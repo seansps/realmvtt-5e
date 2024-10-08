@@ -1,12 +1,12 @@
 <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
   <div style='display: flex; gap: 4px'>
     <div style='width: 100px; height: 100px; min-height: 100px; min-width: 100px;'>
-	  <portrait field="portrait"></portrait>
-	</div>
-	<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
-        <stringfield field="class" label="Required Class" placeholder='Enter Class name...'></stringfield>
+      <portrait width='100px' height='100px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <stringfield field="class" label="Required Class" placeholder='Enter Class name...'></stringfield>
 
-	</div>
+    </div>
   </div>
 
   <div style='margin-top: 8px; margin-bottom: 8px'>
@@ -14,10 +14,4 @@
   </div>
 
   <richtextfield field="Description" label="Description" placeholder='Enter Subclass description...'></richtextfield>
-</div>
-
------
-
-<div style='margin-top: 8px'>
-  <list label='Subclass Features by Level' listtype="feature_list" field='feature_list'></list>
 </div>

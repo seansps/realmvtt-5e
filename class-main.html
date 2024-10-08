@@ -1,0 +1,45 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px'>
+    <div style='width: 100px; height: 100px; min-height: 100px; min-width: 100px;'>
+      <portrait width='100px' height='100px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <stringfield field="primaryAbility" label="Primary Ability" placeholder='Enter primary Ability details...'>
+      </stringfield>
+      <dropdown field="hitDie" label="Hit Point Die" placeholder='Select Hit Die'
+        options='[{"label": "D6 per level", "value": "d6"}, {"label": "D8 per level", "value": "d8"}, {"label": "D10 per level", "value": "d10"}, {"label": "D12 per level", "value": "d12"}]'>
+      </dropdown>
+    </div>
+  </div>
+  <dropdown field="saveProficiencies" placeholder='Select up to 2 Proficiencies' multiselect='2'
+    label="Saving Throw Proficiencies"
+    options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+  </dropdown>
+  <stringfield height="100%" multiline maxRows='2' field="skillProficiencies" label="Skill Proficiencies"
+    placeholder='None'></stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="toolProficiencies" label="Tool Proficiencies"
+    placeholder='None'></stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="weaponProficiencies" label="Weapon Proficiencies"
+    placeholder='None'></stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="armorTraining" label="Armor Training" placeholder='None'>
+  </stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="startingEquipment" label="Starting Equipment"
+    placeholder='None'></stringfield>
+  <accordion field='asMulticlass' label='As a Multiclass Character'>
+    <stringfield height="100%" multiline maxRows='2' field="skillProficienciesMulti" label="Skill Proficiencies"
+      placeholder='None'></stringfield>
+    <stringfield height="100%" multiline maxRows='2' field="toolProficienciesMulti" label="Tool Proficiencies"
+      placeholder='None'></stringfield>
+    <stringfield height="100%" multiline maxRows='2' field="weaponProficienciesMulti" label="Weapon Proficiencies"
+      placeholder='None'></stringfield>
+    <stringfield height="100%" multiline maxRows='2' field="armorTrainingMulti" label="Armor Training"
+      placeholder='None'></stringfield>
+  </accordion>
+</div>
+
+
+<div style='margin-top: 8px; margin-bottom: 8px'>
+  <divider label='Description'></divider>
+</div>
+
+<richtextfield placeholder='Enter Class description...' field="Description" label="Description"></richtextfield>

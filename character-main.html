@@ -1,822 +1,899 @@
 <script>
-  function setSaveValue(profBonus, prof, attribute) {
-    const isProficient = prof === 'true';
-	
-	const modField = `${attribute}Mod`;
-	const saveField = `${attribute}Save`;
-	
-	let modVal = parseInt(record.data[modField], 10);
-	if (isNaN(modVal)) { 
-		modVal = 0;
+	function setSaveValue(profBonus, prof, attribute) {
+		const isProficient = prof === 'true';
+
+		const modField = `${attribute}Mod`;
+		const saveField = `${attribute}Save`;
+
+		let modVal = parseInt(record?.data?.[modField] || '0', 10);
+		if (isNaN(modVal)) {
+			modVal = 0;
+		}
+
+		const savVal = isProficient ? modVal + profBonus : modVal;
+		api.setValue(`data.${saveField}`, savVal);
 	}
-	
-	const savVal = isProficient ? modVal + profBonus : modVal;
-	api.setValue(`data.${saveField}`, savVal);
-  }
-  
-  function updateHitPoints(newClass, newLevel, totalLevel, newHitDie, additionalPrompt) {
-	// Here we update the characters HP and set a hidden value `hpByLevel` to track 
-	// the HP received at each level
-	// For levels > 1 we prompt the user to determine if they are rolling or taking the average
-	const hpByLevel = record?.data?.hpByLevel || '[]';
-	const hpByLevelArr = JSON.parse(hpByLevel);
-	
-	const callback = (values) => {
-		if (values.length >= 1) {;
-			const value = values[0];
-			// Here we set the HP by Level string for this level with the average roll
-			// or trigger a roll of type hitpoints with the given roll
-			if (value.startsWith('value-')) {
-				// Add it to map for record keeping
-				const addHp = parseInt(value.replace('value-', ''), 10);
-				hpByLevelArr.push({
-					className: newClass,
-					level: newLevel,
-					hitDie: newHitDie,
-					hp: addHp
+
+	function updateHitPoints(newClass, newLevel, totalLevel, newHitDie, additionalPrompt) {
+		// Here we update the characters HP and set a hidden value `hpByLevel` to track 
+		// the HP received at each level
+		// For levels > 1 we prompt the user to determine if they are rolling or taking the average
+		const hpByLevel = record?.data?.hpByLevel || '[]';
+		const hpByLevelArr = JSON.parse(hpByLevel);
+
+		const callback = (values) => {
+			if (values.length >= 1) {
+				;
+				const value = values[0];
+				// Here we set the HP by Level string for this level with the average roll
+				// or trigger a roll of type hitpoints with the given roll
+				if (value.startsWith('value-')) {
+					// Add it to map for record keeping
+					const addHp = parseInt(value.replace('value-', ''), 10);
+					hpByLevelArr.push({
+						className: newClass,
+						level: newLevel,
+						hitDie: newHitDie,
+						hp: addHp
+					});
+
+					// Get CON mod
+					const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
+					// Add addHP + conMod
+					let hpToAdd = addHp + conMod;
+					if (hpToAdd < 0) { hpToAdd = 1; }
+					const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
+					const curHp = parseInt(record?.data?.curhp || '0', 10);
+
+					// Set curhp and hitpoints
+					api.setValue('data.curhp', curHp + hpToAdd);
+					api.setValue('data.hitpoints', curHpMax + hpToAdd);
+
+					// Set hpByLevel map
+					api.setValue('data.hpByLevel', JSON.stringify(hpByLevelArr));
+
+					// Add a hitdie
+					const hitDieField = `${newHitDie}HitDie`;
+					const numHitDie = parseInt(record?.data?.[hitDieField] || '0', 10);
+					api.setValue(`data.${hitDieField}`, numHitDie + 1);
+
+					// Send a Message
+					const newHp = curHpMax + hpToAdd;
+					const characterName = record?.name || 'New Character';
+					const message = `Added 1 Level of ${newClass} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHp}`;
+					api.sendMessage(message, undefined, [], []);
+				}
+				else {
+					api.roll(newHitDie, {
+						className: newClass,
+						newLevel: newLevel,
+						totalLevel: totalLevel,
+						newHitDie: newHitDie
+					}, 'hitpoints');
+				}
+			}
+
+			if (additionalPrompt) {
+				additionalPrompt();
+			}
+		}
+
+		const hitDieValue = parseInt(newHitDie.replace('d', ''), 10);
+		if (hitDieValue === 0 || isNaN(hitDieValue)) { return; }
+		const avg = Math.floor(hitDieValue / 2) + 1;
+
+		if (totalLevel > 1) {
+			// Prompt for method
+			const text = `Select Average or Roll...`;
+			const options = [
+				{
+					label: `Average (${avg})`,
+					value: `value-${avg}`,
+				},
+				{
+					label: `Roll (${newHitDie})`,
+					value: newHitDie
+				}
+			]
+			api.showPrompt('New Level Hit Points', 'Select Hit Point Method', text, options, null, callback);
+		}
+		else {
+			// Just call callback with max value
+			callback([`value-${hitDieValue}`]);
+		}
+	}
+
+	function setSave(prof, attribute) {
+		const isProficient = prof === 'true';
+
+		const modField = `${attribute}Mod`;
+		const saveField = `${attribute}Save`;
+
+		let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '0', 10);
+		if (isNaN(proficiencyBonus)) {
+			proficiencyBonus = 0;
+		}
+
+		let modVal = parseInt(record?.data?.[modField] || '0', 10);
+		if (isNaN(modVal)) {
+			modVal = 0;
+		}
+
+		const savVal = isProficient ? modVal + proficiencyBonus : modVal;
+		api.setValue(`data.${saveField}`, savVal);
+	}
+
+	// On update of PB, update Saves and Skills
+	function updateProficiencies(value) {
+		const val = parseInt(value, 10);
+		if (isNaN(val)) {
+			return;
+		}
+
+		['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach((attribute) => {
+			const isProficient = record?.data?.[`${attribute}Prof`] || 'false';
+			setSaveValue(value, isProficient, attribute);
+		});
+
+		// TODO Skills
+	}
+
+	function getProficiencyBonus(level) {
+		if (level <= 4) {
+			return 2;
+		}
+		if (level <= 8) {
+			return 3;
+		}
+		if (level <= 12) {
+			return 4;
+		}
+		if (level <= 16) {
+			return 5;
+		}
+		if (level <= 20) {
+			return 6;
+		}
+		if (level <= 24) {
+			return 7;
+		}
+		if (level <= 28) {
+			return 8;
+		}
+		return 9;
+	}
+
+	function getNextLevelXp(level) {
+		if (level < 1) {
+			return 0;
+		}
+		if (level === 1) {
+			return 300;
+		}
+		if (level === 2) {
+			return 900;
+		}
+		if (level === 3) {
+			return 2700;
+		}
+		if (level === 4) {
+			return 6500;
+		}
+		if (level === 5) {
+			return 14000;
+		}
+		if (level === 6) {
+			return 23000;
+		}
+		if (level === 7) {
+			return 34000;
+		}
+		if (level === 8) {
+			return 48000;
+		}
+		if (level === 9) {
+			return 64000;
+		}
+		if (level === 10) {
+			return 85000;
+		}
+		if (level === 11) {
+			return 100000;
+		}
+		if (level === 12) {
+			return 120000;
+		}
+		if (level === 13) {
+			return 140000;
+		}
+		if (level === 14) {
+			return 165000;
+		}
+		if (level === 15) {
+			return 195000;
+		}
+		if (level === 16) {
+			return 225000;
+		}
+		if (level === 17) {
+			return 265000;
+		}
+		if (level === 18) {
+			return 305000;
+		}
+		// Level 20 -- undefined beyond this point
+		return 355000;
+	}
+
+	// Add class and subclass features
+	function addMissingClassFeatures(className, classObj, subclass, newLevel) {
+		const curFeatures = (record?.data?.features || []).map(feature => `${className}-${feature.name}`);
+		const features = classObj?.data?.feature_list || [];
+		const subClassFeatures = subclass?.data?.feature_list || [];
+
+		[...features, ...subClassFeatures].forEach(feature => {
+			const level = feature?.data?.level || 0;
+			if (level <= newLevel && !curFeatures.includes(`${className}-${feature.name}`)) {
+				// Add this feature
+				api.addValue('data.features', {
+					...feature
 				});
-				
-				// Get CON mod
-				const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
-				// Add addHP + conMod
-				let hpToAdd = addHp + conMod;
-				if (hpToAdd < 0) { hpToAdd = 1; }
-				const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
-				const curHp  = parseInt(record?.data?.curhp || '0', 10); 
-				
-				// Set curhp and hitpoints
-				api.setValue('data.curhp', curHp + hpToAdd);
-				api.setValue('data.hitpoints', curHpMax + hpToAdd);
-				
-				// Set hpByLevel map
-				api.setValue('data.hpByLevel', JSON.stringify(hpByLevelArr));
-				
-				// Add a hitdie
-				const hitDieField = `${newHitDie}HitDie`;
-				const numHitDie = parseInt(record.data[hitDieField] || '0', 10);
-				api.setValue(`data.${hitDieField}`, numHitDie + 1);
-				
-				// Send a Message
-				const newHp = curHpMax + hpToAdd;
-				const characterName = record?.name || 'New Character';
-				const message = `Added 1 Level of ${newClass} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHp}`;
-				api.sendMessage(message, undefined, [], []);
 			}
-			else {
-				api.roll(newHitDie, {
-					className: newClass,
-					newLevel: newLevel,
-					totalLevel: totalLevel,
-					newHitDie: newHitDie
-				}, 'hitpoints');
-			}
-		}
-		
-		if (additionalPrompt) {
-			additionalPrompt();
-		}
+		});
 	}
-	
-	const hitDieValue = parseInt(newHitDie.replace('d', ''), 10);
-	if (hitDieValue === 0 || isNaN(hitDieValue)) { return; }
-	const avg = Math.floor(hitDieValue / 2) + 1;
-	
-	if (totalLevel > 1) {
-	 // Prompt for method
-	 const text = `Select Average or Roll...`;
-	 const options = [
-		{
-			label: `Average (${avg})`,
-			value: `value-${avg}`,
-		},
-		{
-			label: `Roll (${newHitDie})`,
-			value: newHitDie
-		}
-	 ]
-	 api.showPrompt('New Level Hit Points', 'Select Hit Point Method', text, options, null, callback);
-	}
-	else {
-		// Just call callback with max value
-		callback([`value-${hitDieValue}`]); 
-	}
-  }
-  
-  function setSave(prof, attribute) {
-	const isProficient = prof === 'true';
-	
-	const modField = `${attribute}Mod`;
-	const saveField = `${attribute}Save`;
-	
-	let proficiencyBonus = parseInt(record.data['proficiencyBonus'], 10);
-	if (isNaN(proficiencyBonus)) { 
-		proficiencyBonus = 0;
-	}
-	
-	let modVal = parseInt(record.data[modField], 10);
-	if (isNaN(modVal)) { 
-		modVal = 0;
-	}
-	
-	const savVal = isProficient ? modVal + proficiencyBonus : modVal;
-	api.setValue(`data.${saveField}`, savVal);
-  }
-  
-  // On update of PB, update Saves and Skills
-  function updateProficiencies(value) {
-	const val = parseInt(value, 10);
-    if (isNaN(val)) {
-      return;
-    }
-	
-	['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach((attribute) => {
-		const isProficient = record.data[`${attribute}Prof`];
-		setSaveValue(value, isProficient, attribute);
-	});
-	
-	// TODO Skills
-  }
 
-  function getProficiencyBonus(level) {
-	if (level <= 4) {
-	  return 2;
-	}
-	if (level <= 8) {
-	  return 3;
-	}
-	if (level <= 12) {
-	  return 4;
-	}
-	if (level <= 16) {
-	  return 5;
-	}
-	if (level <= 20) {
-	  return 6;
-	}
-	if (level <= 24) {
-	  return 7;
-	}
-	if (level <= 28) {
-	  return 8;
-	}
-	return 9;
-  }
+	function onDrop(type, recordLink) {
+		// Check if already on Character
+		const classes = record?.data?.classes || [];
+		const className = recordLink.tooltip;
+		const hasClass = classes.find(classObj => classObj._id === className);
 
-  function getNextLevelXp(level) {
-	if (level < 1) {
-		return 0;
-	}
-	if (level === 1) {
-		return 300;
-	}
-	if (level === 2) {
-		return 900;
-	}
-	if (level === 3) {
-		return 2700;
-	}
-	if (level === 4) {
-		return 6500;
-	}
-	if (level === 5) {
-		return 14000;
-	}
-	if (level === 6) {
-		return 23000;
-	}
-	if (level === 7) {
-		return 34000;
-	}
-	if (level === 8) {
-		return 48000;
-	}
-	if (level === 9) {
-		return 64000;
-	}
-	if (level === 10) {
-		return 85000;
-	}
-	if (level === 11) {
-		return 100000;
-	}
-	if (level === 12) {
-		return 120000;
-	}
-	if (level === 13) {
-		return 140000;
-	}
-	if (level === 14) {
-		return 165000;
-	}
-	if (level === 15) {
-		return 195000;
-	}
-	if (level === 16) {
-		return 225000;
-	}
-	if (level === 17) {
-		return 265000;
-	}
-	if (level === 18) {
-		return 305000;
-	}
-	// Level 20 -- undefined beyond this point
-	return 355000;
-  }
-
-  // Add class and subclass features
-  function addMissingClassFeatures(className, classObj, subclass, newLevel) {
-	const curFeatures = (record?.data?.features || []).map(feature => `${className}-${feature.name}`);
-	const features = classObj?.data?.feature_list || [];
-	const subClassFeatures = subclass?.data?.feature_list || [];
-	
-	[...features, ...subClassFeatures].forEach(feature => {
-		const level = feature?.data?.level || 0;
-		if (level <= newLevel && !curFeatures.includes(`${className}-${feature.name}`)) {
-			// Add this feature
-			api.addValue('data.features', {
-			  ...feature
+		// Add the class to the the classes list if needed
+		if (!hasClass) {
+			api.addValue('data.classes', {
+				...recordLink.value,
+				'_id': className,
 			});
 		}
-	});
-  }
 
-  function onDrop(type, recordLink) {
-    // Check if already on Character
-    const classes = record?.data?.classes || [];
-	const className = recordLink.tooltip;
-	const hasClass = classes.find(classObj => classObj._id === className);
-	      
-    // Add the class to the the classes list if needed
-	if (!hasClass) {
-	  api.addValue('data.classes', {
-		...recordLink.value,
-	    '_id': className,
-	  });
-	}
-	
-	// Update the class / level string
-	let classLevels = record?.data?.classLevels || '';
-	let newLevel = 1;
-	if (hasClass) {
-	  // Parse level from hidden string
-	  const regex = new RegExp(`(${className} (\\d+))`, 'i');
-	  // Replace the found class and level with the incremented level
-	  classLevels = classLevels.replace(regex, (match, g1, g2) => {
-		const currentLevel = parseInt(g2, 10);
-		newLevel = currentLevel + 1;
-		return `${className} ${newLevel}`;
-	  });
-	}
-	else {
-	  // Add the class 
-	  if (classLevels !== '') {
-		classLevels += ' / ';
-	  }
-	  classLevels += `${className} ${newLevel}`;
-	}
-
-	// Update the class strings
-	api.setValue('data.classLevels', classLevels);
-	api.setValue('data.className', classLevels);
-	
-	 // Update the level total
-	const level = getTotalLevel(classLevels);
-	api.setValue('data.level', level);
-	
-	// Set Next Level XP
-	const nextLevelXp = getNextLevelXp(level);
-	api.setValue('data.xpNext', nextLevelXp);
-    
-    // Unhide the classes list
-    api.setHidden('classes', false);
-	
-	// Update proficiencies based on Level
-	const bonus = getProficiencyBonus(level);
-	api.setValue('data.proficiencyBonus', bonus, () => {
-	  updateProficiencies(bonus);
-	});
-	
-	// Prompt for subclass (If level 3 in THIS class) - pass as additional prompt to updateHitPoints
-	let promptSubclass = newLevel === 3 ? () => {
-		const subclassSelection = (values) => {
-			if (values.length > 0) {
-			  const subclass = values[0];
-			  api.addValue('data.subclasses', {
-				...subclass,
-				icon: 'IconBadges'
-			  });
-			  // Add subclass features for level 3
-			  addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+		// Update the class / level string
+		let classLevels = record?.data?.classLevels || '';
+		let newLevel = 1;
+		if (hasClass) {
+			// Parse level from hidden string
+			const regex = new RegExp(`(${className} (\\d+))`, 'i');
+			// Replace the found class and level with the incremented level
+			classLevels = classLevels.replace(regex, (match, g1, g2) => {
+				const currentLevel = parseInt(g2, 10);
+				newLevel = currentLevel + 1;
+				return `${className} ${newLevel}`;
+			});
+		}
+		else {
+			// Add the class 
+			if (classLevels !== '') {
+				classLevels += ' / ';
 			}
+			classLevels += `${className} ${newLevel}`;
 		}
-		
-		// We need to prompt with options to select a subclass
-		const optionsQuery={
-			type: "subclass",
-			query: {
-				"data.class": className
+
+		// Update the class strings
+		api.setValue('data.classLevels', classLevels);
+		api.setValue('data.className', classLevels);
+
+		// Update the level total
+		const level = getTotalLevel(classLevels);
+		api.setValue('data.level', level);
+
+		// Set Next Level XP
+		const nextLevelXp = getNextLevelXp(level);
+		api.setValue('data.xpNext', nextLevelXp);
+
+		// Unhide the classes list
+		api.setHidden('classes', false);
+
+		// TODO get class proficiencies and set if needed
+
+		// Update proficiencies based on Level
+		const bonus = getProficiencyBonus(level);
+		api.setValue('data.proficiencyBonus', bonus, () => {
+			updateProficiencies(bonus);
+		});
+
+		// Prompt for subclass (If level 3 in THIS class) - pass as additional prompt to updateHitPoints
+		let promptSubclass = newLevel === 3 ? () => {
+			const subclassSelection = (values) => {
+				if (values.length > 0) {
+					const subclass = values[0];
+					api.addValue('data.subclasses', {
+						...subclass,
+						icon: 'IconBadges'
+					});
+					// Add subclass features for level 3
+					addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+				}
 			}
-		};
-		api.showPrompt('Select Subclass', 'Subclass', 'Select a Subclass...', null, optionsQuery, subclassSelection);
-	} : null;
-	
-	// Add class features for added class at the new level, using the chosen subclass for it (if one)
-	const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
-	addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
-	
-	// Update HP and Hit Dice
-	// Get class hit die
-	const hitDie = recordLink?.value?.data?.hitDie;
-	if (hitDie !== undefined && hitDie !== '') {
-		updateHitPoints(className, newLevel, level, hitDie, promptSubclass);
-	}
-  }
-  
-  function onDeleteClass() {
-	// Recalculate class name / level
-    const classes = record?.data?.classes || [];
-	const existingClasses = classes.map(classObj => classObj.name);
-		
-	let classLevels = record?.data?.classLevels || '';
-	const classLevelsArr = classLevels.split('/');
-	classLevelsArr.forEach(classLevel => {
-	  // Parse class name
-	  const regex = /(\w+) (\d+)/i;
-	  const found = classLevel.match(regex);
-	  const className = found[1];
-		
-	  // If this class is NOT in existing classes, remove it
-	  if (!existingClasses.includes(className.trim())) {
-	    // Parse level from hidden string
-	    const regex = new RegExp(`(${className} (\\d+))`, 'i');
-	    // Replace the found class and level
-	    classLevels = classLevels.replace(regex, (match, g1, g2) => {
-	      const currentLevel = parseInt(g2, 10);
-	      return '';
-	    });
-	    // Replace leading or trailing /
-        classLevels = classLevels.trim().replace(/\/$/, '').replace(/^\//,'').trim();
-	  }
-	});
-	
-	// Update the class strings
-	api.setValue('data.classLevels', classLevels);
-	api.setValue('data.className', classLevels);
-	
-	// Remove subclasses for this class from `data.subclasses`
-	const subclasses = record?.data?.subclasses || [];
-	let newSubclasses = [...subclasses]
-	newSubclasses.forEach((subclass, index) => {
-		if (!existingClasses.includes(subclass.data.class)) {
-			newSubclasses[index]._id = 'delete';
+
+			// We need to prompt with options to select a subclass
+			const optionsQuery = {
+				type: "subclass",
+				query: {
+					"data.class": className
+				}
+			};
+			api.showPrompt('Select Subclass', 'Subclass', 'Select a Subclass...', null, optionsQuery, subclassSelection);
+		} : null;
+
+		// Add class features for added class at the new level, using the chosen subclass for it (if one)
+		const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
+		addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+
+		// Update HP and Hit Dice
+		// Get class hit die
+		const hitDie = recordLink?.value?.data?.hitDie;
+		if (hitDie !== undefined && hitDie !== '') {
+			updateHitPoints(className, newLevel, level, hitDie, promptSubclass);
 		}
-	});
-	newSubclasses = newSubclasses.filter(subclass => subclass._id !== 'delete'); 
-	api.setValue('data.subclasses', newSubclasses);
-	
-	 // Update the level total
-	const level = getTotalLevel(classLevels);
-	api.setValue('data.level', level);
-	
-	// Reset XP to next level
-    const nextLevelXp = getNextLevelXp(level);
-	api.setValue('data.xpNext', nextLevelXp);
-    
-	// Update proficiencies based on Level
-	const bonus = getProficiencyBonus(level);
-	api.setValue('data.proficiencyBonus', bonus, () => {
-	  updateProficiencies(bonus);
-	});
-	
-	//  Update HP and Hit Dice
-	const hpByLevel = record?.data?.hpByLevel || '[]';
-	const hpByLevelArr = JSON.parse(hpByLevel);
-	
-	// Remove all entries from hpByLevelArr where className no longer exists
-	let newHpByLevel = [...hpByLevelArr];
-	hpByLevelArr.forEach((hpLevel, index) => {
-		if (!existingClasses.includes(hpLevel.className)) {
-			newHpByLevel[index].className = 'delete';
+	}
+
+	function onDeleteClass() {
+		// Recalculate class name / level
+		const classes = record?.data?.classes || [];
+		const existingClasses = classes.map(classObj => classObj.name);
+
+		let classLevels = record?.data?.classLevels || '';
+		const classLevelsArr = classLevels.split('/');
+		classLevelsArr.forEach(classLevel => {
+			// Parse class name
+			const regex = /(\w+) (\d+)/i;
+			const found = classLevel.match(regex);
+			const className = found[1];
+
+			// If this class is NOT in existing classes, remove it
+			if (!existingClasses.includes(className.trim())) {
+				// Parse level from hidden string
+				const regex = new RegExp(`(${className} (\\d+))`, 'i');
+				// Replace the found class and level
+				classLevels = classLevels.replace(regex, (match, g1, g2) => {
+					const currentLevel = parseInt(g2, 10);
+					return '';
+				});
+				// Replace leading or trailing /
+				classLevels = classLevels.trim().replace(/\/$/, '').replace(/^\//, '').trim();
+			}
+		});
+
+		// Update the class strings
+		api.setValue('data.classLevels', classLevels);
+		api.setValue('data.className', classLevels);
+
+		// Remove subclasses for this class from `data.subclasses`
+		const subclasses = record?.data?.subclasses || [];
+		let newSubclasses = [...subclasses]
+		newSubclasses.forEach((subclass, index) => {
+			if (!existingClasses.includes(subclass.data.class)) {
+				newSubclasses[index]._id = 'delete';
+			}
+		});
+		newSubclasses = newSubclasses.filter(subclass => subclass._id !== 'delete');
+		api.setValue('data.subclasses', newSubclasses);
+
+		// Update the level total
+		const level = getTotalLevel(classLevels);
+		api.setValue('data.level', level);
+
+		// Reset XP to next level
+		const nextLevelXp = getNextLevelXp(level);
+		api.setValue('data.xpNext', nextLevelXp);
+
+		// Update proficiencies based on Level
+		const bonus = getProficiencyBonus(level);
+		api.setValue('data.proficiencyBonus', bonus, () => {
+			updateProficiencies(bonus);
+		});
+
+		//  Update HP and Hit Dice
+		const hpByLevel = record?.data?.hpByLevel || '[]';
+		const hpByLevelArr = JSON.parse(hpByLevel);
+
+		// Remove all entries from hpByLevelArr where className no longer exists
+		let newHpByLevel = [...hpByLevelArr];
+		hpByLevelArr.forEach((hpLevel, index) => {
+			if (!existingClasses.includes(hpLevel.className)) {
+				newHpByLevel[index].className = 'delete';
+			}
+		});
+		newHpByLevel = newHpByLevel.filter(hpLevel => hpLevel.className !== 'delete');
+
+		// Set new hpByLevelArray
+		api.setValue('data.hpByLevel', JSON.stringify(newHpByLevel));
+
+		// Get total HP from HP by level, amd CON Mod, and determine new HP totals
+		const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
+		const curHp = parseInt(record?.data?.curhp || '0', 10);
+		const curD6HitDie = parseInt(record?.data?.d6HitDie || '0', 10);
+		const curD8HitDie = parseInt(record?.data?.d8HitDie || '0', 10);
+		const curD10HitDie = parseInt(record?.data?.d10HitDie || '0', 10);
+		const curD12HitDie = parseInt(record?.data?.d12HitDie || '0', 10);
+		let newMaxHp = 0;
+		let d6HitDie = 0;
+		let d8HitDie = 0;
+		let d10HitDie = 0;
+		let d12HitDie = 0;
+		newHpByLevel.forEach(hpLevel => {
+			newMaxHp += hpLevel.hp + conMod;
+			if (hpLevel.hitDie === 'd6') {
+				d6HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd8') {
+				d8HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd10') {
+				d10HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd12') {
+				d12HitDie += 1;
+			}
+		});
+		// Set max hp and current
+		if (curHp > newMaxHp) {
+			api.setValue('data.curhp', newMaxHp);
 		}
-	});
-	newHpByLevel = newHpByLevel.filter(hpLevel => hpLevel.className !== 'delete');
-	
-	// Set new hpByLevelArray
-	api.setValue('data.hpByLevel', JSON.stringify(newHpByLevel));
-	
-	// Get total HP from HP by level, amd CON Mod, and determine new HP totals
-	const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
-	const curHp = parseInt(record?.data?.curhp || '0', 10);
-	const curD6HitDie = parseInt(record?.data?.d6HitDie || '0', 10); 
-	const curD8HitDie = parseInt(record?.data?.d8HitDie || '0', 10); 
-	const curD10HitDie = parseInt(record?.data?.d10HitDie || '0', 10); 
-	const curD12HitDie = parseInt(record?.data?.d12HitDie || '0', 10); 
-	let newMaxHp = 0;
-	let d6HitDie = 0;
-	let d8HitDie = 0;
-	let d10HitDie = 0;
-	let d12HitDie = 0;
-	newHpByLevel.forEach(hpLevel => {
-		newMaxHp += hpLevel.hp + conMod;
-		if (hpLevel.hitDie === 'd6') {
-			d6HitDie += 1;
+		api.setValue('data.hitpoints', newMaxHp);
+
+		// Set new hitDie
+		if (curD6HitDie != d6HitDie) {
+			api.setValue('data.d6HitDie', d6HitDie || null);
 		}
-		else if (hpLevel.hitDie === 'd8') {
-			d8HitDie += 1;
+		if (curD8HitDie != d8HitDie) {
+			api.setValue('data.d8HitDie', d8HitDie || null);
 		}
-		else if (hpLevel.hitDie === 'd10') {
-			d10HitDie += 1;
+		if (curD10HitDie != d10HitDie) {
+			api.setValue('data.d10HitDie', d10HitDie || null);
 		}
-		else if (hpLevel.hitDie === 'd12') {
-			d12HitDie += 1;
+		if (curD12HitDie != d12HitDie) {
+			api.setValue('data.d12HitDie', d12HitDie || null);
 		}
-	});
-	// Set max hp and current
-	if (curHp > newMaxHp) {
-		api.setValue('data.curhp', newMaxHp);
 	}
-	api.setValue('data.hitpoints', newMaxHp);
-	
-	// Set new hitDie
-	if (curD6HitDie != d6HitDie) {
-		api.setValue('data.d6HitDie', d6HitDie || null);
+
+	function getTotalLevel(inputString) {
+		// Regular expression to find all class levels
+		const regex = /\d+/g;
+		let totalLevel = 0;
+
+		// Extract all levels and sum them
+		const levels = inputString.match(regex);
+		if (levels) {
+			levels.forEach(level => {
+				totalLevel += parseInt(level, 10);
+			});
+		}
+
+		return totalLevel;
 	}
-	if (curD8HitDie != d8HitDie) {
-		api.setValue('data.d8HitDie', d8HitDie || null);
+
+	function capitalize(string) {
+		if (!string || typeof string !== 'string') return '';
+		return string.charAt(0).toUpperCase() + string.slice(1);
 	}
-	if (curD10HitDie != d10HitDie) {
-		api.setValue('data.d10HitDie', d10HitDie || null);
+
+	function rollCheck(ability) {
+		const mod = `${ability}Mod`;
+
+		const modifiers = [];
+		let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
+		if (abilityMod === undefined || isNaN(abilityMod)) {
+			abilityMod = 0;
+		}
+		modifiers.push({
+			name: ability,
+			value: abilityMod,
+			active: true,
+		});
+		const metadata = {
+			"rollName": `${capitalize(ability)}`
+		}
+		api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
 	}
-	if (curD12HitDie != d12HitDie) {
-		api.setValue('data.d12HitDie', d12HitDie || null);
+
+	function rollSave(save) {
+		const mod = `${save}Save`;
+		const modifiers = [];
+		let saveMod = record?.data?.[mod] || '0';
+		if (saveMod === undefined) {
+			saveMod = 0;
+		}
+		modifiers.push({
+			name: save,
+			value: saveMod,
+			active: true,
+		});
+		const metadata = {
+			"rollName": `${capitalize(save)} Save`,
+			"dc": 0
+		}
+		api.promptRoll(`${capitalize(save)} Save`, "1d20", modifiers, metadata, 'save');
 	}
-  }
-  
-  function getTotalLevel(inputString) {
-    // Regular expression to find all class levels
-    const regex = /\d+/g;
-    let totalLevel = 0;
 
-    // Extract all levels and sum them
-    const levels = inputString.match(regex);
-    if (levels) {
-        levels.forEach(level => {
-            totalLevel += parseInt(level, 10);
-        });
-    }
-
-    return totalLevel;
-  }
-  
-  function capitalize(string) {
-    if (!string || typeof string !== 'string') return '';
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  function rollCheck(ability) {
-    const mod = `${ability}Mod`;
-    
-    const modifiers = [];
-    let abilityMod = parseInt(record.data[mod], 10);
-    if (abilityMod === undefined || isNaN(abilityMod)) {
-      abilityMod = 0;
-    }
-    modifiers.push({
-      name: ability,
-      value: abilityMod,
-      active: true,
-    });
-    const metadata = {
-      "rollName": `${capitalize(ability)}`
-    }
-    api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
-  }
-
-  function rollSave(save) {
-    const mod = `${save}Save`;
-    const modifiers = [];
-    let saveMod = record.data[mod];
-    if (saveMod === undefined) {
-      saveMod = 0;
-    }
-    modifiers.push({
-      name: save,
-      value: saveMod,
-      active: true,
-    });
-    const metadata = {
-      "rollName": `${capitalize(save)} Save`,
-      "dc": 0
-    }
-    api.promptRoll(`${capitalize(save)} Save`, "1d20", modifiers, metadata, 'save');
-  }
-
-  function rollHitDie(hitdie) {
-    // TODO If hit die are available, prompt roll of hitDice type roll
-  }
-
-  function shortRest() {
-    // TODO Restore Warlock Spellcasting (if Pactmagic is on sheet)
-	// TODO Update any other short rest actions as needed
-	
-	// TODO Output to chat
-  }
-
-  function longRest() {
-	// TODO Restore HP
-	
-	// TODO Restory half max Hit Die using  hit die totals from hpByLevel
-	const hpByLevel = record?.data?.hpByLevel || '[]';
-	const hpByLevelArr = JSON.parse(hpByLevel);
-	
-    // TODO Output to chat
-  }
-
-  function rollDeathSave() {
-    // TODO Prompt roll of Death Save
-  }
-
-  // On Change of Attributes, Set the Relavant Mods
-  function setModifier(value, attribute) {
-	const modField = `${attribute}Mod`;
-	const saveField = `${attribute}Save`;
-	const saveProf = `${attribute}Prof`;
-	
-    const val = parseInt(value, 10);
-    if (isNaN(val)) {
-      return;
-    }
-    const modVal = Math.floor((val - 10) / 2);
-    let modValStr = `${modVal}`;
-    if (modVal >= 0) {
-      modValStr = `+${modVal}`;
-    }
-    api.setValue(`data.${modField}`, modValStr);
-	
-	let proficiencyBonus = parseInt(record.data['proficiencyBonus'], 10);
-	if (isNaN(proficiencyBonus)) { 
-		proficiencyBonus = 0;
+	function rollHitDie(hitdie) {
+		// TODO If hit die are available, prompt roll of hitDice type roll
 	}
-	
-	const isProficient = record.data[saveProf] === 'true';
-	const savVal = isProficient ? modVal + proficiencyBonus : modVal;
-	api.setValue(`data.${saveField}`, savVal);
-  }
-  
-  // On update of Constitution, update HP
-  function updateHitPointsForCon() {
-	// TODO
-  }
+
+	function shortRest() {
+		// TODO Restore Warlock Spellcasting (if Pactmagic is on sheet)
+		// TODO Update any other short rest actions as needed
+
+		// TODO Output to chat
+	}
+
+	function longRest() {
+		// TODO Restore HP
+
+		// TODO Restory half max Hit Die using  hit die totals from hpByLevel
+		const hpByLevel = record?.data?.hpByLevel || '[]';
+		const hpByLevelArr = JSON.parse(hpByLevel);
+
+		// TODO Output to chat
+	}
+
+	function rollDeathSave() {
+		// TODO Prompt roll of Death Save
+	}
+
+	// On Change of Attributes, Set the Relavant Mods
+	function setModifier(value, attribute) {
+		const modField = `${attribute}Mod`;
+		const saveField = `${attribute}Save`;
+		const saveProf = `${attribute}Prof`;
+
+		const val = parseInt(value, 10);
+		if (isNaN(val)) {
+			return;
+		}
+		const modVal = Math.floor((val - 10) / 2);
+		let modValStr = `${modVal}`;
+		if (modVal >= 0) {
+			modValStr = `+${modVal}`;
+		}
+		api.setValue(`data.${modField}`, modValStr);
+
+		let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '0', 10);
+		if (isNaN(proficiencyBonus)) {
+			proficiencyBonus = 0;
+		}
+
+		const isProficient = record?.data?.[saveProf] === 'true';
+		const savVal = isProficient ? modVal + proficiencyBonus : modVal;
+		api.setValue(`data.${saveField}`, savVal);
+	}
+
+	// On update of Constitution, update HP
+	function updateHitPointsForCon() {
+		// TODO
+	}
 </script>
 
-<div style="display: flex; margin-top: 4px; flex-direction: "row">
-  <div style='display: flex; flex-direction: column;'>
-    <div style="width: 120px; min-width:130px; max-width: 130px; min-height: 130px; max-height: 130px">
-      <portrait />
-    </div>
-    
-    <div style='display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="strengthMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='strength' label='STR' onchange="setModifier(value, 'strength')" onclick="rollCheck('strength');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Strength Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('strength');"></iconbutton>
-      </div>
-    </div>
+<div style="display: flex; margin-top: 4px; flex-direction: " row">
+	<div style='display: flex; flex-direction: column;'>
+		<div style="width: 130px; min-width:130px; max-width: 130px; min-height: 130px; max-height: 130px">
+			<portrait width='130px' height='130px'></portrait>
+		</div>
 
-    <div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="dexterityMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='dexterity' label='DEX' onchange="setModifier(value, 'dexterity')" onclick="rollCheck('dexterity');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Dexterity Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('dexterity');"></iconbutton>
-      </div>
-    </div>
+		<div style='display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="strengthMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='strength' label='STR'
+						onchange="setModifier(value, 'strength')" onclick="rollCheck('strength');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Strength Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('strength');">
+				</iconbutton>
+			</div>
+		</div>
 
-    <div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="constitutionMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='constitution' label='CON' onchange="setModifier(value, 'constitution')" onclick="rollCheck('constitution');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Constitution Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('constitution');"></iconbutton>
-      </div>
-    </div>
+		<div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="dexterityMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='dexterity' label='DEX'
+						onchange="setModifier(value, 'dexterity')" onclick="rollCheck('dexterity');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Dexterity Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('dexterity');">
+				</iconbutton>
+			</div>
+		</div>
 
-    <div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="intelligenceMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='intelligence' label='INT' onchange="setModifier(value, 'intelligence')" onclick="rollCheck('intelligence');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Intelligence Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('intelligence');"></iconbutton>
-      </div>
-    </div>
+		<div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="constitutionMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='constitution' label='CON'
+						onchange="setModifier(value, 'constitution')" onclick="rollCheck('constitution');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Constitution Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('constitution');">
+				</iconbutton>
+			</div>
+		</div>
 
-    <div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="wisdomMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='wisdom' label='WIS' onchange="setModifier(value, 'wisdom')" onclick="rollCheck('wisdom');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Wisdom Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('wisdom');"></iconbutton>
-      </div>
-    </div>
+		<div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="intelligenceMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='intelligence' label='INT'
+						onchange="setModifier(value, 'intelligence')" onclick="rollCheck('intelligence');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Intelligence Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('intelligence');">
+				</iconbutton>
+			</div>
+		</div>
 
-    <div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
-      <div style='display: flex; flex-direction: column'>
-        <indicator variant='outline' size='24' defaultvalue="+0" field="charismaMod" position='bottom-center'>
-          <numberfield placeholder='0' size='md' width="100px" field='charisma' label='CHA' onchange="setModifier(value, 'charisma')"  onclick="rollCheck('charisma');"></numberfield>
-        </indicator>
-      </div>
-      <div style='display: flex; flex-direction: column; justify-content: flex-end'>
-        <iconbutton field="Charisma Check" size='xl' color="blue" variant="light" options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('charisma');"></iconbutton>
-      </div>
-    </div>
+		<div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="wisdomMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='wisdom' label='WIS'
+						onchange="setModifier(value, 'wisdom')" onclick="rollCheck('wisdom');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Wisdom Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('wisdom');">
+				</iconbutton>
+			</div>
+		</div>
 
-    <div style='margin-top: 12px; display: flex; flex-direction: row;'>
-      <div style='align-items: center; display: flex; flex-direction: column; margin-right: 8px'>
-        <label size='xs' label='Death'></label>
-        <iconbutton field="Death Save" size='md' color="red" variant="light" options='[{"icon": "d20", "label": "Roll Death Save", "value": "roll"}]' onchange='' onclick="rollDeathSave();"></iconbutton>
-      </div>
-      <div style="display:flex; flex-direction: column;">
-        <div style="display:flex; flex-direction: row; gap: 4px">
-          <checkbox label='Failure&nbsp;&nbsp;&nbsp;' field="deathSaveFailure1" color='red' radius='md'></checkbox>
-          <checkbox field="deathSaveFailure2" color='red' radius='md'></checkbox>
-          <checkbox field="deathSaveFailure3" color='red' radius='md'></checkbox>
-        </div>
-      
-        <div style="margin-top: 8px; display:flex; flex-direction: row; gap: 4px">
-          <checkbox label='Success' field="deathSaveSuccess1" color='green' radius='md'></checkbox>
-          <checkbox field="deathSaveSuccess2" color='green' radius='md'></checkbox>
-          <checkbox field="deathSaveSuccess3" color='green' radius='md'></checkbox>
-        </div>
-      </div>
-    </div>
-  </div>
-    
-  <div style="display: flex; flex-direction:column; margin-left: 4px; width: 100%">
-    <div style='display: flex; flex-direction: row; width: 100%'>
-      <div style='display: flex; flex-direction: column; width: 100%'>
-        <div style="width: 100%; display: flex; gap: 4px">
-          <numberfield icon='IconHeart' width='50%' placeholder='0' field='curhp' label='Hit Points' color='pink'></numberfield>
-          <numberfield icon='IconHeartFilled' width='50%' placeholder='0' field='hitpoints' label='Max Hit Points' color='green'></numberfield>
-          <div style='justify: center; align-items: center; margin-top: auto; display: flex; flex-direction: column; gap: 2px;'>
-            <label textalign='center' label='Heroic Inspiration' size='xs'></label>
-            <iconbutton field="inspiration" size='sm' color="yellow" variant="light" options='[{"icon": "IconStars", "label": "Heroic Inspiration: No", "value": "false"},{"icon": "IconStarsFilled", "label": "Heroic Inspiration: Yes", "value": "true"}]' onchange='' onclick=''></iconbutton>
-          </div>
-        </div>
+		<div style='margin-top: 4px; display:flex; flex-direction: row; gap: 6px'>
+			<div style='display: flex; flex-direction: column'>
+				<indicator variant='outline' size='24' defaultvalue="+0" field="charismaMod" position='bottom-center'>
+					<numberfield placeholder='0' size='md' width="100px" field='charisma' label='CHA'
+						onchange="setModifier(value, 'charisma')" onclick="rollCheck('charisma');"></numberfield>
+				</indicator>
+			</div>
+			<div style='display: flex; flex-direction: column; justify-content: flex-end'>
+				<iconbutton field="Charisma Check" size='xl' color="blue" variant="light"
+					options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('charisma');">
+				</iconbutton>
+			</div>
+		</div>
 
-        <div style="width: 100%; display: flex; gap: 4px">
-          <numberfield width='50%' placeholder='0' field='tempHp' label='Temporary Hit Points' color='blue'></numberfield>
-          <numberfield icon='IconShield' width='50%' placeholder='0' field='ac' label='Armor Class' color='blue'></numberfield>
-        </div>
+		<div style='margin-top: 12px; display: flex; flex-direction: row;'>
+			<div style='align-items: center; display: flex; flex-direction: column; margin-right: 8px'>
+				<label size='xs' label='Death'></label>
+				<iconbutton field="Death Save" size='md' color="red" variant="light"
+					options='[{"icon": "d20", "label": "Roll Death Save", "value": "roll"}]' onchange=''
+					onclick="rollDeathSave();"></iconbutton>
+			</div>
+			<div style="display:flex; flex-direction: column;">
+				<div style="display:flex; flex-direction: row; gap: 4px">
+					<checkbox label='Failure&nbsp;&nbsp;&nbsp;' field="deathSaveFailure1" color='red' radius='md'></checkbox>
+					<checkbox field="deathSaveFailure2" color='red' radius='md'></checkbox>
+					<checkbox field="deathSaveFailure3" color='red' radius='md'></checkbox>
+				</div>
 
-        <div style="width: 100%; display: flex; gap: 4px; margin-top: 16px">
-          <div style='display: flex; gap: 4px; align-items: center'>
-            <label size='xs' label='Hit Dice' color='red'></label>
-          </div>
-          <div style='display: flex; gap: 4px; align-items: flex-end'>
-            <indicator position='top-center' size='sm' field='d6HitDie' color='red' defaultvalue=''>
-              <iconbutton field="Roll D6 Hit Die" size='lg' variant="default" options='[{"icon": "D6", "label": "Roll D6 Hit Die", "value": "roll"}]' onchange='' onclick="rollHitDie('D6');"></iconbutton>
-            </indicator>
-            <indicator position='top-center' size='sm' field='d8HitDie' color='red' defaultvalue=''>
-              <iconbutton field="Roll D8 Hit Die" size='lg' variant="default" options='[{"icon": "D8", "label": "Roll D8 Hit Die", "value": "roll"}]' onchange='' onclick="rollHitDie('D8');"></iconbutton>
-            </indicator>
-            <indicator position='top-center' size='sm' field='d10HitDie' color='red' defaultvalue=''>
-              <iconbutton field="Roll D10 Hit Die" size='lg' variant="default" options='[{"icon": "D10", "label": "Roll D10 Hit Die", "value": "roll"}]' onchange='' onclick="rollHitDie('D10');"></iconbutton>
-            </indicator>
-            <indicator position='top-center' size='sm' field='d12HitDie' color='red' defaultvalue=''>
-              <iconbutton field="Roll D10 Hit Die" size='lg' variant="default" options='[{"icon": "D12", "label": "Roll D12 Hit Die", "value": "roll"}]' onchange='' onclick="rollHitDie('D12');"></iconbutton>
-            </indicator>
-          </div>
-          <div style='margin-left: auto; display: flex; flex-direction: column;'>
+				<div style="margin-top: 8px; display:flex; flex-direction: row; gap: 4px">
+					<checkbox label='Success' field="deathSaveSuccess1" color='green' radius='md'></checkbox>
+					<checkbox field="deathSaveSuccess2" color='green' radius='md'></checkbox>
+					<checkbox field="deathSaveSuccess3" color='green' radius='md'></checkbox>
+				</div>
+			</div>
+		</div>
+	</div>
 
-            <div style='display: flex; gap: 4px; align-items: center'>
-              <label size='xs' label='Rest'></label>
-              <iconbutton field="Short Rest" size='lg' variant="default" options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]' onchange='' onclick="shortRest();"></iconbutton>
-              <iconbutton field="Long Rest" size='lg' variant="default" options='[{"icon": "IconBed", "label": "Long Rest", "value": "longrest"}]' onchange='' onclick="longRest();"></iconbutton>
-            </div>
-          </div>
-        </div>
-        
-        <div style="width: 100%; display: flex; gap: 4px">
-          <numberfield width='40%' size='xs'  placeholder='0' field="xp" label="XP"></numberfield>
-          <numberfield width='40%' size='xs'  placeholder='0' field="xpNext" label="Next Level"></numberfield>
-          <numberfield width='20%' size='xs' placeholder='2' field='proficiencyBonus' label='P.B.' onchange="updateProficiencies(value);"></numberfield>
-        </div>
-      </div>
-    </div>
+	<div style="display: flex; flex-direction:column; margin-left: 4px; width: 100%">
+		<div style='display: flex; flex-direction: row; width: 100%'>
+			<div style='display: flex; flex-direction: column; width: 100%'>
+				<div style="width: 100%; display: flex; gap: 4px">
+					<numberfield icon='IconHeart' width='50%' placeholder='0' field='curhp' label='Hit Points' color='pink'>
+					</numberfield>
+					<numberfield icon='IconHeartFilled' width='50%' placeholder='0' field='hitpoints' label='Max Hit Points'
+						color='green'></numberfield>
+					<div
+						style='justify: center; align-items: center; margin-top: auto; display: flex; flex-direction: column; gap: 2px;'>
+						<label textalign='center' label='Heroic Inspiration' size='xs'></label>
+						<iconbutton field="inspiration" size='sm' color="yellow" variant="light"
+							options='[{"icon": "IconStars", "label": "Heroic Inspiration: No", "value": "false"},{"icon": "IconStarsFilled", "label": "Heroic Inspiration: Yes", "value": "true"}]'
+							onchange='' onclick=''></iconbutton>
+					</div>
+				</div>
 
-    <div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
-      <stringfield width='100%' size='xs' field='className' placeholder='Drag and drop a Class to add a Level' label='Class & Level'></stringfield>
-      <list width='30%' height='32px' hidden='true' listtype="class_list" field='classes' onchange='onDeleteClass();'></list>
-    </div>
+				<div style="width: 100%; display: flex; gap: 4px">
+					<numberfield width='50%' placeholder='0' field='tempHp' label='Temporary Hit Points' color='blue'>
+					</numberfield>
+					<numberfield icon='IconShield' width='50%' placeholder='0' field='ac' label='Armor Class' color='blue'>
+					</numberfield>
+				</div>
 
-    <div style='width: 100%'>
-      <stringfield size='xs' field='speciesName' placeholder='Drag and drop your chosen Species' label='Species'></stringfield>
-    </div>
+				<div style="width: 100%; display: flex; gap: 4px; margin-top: 16px">
+					<div style='display: flex; gap: 4px; align-items: center'>
+						<label size='xs' label='Hit Dice' color='red'></label>
+					</div>
+					<div style='display: flex; gap: 4px; align-items: flex-end'>
+						<indicator position='top-center' size='sm' field='d6HitDie' color='red' defaultvalue=''>
+							<iconbutton field="Roll D6 Hit Die" size='lg' variant="default"
+								options='[{"icon": "D6", "label": "Roll D6 Hit Die", "value": "roll"}]' onchange=''
+								onclick="rollHitDie('D6');"></iconbutton>
+						</indicator>
+						<indicator position='top-center' size='sm' field='d8HitDie' color='red' defaultvalue=''>
+							<iconbutton field="Roll D8 Hit Die" size='lg' variant="default"
+								options='[{"icon": "D8", "label": "Roll D8 Hit Die", "value": "roll"}]' onchange=''
+								onclick="rollHitDie('D8');"></iconbutton>
+						</indicator>
+						<indicator position='top-center' size='sm' field='d10HitDie' color='red' defaultvalue=''>
+							<iconbutton field="Roll D10 Hit Die" size='lg' variant="default"
+								options='[{"icon": "D10", "label": "Roll D10 Hit Die", "value": "roll"}]' onchange=''
+								onclick="rollHitDie('D10');"></iconbutton>
+						</indicator>
+						<indicator position='top-center' size='sm' field='d12HitDie' color='red' defaultvalue=''>
+							<iconbutton field="Roll D10 Hit Die" size='lg' variant="default"
+								options='[{"icon": "D12", "label": "Roll D12 Hit Die", "value": "roll"}]' onchange=''
+								onclick="rollHitDie('D12');"></iconbutton>
+						</indicator>
+					</div>
+					<div style='margin-left: auto; display: flex; flex-direction: column;'>
 
-    <div style='width: 100%'>
-      <stringfield size='xs' field='backgroundName' placeholder='Drag and drop your chosen Background' label='Background'></stringfield>
-    </div>
-  
-    <div style='display: flex; flex-direction: row;'>
-      <div style='width: 50%'>
-        <stringfield size='xs' field='senses' label='Senses' placeholder='None'></stringfield>
-      </div>
-      <div style='width: 30%; margin-left: 4px'>
-        <stringfield size='xs' field='size' placeholder='Medium' label='Size'></stringfield>
-      </div>
-      <div style='width: 20%; margin-left: 4px'>
-        <stringfield size='xs' field='speed' placeholder='0 ft' label='Speed'></stringfield>
-      </div>
-    </div>
+						<div style='display: flex; gap: 4px; align-items: center'>
+							<label size='xs' label='Rest'></label>
+							<iconbutton field="Short Rest" size='lg' variant="default"
+								options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]' onchange=''
+								onclick="shortRest();"></iconbutton>
+							<iconbutton field="Long Rest" size='lg' variant="default"
+								options='[{"icon": "IconBed", "label": "Long Rest", "value": "longrest"}]' onchange=''
+								onclick="longRest();"></iconbutton>
+						</div>
+					</div>
+				</div>
+
+				<div style="width: 100%; display: flex; gap: 4px">
+					<numberfield width='40%' size='xs' placeholder='0' field="xp" label="XP"></numberfield>
+					<numberfield width='40%' size='xs' placeholder='0' field="xpNext" label="Next Level"></numberfield>
+					<numberfield width='20%' size='xs' placeholder='2' field='proficiencyBonus' label='P.B.'
+						onchange="updateProficiencies(value);"></numberfield>
+				</div>
+			</div>
+		</div>
+
+		<div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
+			<stringfield width='100%' size='xs' field='className' placeholder='Drag and drop a Class to add a Level'
+				label='Class & Level'></stringfield>
+			<list width='30%' height='32px' hidden='true' listtype="class_list" field='classes' onchange='onDeleteClass();'>
+			</list>
+		</div>
+
+		<div style='width: 100%'>
+			<stringfield size='xs' field='speciesName' placeholder='Drag and drop your chosen Species' label='Species'>
+			</stringfield>
+		</div>
+
+		<div style='width: 100%'>
+			<stringfield size='xs' field='backgroundName' placeholder='Drag and drop your chosen Background'
+				label='Background'></stringfield>
+		</div>
+
+		<div style='display: flex; flex-direction: row;'>
+			<div style='width: 50%'>
+				<stringfield size='xs' field='senses' label='Senses' placeholder='None'></stringfield>
+			</div>
+			<div style='width: 30%; margin-left: 4px'>
+				<stringfield size='xs' field='size' placeholder='Medium' label='Size'></stringfield>
+			</div>
+			<div style='width: 20%; margin-left: 4px'>
+				<stringfield size='xs' field='speed' placeholder='0 ft' label='Speed'></stringfield>
+			</div>
+		</div>
 
 
-    <div style='display: flex; flex-direction:row; gap: 4px; width: 100%'>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-	      <div style='margin-top: auto; margin-bottom: 2px;'>
-			<iconbutton field="strengthProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'strength');" onclick=''></iconbutton>
-		  </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='strengthSave' label='Strengh' onclick="rollSave('strength');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Strength Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('strength');"></iconbutton>
-          </div>
-        </div>
-      </div>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-		  <div style='margin-top: auto; margin-bottom: 2px;'>
-			<iconbutton field="dexterityProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'dexterity');" onclick=''></iconbutton>
-		  </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='dexteritySave' label='Dexterity' onclick="rollSave('dexterity');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Dexterity Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('dexterity');"></iconbutton>
-          </div>
-        </div>
-      </div>
-    </div>
-	
-	<div style='margin-top: 4px; display: flex; flex-direction:row; gap: 4px; width: 100%'>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-	      <div style='margin-top: auto; margin-bottom: 2px;'>
-	        <iconbutton field="constitutionProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'constitution');" onclick=''></iconbutton>
-		  </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='constitutionSave' label='Constitution' onclick="rollSave('constitution');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Constitution Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('constitution');"></iconbutton>
-          </div>
-        </div>
-      </div>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-		  <div style='margin-top: auto; margin-bottom: 2px;'>
-			<iconbutton field="intelligenceProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'intelligence');" onclick=''></iconbutton>
-		  </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='intelligenceSave' label='Intelligence' onclick="rollSave('intelligence');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Intelligence Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('intelligence');"></iconbutton>
-          </div>
-        </div>
-      </div>
-    </div>
-	
-  	<div style='margin-top: 4px; display: flex; flex-direction:row; gap: 4px; width: 100%'>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-		  <div style='margin-top: auto; margin-bottom: 2px;'>
-		    <iconbutton field="wisdomProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'wisdom');" onclick=''></iconbutton>
-		  </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='wisdomSave' label='Wisdom' onclick="rollSave('wisdom');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Wisdom Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('wisdom');"></iconbutton>
-          </div>
-        </div>
-      </div>
-      <div style='display: flex; flex-direction:column; width: 50%'>
-        <div style='display: flex; gap: 4px'>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="charismaProf" size='md' color="default" variant="default" options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]' onchange="setSave(value, 'charisma');" onclick=''></iconbutton>
-          </div>
-          <numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='charismaSave' label='Charisma' onclick="rollSave('charisma');"></numberfield>
-          <div style='margin-top: auto; margin-bottom: 2px;'>
-            <iconbutton field="Charisma Save" size='md' color="default" variant="default" options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('charisma');"></iconbutton>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+		<div style='display: flex; flex-direction:row; gap: 4px; width: 100%'>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="strengthProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'strength');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='strengthSave' label='Strengh'
+						onclick="rollSave('strength');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Strength Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('strength');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="dexterityProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'dexterity');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='dexteritySave' label='Dexterity'
+						onclick="rollSave('dexterity');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Dexterity Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('dexterity');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div style='margin-top: 4px; display: flex; flex-direction:row; gap: 4px; width: 100%'>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="constitutionProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'constitution');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='constitutionSave'
+						label='Constitution' onclick="rollSave('constitution');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Constitution Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('constitution');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="intelligenceProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'intelligence');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='intelligenceSave'
+						label='Intelligence' onclick="rollSave('intelligence');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Intelligence Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('intelligence');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div style='margin-top: 4px; display: flex; flex-direction:row; gap: 4px; width: 100%'>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="wisdomProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'wisdom');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='wisdomSave' label='Wisdom'
+						onclick="rollSave('wisdom');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Wisdom Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('wisdom');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+			<div style='display: flex; flex-direction:column; width: 50%'>
+				<div style='display: flex; gap: 4px'>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="charismaProf" size='md' color="default" variant="default"
+							options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+							onchange="setSave(value, 'charisma');" onclick=''></iconbutton>
+					</div>
+					<numberfield placeholder='+0' showsign='true' width="100%" size='xs' field='charismaSave' label='Charisma'
+						onclick="rollSave('charisma');"></numberfield>
+					<div style='margin-top: auto; margin-bottom: 2px;'>
+						<iconbutton field="Charisma Save" size='md' color="default" variant="default"
+							options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]' onclick="rollSave('charisma');">
+						</iconbutton>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 <stringfield field="hpByLevel" hidden='true'></stringfield>

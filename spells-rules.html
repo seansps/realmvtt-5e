@@ -1,0 +1,103 @@
+<label label="Rules Elements" size='lg'></label>
+<div style='display: flex; flex-direction: column; gap: 4px'>
+  <checkbox size='md' field="isAttack" label="Is Attack" textalign='right'></checkbox>
+  <div style='display: flex; gap: 8px; align-items: center'>
+    <checkbox size='md' field="isSave" label="Has Save" textalign='right'></checkbox>
+    <dropdown size='xs' field='savingThrow' placeholder='Select Saving Throw...'
+      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+    </dropdown>
+  </div>
+</div>
+
+<stringfield field="damage" label="Base Damage" placeholder='Enter Damage, if applicable...'></stringfield>
+
+<accordion field='damageHigherCantrip' label='Damage at Higher Character Levels (if Applicable Cantrip)'>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>5</th>
+        <th>
+          <stringfield field="damageCharacterLevel5" placeholder='Level 5 Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>11</th>
+        <th>
+          <stringfield field="damageCharacterLevel11" placeholder='Level 11 Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>17</th>
+        <th>
+          <stringfield field="damageCharacterLevel17" placeholder='Level 17 Damage...'></stringfield>
+        </th>
+      </tr>
+  </table>
+</accordion>
+
+<accordion field='damageHigher' label='Damage at Higher Spell Levels (if Applicable Spell)'>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>2</th>
+        <th>
+          <stringfield field="damageLevel2" placeholder='2nd Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>3</th>
+        <th>
+          <stringfield field="damageLevel3" placeholder='3rd Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>4</th>
+        <th>
+          <stringfield field="damageLevel4" placeholder='4th Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>5</th>
+        <th>
+          <stringfield field="damageLevel5" placeholder='5th Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>6</th>
+        <th>
+          <stringfield field="damageLevel6" placeholder='6th Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>7</th>
+        <th>
+          <stringfield field="damageLevel7" placeholder='7th Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>8</th>
+        <th>
+          <stringfield field="damageLevel8" placeholder='8th Level Damage...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>9</th>
+        <th>
+          <stringfield field="damageLevel9" placeholder='9th Level Damage...'></stringfield>
+        </th>
+      </tr>
+    </tbody>
+  </table>
+</accordion>
