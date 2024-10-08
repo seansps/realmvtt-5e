@@ -1,5 +1,3 @@
-hitpoints
---------------------------------------------------------------------------
 // Here we update the character that rolled with the result
 // And update the hpByLevelMap at record?.data?.hpByLevel
 const className = data?.roll?.metadata?.className;
@@ -16,7 +14,7 @@ if (className && newLevel && newHitDie && newHp && recordId) {
 	let hpToAdd = newHp + conMod;
 	if (hpToAdd < 0) { hpToAdd = 1; }
 	const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
-	const curHp  = parseInt(record?.data?.curhp || '0', 10); 
+	const curHp = parseInt(record?.data?.curhp || '0', 10);
 
 	// Set curhp and hitpoints
 	api.setValue('data.hitpoints', curHpMax + hpToAdd);
