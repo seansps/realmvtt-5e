@@ -1,3 +1,53 @@
+<script>
+  function updateSpellLevels() {
+    api.setHidden('level9spellsOpen', true);
+    api.setHidden('level8spellsOpen', true);
+    api.setHidden('level7spellsOpen', true);
+    api.setHidden('level6spellsOpen', true);
+    api.setHidden('level5spellsOpen', true);
+    api.setHidden('level4spellsOpen', true);
+    api.setHidden('level3spellsOpen', true);
+    api.setHidden('level2spellsOpen', true);
+    api.setHidden('level1spellsOpen', true);
+    api.setHidden('cantripsOpen', true);
+
+    if (value === undefined || value === null) {
+      return;
+    }
+
+    if (value >= 9) {
+      api.setHidden('level9spellsOpen', false);
+    }
+    if (value >= 8) {
+      api.setHidden('level8spellsOpen', false);
+    }
+    if (value >= 7) {
+      api.setHidden('level7spellsOpen', false);
+    }
+    if (value >= 6) {
+      api.setHidden('level6spellsOpen', false);
+    }
+    if (value >= 5) {
+      api.setHidden('level5spellsOpen', false);
+    }
+    if (value >= 4) {
+      api.setHidden('level4spellsOpen', false);
+    }
+    if (value >= 3) {
+      api.setHidden('level3spellsOpen', false);
+    }
+    if (value >= 2) {
+      api.setHidden('level2spellsOpen', false);
+    }
+    if (value >= 1) {
+      api.setHidden('level1spellsOpen', false);
+    }
+    if (value >= 0) {
+      api.setHidden('cantripsOpen', false);
+    }
+  }
+</script>
+
 <!-- <div>
   <button field="rollInitBtn" icon="D20" label="Initiative" variant='outlined' color="primary" onclick='rollInit();'></button>
 </div> -->
@@ -7,6 +57,75 @@
     field='inventory_list' label='Attacks' /></list>
 </div>
  -->
- <div style='margin-top: 4px;'>
+<div style='margin-top: 4px;'>
   <label label="Spells" size='md' textalign="center"></label>
 </div>
+
+<div style='margin-bottom: 4px;'>
+  <accordion size="sm" field="casterSettingsOpen" label="Caster Settings" variant="separated">
+    <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
+      onchange='updateSpellLevels();'
+      options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
+    </dropdown>
+  </accordion>
+</div>
+
+<accordion hidden="true" size="sm" field="cantripsOpen" label="Cantrips">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='cantrips' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level1spellsOpen" label="Level 1">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells1' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level2spellsOpen" label="Level 2">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells2' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level3spellsOpen" label="Level 3">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells3' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level4spellsOpen" label="Level 4">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells4' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level5spellsOpen" label="Level 5">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells5' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level6spellsOpen" label="Level 6">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells6' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level7spellsOpen" label="Level 7">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells7' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level8spellsOpen" label="Level 8">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells8' variant='striped'></list>
+  </div>
+</accordion>
+
+<accordion hidden="true" size="sm" field="level9spellsOpen" label="Level 9">
+  <div style='width: 100%'>
+    <list listtype="spell_list" field='spells9' variant='striped'></list>
+  </div>
+</accordion>
