@@ -1,0 +1,30 @@
+<script>
+  function castSpell() {
+    // TODO
+  }
+</script>
+
+<div style='display: column; gap: 2px; width: 100%'>
+  <div style='display: flex; gap: 2px; width: 100%'>
+    <div style='width: 30px; height: 30px; min-width: 30px; min-height: 30px;'>
+      <portrait field="portrait"></portrait>
+    </div>
+    <namefield size='xs' width='100%' variant='unstyled' field="namefield"></namefield>
+    <stringfield size='xs' field="castingTime" label='Casting Time' variant='tooltip'></stringfield>
+    <stringfield size='xs' field="range" label='Range' variant='tooltip'></stringfield>
+    <div style='margin-left: auto'>
+      <button size='xs' radius='xs' field="castBtn" label="Cast" variant='light' onclick='castSpell();'></button>
+    </div>
+  </div>
+  <accordion size='xs' field="Description" label="Description">
+    <div style='display: flex; gap: 4px;'>
+      <stringfield size='xs' width=50% field="components" label='Components'></stringfield>
+      <stringfield size='xs' width=50% field="duration" label='Duration'></stringfield>
+    </div>
+    <div style='margin-top: 4px'>
+      <richtextfield field="description"></richtextfield>
+    </div>
+  </accordion>
+</div>
+
+<numberfield hidden='true' field="level"></numberfield>

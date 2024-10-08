@@ -1,0 +1,114 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+    <div style='display: flex; gap: 4px; width: 100%'>
+      <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+	    <portrait field="portrait"></portrait>
+	  </div>
+    <div>
+  	<div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
+          <dropdown field="level" label="Spell Level" placeholder='Select level...' options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'></dropdown>
+          <dropdown field="school" label="School of Magic" placeholder='Select school...' options='[{"label": "Abjuration", "value": "Abjuration"}, {"label": "Conjuration", "value": "Conjuration"}, {"label": "Divination", "value": "Divination"}, {"label": "Enchantment", "value": "Enchantment"}, {"label": "Evocation", "value": "Evocation"}, {"label": "Illusion", "value": "Illusion"}, {"label": "Necromancy", "value": "Necromancy"}, {"label": "Transmutation", "value": "Transmutation"}]'></dropdown>
+      </div>
+      <dropdown multiselect='12' field="spellLists" placeholder='Select classes...' label="Spell Lists" options='[{"label": "Bard", "value": "Bard"}, {"label": "Cleric", "value": "Cleric"}, {"label": "Druid", "value": "Druid"}, {"label": "Paladin", "value": "Paladin"}, {"label": "Ranger", "value": "Ranger"}, {"label": "Sorcerer", "value": "Sorcerer"}, {"label": "Warlock", "value": "Warlock"}, {"label": "Wizard", "value": "Wizard"}]'></dropdown>
+    </div>
+  </div>
+
+  <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
+    <stringfield width="50%" field="castingTime" label="Casting Time"></stringfield>
+    <stringfield width="50%" field="range" label="Range"></stringfield>
+  </div>
+  <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
+    <stringfield width="50%" field="components" label="Components"></stringfield>
+    <stringfield width="50%" field="duration" label="Duration"></stringfield>
+  </div>
+  
+  <div style='margin-top: 8px; margin-bottom: 8px'>
+    <divider label='Description'></divider>
+  </div>
+
+  <richtextfield field="Description" label="Description" placeholder='Enter Subclass description...'></richtextfield>
+</div>
+
+
+----  Rules ----
+
+<label label="Rules Elements" size='lg'></label>
+<div style='display: flex; flex-direction: column; gap: 4px'>
+  <checkbox size='md' field="isAttack" label="Is Attack" textalign='right'></checkbox>
+  <div style='display: flex; gap: 8px; align-items: center'>
+    <checkbox size='md' field="isSave" label="Has Save" textalign='right'></checkbox>
+    <dropdown size='xs' field='savingThrow' placeholder='Select Saving Throw...' options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'></dropdown>
+  </div>
+</div>
+
+<stringfield field="damage" label="Base Damage" placeholder='Enter Damage, if applicable...'></stringfield>
+
+<accordion field='damageHigherCantrip' label='Damage at Higher Character Levels (if Applicable Cantrip)'>
+<table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>5</th>
+        <th><stringfield field="damageCharacterLevel5"  placeholder='Level 5 Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>11</th>
+        <th><stringfield field="damageCharacterLevel11"  placeholder='Level 11 Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>17</th>
+        <th><stringfield field="damageCharacterLevel17"  placeholder='Level 17 Damage...'></stringfield></th>
+      </tr>
+  </table>
+</accordion>
+
+<accordion field='damageHigher' label='Damage at Higher Spell Levels (if Applicable Spell)'>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>2</th>
+        <th><stringfield field="damageLevel2"  placeholder='2nd Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>3</th>
+        <th><stringfield field="damageLevel3"  placeholder='3rd Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>4</th>
+        <th><stringfield field="damageLevel4"  placeholder='4th Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>5</th>
+        <th><stringfield field="damageLevel5"  placeholder='5th Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>6</th>
+        <th><stringfield field="damageLevel6"  placeholder='6th Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>7</th>
+        <th><stringfield field="damageLevel7"  placeholder='7th Level Damage...'></stringfield></th>
+      </tr>
+	  <tr>
+        <th>8</th>
+        <th><stringfield field="damageLevel8"  placeholder='8th Level Damage...'></stringfield></th>
+      </tr>
+	   <tr>
+        <th>9</th>
+        <th><stringfield field="damageLevel9"  placeholder='9th Level Damage...'></stringfield></th>
+      </tr>
+    </tbody>
+  </table>
+</accordion>
+
+

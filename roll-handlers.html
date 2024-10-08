@@ -1,0 +1,43 @@
+hitpoints
+--------------------------------------------------------------------------
+// Here we update the character that rolled with the result
+// And update the hpByLevelMap at record?.data?.hpByLevel
+const className = data?.roll?.metadata?.className;
+const newLevel = data?.roll?.metadata?.newLevel;
+const newHitDie = data?.roll?.metadata?.newHitDie;
+const newHp = data?.roll?.total;
+
+const recordId = record?._id;
+const hpByLevel = JSON.parse(record?.data?.hpByLevel || '[]');
+
+if (className && newLevel && newHitDie && newHp && recordId) {
+	const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
+	// Add newHp + conMod
+	let hpToAdd = newHp + conMod;
+	if (hpToAdd < 0) { hpToAdd = 1; }
+	const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
+	const curHp  = parseInt(record?.data?.curhp || '0', 10); 
+
+	// Set curhp and hitpoints
+	api.setValue('data.hitpoints', curHpMax + hpToAdd);
+	api.setValue('data.curhp', curHp + hpToAdd);
+
+	// Set hpByLevel map
+	hpByLevel.push({
+		className: className,
+		level: newLevel,
+		hitDie: newHitDie,
+		hp: newHp
+	});
+	api.setValue('data.hpByLevel', JSON.stringify(hpByLevel));
+
+	// Add a hitdie
+	const hitDieField = `${newHitDie}HitDie`;
+	const numHitDie = parseInt(record.data[hitDieField] || '0', 10);
+	api.setValue(`data.${hitDieField}`, numHitDie + 1);
+
+	// Send a Message
+	const newHpMax = curHpMax + hpToAdd;
+	const characterName = record?.name || 'New Character';
+	api.sendMessage(`Added 1 Level of ${className} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHpMax}`, data.roll, [], []);
+}
