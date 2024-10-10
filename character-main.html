@@ -242,7 +242,7 @@
 		});
 	}
 
-	function onDrop(type, recordLink) {
+	function onDropClass(type, recordLink) {
 		// Check if already on Character
 		const classes = record?.data?.classes || [];
 		const className = recordLink.tooltip;
@@ -333,6 +333,12 @@
 		const hitDie = recordLink?.value?.data?.hitDie;
 		if (hitDie !== undefined && hitDie !== '') {
 			updateHitPoints(className, newLevel, level, hitDie, promptSubclass);
+		}
+	}
+
+	function onDrop(type, recordLink) {
+		if (type === 'class') {
+			onDropClass(type, recordLink);
 		}
 	}
 
