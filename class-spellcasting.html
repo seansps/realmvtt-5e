@@ -1,0 +1,907 @@
+<label label='Caster Type' size=md></label>
+<div style='display: flex; flex-direction: column; gap: 4px; margin-left: 4px'>
+  <radio field="casterType" label="None" textalign='right'></radio>
+  <radio field="casterType" label="Spellcasting" textalign='right'></radio>
+  <radio field="casterType" label="Pact Magic" textalign='right'></radio>
+</div>
+
+<div style='margin-top: 8px; margin-bottom: 8px'>
+  <divider label='Spellcasting'></divider>
+</div>
+
+<label label='Spell Slots by Level'></label>
+
+<table>
+  <thead>
+    <tr>
+      <th>Level</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        1
+      </td>
+      <td>
+        <numberfield field='level1spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        2
+      </td>
+      <td>
+        <numberfield field='level2spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        3
+      </td>
+      <td>
+        <numberfield field='level3spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        4
+      </td>
+      <td>
+        <numberfield field='level4spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        5
+      </td>
+      <td>
+        <numberfield field='level5spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        6
+      </td>
+      <td>
+        <numberfield field='level6spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        7
+      </td>
+      <td>
+        <numberfield field='level7spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        8
+      </td>
+      <td>
+        <numberfield field='level8spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        9
+      </td>
+      <td>
+        <numberfield field='level9spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        10
+      </td>
+      <td>
+        <numberfield field='level10spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        11
+      </td>
+      <td>
+        <numberfield field='level11spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        12
+      </td>
+      <td>
+        <numberfield field='level12spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        13
+      </td>
+      <td>
+        <numberfield field='level13spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        14
+      </td>
+      <td>
+        <numberfield field='level14spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        15
+      </td>
+      <td>
+        <numberfield field='level15spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        16
+      </td>
+      <td>
+        <numberfield field='level16spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        17
+      </td>
+      <td>
+        <numberfield field='level17spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        18
+      </td>
+      <td>
+        <numberfield field='level18spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        19
+      </td>
+      <td>
+        <numberfield field='level19spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        20
+      </td>
+      <td>
+        <numberfield field='level20spell1' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell2' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell3' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell4' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell5' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell6' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell7' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell8' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level20spell9' size='xs' width='50px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div margin-top: 8px>
+  <label label='Cantrips and Prepared Spells by Level'></label>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Level</th>
+      <th>Cantrips</th>
+      <th>Prepared Spells</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        1
+      </td>
+      <td>
+        <numberfield field='level1cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level1spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        2
+      </td>
+      <td>
+        <numberfield field='level2cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level2spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        3
+      </td>
+      <td>
+        <numberfield field='level3cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level3spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        4
+      </td>
+      <td>
+        <numberfield field='level4cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level4spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        5
+      </td>
+      <td>
+        <numberfield field='level5cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level5spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        6
+      </td>
+      <td>
+        <numberfield field='level6cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level6spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        7
+      </td>
+      <td>
+        <numberfield field='level7cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level7spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        8
+      </td>
+      <td>
+        <numberfield field='level8cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level8spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        9
+      </td>
+      <td>
+        <numberfield field='level9cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level9spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        10
+      </td>
+      <td>
+        <numberfield field='level10cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level10spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        11
+      </td>
+      <td>
+        <numberfield field='level11cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level11spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        12
+      </td>
+      <td>
+        <numberfield field='level12cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level12spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        13
+      </td>
+      <td>
+        <numberfield field='level13cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level13spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        14
+      </td>
+      <td>
+        <numberfield field='level14cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level14spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        15
+      </td>
+      <td>
+        <numberfield field='level15cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level15spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        16
+      </td>
+      <td>
+        <numberfield field='level16cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level16spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        17
+      </td>
+      <td>
+        <numberfield field='level17cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level17spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        18
+      </td>
+      <td>
+        <numberfield field='level18cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level18spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        19
+      </td>
+      <td>
+        <numberfield field='level19cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level19spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        20
+      </td>
+      <td>
+        <numberfield field='level20cantrips' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+      <td>
+        <numberfield field='level29spells' size='xs' width='100px' placeholder='--'></numberfield>
+      </td>
+    </tr>
+  </tbody>
+</table>
