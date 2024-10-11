@@ -1,50 +1,44 @@
 <script>
   function updateSpellLevels() {
-    api.setHidden('level9spellsOpen', true);
-    api.setHidden('level8spellsOpen', true);
-    api.setHidden('level7spellsOpen', true);
-    api.setHidden('level6spellsOpen', true);
-    api.setHidden('level5spellsOpen', true);
-    api.setHidden('level4spellsOpen', true);
-    api.setHidden('level3spellsOpen', true);
-    api.setHidden('level2spellsOpen', true);
-    api.setHidden('level1spellsOpen', true);
-    api.setHidden('cantripsOpen', true);
+    api.setHidden(['cantripsOpen', 'level1spellsOpen', 'level2spellsOpen', 'level3spellsOpen', 'level4spellsOpen', 'level5spellsOpen', 'level6spellsOpen', 'level7spellsOpen', 'level8spellsOpen', 'level9spellsOpen'], true, () => {
+      if (value === undefined || value === null) {
+        return;
+      }
 
-    if (value === undefined || value === null) {
-      return;
-    }
+      const valuesToUnhide = [];
+      if (value >= 9) {
+        valuesToUnhide.push('level9spellsOpen');
+      }
+      if (value >= 8) {
+        valuesToUnhide.push('level8spellsOpen');
+      }
+      if (value >= 7) {
+        valuesToUnhide.push('level7spellsOpen');
+      }
+      if (value >= 6) {
+        valuesToUnhide.push('level6spellsOpen');
+      }
+      if (value >= 5) {
+        valuesToUnhide.push('level5spellsOpen');
+      }
+      if (value >= 4) {
+        valuesToUnhide.push('level4spellsOpen');
+      }
+      if (value >= 3) {
+        valuesToUnhide.push('level3spellsOpen');
+      }
+      if (value >= 2) {
+        valuesToUnhide.push('level2spellsOpen');
+      }
+      if (value >= 1) {
+        valuesToUnhide.push('level1spellsOpen');
+      }
+      if (value >= 0) {
+        valuesToUnhide.push('cantripsOpen');
+      }
 
-    if (value >= 9) {
-      api.setHidden('level9spellsOpen', false);
-    }
-    if (value >= 8) {
-      api.setHidden('level8spellsOpen', false);
-    }
-    if (value >= 7) {
-      api.setHidden('level7spellsOpen', false);
-    }
-    if (value >= 6) {
-      api.setHidden('level6spellsOpen', false);
-    }
-    if (value >= 5) {
-      api.setHidden('level5spellsOpen', false);
-    }
-    if (value >= 4) {
-      api.setHidden('level4spellsOpen', false);
-    }
-    if (value >= 3) {
-      api.setHidden('level3spellsOpen', false);
-    }
-    if (value >= 2) {
-      api.setHidden('level2spellsOpen', false);
-    }
-    if (value >= 1) {
-      api.setHidden('level1spellsOpen', false);
-    }
-    if (value >= 0) {
-      api.setHidden('cantripsOpen', false);
-    }
+      api.setHidden(valuesToUnhide, false);
+    });
   }
 </script>
 

@@ -256,6 +256,9 @@
 			});
 		}
 
+		// Unhide the classes list
+		api.setHidden('classes', false);
+
 		// Update the class / level string
 		let classLevels = record?.data?.classLevels || '';
 		let newLevel = 1;
@@ -277,20 +280,21 @@
 			classLevels += `${className} ${newLevel}`;
 		}
 
-		// Update the class strings
-		api.setValue('data.classLevels', classLevels);
-		api.setValue('data.className', classLevels);
+		// Map of values to set in bulk later
+		const valuesToSet = {
+			'data.classLevels': classLevels,
+			'data.className': classLevels,
+		};
 
 		// Update the level total
 		const level = getTotalLevel(classLevels);
-		api.setValue('data.level', level);
+		valuesToSet['data.level'] = level;
 
 		// Set Next Level XP
 		const nextLevelXp = getNextLevelXp(level);
-		api.setValue('data.xpNext', nextLevelXp);
+		valuesToSet['data.xpNext'] = nextLevelXp;
 
-		// Unhide the classes list
-		api.setHidden('classes', false);
+		api.setValues(valuesToSet);
 
 		// TODO get class proficiencies and set if needed
 
