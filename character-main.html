@@ -682,15 +682,13 @@
 			</div>
 			<div style="display:flex; flex-direction: column;">
 				<div style="display:flex; flex-direction: row; gap: 4px">
-					<checkbox label='Failure&nbsp;&nbsp;&nbsp;' field="deathSaveFailure1" color='red' radius='md'></checkbox>
-					<checkbox field="deathSaveFailure2" color='red' radius='md'></checkbox>
-					<checkbox field="deathSaveFailure3" color='red' radius='md'></checkbox>
+					<label label='Failure&nbsp;&nbsp;&nbsp;' size='xs'></label>
+					<counter color='red' field='deathSaveFailures' maxvalue='3' size='xs'></counter>
 				</div>
 
 				<div style="margin-top: 8px; display:flex; flex-direction: row; gap: 4px">
-					<checkbox label='Success' field="deathSaveSuccess1" color='green' radius='md'></checkbox>
-					<checkbox field="deathSaveSuccess2" color='green' radius='md'></checkbox>
-					<checkbox field="deathSaveSuccess3" color='green' radius='md'></checkbox>
+					<label label='Success' size='xs'></label>
+					<counter color='green' field='deathSaveSuccesses' maxvalue='3' size='xs'></counter>
 				</div>
 			</div>
 		</div>
