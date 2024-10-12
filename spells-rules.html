@@ -11,6 +11,17 @@
 
 <stringfield field="damage" label="Base Damage" placeholder='Enter Damage, if applicable...'></stringfield>
 
+<div style='margin-top: 4px;'>
+  <stringfield field="healing" label="Base Healing" placeholder='Enter Healing, if applicable...'></stringfield>
+</div>
+
+<div style='margin-top: 4px; margin-bottom: 4px'>
+  <dropdown size='sm' field="effects" label="Effects" searchable='true' multiselect='5'
+    description='Effects that this spell can apply' optionsquery='{"type": "effects", "query": {}}'
+    placeholder='Select Effects...'>
+  </dropdown>
+</div>
+
 <accordion field='damageHigherCantrip' label='Damage at Higher Character Levels (if Applicable Cantrip)'>
   <table>
     <thead>
@@ -96,6 +107,67 @@
         <th>9</th>
         <th>
           <stringfield field="damageLevel9" placeholder='9th Level Damage...'></stringfield>
+        </th>
+      </tr>
+    </tbody>
+  </table>
+</accordion>
+
+<accordion field='healingHigher' label='Healing at Higher Spell Levels (if Applicable Spell)'>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Healing</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>2</th>
+        <th>
+          <stringfield field="healingLevel2" placeholder='2nd Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>3</th>
+        <th>
+          <stringfield field="healingLevel3" placeholder='3rd Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>4</th>
+        <th>
+          <stringfield field="healingLevel4" placeholder='4th Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>5</th>
+        <th>
+          <stringfield field="healingLevel5" placeholder='5th Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>6</th>
+        <th>
+          <stringfield field="healingLevel6" placeholder='6th Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>7</th>
+        <th>
+          <stringfield field="healingLevel7" placeholder='7th Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>8</th>
+        <th>
+          <stringfield field="healingLevel8" placeholder='8th Level Healing...'></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>9</th>
+        <th>
+          <stringfield field="healingLevel9" placeholder='9th Level Healing...'></stringfield>
         </th>
       </tr>
     </tbody>
