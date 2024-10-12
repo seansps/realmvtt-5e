@@ -40,6 +40,18 @@
       api.setHidden(valuesToUnhide, false);
     });
   }
+
+  function canAddSpell(spellLevel) {
+    // Return true if the given spell being added can be added to the given spell list
+    const levelOfSpell = parseInt(value?.data?.level || '0', 10);
+    const levelOfList = parseInt(spellLevel, 10);
+    if (levelOfSpell === 0 || levelOfList === 0) {
+      // Cantrips can only go in the cantrips list
+      return levelOfList === levelOfSpell;
+    }
+    // Otherwise, only spells of the given level or lower are allowed
+    return levelOfSpell <= levelOfList;
+  }
 </script>
 
 <!-- <div>
@@ -66,60 +78,60 @@
 
 <accordion hidden="true" size="sm" field="cantripsOpen" label="Cantrips">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='cantrips' variant='striped'></list>
+    <list listtype="spell_list" field='cantrips' variant='striped' allowadd="return canAddSpell('0');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level1spellsOpen" label="Level 1">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells1' variant='striped'></list>
+    <list listtype="spell_list" field='spells1' variant='striped' allowadd="return canAddSpell('1');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level2spellsOpen" label="Level 2">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells2' variant='striped'></list>
+    <list listtype="spell_list" field='spells2' variant='striped' allowadd="return canAddSpell('2');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level3spellsOpen" label="Level 3">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells3' variant='striped'></list>
+    <list listtype="spell_list" field='spells3' variant='striped' allowadd="return canAddSpell('3');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level4spellsOpen" label="Level 4">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells4' variant='striped'></list>
+    <list listtype="spell_list" field='spells4' variant='striped' allowadd="return canAddSpell('4');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level5spellsOpen" label="Level 5">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells5' variant='striped'></list>
+    <list listtype="spell_list" field='spells5' variant='striped' allowadd="return canAddSpell('5');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level6spellsOpen" label="Level 6">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells6' variant='striped'></list>
+    <list listtype="spell_list" field='spells6' variant='striped' allowadd="return canAddSpell('6');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level7spellsOpen" label="Level 7">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells7' variant='striped'></list>
+    <list listtype="spell_list" field='spells7' variant='striped' allowadd="return canAddSpell('7');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level8spellsOpen" label="Level 8">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells8' variant='striped'></list>
+    <list listtype="spell_list" field='spells8' variant='striped' allowadd="return canAddSpell('8');"></list>
   </div>
 </accordion>
 
 <accordion hidden="true" size="sm" field="level9spellsOpen" label="Level 9">
   <div style='width: 100%'>
-    <list listtype="spell_list" field='spells9' variant='striped'></list>
+    <list listtype="spell_list" field='spells9' variant='striped' allowadd="return canAddSpell('9');"></list>
   </div>
 </accordion>
