@@ -2,6 +2,25 @@
   function castSpell() {
     // TODO
   }
+
+
+  // Returns the options for upcasting a spell
+  function getLevelOptions() {
+    const iconButtonOptions = [
+      { "icon": "IconCircleNumber1", "label": "Level 1", "value": 1 },
+      { "icon": "IconCircleNumber2", "label": "Level 2", "value": 2 },
+      { "icon": "IconCircleNumber3", "label": "Level 3", "value": 3 },
+      { "icon": "IconCircleNumber4", "label": "Level 4", "value": 4 },
+      { "icon": "IconCircleNumber5", "label": "Level 5", "value": 5 },
+      { "icon": "IconCircleNumber6", "label": "Level 6", "value": 6 },
+      { "icon": "IconCircleNumber7", "label": "Level 7", "value": 7 },
+      { "icon": "IconCircleNumber8", "label": "Level 8", "value": 8 },
+      { "icon": "IconCircleNumber9", "label": "Level 9", "value": 9 },
+    ]
+
+    const spellLevel = parseInt(value?.data?.level, 10);
+    return iconButtonOptions.filter(option => option.value >= spellLevel);
+  }
 </script>
 
 <div style='display: column; gap: 2px; width: 100%'>
@@ -12,6 +31,9 @@
     <namefield size='xs' width='100%' variant='unstyled' field="namefield"></namefield>
     <stringfield size='xs' field="castingTime" label='Casting Time' variant='tooltip'></stringfield>
     <stringfield size='xs' field="range" label='Range' variant='tooltip'></stringfield>
+    <div style='margin-top: auto; margin-bottom: auto'>
+      <iconbutton size='sm' field="upcastLevel" variant='light' getoptions='return getLevelOptions();'></iconbutton>
+    </div>
     <div style='margin-left: auto'>
       <button size='xs' radius='xs' field="castBtn" label="Cast" variant='light' onclick='castSpell();'></button>
     </div>
