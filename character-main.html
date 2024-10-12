@@ -165,6 +165,36 @@
 		return 9;
 	}
 
+	// Get the number of spell slots for a given level caster level
+	// and spell slot level
+	function getSpellSlotCount(spellCasterLevel, level) {
+		const spellSlotsByLevel = [
+			[0, 0, 0, 0, 0, 0, 0, 0, 0], // Level 0
+			[2, 0, 0, 0, 0, 0, 0, 0, 0], // Level 1
+			[3, 0, 0, 0, 0, 0, 0, 0, 0], // Level 2	
+			[4, 2, 0, 0, 0, 0, 0, 0, 0], // Level 3
+			[4, 3, 0, 0, 0, 0, 0, 0, 0], // Level 4
+			[4, 3, 2, 0, 0, 0, 0, 0, 0], // Level 5
+			[4, 3, 3, 0, 0, 0, 0, 0, 0], // Level 6
+			[4, 3, 3, 1, 0, 0, 0, 0, 0], // Level 7
+			[4, 3, 3, 2, 0, 0, 0, 0, 0], // Level 8
+			[4, 3, 3, 3, 1, 0, 0, 0, 0], // Level 9
+			[4, 3, 3, 3, 2, 0, 0, 0, 0], // Level 10
+			[4, 3, 3, 3, 2, 1, 0, 0, 0], // Level 11
+			[4, 3, 3, 3, 2, 1, 0, 0, 0], // Level 12
+			[4, 3, 3, 3, 2, 1, 1, 0, 0], // Level 13
+			[4, 3, 3, 3, 2, 1, 1, 0, 0], // Level 14
+			[4, 3, 3, 3, 2, 1, 1, 1, 0], // Level 15
+			[4, 3, 3, 3, 2, 1, 1, 1, 0], // Level 16
+			[4, 3, 3, 3, 2, 1, 1, 1, 1], // Level 17
+			[4, 3, 3, 3, 3, 1, 1, 1, 1], // Level 18
+			[4, 3, 3, 3, 3, 2, 1, 1, 1], // Level 19
+			[4, 3, 3, 3, 3, 2, 2, 1, 1], // Level 20
+		]
+
+		return spellSlotsByLevel[spellCasterLevel][level];
+	}
+
 	function getNextLevelXp(level) {
 		if (level < 1) {
 			return 0;
@@ -227,6 +257,323 @@
 		return 355000;
 	}
 
+	// Show/Hide spell level lists
+	function showSpellLevels(spellLevel) {
+		console.log("Showing for spellLevel", spellLevel);
+		api.setHidden(['cantripsOpen', 'level1spellsOpen', 'level2spellsOpen', 'level3spellsOpen', 'level4spellsOpen', 'level5spellsOpen', 'level6spellsOpen', 'level7spellsOpen', 'level8spellsOpen', 'level9spellsOpen'], true, () => {
+			if (spellLevel === undefined || spellLevel === null) {
+				return;
+			}
+
+			const valuesToUnhide = [];
+			if (spellLevel >= 9) {
+				valuesToUnhide.push('level9spellsOpen');
+			}
+			if (spellLevel >= 8) {
+				valuesToUnhide.push('level8spellsOpen');
+			}
+			if (spellLevel >= 7) {
+				valuesToUnhide.push('level7spellsOpen');
+			}
+			if (spellLevel >= 6) {
+				valuesToUnhide.push('level6spellsOpen');
+			}
+			if (spellLevel >= 5) {
+				valuesToUnhide.push('level5spellsOpen');
+			}
+			if (spellLevel >= 4) {
+				valuesToUnhide.push('level4spellsOpen');
+			}
+			if (spellLevel >= 3) {
+				valuesToUnhide.push('level3spellsOpen');
+			}
+			if (spellLevel >= 2) {
+				valuesToUnhide.push('level2spellsOpen');
+			}
+			if (spellLevel >= 1) {
+				valuesToUnhide.push('level1spellsOpen');
+			}
+			if (spellLevel >= 0) {
+				valuesToUnhide.push('cantripsOpen');
+			}
+
+			api.setHidden(valuesToUnhide, false);
+		});
+	}
+
+	function showHideSpellSlots({
+		numSpellSlots1, numSpellSlots2, numSpellSlots3, numSpellSlots4, numSpellSlots5, numSpellSlots6, numSpellSlots7, numSpellSlots8, numSpellSlots9,
+		numPactMagic1, numPactMagic2, numPactMagic3, numPactMagic4, numPactMagic5, numPactMagic6, numPactMagic7, numPactMagic8, numPactMagic9
+	}) {
+		console.log("Showing spell slots", numSpellSlots1)
+		// Determine if we should hide/unhide spell slots and labels
+		const valuesToHide = [];
+		const valuesToUnhide = [];
+		if (numSpellSlots1 > 0 || numSpellSlots2 > 0
+			|| numSpellSlots3 > 0 || numSpellSlots4 > 0 ||
+			numSpellSlots5 > 0 || numSpellSlots6 > 0 ||
+			numSpellSlots7 > 0 || numSpellSlots8 > 0 ||
+			numSpellSlots9 > 0) {
+			valuesToUnhide.push('spellSlotsLabel');
+		}
+		else {
+			valuesToHide.push('spellSlotsLabel');
+		}
+		if (numSpellSlots1 > 0) {
+			valuesToUnhide.push('spellSlots1');
+		}
+		else {
+			valuesToHide.push('spellSlots1');
+		}
+		if (numSpellSlots2 > 0) {
+			valuesToUnhide.push('spellSlots2');
+		}
+		else {
+			valuesToHide.push('spellSlots2');
+		}
+		if (numSpellSlots3 > 0) {
+			valuesToUnhide.push('spellSlots3');
+		}
+		else {
+			valuesToHide.push('spellSlots3');
+		}
+		if (numSpellSlots4 > 0) {
+			valuesToUnhide.push('spellSlots4');
+		}
+		else {
+			valuesToHide.push('spellSlots4');
+		}
+		if (numSpellSlots5 > 0) {
+			valuesToUnhide.push('spellSlots5');
+		}
+		else {
+			valuesToHide.push('spellSlots5');
+		}
+		if (numSpellSlots6 > 0) {
+			valuesToUnhide.push('spellSlots6');
+		}
+		else {
+			valuesToHide.push('spellSlots6');
+		}
+		if (numSpellSlots7 > 0) {
+			valuesToUnhide.push('spellSlots7');
+		}
+		else {
+			valuesToHide.push('spellSlots7');
+		}
+		if (numSpellSlots8 > 0) {
+			valuesToUnhide.push('spellSlots8');
+		}
+		else {
+			valuesToHide.push('spellSlots8');
+		}
+		if (numSpellSlots9 > 0) {
+			valuesToUnhide.push('spellSlots9');
+		}
+		else {
+			valuesToHide.push('spellSlots9');
+		}
+
+		if (numPactMagic1 > 0 || numPactMagic2 > 0
+			|| numPactMagic3 > 0 || numPactMagic4 > 0 ||
+			numPactMagic5 > 0 || numPactMagic6 > 0 ||
+			numPactMagic7 > 0 || numPactMagic8 > 0 ||
+			numPactMagic9 > 0) {
+			valuesToUnhide.push('pactMagicLabel');
+		}
+		else {
+			valuesToHide.push('pactMagicLabel');
+		}
+		if (numPactMagic1 > 0) {
+			valuesToUnhide.push('pactMagic1');
+		}
+		else {
+			valuesToHide.push('pactMagic1');
+		}
+		if (numPactMagic2 > 0) {
+			valuesToUnhide.push('pactMagic2');
+		}
+		else {
+			valuesToHide.push('pactMagic2');
+		}
+		if (numPactMagic3 > 0) {
+			valuesToUnhide.push('pactMagic3');
+		}
+		else {
+			valuesToHide.push('pactMagic3');
+		}
+		if (numPactMagic4 > 0) {
+			valuesToUnhide.push('pactMagic4');
+		}
+		else {
+			valuesToHide.push('pactMagic4');
+		}
+		if (numPactMagic5 > 0) {
+			valuesToUnhide.push('pactMagic5');
+		}
+		else {
+			valuesToHide.push('pactMagic5');
+		}
+		if (numPactMagic6 > 0) {
+			valuesToUnhide.push('pactMagic6');
+		}
+		else {
+			valuesToHide.push('pactMagic6');
+		}
+		if (numPactMagic7 > 0) {
+			valuesToUnhide.push('pactMagic7');
+		}
+		else {
+			valuesToHide.push('pactMagic7');
+		}
+		if (numPactMagic8 > 0) {
+			valuesToUnhide.push('pactMagic8');
+		}
+		else {
+			valuesToHide.push('pactMagic8');
+		}
+		if (numPactMagic9 > 0) {
+			valuesToUnhide.push('pactMagic9');
+		}
+		else {
+			valuesToHide.push('pactMagic9');
+		}
+
+		api.setHidden(valuesToHide, true, () => {
+			api.setHidden(valuesToUnhide, false);
+		});
+	}
+
+	// Return a map of spell slot fields to set for the given list of 
+	// current classes, subclasses, the class object for the new class,
+	// and the total level of the character
+	function getSpellSlotFields(classes, subclasses, classString, classObj, level) {
+		// If we're multiclasses, we use the multiclass settings
+		const isMulticlass = classes.length > 1
+			|| (classes.find(c => c._id !== classObj._id));
+
+		const casterType = classObj?.data?.casterType || 'None';
+		const fieldsToSet = {};
+		let highestSpellLevel = 0;
+		if (!isMulticlass && casterType === 'Spellcasting') {
+			const spellSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(spellLevel => classObj?.data?.[`level${level}spell${spellLevel}`] || 0);
+			fieldsToSet[`data.numSpellSlots1`] = spellSlots[0];
+			fieldsToSet[`data.numSpellSlots2`] = spellSlots[1];
+			fieldsToSet[`data.numSpellSlots3`] = spellSlots[2];
+			fieldsToSet[`data.numSpellSlots4`] = spellSlots[3];
+			fieldsToSet[`data.numSpellSlots5`] = spellSlots[4];
+			fieldsToSet[`data.numSpellSlots6`] = spellSlots[5];
+			fieldsToSet[`data.numSpellSlots7`] = spellSlots[6];
+			fieldsToSet[`data.numSpellSlots8`] = spellSlots[7];
+			fieldsToSet[`data.numSpellSlots9`] = spellSlots[8];
+			// Calculate the highest spell level that has slots available
+			highestSpellLevel = spellSlots.findIndex(slots => slots === 0);
+			if (highestSpellLevel === -1) {
+				highestSpellLevel = 9;
+			}
+		}
+		else if (isMulticlass) {
+			// Get total levels of all spellcasting classes
+			let spellCasterLevel = 0;
+			classes.forEach(c => {
+				const className = c?.name;
+				const multiclassSetting = c?.data?.multiclassSpellcaster || 'No';
+				// Use regex to safely escape special characters in className and match the level number
+				if (multiclassSetting !== 'No') {
+					const safeClassName = className.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+					const regex = new RegExp(`(${safeClassName}\\s+(\\d+))`, 'i');
+					const classLevelMatch = classString.match(regex);
+					if (classLevelMatch && classLevelMatch[2]) {
+						const classLevel = parseInt(classLevelMatch[2], 10);
+						if (multiclassSetting.toLowerCase().includes('each')) {
+							spellCasterLevel += classLevel;
+						}
+						else if (multiclassSetting.toLowerCase().includes('half')) {
+							spellCasterLevel += Math.ceil(classLevel / 2);
+						}
+						else if (multiclassSetting.toLowerCase().includes('third')) {
+							// Check if subclass exists
+							const subclasesToCheck = (c?.data?.multiclassSpellcasterSubclass || '').split(',').map(s => s.trim());
+							if (subclasses.find(s => subclasesToCheck.includes(s?.name || ''))) {
+								spellCasterLevel += Math.floor(classLevel / 3);
+							}
+						}
+					}
+				}
+			});
+
+			if (spellCasterLevel > 0) {
+				console.log('multiclass spellCasterLevel', spellCasterLevel);
+				fieldsToSet[`data.numSpellSlots1`] = getSpellSlotCount(spellCasterLevel, 1);
+				fieldsToSet[`data.numSpellSlots2`] = getSpellSlotCount(spellCasterLevel, 2);
+				fieldsToSet[`data.numSpellSlots3`] = getSpellSlotCount(spellCasterLevel, 3);
+				fieldsToSet[`data.numSpellSlots4`] = getSpellSlotCount(spellCasterLevel, 4);
+				fieldsToSet[`data.numSpellSlots5`] = getSpellSlotCount(spellCasterLevel, 5);
+				fieldsToSet[`data.numSpellSlots6`] = getSpellSlotCount(spellCasterLevel, 6);
+				fieldsToSet[`data.numSpellSlots7`] = getSpellSlotCount(spellCasterLevel, 7);
+				fieldsToSet[`data.numSpellSlots8`] = getSpellSlotCount(spellCasterLevel, 8);
+				fieldsToSet[`data.numSpellSlots9`] = getSpellSlotCount(spellCasterLevel, 9);
+				highestSpellLevel = spellSlots.findIndex(slots => slots === 0);
+				if (highestSpellLevel === -1) {
+					highestSpellLevel = 9;
+				}
+			}
+		}
+
+		// If the Caster Type is Pact Magic, we just add the pact magic slots
+		if (casterType === 'Pact Magic') {
+			const pactSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(spellLevel => classObj?.data?.[`level${level}spell${spellLevel}`] || 0);
+			fieldsToSet[`data.numPactMagic1`] = pactSlots[0];
+			fieldsToSet[`data.numPactMagic2`] = pactSlots[1];
+			fieldsToSet[`data.numPactMagic3`] = pactSlots[2];
+			fieldsToSet[`data.numPactMagic4`] = pactSlots[3];
+			fieldsToSet[`data.numPactMagic5`] = pactSlots[4];
+			fieldsToSet[`data.numPactMagic6`] = pactSlots[5];
+			fieldsToSet[`data.numPactMagic7`] = pactSlots[6];
+			fieldsToSet[`data.numPactMagic8`] = pactSlots[7];
+			fieldsToSet[`data.numPactMagic9`] = pactSlots[8];
+			let highestPactLevel = pactSlots.findIndex(slots => slots === 0);
+			if (highestPactLevel === -1) {
+				highestPactLevel = 9;
+			}
+			if (highestPactLevel > highestSpellLevel) {
+				highestSpellLevel = highestPactLevel;
+			}
+		}
+
+		if (highestSpellLevel !== 0) {
+			showSpellLevels(highestSpellLevel);
+
+			// Show or hide spell slots based on the fields we're setting
+			showHideSpellSlots({
+				numSpellSlots1: fieldsToSet[`data.numSpellSlots1`] || 0,
+				numSpellSlots2: fieldsToSet[`data.numSpellSlots2`] || 0,
+				numSpellSlots3: fieldsToSet[`data.numSpellSlots3`] || 0,
+				numSpellSlots4: fieldsToSet[`data.numSpellSlots4`] || 0,
+				numSpellSlots5: fieldsToSet[`data.numSpellSlots5`] || 0,
+				numSpellSlots6: fieldsToSet[`data.numSpellSlots6`] || 0,
+				numSpellSlots7: fieldsToSet[`data.numSpellSlots7`] || 0,
+				numSpellSlots8: fieldsToSet[`data.numSpellSlots8`] || 0,
+				numSpellSlots9: fieldsToSet[`data.numSpellSlots9`] || 0,
+				numPactMagic1: fieldsToSet[`data.numPactMagic1`] || 0,
+				numPactMagic2: fieldsToSet[`data.numPactMagic2`] || 0,
+				numPactMagic3: fieldsToSet[`data.numPactMagic3`] || 0,
+				numPactMagic4: fieldsToSet[`data.numPactMagic4`] || 0,
+				numPactMagic5: fieldsToSet[`data.numPactMagic5`] || 0,
+				numPactMagic6: fieldsToSet[`data.numPactMagic6`] || 0,
+				numPactMagic7: fieldsToSet[`data.numPactMagic7`] || 0,
+				numPactMagic8: fieldsToSet[`data.numPactMagic8`] || 0,
+				numPactMagic9: fieldsToSet[`data.numPactMagic9`] || 0,
+			});
+		}
+
+		fieldsToSet['data.maxSpellLevel'] = `${highestSpellLevel}`;
+
+		console.log('fieldsToSet', fieldsToSet);
+
+		return fieldsToSet;
+	}
+
 	// Add class and subclass features
 	function addMissingClassFeatures(className, classObj, subclass, newLevel) {
 		const curFeatures = (record?.data?.features || []).map(feature => `${className}-${feature.name}`);
@@ -248,14 +595,16 @@
 		// Check if already on Character
 		const classes = record?.data?.classes || [];
 		const className = recordLink.tooltip;
+
+		const classObj = {
+			...recordLink.value,
+			'_id': className,
+		};
 		const hasClass = classes.find(classObj => classObj._id === className);
 
 		// Add the class to the the classes list if needed
 		if (!hasClass) {
-			api.addValue('data.classes', {
-				...recordLink.value,
-				'_id': className,
-			});
+			api.addValue('data.classes', classObj);
 		}
 
 		// Unhide the classes list
@@ -266,7 +615,7 @@
 		let newLevel = 1;
 		if (hasClass) {
 			// Parse level from hidden string
-			const regex = new RegExp(`(${className} (\\d+))`, 'i');
+			const regex = new RegExp(`(${className} (\\d+)(?=$| /))`, 'i');
 			// Replace the found class and level with the incremented level
 			classLevels = classLevels.replace(regex, (match, g1, g2) => {
 				const currentLevel = parseInt(g2, 10);
@@ -283,7 +632,7 @@
 		}
 
 		// Map of values to set in bulk later
-		const valuesToSet = {
+		let valuesToSet = {
 			'data.classLevels': classLevels,
 			'data.className': classLevels,
 		};
@@ -296,9 +645,12 @@
 		const nextLevelXp = getNextLevelXp(level);
 		valuesToSet['data.xpNext'] = nextLevelXp;
 
-		api.setValues(valuesToSet);
-
 		// TODO get class proficiencies and set if needed
+		const subclasses = record?.data?.subclasses || [];
+		const spellSlotFieldsToSet = getSpellSlotFields(classes, subclasses, classLevels, classObj, level);
+		valuesToSet = { ...valuesToSet, ...spellSlotFieldsToSet };
+
+		api.setValues(valuesToSet);
 
 		// Update proficiencies based on Level
 		const bonus = getProficiencyBonus(level);
@@ -317,6 +669,10 @@
 					});
 					// Add subclass features for level 3
 					addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+					// Get Spellcasting info for new subclass
+					const subclasses = [...(record?.data?.subclasses || []), subclass];
+					const spellSlotFieldsToSet = getSpellSlotFields(classes, subclasses, classLevels, classObj, level);
+					api.setValues(spellSlotFieldsToSet);
 				}
 			}
 
