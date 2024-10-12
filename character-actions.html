@@ -45,12 +45,7 @@
     // Return true if the given spell being added can be added to the given spell list
     const levelOfSpell = parseInt(value?.data?.level || '0', 10);
     const levelOfList = parseInt(spellLevel, 10);
-    if (levelOfSpell === 0 || levelOfList === 0) {
-      // Cantrips can only go in the cantrips list
-      return levelOfList === levelOfSpell;
-    }
-    // Otherwise, only spells of the given level or lower are allowed
-    return levelOfSpell <= levelOfList;
+    return levelOfSpell === levelOfList;
   }
 </script>
 
@@ -73,6 +68,10 @@
       onchange='updateSpellLevels();'
       options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
     </dropdown>
+
+    <!-- TODO: Add spell slot settings -->
+    <!-- Todo: Set maxSpellLevel and spell slots when class added -->
+    <!-- Todo: Cast button deducts relevant spell slot, outputs to chat with description and buttons  -->
   </accordion>
 </div>
 
