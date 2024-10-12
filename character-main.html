@@ -45,17 +45,19 @@
 					const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
 					const curHp = parseInt(record?.data?.curhp || '0', 10);
 
-					// Set curhp and hitpoints
-					api.setValue('data.curhp', curHp + hpToAdd);
-					api.setValue('data.hitpoints', curHpMax + hpToAdd);
-
-					// Set hpByLevel map
-					api.setValue('data.hpByLevel', JSON.stringify(hpByLevelArr));
+					const hpValuesToSet = {
+						'data.curhp': curHp + hpToAdd,
+						'data.hitpoints': curHpMax + hpToAdd,
+						'data.hpByLevel': JSON.stringify(hpByLevelArr)
+					};
 
 					// Add a hitdie
 					const hitDieField = `${newHitDie}HitDie`;
 					const numHitDie = parseInt(record?.data?.[hitDieField] || '0', 10);
-					api.setValue(`data.${hitDieField}`, numHitDie + 1);
+					hpValuesToSet[`data.${hitDieField}`] = numHitDie + 1;
+
+					// Set values
+					api.setValues(hpValuesToSet);
 
 					// Send a Message
 					const newHp = curHpMax + hpToAdd;
@@ -374,8 +376,10 @@
 		});
 
 		// Update the class strings
-		api.setValue('data.classLevels', classLevels);
-		api.setValue('data.className', classLevels);
+		const valuesToSet = {
+			'data.classLevels': classLevels,
+			'data.className': classLevels,
+		};
 
 		// Remove subclasses for this class from `data.subclasses`
 		const subclasses = record?.data?.subclasses || [];
@@ -386,21 +390,15 @@
 			}
 		});
 		newSubclasses = newSubclasses.filter(subclass => subclass._id !== 'delete');
-		api.setValue('data.subclasses', newSubclasses);
+		valuesToSet['data.subclasses'] = newSubclasses;
 
 		// Update the level total
 		const level = getTotalLevel(classLevels);
-		api.setValue('data.level', level);
+		valuesToSet['data.level'] = level;
 
 		// Reset XP to next level
 		const nextLevelXp = getNextLevelXp(level);
-		api.setValue('data.xpNext', nextLevelXp);
-
-		// Update proficiencies based on Level
-		const bonus = getProficiencyBonus(level);
-		api.setValue('data.proficiencyBonus', bonus, () => {
-			updateProficiencies(bonus);
-		});
+		valuesToSet['data.xpNext'] = nextLevelXp;
 
 		//  Update HP and Hit Dice
 		const hpByLevel = record?.data?.hpByLevel || '[]';
@@ -416,7 +414,7 @@
 		newHpByLevel = newHpByLevel.filter(hpLevel => hpLevel.className !== 'delete');
 
 		// Set new hpByLevelArray
-		api.setValue('data.hpByLevel', JSON.stringify(newHpByLevel));
+		valuesToSet['data.hpByLevel'] = JSON.stringify(newHpByLevel);
 
 		// Get total HP from HP by level, amd CON Mod, and determine new HP totals
 		const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
@@ -447,23 +445,32 @@
 		});
 		// Set max hp and current
 		if (curHp > newMaxHp) {
-			api.setValue('data.curhp', newMaxHp);
+			valuesToSet['data.curhp'] = newMaxHp;
 		}
-		api.setValue('data.hitpoints', newMaxHp);
+		valuesToSet['data.hitpoints'] = newMaxHp;
 
 		// Set new hitDie
 		if (curD6HitDie != d6HitDie) {
-			api.setValue('data.d6HitDie', d6HitDie || null);
+			valuesToSet['data.d6HitDie'] = d6HitDie || null;
 		}
 		if (curD8HitDie != d8HitDie) {
-			api.setValue('data.d8HitDie', d8HitDie || null);
+			valuesToSet['data.d8HitDie'] = d8HitDie || null;
 		}
 		if (curD10HitDie != d10HitDie) {
-			api.setValue('data.d10HitDie', d10HitDie || null);
+			valuesToSet['data.d10HitDie'] = d10HitDie || null;
 		}
 		if (curD12HitDie != d12HitDie) {
-			api.setValue('data.d12HitDie', d12HitDie || null);
+			valuesToSet['data.d12HitDie'] = d12HitDie || null;
 		}
+
+		// Set values
+		api.setValues(valuesToSet);
+
+		// Update proficiencies based on Level
+		const bonus = getProficiencyBonus(level);
+		api.setValue('data.proficiencyBonus', bonus, () => {
+			updateProficiencies(bonus);
+		});
 	}
 
 	function getTotalLevel(inputString) {
