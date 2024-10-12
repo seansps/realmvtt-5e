@@ -34,9 +34,17 @@
       placeholder='None'></stringfield>
     <stringfield height="100%" multiline maxRows='2' field="armorTrainingMulti" label="Armor Training"
       placeholder='None'></stringfield>
+    <label label="Counts as 1 Level of Spellcaster"></label>
+    <div style='display: flex; gap: 4px; flex-direction: column;'>
+      <radio field="multiclassSpellcaster" label="No" textalign="right"></radio>
+      <radio field="multiclassSpellcaster" label="Each Level" textalign="right"></radio>
+      <radio field="multiclassSpellcaster" label="Half of Levels (round up)" textalign="right"></radio>
+      <radio field="multiclassSpellcaster" label="Third of Levels (round down) if Subclass" textalign="right"></radio>
+      <stringfield field="multiclassSpellcasterSubclass" label="Caster Subclasses"
+        placeholder='Comma separated list of subclasses'></stringfield>
+    </div>
   </accordion>
 </div>
-
 
 <div style='margin-top: 8px; margin-bottom: 8px'>
   <divider label='Description'></divider>

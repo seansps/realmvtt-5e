@@ -41,6 +41,145 @@
     });
   }
 
+  function updateSpellSlots() {
+    // Determine if we should hide/unhide spell slots and labels
+    const valuesToHide = [];
+    const valuesToUnhide = [];
+    if (record?.data?.numSpellSlots1 > 0 || record?.data?.numSpellSlots2 > 0
+      || record?.data?.numSpellSlots3 > 0 || record?.data?.numSpellSlots4 > 0 ||
+      record?.data?.numSpellSlots5 > 0 || record?.data?.numSpellSlots6 > 0 ||
+      record?.data?.numSpellSlots7 > 0 || record?.data?.numSpellSlots8 > 0 ||
+      record?.data?.numSpellSlots9 > 0) {
+      valuesToUnhide.push('spellSlotsLabel');
+    }
+    else {
+      valuesToHide.push('spellSlotsLabel');
+    }
+    if (record?.data?.numSpellSlots1 > 0) {
+      valuesToUnhide.push('spellSlots1');
+    }
+    else {
+      valuesToHide.push('spellSlots1');
+    }
+    if (record?.data?.numSpellSlots2 > 0) {
+      valuesToUnhide.push('spellSlots2');
+    }
+    else {
+      valuesToHide.push('spellSlots2');
+    }
+    if (record?.data?.numSpellSlots3 > 0) {
+      valuesToUnhide.push('spellSlots3');
+    }
+    else {
+      valuesToHide.push('spellSlots3');
+    }
+    if (record?.data?.numSpellSlots4 > 0) {
+      valuesToUnhide.push('spellSlots4');
+    }
+    else {
+      valuesToHide.push('spellSlots4');
+    }
+    if (record?.data?.numSpellSlots5 > 0) {
+      valuesToUnhide.push('spellSlots5');
+    }
+    else {
+      valuesToHide.push('spellSlots5');
+    }
+    if (record?.data?.numSpellSlots6 > 0) {
+      valuesToUnhide.push('spellSlots6');
+    }
+    else {
+      valuesToHide.push('spellSlots6');
+    }
+    if (record?.data?.numSpellSlots7 > 0) {
+      valuesToUnhide.push('spellSlots7');
+    }
+    else {
+      valuesToHide.push('spellSlots7');
+    }
+    if (record?.data?.numSpellSlots8 > 0) {
+      valuesToUnhide.push('spellSlots8');
+    }
+    else {
+      valuesToHide.push('spellSlots8');
+    }
+    if (record?.data?.numSpellSlots9 > 0) {
+      valuesToUnhide.push('spellSlots9');
+    }
+    else {
+      valuesToHide.push('spellSlots9');
+    }
+
+    if (record?.data?.numPactMagic1 > 0 || record?.data?.numPactMagic2 > 0
+      || record?.data?.numPactMagic3 > 0 || record?.data?.numPactMagic4 > 0 ||
+      record?.data?.numPactMagic5 > 0 || record?.data?.numPactMagic6 > 0 ||
+      record?.data?.numPactMagic7 > 0 || record?.data?.numPactMagic8 > 0 ||
+      record?.data?.numPactMagic9 > 0) {
+      valuesToUnhide.push('pactMagicLabel');
+    }
+    else {
+      valuesToHide.push('pactMagicLabel');
+    }
+    if (record?.data?.numPactMagic1 > 0) {
+      valuesToUnhide.push('pactMagic1');
+    }
+    else {
+      valuesToHide.push('pactMagic1');
+    }
+    if (record?.data?.numPactMagic2 > 0) {
+      valuesToUnhide.push('pactMagic2');
+    }
+    else {
+      valuesToHide.push('pactMagic2');
+    }
+    if (record?.data?.numPactMagic3 > 0) {
+      valuesToUnhide.push('pactMagic3');
+    }
+    else {
+      valuesToHide.push('pactMagic3');
+    }
+    if (record?.data?.numPactMagic4 > 0) {
+      valuesToUnhide.push('pactMagic4');
+    }
+    else {
+      valuesToHide.push('pactMagic4');
+    }
+    if (record?.data?.numPactMagic5 > 0) {
+      valuesToUnhide.push('pactMagic5');
+    }
+    else {
+      valuesToHide.push('pactMagic5');
+    }
+    if (record?.data?.numPactMagic6 > 0) {
+      valuesToUnhide.push('pactMagic6');
+    }
+    else {
+      valuesToHide.push('pactMagic6');
+    }
+    if (record?.data?.numPactMagic7 > 0) {
+      valuesToUnhide.push('pactMagic7');
+    }
+    else {
+      valuesToHide.push('pactMagic7');
+    }
+    if (record?.data?.numPactMagic8 > 0) {
+      valuesToUnhide.push('pactMagic8');
+    }
+    else {
+      valuesToHide.push('pactMagic8');
+    }
+    if (record?.data?.numPactMagic9 > 0) {
+      valuesToUnhide.push('pactMagic9');
+    }
+    else {
+      valuesToHide.push('pactMagic9');
+    }
+
+    api.setHidden(valuesToHide, true, () => {
+      api.setHidden(valuesToUnhide, false);
+    });
+  }
+
   function canAddSpell(spellLevel) {
     // Return true if the given spell being added can be added to the given spell list
     const levelOfSpell = parseInt(value?.data?.level || '0', 10);
@@ -58,22 +197,122 @@
     field='inventory_list' label='Attacks' /></list>
 </div>
  -->
-<div style='margin-top: 4px;'>
-  <label label="Spells" size='md' textalign="center"></label>
+<div>
+  <label hidden="true" field="spellSlotsLabel" label="Spell Slots" size='md' textalign="center"></label>
 </div>
 
 <div style='margin-bottom: 4px;'>
-  <accordion size="sm" field="casterSettingsOpen" label="Caster Settings" variant="separated">
+  <!-- Spell Slots -->
+  <div
+    style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
+    <counter field='spellSlots1' hidden="true" maxvaluefield="numSpellSlots1" label='Level 1' size='xs'
+      textalign="center" color='violet'></counter>
+    <counter field='spellSlots2' hidden="true" maxvaluefield="numSpellSlots2" label='Level 2' size='xs'
+      textalign="center" color='blue'></counter>
+    <counter field='spellSlots3' hidden="true" maxvaluefield="numSpellSlots3" label='Level 3' size='xs'
+      textalign="center" color='cyan'></counter>
+    <counter field='spellSlots4' hidden="true" maxvaluefield="numSpellSlots4" label='Level 4' size='xs'
+      textalign="center" color='teal'></counter>
+    <counter field='spellSlots5' hidden="true" maxvaluefield="numSpellSlots5" label='Level 5' size='xs'
+      textalign="center" color='green'></counter>
+    <counter field='spellSlots6' hidden="true" maxvaluefield="numSpellSlots6" label='Level 6' size='xs'
+      textalign="center" color='lime'></counter>
+    <counter field='spellSlots7' hidden="true" maxvaluefield="numSpellSlots7" label='Level 7' size='xs'
+      textalign="center" color='yellow'></counter>
+    <counter field='spellSlots8' hidden="true" maxvaluefield="numSpellSlots8" label='Level 8' size='xs'
+      textalign="center" color='orange'></counter>
+    <counter field='spellSlots9' hidden="true" maxvaluefield="numSpellSlots9" label='Level 9' size='xs'
+      textalign="center" color='red'></counter>
+  </div>
+</div>
+
+<div>
+  <label hidden="true" field="pactMagicLabel" label="Pact Magic" size='md' textalign="center"></label>
+</div>
+
+<div style='margin-bottom: 4px;'>
+  <!-- Pact Magic -->
+  <div
+    style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
+    <counter field='pactMagic1' hidden="true" maxvaluefield="numPactMagic1" label='Level 1' size='xs' textalign="center"
+      color='violet'></counter>
+    <counter field='pactMagic2' hidden="true" maxvaluefield="numPactMagic2" label='Level 2' size='xs' textalign="center"
+      color='blue'></counter>
+    <counter field='pactMagic3' hidden="true" maxvaluefield="numPactMagic3" label='Level 3' size='xs' textalign="center"
+      color='cyan'></counter>
+    <counter field='pactMagic4' hidden="true" maxvaluefield="numPactMagic4" label='Level 4' size='xs' textalign="center"
+      color='teal'></counter>
+    <counter field='pactMagic5' hidden="true" maxvaluefield="numPactMagic5" label='Level 5' size='xs' textalign="center"
+      color='green'></counter>
+    <counter field='pactMagic6' hidden="true" maxvaluefield="numPactMagic6" label='Level 6' size='xs' textalign="center"
+      color='lime'></counter>
+    <counter field='pactMagic7' hidden="true" maxvaluefield="numPactMagic7" label='Level 7' size='xs' textalign="center"
+      color='yellow'></counter>
+    <counter field='pactMagic8' hidden="true" maxvaluefield="numPactMagic8" label='Level 8' size='xs' textalign="center"
+      color='orange'></counter>
+    <counter field='pactMagic9' hidden="true" maxvaluefield="numPactMagic9" label='Level 9' size='xs' textalign="center"
+      color='red'></counter>
+  </div>
+</div>
+
+<!-- Settings Accordion -->
+<accordion size="sm" field="casterSettingsOpen" label="Caster Settings" variant="separated">
+  <div style='display: flex; flex-direction: column; gap: 4px'>
     <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
       onchange='updateSpellLevels();'
       options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
     </dropdown>
 
-    <!-- TODO: Add spell slot settings -->
-    <!-- Todo: Set maxSpellLevel and spell slots when class added -->
-    <!-- Todo: Cast button deducts relevant spell slot, outputs to chat with description and buttons  -->
-  </accordion>
+    <checkbox field="usePactMagic" label="Use Pact Magic First" size='sm'></checkbox>
+
+    <label label="Spell Slots by Level" size='sm'></label>
+    <div style='display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap'>
+      <numberfield field="numSpellSlots1" placeholder='--' label="Level 1" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots2" placeholder='--' label="Level 2" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots3" placeholder='--' label="Level 3" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots4" placeholder='--' label="Level 4" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots5" placeholder='--' label="Level 5" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots6" placeholder='--' label="Level 6" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots7" placeholder='--' label="Level 7" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots8" placeholder='--' label="Level 8" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numSpellSlots9" placeholder='--' label="Level 9" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+    </div>
+
+    <label label="Pact Magic by Level" size='sm'></label>
+    <div style='display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap'>
+      <numberfield field="numPactMagic1" placeholder='--' label="Level 1" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic2" placeholder='--' label="Level 2" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic3" placeholder='--' label="Level 3" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic4" placeholder='--' label="Level 4" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic5" placeholder='--' label="Level 5" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic6" placeholder='--' label="Level 6" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic7" placeholder='--' label="Level 7" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic8" placeholder='--' label="Level 8" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+      <numberfield field="numPactMagic9" placeholder='--' label="Level 9" size='xs' width='50px'
+        onchange='updateSpellSlots();'></numberfield>
+    </div>
+  </div>
+</accordion>
 </div>
+
+<!-- Spell Lists Accordions -->
 
 <accordion hidden="true" size="sm" field="cantripsOpen" label="Cantrips">
   <div style='width: 100%'>
