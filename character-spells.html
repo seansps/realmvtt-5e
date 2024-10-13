@@ -28,16 +28,22 @@
     <div style='width: 30px; height: 30px; min-width: 30px; min-height: 30px;'>
       <portrait width='30px' height='30px' field="portrait"></portrait>
     </div>
+    <div style='margin-top: auto; margin-bottom: auto'>
+      <iconbutton size='sm' field="prepared" variant='default'
+        options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}]'>
+      </iconbutton>
+    </div>
     <namefield size='xs' width='100%' variant='unstyled' field="namefield"></namefield>
     <stringfield size='xs' field="castingTime" label='Casting Time' variant='tooltip'></stringfield>
     <stringfield size='xs' field="range" label='Range' variant='tooltip'></stringfield>
     <div style='margin-top: auto; margin-bottom: auto'>
-      <iconbutton size='sm' field="ability" variant='light'
+      <iconbutton size='sm' field="ability" variant='default'
         options='[{"icon": "IconSquareLetterS", "label": "Strength", "value": "strength"}, {"icon": "IconSquareLetterD", "label": "Dexterity", "value": "dexterity"}, {"icon": "IconSquareLetterC", "label": "Constitution", "value": "constitution"}, {"icon": "IconSquareLetterI", "label": "Intelligence", "value": "intelligence"}, {"icon": "IconSquareLetterW", "label": "Wisdom", "value": "wisdom"}, {"icon": "IconSquareLetterC", "label": "Charisma", "value": "charisma"}]'>
       </iconbutton>
     </div>
     <div style='margin-top: auto; margin-bottom: auto'>
-      <iconbutton size='sm' field="upcastLevel" variant='light' getoptions='return getLevelOptions();'></iconbutton>
+      <iconbutton size='sm' field="upcastLevel" color='pink' variant='light' getoptions='return getLevelOptions();'>
+      </iconbutton>
     </div>
     <div style='margin-left: auto'>
       <button size='xs' radius='xs' field="castBtn" label="Cast" variant='light' onclick='castSpell();'></button>
