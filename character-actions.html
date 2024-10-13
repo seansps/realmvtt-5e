@@ -256,7 +256,7 @@
 </div>
 
 <!-- Settings Accordion -->
-<accordion size="sm" field="casterSettingsOpen" label="Caster Settings" variant="separated">
+<accordion size="sm" field="casterSettingsOpen" label="Caster Settings" hideonlocked="true" variant="separated">
   <div style='display: flex; flex-direction: column; gap: 4px'>
     <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
       onchange='updateSpellLevels();'
