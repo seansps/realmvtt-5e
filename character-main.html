@@ -444,8 +444,6 @@
 			valuesToHide.push('pactMagic9');
 		}
 
-		console.log('valuesToHide', valuesToHide);
-		console.log('valuesToUnhide', valuesToUnhide);
 		api.setHidden(valuesToHide, true, () => {
 			api.setHidden(valuesToUnhide, false);
 		});
@@ -491,7 +489,11 @@
 		else if (isMulticlass) {
 			// Get total levels of all spellcasting classes
 			let spellCasterLevel = 0;
-			classes.forEach(c => {
+			let allClasses = [...classes];
+			if (!allClasses.find(c => c._id === classObj._id)) {
+				allClasses.push(classObj);
+			}
+			allClasses.forEach(c => {
 				const className = c?.name;
 				const multiclassSetting = c?.data?.multiclassSpellcaster || 'No';
 				// Use regex to safely escape special characters in className and match the level number
@@ -587,8 +589,6 @@
 		if (highestSpellLevel !== undefined) {
 			fieldsToSet['data.maxSpellLevel'] = `${highestSpellLevel}`;
 		}
-
-		console.log('fieldsToSet', fieldsToSet);
 
 		return fieldsToSet;
 	}
