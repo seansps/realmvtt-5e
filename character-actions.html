@@ -1,4 +1,55 @@
 <script>
+  function onDropSpell(recordLink) {
+    const spell = recordLink?.value;
+
+    // Determine which list to add the spell to
+    const spellLevel = spell?.data?.level || '0';
+    let spellList = `cantrips`;
+    if (spellLevel !== '0') {
+      spellList = `spells${spellLevel}`;
+    }
+
+    // Set the ability to the most likely relevant ability based on spell
+    // list and which classes the character has
+    const spellLists = spell?.data?.spellLists || ['Wizard']; // Assume Wizard if not specified
+    // Get classes on the character
+    const spellClasses = record?.data?.classes || [];
+    // Default abiltiy to Intelligence
+    let ability = 'intelligence';
+
+    // Find the first class that matches a class in the spell list
+    const matchingClass = spellClasses.find(c => spellLists.includes(c?.name));
+
+    if (matchingClass) {
+      ability = matchingClass?.data?.spellcastingAbility || 'intelligence';
+    }
+
+    // Set the ability
+    const spellToAdd = {
+      ...spell,
+      data: {
+        ...spell?.data,
+        ability
+      }
+    }
+
+    const curLength = record?.data?.[spellList]?.length || 0;
+
+    // Add the spell to the list
+    api.addValue(`data.${spellList}`, spellToAdd, (updatedRecord) => {
+      // If cantrip was added, hide the upcast button
+      if (spellLevel === '0') {
+        api.setValue(`data.${spellList}.${curLength}.fields.upcastLevel.hidden`, true);
+      }
+    });
+  }
+
+  function onDrop(type, recordLink) {
+    if (type === 'spells') {
+      onDropSpell(recordLink);
+    }
+  }
+
   function updateSpellLevels() {
     api.setHidden(['cantripsOpen', 'level1spellsOpen', 'level2spellsOpen', 'level3spellsOpen', 'level4spellsOpen', 'level5spellsOpen', 'level6spellsOpen', 'level7spellsOpen', 'level8spellsOpen', 'level9spellsOpen'], true, () => {
       if (value === undefined || value === null) {
