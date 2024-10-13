@@ -1,8 +1,36 @@
 <script>
   function castSpell() {
-    // TODO
-  }
+    const spell = data;
+    const spellName = spell?.name || 'Unknown Spell';
+    const spellDescription = api.richTextToMarkdown(spell?.data?.description || '');
+    const spellIcon = spell?.portrait ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) ` : '';
 
+    // api.promptRoll(`${capitalize(save)} Save`, "1d20", modifiers, metadata, 'save');
+
+    const damageButton = spell?.data?.damage ? `\`\`\`Roll_Damage
+api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', [], {}, 'damage')
+\`\`\`` : '';
+
+    const actionsTitle = damageButton === '' ? 'No Actions' : '';
+
+    const message = `
+#### ${spellIcon}${spellName}
+
+---
+
+${spellDescription}
+
+---
+&nbsp;
+
+${actionsTitle}${damageButton}
+`;
+
+    api.sendMessage(message, undefined, [], [{
+      'tooltip': "Cast a Spell",
+      'name': 'Spell'
+    }]);
+  }
 
   // Returns the options for upcasting a spell
   function getLevelOptions() {
