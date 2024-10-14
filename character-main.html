@@ -902,6 +902,7 @@
 		});
 		const metadata = {
 			"rollName": `${capitalize(save)} Save`,
+			"tooltip": `${capitalize(save)} Saving Throw`,
 			"dc": 0
 		}
 		api.promptRoll(`${capitalize(save)} Save`, "1d20", modifiers, metadata, 'save');
@@ -971,7 +972,7 @@
 			<portrait width='130px' height='130px'></portrait>
 		</div>
 
-		<div style='display:flex; flex-direction: row; gap: 6px'>
+		<div style='display:flex; flex-direction: row; gap: 6px; margin-top: 4px'>
 			<div style='display: flex; flex-direction: column'>
 				<indicator variant='outline' size='24' defaultvalue="+0" field="strengthMod" position='bottom-center'>
 					<numberfield placeholder='0' size='md' width="100px" field='strength' label='STR'

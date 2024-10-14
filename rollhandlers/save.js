@@ -1,4 +1,5 @@
-const name = data?.roll?.metadata?.rollName;
+const rollName = data?.roll?.metadata?.rollName;
+const tooltip = data?.roll?.metadata?.tooltip;
 
 let message = '';
 
@@ -18,6 +19,6 @@ if (dc > 0) {
 }
 
 api.sendMessage(message, data.roll, [], [{
-  name: name || "Save",
-  tooltip: `${name || ""} Saving Throw`
+  name: rollName || "Save",
+  tooltip: tooltip || `${rollName || ""} Saving Throw`
 }]);
