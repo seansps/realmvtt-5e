@@ -39,7 +39,31 @@ api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', ${JSON.stringify
 api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringify(modifiers)}, {}, 'healing')
 \`\`\`` : '';
 
-    const actionsTitle = damageButton === '' && healingButton === '' ? 'No Actions' : '';
+    const savingThrow = spell?.data?.savingThrow || 'dexterity'; // Default to dexterity if not set 
+    // TODO Set DC in metadata
+    // TODO allow prompt roll for all selected tokens
+    // Save Button for GM only - look up saves of selected tokens and prompt roll for each
+    const rollSaveButton = spell?.data?.isSave ? `\`\`\`Roll_Save
+if (isGM) { 
+  const saveModifiers = [];
+
+  const selectedTokens = api.getSelectedTokens();
+  if (selectedTokens.length > 0) {
+    record = selectedTokens[0]?.token?.record;
+  }
+
+  const modifier = record?.data?.['${savingThrow}Save'] || 0;
+  saveModifiers.push({
+    name: '${capitalize(savingThrow)} Save',
+    value: modifier,
+    active: true,
+  });
+ 
+  api.promptRoll('${capitalize(savingThrow)} Save', '1d20', saveModifiers, {}, 'save') 
+}
+\`\`\`` : '';
+
+    const actionsTitle = damageButton === '' && healingButton === '' && rollSaveButton === '' ? 'No Actions' : '';
 
     const message = `
 #### ${spellIcon}${spellName}
@@ -52,7 +76,10 @@ ${spellDescription}
 ---
 &nbsp;
 
-${actionsTitle}${damageButton}${damageButton === '' ? '' : ' '}${healingButton}
+${actionsTitle}
+${rollSaveButton}
+${damageButton}
+${healingButton}
 `;
 
     const castingTime = spell?.data?.castingTime;
