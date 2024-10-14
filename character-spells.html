@@ -31,17 +31,24 @@
       });
     }
 
+    const castingTime = spell?.data?.castingTime ? `${spell?.data?.castingTime}` : '';
+    const rangePrefix = spell?.data?.castingTime && spell?.data?.range ? ' - ' : '';
+    const range = spell?.data?.range ? `${rangePrefix}${spell?.data?.range}` : '';
     const components = spell?.data?.components ? ` (${spell?.data?.components})` : '';
 
     const damageButton = spell?.data?.damage ? `\`\`\`Roll_Damage
 api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', ${JSON.stringify(modifiers)}, {}, 'damage')
 \`\`\`` : '';
 
-    const actionsTitle = damageButton === '' ? 'No Actions' : '';
+    const healingButton = spell?.data?.healing ? `\`\`\`Roll_Healing
+api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringify(modifiers)}, {}, 'healing')
+\`\`\`` : '';
+
+    const actionsTitle = damageButton === '' && healingButton === '' ? 'No Actions' : '';
 
     const message = `
 #### ${spellIcon}${spellName}
-${spell?.data?.castingTime} - ${spell?.data?.range}${components}
+${castingTime}${range}${components}
 
 ---
 &nbsp;
@@ -51,7 +58,7 @@ ${spellDescription}
 ---
 &nbsp;
 
-${actionsTitle}${damageButton}
+${actionsTitle}${damageButton}${damageButton === '' ? '' : ' '}${healingButton}
 `;
 
     api.sendMessage(message, undefined, [], [{
