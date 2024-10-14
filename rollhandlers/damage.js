@@ -34,7 +34,7 @@ targets.forEach(target => {
       const unIdentified = target.identified === false;
       const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
 
-      const macro = \`\\\`\\\`\\\`Undo\\n api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}');\\n\\\`\\\`\\\`\`;
+      const macro = \`\\\`\\\`\\\`Undo\\n api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} took \$\{damage\} damage.~');\\n\\\`\\\`\\\`\`;
       
       api.sendMessage(\`\$\{targetName\} took \$\{damage\} damage.\\n\$\{macro\}\`);
   }
