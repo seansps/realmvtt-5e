@@ -46,30 +46,28 @@ api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringi
     const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ? api.getValue('data.proficiencyBonus') : 2;
     const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10);
 
-    // TODO allow prompt roll for all selected tokens
     // Save Button for GM only - look up saves of selected tokens and prompt roll for each
     const rollSaveButton = spell?.data?.isSave ? `\`\`\`Roll_Save
 if (isGM) { 
-  const saveModifiers = [];
-
   const selectedTokens = api.getSelectedTokens();
-  if (selectedTokens.length > 0) {
-    record = selectedTokens[0]?.token?.record;
-  }
+  selectedTokens.forEach(token => {
+    const saveModifiers = [];
+    const record = token?.token?.record;
 
-  const modifier = record?.data?.['${savingThrow}Save'] || 0;
-  saveModifiers.push({
-    name: '${capitalize(savingThrow)}',
-    value: modifier,
-    active: true,
-  });
+    const modifier = record?.data?.['${savingThrow}Save'] || 0;
+    saveModifiers.push({
+      name: '${capitalize(savingThrow)}',
+      value: modifier,
+      active: true,
+    });
 
     const metadata = {
-			"rollName": '${capitalize(savingThrow)} Save',
-			"dc": ${saveDc}
-		}
- 
-  api.promptRoll('${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save') 
+      "rollName": '${capitalize(savingThrow)} Save',
+      "dc": ${saveDc}
+    }
+
+    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  });
 }
 \`\`\`` : '';
 
