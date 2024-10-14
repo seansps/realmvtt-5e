@@ -4,17 +4,6 @@ const tags = [{
   tooltip: "Damage Roll"
 }];
 
-const mods = data.roll?.metadata?.modifiers || [];
-
-mods.forEach(mod => {
-  if (mod.value > 0) {
-    tags.push({
-      name: mod.name,
-      tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`
-    });
-  }
-});
-
 const message = `
 \`\`\`Apply_Damage
 let damage = ${data.roll.total};

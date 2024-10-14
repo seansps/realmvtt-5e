@@ -51,12 +51,44 @@
       });
     }
 
-    const damageButton = spell?.data?.damage ? `\`\`\`Roll_Damage
-api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', ${JSON.stringify(modifiers)}, {}, 'damage')
+    // Deteremine damage or healing based on level of spell / (or character if cantrip)
+    let spellDamage = spell?.data?.damage;
+    let spellHealing = spell?.data?.healing;
+    // Mark the level we're casting at so we can fill a slot
+    let spellLevel = 0;
+
+    if (spell?.data?.level === '0') {
+      // Cantrip handling
+      // Get the character's level
+      const characterLevel = parseInt(api.getValue('data.level') || '1', 10);
+      if (characterLevel >= 5) {
+        spellDamage = spell?.data?.damageCharacterLevel5 || spell?.data?.damage;
+      }
+      if (characterLevel >= 11) {
+        spellDamage = spell?.data?.damageCharacterLevel11 || spell?.data?.damage;
+      }
+      if (characterLevel >= 17) {
+        spellDamage = spell?.data?.damageCharacterLevel17 || spell?.data?.damage;
+      }
+    }
+    else {
+      // Spell handling
+      // Check if we're upcasting
+      spellLevel = parseInt(spell?.data?.upcastLevel, 10) || 0;
+      // Check if damage is defined at that level
+      if (spellLevel >= 2) {
+        spellDamage = spell?.data?.[`damageLevel${spellLevel}`] || spell?.data?.damage;
+        spellHealing = spell?.data?.[`healingLevel${spellLevel}`] || spell?.data?.healing;
+      }
+    }
+
+    // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
+    const damageButton = spell?.data?.damage && spell?.data?.isSave ? `\`\`\`Roll_Damage
+api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(modifiers)}, {}, 'damage')
 \`\`\`` : '';
 
     const healingButton = spell?.data?.healing ? `\`\`\`Roll_Healing
-api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringify(modifiers)}, {}, 'healing')
+api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modifiers)}, {}, 'healing')
 \`\`\`` : '';
 
     const savingThrow = spell?.data?.savingThrow || 'dexterity'; // Default to dexterity if not set 
@@ -75,10 +107,13 @@ targets.forEach(target => {
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
   const metadata = {
     "rollName": 'Attack',
-    "attack": 'Casts ${spellName}',
+    "attack": '${spellName}',
+    "icon": "IconWand",
     "targetName": targetName,
     "tooltip": 'Attack Roll for ${spellName}',
-    "dc": targetAc
+    "dc": targetAc,
+    "damage": "${spellDamage}",
+    "damageModifiers": ${JSON.stringify(modifiers)}
   }
   api.promptRoll('${spellName}', '1d20', ${JSON.stringify(attackModifiers)}, metadata, 'attack');
 });
@@ -110,8 +145,6 @@ if (isGM) {
 }
 \`\`\`` : '';
 
-    const actionsTitle = damageButton === '' && healingButton === '' && rollSaveButton === '' ? 'No Actions' : '';
-
     const message = `
 #### ${spellIcon}${spellName}
 
@@ -123,7 +156,6 @@ ${spellDescription}
 ---
 &nbsp;
 
-${actionsTitle}
 ${rollAttackButton}
 ${rollSaveButton}
 ${damageButton}
