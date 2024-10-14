@@ -13,8 +13,8 @@
     const spellDescription = api.richTextToMarkdown(spell?.data?.description || '');
     const spellIcon = spell?.portrait ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) ` : '';
 
+    // Modifiers for Damage and Healing
     const modifiers = [];
-
     if ((spell?.data?.damage || spell?.data?.healing) && spell?.data?.addAbility) {
       // Get the ability score modifier for the spell
       const ability = spell?.data?.ability || 'strength';
@@ -27,6 +27,26 @@
         name: capitalize(ability),
         type: spell?.data?.damage ? damageType : 'healing',
         value: abilityMod,
+        active: true,
+      });
+    }
+
+    // Spell Attack Modifiers
+    const attackModifiers = [];
+    if (spell?.data?.isAttack) {
+      const attackAbility = spell?.data?.ability || 'strength';
+      const attackAbilityMod = parseInt(api.getValue(`data.${attackAbility}Mod`) || '0', 10);
+      // Add proficiency bonus to attack modifier
+      const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ?
+        parseInt(api.getValue('data.proficiencyBonus'), 10) : 2;
+      attackModifiers.push({
+        name: capitalize(attackAbility),
+        value: attackAbilityMod,
+        active: true,
+      });
+      attackModifiers.push({
+        name: 'Spellcasting Proficiency',
+        value: proficiencyBonus,
         active: true,
       });
     }
@@ -46,6 +66,24 @@ api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringi
     const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ? api.getValue('data.proficiencyBonus') : 2;
     const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10);
 
+    // Roll Attack Button, if Spell is an Attack, in the handler we get the targets and
+    // roll for each target - DC for Attacks is the enemy's AC
+    const rollAttackButton = spell?.data?.isAttack ? `\`\`\`Roll_Attack
+const targets = api.getTargets();
+targets.forEach(target => {
+  const targetAc = parseInt(target?.token?.record?.data?.ac || '0', 10);
+  const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
+  const metadata = {
+    "rollName": 'Attack',
+    "attack": 'Casts ${spellName}',
+    "targetName": targetName,
+    "tooltip": 'Attack Roll for ${spellName}',
+    "dc": targetAc
+  }
+  api.promptRoll('${spellName}', '1d20', ${JSON.stringify(attackModifiers)}, metadata, 'attack');
+});
+\`\`\`` : '';
+
     // Save Button for GM only - look up saves of selected tokens and prompt roll for each
     const rollSaveButton = spell?.data?.isSave ? `\`\`\`Roll_Save
 if (isGM) { 
@@ -56,7 +94,7 @@ if (isGM) {
 
     const modifier = record?.data?.['${savingThrow}Save'] || 0;
     saveModifiers.push({
-      name: '${capitalize(savingThrow)}',
+      name: '${capitalize(savingThrow)} Save',
       value: modifier,
       active: true,
     });
@@ -86,6 +124,7 @@ ${spellDescription}
 &nbsp;
 
 ${actionsTitle}
+${rollAttackButton}
 ${rollSaveButton}
 ${damageButton}
 ${healingButton}
