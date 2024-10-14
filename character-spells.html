@@ -31,11 +31,6 @@
       });
     }
 
-    const castingTime = spell?.data?.castingTime ? `${spell?.data?.castingTime}` : '';
-    const rangePrefix = spell?.data?.castingTime && spell?.data?.range ? ' - ' : '';
-    const range = spell?.data?.range ? `${rangePrefix}${spell?.data?.range}` : '';
-    const components = spell?.data?.components ? ` (${spell?.data?.components})` : '';
-
     const damageButton = spell?.data?.damage ? `\`\`\`Roll_Damage
 api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', ${JSON.stringify(modifiers)}, {}, 'damage')
 \`\`\`` : '';
@@ -48,7 +43,6 @@ api.promptRoll('${spellName} Healing', '${spell?.data?.healing}', ${JSON.stringi
 
     const message = `
 #### ${spellIcon}${spellName}
-${castingTime}${range}${components}
 
 ---
 &nbsp;
@@ -61,10 +55,55 @@ ${spellDescription}
 ${actionsTitle}${damageButton}${damageButton === '' ? '' : ' '}${healingButton}
 `;
 
-    api.sendMessage(message, undefined, [], [{
+    const castingTime = spell?.data?.castingTime;
+    const range = spell?.data?.range;
+    let components = spell?.data?.components;
+    if (components) {
+      components = components.split(',');
+      components = components.map(component => {
+        const trimmedComponent = component.trim().toLowerCase(); // Trim and convert to lower case
+        if (trimmedComponent === 'v') {
+          return 'Verbal';
+        } else if (trimmedComponent === 's') {
+          return 'Somatic';
+        } else if (trimmedComponent === 'm') {
+          return 'Material';
+        } else if (trimmedComponent === 'f') {
+          return 'Focus';
+        }
+        return component.trim(); // Return the trimmed component if no match
+      });
+    }
+
+    const tags = [{
       'tooltip': "Cast a Spell",
       'name': 'Spell'
-    }]);
+    }];
+
+    if (castingTime) {
+      tags.push({
+        'tooltip': "Casting Time",
+        'name': castingTime
+      });
+    }
+
+    if (range) {
+      tags.push({
+        'tooltip': "Range",
+        'name': range
+      });
+    }
+
+    if (components && Array.isArray(components) && components.length > 0) {
+      components.forEach(component => {
+        tags.push({
+          'tooltip': 'Components',
+          'name': component
+        });
+      });
+    }
+
+    api.sendMessage(message, undefined, [], tags);
   }
 
   // Returns the options for upcasting a spell
