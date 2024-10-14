@@ -1,22 +1,50 @@
 <script>
+  function capitalize(string) {
+    if (!string || typeof string !== 'string') return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
   function castSpell() {
-    const spell = data;
+    // Get the spell by path to ensure most up-to-date value
+    const spellDataPath = dataPath.replace('.data.castBtn', '');
+    const spell = api.getValue(spellDataPath);
+
     const spellName = spell?.name || 'Unknown Spell';
     const spellDescription = api.richTextToMarkdown(spell?.data?.description || '');
     const spellIcon = spell?.portrait ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) ` : '';
 
-    // api.promptRoll(`${capitalize(save)} Save`, "1d20", modifiers, metadata, 'save');
+    const modifiers = [];
+
+    if ((spell?.data?.damage || spell?.data?.healing) && spell?.data?.addAbility) {
+      // Get the ability score modifier for the spell
+      const ability = spell?.data?.ability || 'strength';
+      const abilityMod = api.getValue(`data.${ability}Mod`) || 0;
+      // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
+      const damageString = spell?.data?.damage || '';
+      const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
+      const damageType = damageParts.length > 1 ? damageParts[1] : 'untyped';
+      modifiers.push({
+        name: capitalize(ability),
+        type: spell?.data?.damage ? damageType : 'healing',
+        value: abilityMod,
+        active: true,
+      });
+    }
+
+    const components = spell?.data?.components ? ` (${spell?.data?.components})` : '';
 
     const damageButton = spell?.data?.damage ? `\`\`\`Roll_Damage
-api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', [], {}, 'damage')
+api.promptRoll('${spellName} Damage', '${spell?.data?.damage}', ${JSON.stringify(modifiers)}, {}, 'damage')
 \`\`\`` : '';
 
     const actionsTitle = damageButton === '' ? 'No Actions' : '';
 
     const message = `
 #### ${spellIcon}${spellName}
+${spell?.data?.castingTime} - ${spell?.data?.range}${components}
 
 ---
+&nbsp;
 
 ${spellDescription}
 
