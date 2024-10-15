@@ -541,7 +541,7 @@
 		// If the Caster Type is Pact Magic, we just add the pact magic slots
 		if (casterType === 'Pact Magic') {
 			// Warlocks only use their own level, no multiclassing level
-			const pactSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(spellLevel => classObj?.data?.[`level${newClassLevel}spell${spellLevel}`] || 0);
+			const pactSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(spellLevel => parseInt(classObj?.data?.[`level${newClassLevel}spell${spellLevel}`] || '0', 10));
 			fieldsToSet[`data.numPactMagic1`] = pactSlots[0];
 			fieldsToSet[`data.numPactMagic2`] = pactSlots[1];
 			fieldsToSet[`data.numPactMagic3`] = pactSlots[2];
@@ -551,11 +551,12 @@
 			fieldsToSet[`data.numPactMagic7`] = pactSlots[6];
 			fieldsToSet[`data.numPactMagic8`] = pactSlots[7];
 			fieldsToSet[`data.numPactMagic9`] = pactSlots[8];
+
 			let highestPactLevel = pactSlots.findIndex(slots => slots === 0);
 			if (highestPactLevel === -1) {
 				highestPactLevel = 9;
 			}
-			if (highestPactLevel > highestSpellLevel) {
+			if (highestPactLevel > (highestSpellLevel || 0)) {
 				highestSpellLevel = highestPactLevel;
 			}
 		}

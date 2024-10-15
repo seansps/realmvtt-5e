@@ -54,8 +54,101 @@
     // Deteremine damage or healing based on level of spell / (or character if cantrip)
     let spellDamage = spell?.data?.damage;
     let spellHealing = spell?.data?.healing;
+
     // Mark the level we're casting at so we can fill a slot
     let spellLevel = 0;
+
+    // Deduct spell slot or daily uses and update spell level
+    const spellPrepared = spell?.data?.prepared || 'prepared';
+    const actualSpellLevel = parseInt(spell?.data?.level || '0', 10) || 0;
+    if (spellPrepared === 'prepared' && actualSpellLevel > 0) {
+      let spellSlot = parseInt(spell?.data?.upcastLevel || `${actualSpellLevel}`, 10) || 1;
+
+      // Determine if we are using a spell slot of a pact magic slot
+      let fieldToUse = '';
+      let maxField = '';
+
+      // Pact Magic Slots available
+      const numPactMagicAvail1 = parseInt(record?.data?.numPactMagic1 || '0', 10) - parseInt(record?.data?.pactMagic1 || '0', 10);
+      const numPactMagicAvail2 = parseInt(record?.data?.numPactMagic2 || '0', 10) - parseInt(record?.data?.pactMagic2 || '0', 10);
+      const numPactMagicAvail3 = parseInt(record?.data?.numPactMagic3 || '0', 10) - parseInt(record?.data?.pactMagic3 || '0', 10);
+      const numPactMagicAvail4 = parseInt(record?.data?.numPactMagic4 || '0', 10) - parseInt(record?.data?.pactMagic4 || '0', 10);
+      const numPactMagicAvail5 = parseInt(record?.data?.numPactMagic5 || '0', 10) - parseInt(record?.data?.pactMagic5 || '0', 10);
+      const numPactMagicAvail6 = parseInt(record?.data?.numPactMagic6 || '0', 10) - parseInt(record?.data?.pactMagic6 || '0', 10);
+      const numPactMagicAvail7 = parseInt(record?.data?.numPactMagic7 || '0', 10) - parseInt(record?.data?.pactMagic7 || '0', 10);
+      const numPactMagicAvail8 = parseInt(record?.data?.numPactMagic8 || '0', 10) - parseInt(record?.data?.pactMagic8 || '0', 10);
+      const numPactMagicAvail9 = parseInt(record?.data?.numPactMagic9 || '0', 10) - parseInt(record?.data?.pactMagic9 || '0', 10);
+
+      // Spell Slots available  
+      const numSpellSlots1Avail = parseInt(record?.data?.numSpellSlots1 || '0', 10) - parseInt(record?.data?.spellSlots1 || '0', 10);
+      const numSpellSlots2Avail = parseInt(record?.data?.numSpellSlots2 || '0', 10) - parseInt(record?.data?.spellSlots2 || '0', 10);
+      const numSpellSlots3Avail = parseInt(record?.data?.numSpellSlots3 || '0', 10) - parseInt(record?.data?.spellSlots3 || '0', 10);
+      const numSpellSlots4Avail = parseInt(record?.data?.numSpellSlots4 || '0', 10) - parseInt(record?.data?.spellSlots4 || '0', 10);
+      const numSpellSlots5Avail = parseInt(record?.data?.numSpellSlots5 || '0', 10) - parseInt(record?.data?.spellSlots5 || '0', 10);
+      const numSpellSlots6Avail = parseInt(record?.data?.numSpellSlots6 || '0', 10) - parseInt(record?.data?.spellSlots6 || '0', 10);
+      const numSpellSlots7Avail = parseInt(record?.data?.numSpellSlots7 || '0', 10) - parseInt(record?.data?.spellSlots7 || '0', 10);
+      const numSpellSlots8Avail = parseInt(record?.data?.numSpellSlots8 || '0', 10) - parseInt(record?.data?.spellSlots8 || '0', 10);
+      const numSpellSlots9Avail = parseInt(record?.data?.numSpellSlots9 || '0', 10) - parseInt(record?.data?.spellSlots9 || '0', 10);
+
+      const hasPactAvailable = (numPactMagicAvail1 > 0 || numPactMagicAvail2 > 0 || numPactMagicAvail3 > 0 || numPactMagicAvail4 > 0 ||
+        numPactMagicAvail5 > 0 || numPactMagicAvail6 > 0 ||
+        numPactMagicAvail7 > 0 || numPactMagicAvail8 > 0 ||
+        numPactMagicAvail9 > 0);
+
+      const hasSpellSlotsAvailable = (numSpellSlots1Avail > 0 || numSpellSlots2Avail > 0 || numSpellSlots3Avail > 0 || numSpellSlots4Avail > 0 ||
+        numSpellSlots5Avail > 0 || numSpellSlots6Avail > 0 ||
+        numSpellSlots7Avail > 0 || numSpellSlots8Avail > 0 ||
+        numSpellSlots9Avail > 0);
+
+      //  Use a pact magic slot if we have any available and we're using pact magic, or if we don't have any spell slots available
+      if (hasPactAvailable && (record?.data?.usePactMagic || !hasSpellSlotsAvailable)) {
+        const availablePactSlots = [
+          numPactMagicAvail1,
+          numPactMagicAvail2,
+          numPactMagicAvail3,
+          numPactMagicAvail4,
+          numPactMagicAvail5,
+          numPactMagicAvail6,
+          numPactMagicAvail7,
+          numPactMagicAvail8,
+          numPactMagicAvail9
+        ];
+
+        const lowestPactMagicIndex = availablePactSlots.findIndex(pactMagic => pactMagic > 0);
+        const lowestPactMagic = lowestPactMagicIndex + 1;
+
+        if (lowestPactMagic > 0) { // Ensure that there is at least one available slot
+          if (actualSpellLevel <= lowestPactMagic) {
+            // For pact magic, we always upcast to the lowest available slot
+            // (Generally never above level 5 but we allow it just in case)
+            spellSlot = lowestPactMagic;
+            fieldToUse = `pactMagic${lowestPactMagic}`;
+            maxField = `numPactMagic${lowestPactMagic}`;
+          }
+        }
+      }
+      else {
+        // Otherwise we use the spell slot for the level being cast at
+        fieldToUse = `spellSlots${spellSlot}`;
+        maxField = `numSpellSlots${spellSlot}`;
+      }
+
+      spellLevel = spellSlot;
+
+      let numSpellSlots = parseInt(api.getValue(`data.${fieldToUse}`) || '0', 10);
+      let numMaxSpellSlots = parseInt(api.getValue(`data.${maxField}`) || '0', 10);
+
+      if (numSpellSlots < numMaxSpellSlots) {
+        api.setValue(`data.${fieldToUse}`, numSpellSlots + 1);
+      }
+    } else if (spell?.data?.prepared === 'daily') {
+      let dailyUses = parseInt(spell?.data?.dailyUses, 10) || 0;
+      let maxDailyUses = parseInt(spell?.data?.maxDailyUses, 10) || 1;
+      if (dailyUses < maxDailyUses) {
+        const dataPathToDaily = dataPath.replace('.data.castBtn', '.data.dailyUses');
+        api.setValue(dataPathToDaily, dailyUses + 1);
+      }
+    }
 
     if (spell?.data?.level === '0') {
       // Cantrip handling
@@ -74,7 +167,9 @@
     else {
       // Spell handling
       // Check if we're upcasting
-      spellLevel = parseInt(spell?.data?.upcastLevel, 10) || 0;
+      if (spellLevel === 0) {
+        spellLevel = parseInt(spell?.data?.upcastLevel || spell?.data?.level, 10) || 0;
+      }
       // Check if damage is defined at that level
       if (spellLevel >= 2) {
         spellDamage = spell?.data?.[`damageLevel${spellLevel}`] || spell?.data?.damage;
