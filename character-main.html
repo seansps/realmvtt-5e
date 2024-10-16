@@ -1,5 +1,5 @@
 <script>
-	function setSaveValue(profBonus, prof, attribute) {
+	function getSaveValue(profBonus, prof, attribute) {
 		const isProficient = prof === 'true';
 
 		const modField = `${attribute}Mod`;
@@ -11,7 +11,10 @@
 		}
 
 		const savVal = isProficient ? modVal + profBonus : modVal;
-		api.setValue(`data.${saveField}`, savVal);
+		return {
+			field: `data.${saveField}`,
+			value: savVal
+		};
 	}
 
 	function updateHitPoints(newClass, newLevel, totalLevel, newHitDie, additionalPrompt) {
@@ -133,10 +136,14 @@
 			return;
 		}
 
+		const valuesToSet = {};
 		['strength', 'constitution', 'dexterity', 'intelligence', 'wisdom', 'charisma'].forEach((attribute) => {
 			const isProficient = thisRecord?.data?.[`${attribute}Prof`] || 'false';
-			setSaveValue(value, isProficient, attribute);
+			const saveValue = getSaveValue(value, isProficient, attribute);
+			valuesToSet[saveValue.field] = saveValue.value;
 		});
+
+		api.setValues(valuesToSet);
 
 		// TODO Skills
 	}
