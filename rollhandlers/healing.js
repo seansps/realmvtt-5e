@@ -17,11 +17,22 @@ mods.forEach(mod => {
 
 const message = `
 \`\`\`Apply_Healing
-let healing = ${data.roll.total};
-let targets = [record];
-if (!record) {
-  targets = api.getSelectedTokens().map(target => target.token);
+const healing = ${data.roll.total};
+
+let targets = api.getSelectedTokens().map(target => target.token);
+
+// If record is not null, check if we're the GM or owner and use it
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
 }
+
+// If we're a player and we did not drop on a record, get our owned tokens
+if (!isGM && targets.length === 0) {
+    targets = api.getSelectedOwnedTokens().map(target => target.token);
+}
+
 targets.forEach(target => {
   // Apply healing
   if (target && target.data) {
@@ -33,9 +44,9 @@ targets.forEach(target => {
       const unIdentified = target.identified === false;
       const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
 
-      const macro = \`\\\`\\\`\\\`Undo\\n api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} healed for \$\{healing\} HP.~');\\n\\\`\\\`\\\`\`;
+      const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} healed for \$\{healing\} HP.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
       
-      api.sendMessage(\`\$\{targetName\} healed for \$\{healing\} HP.\\n\$\{macro\}\`);
+      api.sendMessage(\`\$\{targetName\} healed for \$\{healing\} HP.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
   }
 });
 \`\`\`

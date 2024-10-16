@@ -8,11 +8,20 @@ const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?
 
 const damageMacro = `
 \`\`\`Apply_Damage
-
 const damage = ${data.roll.total};
+
 let targets = api.getSelectedTokens().map(target => target.token);
-if (!isGM) {
-  targets = api.getSelectedOwnedTokens().map(target => target.token);
+
+// If record is not null, check if we're the GM or owner and use it
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
+}
+
+// If we're a player and we did not drop on a record, get our owned tokens
+if (!isGM && targets.length === 0) {
+    targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
 
 targets.forEach(target => {
@@ -39,9 +48,19 @@ targets.forEach(target => {
 
 const halfDamageMacro = showHalf ? `
 \`\`\`Apply_Half_Damage
-let damage = Math.floor(${data.roll.total} / 2);
+const damage = Math.floor(${data.roll.total} / 2);
+
 let targets = api.getSelectedTokens().map(target => target.token);
-if (!isGM) {
+
+// If record is not null, check if we're the GM or owner and use it
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
+}
+
+// If we're a player and we did not drop on a record, get our owned tokens
+if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
 
