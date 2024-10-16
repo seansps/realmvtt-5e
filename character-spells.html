@@ -242,6 +242,28 @@ if (isGM) {
 }
 \`\`\`` : '';
 
+    // Create macros for all effects that this spell can apply
+    let effectButtons = '';
+    const effects = spell?.data?.effects || [];
+    effects.forEach(effectJson => {
+      const effect = JSON.parse(effectJson);
+      const effectName = effect?.name || '';
+      const effectID = effect?._id || '';
+      const effectTitle = `Apply_${effectName.replace(/ /g, '_')}`;
+      if (effectButtons !== '') {
+        effectButtons += '\n';
+      }
+      effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedTokens().map(target => target.token);
+if (!isGM) {
+  targets = api.getSelectedOwnedTokens().map(target => target.token);
+}
+targets.forEach(target => {
+  api.addEffectById('${effectID}', target);
+});
+\`\`\``;
+    });
+
     const message = `
 #### ${spellIcon}${spellName}
 
@@ -257,6 +279,7 @@ ${rollAttackButton}
 ${rollSaveButton}
 ${damageButton}
 ${healingButton}
+${effectButtons}
 `;
 
     const castingTime = spell?.data?.castingTime;
