@@ -177,21 +177,23 @@
       }
     }
 
-    // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
-    const damageButton = spell?.data?.damage && spell?.data?.isSave ? `\`\`\`Roll_Damage
-api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(modifiers)}, {}, 'damage')
-\`\`\`` : '';
-
-    const healingButton = spell?.data?.healing ? `\`\`\`Roll_Healing
-api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modifiers)}, {}, 'healing')
-\`\`\`` : '';
-
+    // Get save info, if Save
     const savingThrow = spell?.data?.savingThrow || 'dexterity'; // Default to dexterity if not set 
     // Spell Save DC is 8 + Spellcasting Ability Modifier + Proficiency Bonus (We assume they are proficient)
     const spellcastingAbility = spell?.data?.ability || 'intelligence';
     const spellcastingAbilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
     const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ? api.getValue('data.proficiencyBonus') : 2;
     const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10);
+
+    // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
+    const saveDamageMetadata = spell?.data?.isSave ? { save: savingThrow, saveDc: saveDc } : {};
+    const damageButton = spell?.data?.damage && spell?.data?.isSave ? `\`\`\`Roll_Damage
+api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(modifiers)}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+\`\`\`` : '';
+
+    const healingButton = spell?.data?.healing ? `\`\`\`Roll_Healing
+api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modifiers)}, {}, 'healing')
+\`\`\`` : '';
 
     // Roll Attack Button, if Spell is an Attack, in the handler we get the targets and
     // roll for each target - DC for Attacks is the enemy's AC

@@ -4,7 +4,9 @@ const tags = [{
   tooltip: "Damage Roll"
 }];
 
-const message = `
+const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
+
+const damageMacro = `
 \`\`\`Apply_Damage
 let damage = ${data.roll.total};
 let targets = [record];
@@ -29,6 +31,38 @@ targets.forEach(target => {
   }
 });
 \`\`\`
+`;
+
+const halfDamageMacro = showHalf ? `
+\`\`\`Apply_Half_Damage
+let damage = Math.floor(${data.roll.total} / 2);
+let targets = [record];
+if (!record) {
+  targets = api.getSelectedTokens().map(target => target.token);
+}
+targets.forEach(target => {
+  // Apply wounds
+  if (target && target.data) {
+      var curhp = target.data?.curhp || 0;
+      curhp -= damage;
+      if (curhp < 0) { curhp = 0; }
+      if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
+      const oldHp = (target.data?.curhp || 0);
+      api.setValueOnToken(target, "data.curhp", curhp);
+      const unIdentified = target.identified === false;
+      const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+
+      const macro = \`\\\`\\\`\\\`Undo\\n api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} took \$\{damage\} damage.~');\\n\\\`\\\`\\\`\`;
+      
+      api.sendMessage(\`\$\{targetName\} took \$\{damage\} damage.\\n\$\{macro\}\`);
+  }
+});
+\`\`\`
+` : '';
+
+const message = `
+${damageMacro}
+${halfDamageMacro}
 `;
 
 // Here you would check targets and apply damage, etc.
