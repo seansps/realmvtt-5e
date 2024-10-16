@@ -1,14 +1,26 @@
+<label textalign='center' label='Proficiencies'></label>
+
+<div style='margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 4px;'>
+  <stringfield multiline maxRows='2' field="weaponProficiencies" label="Weapon Proficiencies" placeholder='None'>
+  </stringfield>
+  <stringfield multiline maxRows='2' field="armorTraining" label="Armor Training" placeholder='None'></stringfield>
+</div>
+
 <label textalign='center' label='Class Features'></label>
 
 <table>
   <tbody>
     <tr>
       <td><label label='Classes:'></label></td>
-      <td><list listtype="class_list_no_delete" field='classes'></list></td>
+      <td>
+        <list listtype="class_list_no_delete" field='classes'></list>
+      </td>
     </tr>
     <tr>
       <td><label label='Subclasses:'></label></td>
-      <td><list listtype="class_list_no_delete" field='subclasses'></list></td>
+      <td>
+        <list listtype="class_list_no_delete" field='subclasses'></list>
+      </td>
     </tr>
   </tbody>
 </table>
