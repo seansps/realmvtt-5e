@@ -938,20 +938,96 @@
 	}
 
 	function shortRest() {
-		// TODO Restore Warlock Spellcasting (if Pactmagic is on sheet)
-		// TODO Update any other short rest actions as needed
+		const message = 'Taking a Short Rest.';
 
-		// TODO Output to chat
+		// If we have pactmagic slots, we restore them
+		const valuesToSet = {
+			'data.pactMagic1': 0,
+			'data.pactMagic2': 0,
+			'data.pactMagic3': 0,
+			'data.pactMagic4': 0,
+			'data.pactMagic5': 0,
+			'data.pactMagic6': 0,
+			'data.pactMagic7': 0,
+			'data.pactMagic8': 0,
+			'data.pactMagic9': 0,
+		};
+
+		// TODO add a check here after we add actions that restore on short rest
+		// Check for all these actions and restore daily uses
+
+		api.setValues(valuesToSet);
+		api.sendMessage(message, undefined, [], []);
 	}
 
 	function longRest() {
-		// TODO Restore HP
+		const valuesToSet = {};
+		// Restore HP and Hit Die
+		valuesToSet['data.curhp'] = record?.data?.hitpoints || 0;
 
-		// TODO Restory half max Hit Die using  hit die totals from hpByLevel
+		// Restore all Hit Die per 2024 rules
 		const hpByLevel = record?.data?.hpByLevel || '[]';
 		const hpByLevelArr = JSON.parse(hpByLevel);
+		let d6HitDie = 0;
+		let d8HitDie = 0;
+		let d10HitDie = 0;
+		let d12HitDie = 0;
+		hpByLevelArr.forEach(hpLevel => {
+			if (hpLevel.hitDie === 'd6') {
+				d6HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd8') {
+				d8HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd10') {
+				d10HitDie += 1;
+			}
+			else if (hpLevel.hitDie === 'd12') {
+				d12HitDie += 1;
+			}
+		});
+		valuesToSet['data.d6HitDie'] = d6HitDie > 0 ? d6HitDie : null;
+		valuesToSet['data.d8HitDie'] = d8HitDie > 0 ? d8HitDie : null;
+		valuesToSet['data.d10HitDie'] = d10HitDie > 0 ? d10HitDie : null;
+		valuesToSet['data.d12HitDie'] = d12HitDie > 0 ? d12HitDie : null;
 
-		// TODO Output to chat
+		// Restore all spell slots and pact magic
+		valuesToSet['data.spellSlots1'] = 0;
+		valuesToSet['data.spellSlots2'] = 0;
+		valuesToSet['data.spellSlots3'] = 0;
+		valuesToSet['data.spellSlots4'] = 0;
+		valuesToSet['data.spellSlots5'] = 0;
+		valuesToSet['data.spellSlots6'] = 0;
+		valuesToSet['data.spellSlots7'] = 0;
+		valuesToSet['data.spellSlots8'] = 0;
+		valuesToSet['data.spellSlots9'] = 0;
+		valuesToSet['data.pactMagic1'] = 0;
+		valuesToSet['data.pactMagic2'] = 0;
+		valuesToSet['data.pactMagic3'] = 0;
+		valuesToSet['data.pactMagic4'] = 0;
+		valuesToSet['data.pactMagic5'] = 0;
+		valuesToSet['data.pactMagic6'] = 0;
+		valuesToSet['data.pactMagic7'] = 0;
+		valuesToSet['data.pactMagic8'] = 0;
+		valuesToSet['data.pactMagic9'] = 0;
+
+		// Restore any Spells that have Daily Uses
+		const spellLists = ['cantrips', 'spells1', 'spells2', 'spells3', 'spells4', 'spells5', 'spells6', 'spells7', 'spells8', 'spells9'];
+		spellLists.forEach((spellList, index) => {
+			const spells = record?.data?.[spellList] || [];
+			spells.forEach((spell, index) => {
+				if (spell?.data?.dailyUses > 0) {
+					valuesToSet[`data.${spellList}.${index}.data.dailyUses`] = 0;
+				}
+			});
+		});
+
+		// TODO when actions with daily uses are added, restore them here also
+
+		api.setValues(valuesToSet);
+
+		// Output to chat
+		api.sendMessage('Taking a Long Rest.', undefined, [], []);
 	}
 
 	function rollDeathSave() {
