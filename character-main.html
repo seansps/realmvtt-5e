@@ -682,11 +682,67 @@
 			saveProficiencies.forEach(proficiency => {
 				valuesToSet[`data.${proficiency}Prof`] = "true";
 			});
-			// TODO set Tool Proficiencies / Weapon Proficiencies / Armor Training
+			let currentWeaponProficiencies = record?.data?.weaponProficiencies || '';
+			let currentArmorTraining = record?.data?.armorTraining || '';
+			if (currentWeaponProficiencies !== '') {
+				if (currentWeaponProficiencies === 'None') {
+					currentWeaponProficiencies = '';
+				}
+				else {
+					currentWeaponProficiencies += ', ';
+				}
+			}
+			currentWeaponProficiencies += classObj?.data?.weaponProficiencies || '';
+			if (currentArmorTraining !== '') {
+				if (currentArmorTraining === 'None') {
+					currentArmorTraining = '';
+				}
+				else {
+					currentArmorTraining += ', ';
+				}
+			}
+			currentArmorTraining += classObj?.data?.armorTraining || '';
+			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
+			valuesToSet[`data.armorTraining`] = currentArmorTraining;
+
 			// TODO prompt Skill choices
+			// TODO set Tool Proficiencies as Skills in skills tab
 		}
 		else if (addingNewClass) {
-			// TODO set Tool Proficiencies / Weapon Proficiencies / Armor Training for the multiclass class
+			// Multiclass do not get save proficiencies
+			// Weapon Proficiencies / Armor Training for the multiclass class
+			let currentWeaponProficiencies = record?.data?.weaponProficiencies || '';
+			let currentArmorTraining = record?.data?.armorTraining || '';
+			const newWeaponProficiencies = classObj?.data?.weaponProficienciesMulti || '';
+			const newArmorTraining = classObj?.data?.armorTrainingMulti || '';
+			if (newWeaponProficiencies !== '' && newWeaponProficiencies !== 'None') {
+				if (currentWeaponProficiencies !== '') {
+					if (currentWeaponProficiencies === 'None') {
+						currentWeaponProficiencies = '';
+					}
+					else {
+						currentWeaponProficiencies += ', ';
+					}
+				}
+				currentWeaponProficiencies += newWeaponProficiencies;
+			}
+			if (newArmorTraining !== '' && newArmorTraining !== 'None') {
+				if (currentArmorTraining !== '') {
+					if (currentArmorTraining === 'None') {
+						currentArmorTraining = '';
+					}
+					else {
+						currentArmorTraining += ', ';
+					}
+				}
+				currentArmorTraining += newArmorTraining;
+			}
+
+			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
+			valuesToSet[`data.armorTraining`] = currentArmorTraining;
+
+			// Add Tool Proficiencies as Skills in skills tab 
+			// Prompt for a skill choice if they get one 
 		}
 
 		const subclasses = record?.data?.subclasses || [];
