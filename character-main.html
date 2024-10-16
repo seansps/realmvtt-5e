@@ -1040,6 +1040,8 @@
 		const saveField = `${attribute}Save`;
 		const saveProf = `${attribute}Prof`;
 
+		const valuesToSet = {};
+
 		const val = parseInt(value, 10);
 		if (isNaN(val)) {
 			return;
@@ -1049,7 +1051,7 @@
 		if (modVal >= 0) {
 			modValStr = `+${modVal}`;
 		}
-		api.setValue(`data.${modField}`, modValStr);
+		valuesToSet[`data.${modField}`] = modValStr;
 
 		let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '0', 10);
 		if (isNaN(proficiencyBonus)) {
@@ -1058,12 +1060,38 @@
 
 		const isProficient = record?.data?.[saveProf] === 'true';
 		const savVal = isProficient ? modVal + proficiencyBonus : modVal;
-		api.setValue(`data.${saveField}`, savVal);
+		valuesToSet[`data.${saveField}`] = savVal;
+
+		// Update hit points if this is constitution
+		if (attribute === 'constitution') {
+			const totalHp = getHpForLevel();
+			const level = parseInt(record?.data?.level || '0', 10);
+			let newHp = totalHp + (modVal * level);
+			if (level > 0 && newHp < 1) {
+				// To a minimum of 1
+				newHp = 1;
+			}
+			// Set our HP to be totalHp per level + conMod * level
+			valuesToSet['data.hitpoints'] = newHp;
+		}
+
+		// TODO Get Skills we need to update
+
+		api.setValues(valuesToSet);
 	}
 
 	// On update of Constitution, update HP
-	function updateHitPointsForCon() {
-		// TODO
+	function getHpForLevel() {
+		// Get the max HP we should have at our current level
+		const hpByLevel = record?.data?.hpByLevel || '[]';
+		const hpByLevelArr = JSON.parse(hpByLevel);
+		let totalHp = 0;
+		// Get all the HP we rolled or set for each level
+		hpByLevelArr.forEach(hpLevel => {
+			totalHp += hpLevel.hp;
+		});
+
+		return totalHp;
 	}
 </script>
 
