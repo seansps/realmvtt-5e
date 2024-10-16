@@ -910,7 +910,31 @@
 	}
 
 	function rollHitDie(hitdie) {
-		// TODO If hit die are available, prompt roll of hitDice type roll
+		const hitDieField = `${hitdie}HitDie`;
+		const hitDieRemaining = parseInt(record?.data?.[hitDieField] || '0', 10);
+
+		if (hitDieRemaining > 0) {
+			// We add the constitution modifier to the roll
+			const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
+			const modifiers = [
+				{
+					name: 'Constitution',
+					value: conMod,
+					active: true,
+				}
+			];
+			const metadata = {
+				"rollName": 'Hit Die',
+				"tooltip": `Recovering HP with a ${hitdie} Hit Die`,
+				"hitDieField": hitDieField,
+				"hitDieRemaining": hitDieRemaining
+			}
+
+			api.promptRoll(`Roll ${hitdie} Hit Die`, `${hitdie}`, modifiers, metadata, 'hitdie');
+		}
+		else {
+			api.showNotification(`No ${hitdie} Hit Dice Remaining`, 'red', 'No Hit Dice');
+		}
 	}
 
 	function shortRest() {
@@ -1110,22 +1134,22 @@
 						<indicator position='top-center' size='sm' field='d6HitDie' color='red' defaultvalue=''>
 							<iconbutton field="Roll D6 Hit Die" size='lg' variant="default"
 								options='[{"icon": "D6", "label": "Roll D6 Hit Die", "value": "roll"}]' onchange=''
-								onclick="rollHitDie('D6');"></iconbutton>
+								onclick="rollHitDie('d6');"></iconbutton>
 						</indicator>
 						<indicator position='top-center' size='sm' field='d8HitDie' color='red' defaultvalue=''>
 							<iconbutton field="Roll D8 Hit Die" size='lg' variant="default"
 								options='[{"icon": "D8", "label": "Roll D8 Hit Die", "value": "roll"}]' onchange=''
-								onclick="rollHitDie('D8');"></iconbutton>
+								onclick="rollHitDie('d8');"></iconbutton>
 						</indicator>
 						<indicator position='top-center' size='sm' field='d10HitDie' color='red' defaultvalue=''>
 							<iconbutton field="Roll D10 Hit Die" size='lg' variant="default"
 								options='[{"icon": "D10", "label": "Roll D10 Hit Die", "value": "roll"}]' onchange=''
-								onclick="rollHitDie('D10');"></iconbutton>
+								onclick="rollHitDie('d10');"></iconbutton>
 						</indicator>
 						<indicator position='top-center' size='sm' field='d12HitDie' color='red' defaultvalue=''>
 							<iconbutton field="Roll D10 Hit Die" size='lg' variant="default"
 								options='[{"icon": "D12", "label": "Roll D12 Hit Die", "value": "roll"}]' onchange=''
-								onclick="rollHitDie('D12');"></iconbutton>
+								onclick="rollHitDie('d12');"></iconbutton>
 						</indicator>
 					</div>
 					<div style='margin-left: auto; display: flex; flex-direction: column;'>
