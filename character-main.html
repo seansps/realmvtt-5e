@@ -1267,19 +1267,19 @@
 
 		<div style='margin-top: 12px; display: flex; flex-direction: row;'>
 			<div style='align-items: center; display: flex; flex-direction: column; margin-right: 8px'>
-				<label size='xs' label='Death'></label>
+				<label variant="bold" size='xs' label='Death'></label>
 				<iconbutton field="Death Save" size='md' color="red" variant="light"
 					options='[{"icon": "d20", "label": "Roll Death Save", "value": "roll"}]' onchange=''
 					onclick="rollDeathSave();"></iconbutton>
 			</div>
 			<div style="display:flex; flex-direction: column;">
 				<div style="display:flex; flex-direction: row; gap: 4px">
-					<label label='Failure&nbsp;&nbsp;&nbsp;' size='xs'></label>
+					<label variant="bold" label='Failure&nbsp;&nbsp;&nbsp;' size='xs'></label>
 					<counter color='red' field='deathSaveFailures' maxvalue='3' size='xs'></counter>
 				</div>
 
 				<div style="margin-top: 8px; display:flex; flex-direction: row; gap: 4px">
-					<label label='Success' size='xs'></label>
+					<label variant="bold" label='Success' size='xs'></label>
 					<counter color='green' field='deathSaveSuccesses' maxvalue='3' size='xs'></counter>
 				</div>
 			</div>
@@ -1296,7 +1296,7 @@
 						color='green'></numberfield>
 					<div
 						style='justify-content: center; align-items: center; margin-top: auto; display: flex; flex-direction: column; gap: 2px;'>
-						<label textalign='center' label='Heroic Inspiration' size='xs'></label>
+						<label variant="bold" textalign='center' label='Heroic Inspiration' size='xs'></label>
 						<iconbutton field="inspiration" size='sm' color="yellow" variant="light"
 							options='[{"icon": "IconStars", "label": "Heroic Inspiration: No", "value": "false"},{"icon": "IconStarsFilled", "label": "Heroic Inspiration: Yes", "value": "true"}]'
 							onchange='' onclick=''></iconbutton>
@@ -1312,7 +1312,7 @@
 
 				<div style="width: 100%; display: flex; gap: 4px; margin-top: 16px">
 					<div style='display: flex; gap: 4px; align-items: center'>
-						<label size='xs' label='Hit Dice' color='red'></label>
+						<label variant="bold" size='xs' label='Hit Dice' color='red'></label>
 					</div>
 					<div style='display: flex; gap: 4px; align-items: flex-end'>
 						<indicator position='top-center' size='sm' field='d6HitDie' color='red' defaultvalue=''>
@@ -1339,7 +1339,7 @@
 					<div style='margin-left: auto; display: flex; flex-direction: column;'>
 
 						<div style='display: flex; gap: 4px; align-items: center'>
-							<label size='xs' label='Rest'></label>
+							<label variant="bold" size='xs' label='Rest'></label>
 							<iconbutton field="Short Rest" size='lg' variant="default"
 								options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]' onchange=''
 								onclick="shortRest();"></iconbutton>
