@@ -1,4 +1,9 @@
 <script>
+  function capitalize(string) {
+    if (!string || typeof string !== 'string') return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
   function getAbilityFromSkill(skill) {
     switch (skill) {
       case 'acrobatics':
@@ -90,7 +95,55 @@
   }
 
   function rollCheck(skill) {
+    const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+    const mod = `${ability}Mod`;
 
+    const modifiers = [];
+    let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
+    if (abilityMod === undefined || isNaN(abilityMod)) {
+      abilityMod = 0;
+    }
+
+    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+    const proficiency = record?.data?.[`${skill}Prof`] || 'false';
+    const isHalfProficient = proficiency === 'half';
+    const isExpertise = proficiency === 'expertise';
+    const isProficient = proficiency === 'true';
+
+    modifiers.push({
+      name: ability,
+      value: abilityMod,
+      active: true,
+    });
+
+    if (isHalfProficient) {
+      modifiers.push({
+        name: 'Half Proficiency',
+        value: Math.floor(proficiencyBonus / 2),
+        active: true,
+      });
+    }
+    else if (isExpertise) {
+      modifiers.push({
+        name: 'Expertise',
+        value: proficiencyBonus * 2,
+        active: true,
+      });
+    }
+    else if (isProficient) {
+      modifiers.push({
+        name: 'Proficient',
+        value: proficiencyBonus,
+        active: true,
+      });
+    }
+
+    const metadata = {
+      "rollName": `${capitalize(skill)}`,
+      "tooltip": `${capitalize(ability)} (${capitalize(skill)}) Check`,
+      "dc": 0,
+    }
+    api.promptRoll(`${capitalize(ability)} (${capitalize(skill)}) Check`, "1d20", modifiers, metadata, 'ability');
   }
 </script>
 
