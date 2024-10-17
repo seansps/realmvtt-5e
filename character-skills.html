@@ -1,8 +1,92 @@
 <script>
-  function setProficiency(value, skill) {
-    //TODO
+  function getAbilityFromSkill(skill) {
+    switch (skill) {
+      case 'acrobatics':
+        return 'dexterity';
+      case 'animalHandling':
+        return 'wisdom';
+      case 'arcana':
+        return 'intelligence';
+      case 'athletics':
+        return 'strength';
+      case 'deception':
+        return 'charisma';
+      case 'history':
+        return 'intelligence';
+      case 'insight':
+        return 'wisdom';
+      case 'intimidation':
+        return 'charisma';
+      case 'investigation':
+        return 'intelligence';
+      case 'medicine':
+        return 'wisdom';
+      case 'nature':
+        return 'intelligence';
+      case 'perception':
+        return 'wisdom';
+      case 'performance':
+        return 'charisma';
+      case 'persuasion':
+        return 'charisma';
+      case 'religion':
+        return 'intelligence';
+      case 'sleightOfHand':
+        return 'dexterity';
+      case 'stealth':
+        return 'dexterity';
+      case 'survival':
+        return 'wisdom';
+      default:
+        return 'strength'; // Default to strength if no match
+    }
+  }
+
+  function setProficiencyFor(skill, proficiencyValue, ability) {
+    // Skills can be also be half, proficient, or expertise
+    const proficiency = proficiencyValue || 'false';
+    const isHalfProficient = proficiency === 'half';
+    const isExpertise = proficiency === 'expertise';
+    const isProficient = proficiency === 'true';
+    const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || '0', 10);
+    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+    let proficiencyMod = 0;
+
+    const valuesToSet = {};
+
+    if (isHalfProficient) {
+      proficiencyMod = abilityMod + Math.floor(proficiencyBonus / 2);
+      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
+    }
+    else if (isExpertise) {
+      proficiencyMod = abilityMod + (proficiencyBonus * 2);
+      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
+    }
+    else if (isProficient) {
+      proficiencyMod = abilityMod + proficiencyBonus;
+      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
+    }
+    else {
+      proficiencyMod = abilityMod;
+      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
+    }
 
     // Set a hidden field for passivePerception if this is for perception
+    if (skill === 'perception') {
+      valuesToSet['data.passivePerception'] = proficiencyMod;
+    }
+
+    api.setValues(valuesToSet);
+  }
+
+  function setProficiency(value, skill) {
+    const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+    setProficiencyFor(skill, value, ability);
+  }
+
+  function onAbilityChange(ability, skill) {
+    const proficiency = record?.data?.[`${skill}Prof`] || 'false';
+    setProficiencyFor(skill, proficiency, ability);
   }
 
   function rollCheck(skill) {
@@ -16,7 +100,7 @@
     <tr>
       <td>
         <dropdown label="Acrobatics" field="acrobaticsAbility" placeholder='Select ability...' defaultvalue='dexterity'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'acrobatics');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -36,7 +120,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Medicine" field="medicineAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'medicine');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -58,7 +142,7 @@
     <tr>
       <td>
         <dropdown label="Animal Handling" field="animalHandlingAbility" placeholder='Select ability...'
-          defaultvalue='wisdom' size="xs" width="100%"
+          defaultvalue='wisdom' size="xs" width="100%" onchange="onAbilityChange(value, 'animalHandling');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -78,7 +162,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Nature" field="natureAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'nature');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -100,7 +184,7 @@
     <tr>
       <td>
         <dropdown label="Arcana" field="arcanaAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'arcana');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -120,7 +204,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Perception" field="perceptionAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'perception');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -142,7 +226,7 @@
     <tr>
       <td>
         <dropdown label="Athletics" field="athleticsAbility" placeholder='Select ability...' defaultvalue='strength'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'athletics');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -162,7 +246,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Performance" field="performanceAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'performance');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -184,7 +268,7 @@
     <tr>
       <td>
         <dropdown label="Deception" field="deceptionAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'deception');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -204,7 +288,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Persuasion" field="persuasionAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'persuasion');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -226,7 +310,7 @@
     <tr>
       <td>
         <dropdown label="History" field="historyAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'history');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -246,7 +330,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Religion" field="religionAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'religion');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -268,7 +352,7 @@
     <tr>
       <td>
         <dropdown label="Insight" field="insightAbility" placeholder='Select ability...' defaultvalue='wisdom' size="xs"
-          width="100%"
+          width="100%" onchange="onAbilityChange(value, 'insight');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -288,7 +372,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Sleight of Hand" field="sleightOfHandAbility" placeholder='Select ability...'
-          defaultvalue='dexterity' size="xs" width="100%"
+          defaultvalue='dexterity' size="xs" width="100%" onchange="onAbilityChange(value, 'sleightOfHand');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -310,7 +394,7 @@
     <tr>
       <td>
         <dropdown label="Intimidation" field="intimidationAbility" placeholder='Select ability...'
-          defaultvalue='charisma' size="xs" width="100%"
+          defaultvalue='charisma' size="xs" width="100%" onchange="onAbilityChange(value, 'intimidation');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -330,7 +414,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Stealth" field="stealthAbility" placeholder='Select ability...' defaultvalue='dexterity'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'stealth');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -352,7 +436,7 @@
     <tr>
       <td>
         <dropdown label="Investigation" field="investigationAbility" placeholder='Select ability...'
-          defaultvalue='intelligence' size="xs" width="100%"
+          defaultvalue='intelligence' size="xs" width="100%" onchange="onAbilityChange(value, 'investigation');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
@@ -372,7 +456,7 @@
 
       <td style="align-content: flex-end;">
         <dropdown label="Survival" field="stealthAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%"
+          size="xs" width="100%" onchange="onAbilityChange(value, 'survival');"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
         </dropdown>
       </td>
