@@ -27,24 +27,25 @@ if (isNaN(dc)) {
 if (dc > 0) {
   const total = data?.roll?.total || 0;
   if (isCritical) {
-    message = `${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}: [color=green]CRITICAL HIT[/color] [gm](vs AC ${dc})[/gm]`
+    message = `[center]${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}[/center]\n\n**[center][color=green]CRITICAL HIT[/color] [gm](vs AC ${dc})[/gm][/center]**
+  `
     // If damage was defined, we need to double the dice 
     if (damage) {
       damage = doubleDamageDice(damage);
     }
   }
   else if (isMiss) {
-    message = `${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}: [color=red]AUTOMATIC MISS[/color] [gm](vs AC ${dc})[/gm]`
+    message = `[center]${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm](vs AC ${dc})[/gm][/center]**`
   }
   else if (total >= dc) {
-    message = `${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}: [color=green]HIT[/color] [gm](vs AC ${dc})[/gm]`
+    message = `[center]${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}[/center]\n\n**[center][color=green]HIT[/color] [gm](vs AC ${dc})[/gm][/center]**`
   }
   else {
-    message = `${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}: [color=red]MISS[/color] [gm](vs AC ${dc})[/gm]`
+    message = `[center]${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}[/center]\n\n**[center][color=red]MISS[/color] [gm](vs AC ${dc})[/gm][/center]**`
   }
 }
 else {
-  message = `${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}`
+  message = `[center]${icon ? `:${icon}:` : ''} ${attack} :IconTargetArrow: ${targetName}[/center]`
 }
 
 const tags = [{
