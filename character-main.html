@@ -143,9 +143,30 @@
 			valuesToSet[saveValue.field] = saveValue.value;
 		});
 
-		api.setValues(valuesToSet);
+		getSkills().forEach((skill) => {
+			// Skills can be also be half, proficient, or expertise
+			const proficiency = thisRecord?.data?.[`${skill.field}Prof`] || 'false';
+			const isHalfProficient = proficiency === 'half';
+			const isExpertise = proficiency === 'expertise';
+			const isProficient = proficiency === 'true';
+			// Get the ability being used for this skill, fallback to the skill's default
+			const ability = thisRecord?.data?.[`${skill.field}Ability`] || skill.ability;
+			const abilityMod = parseInt(thisRecord?.data?.[`${ability}Mod`] || '0', 10);
+			if (isHalfProficient) {
+				valuesToSet[`data.${skill.field}Mod`] = abilityMod + (Math.floor(value / 2));
+			}
+			else if (isExpertise) {
+				valuesToSet[`data.${skill.field}Mod`] = abilityMod + (value * 2);
+			}
+			else if (isProficient) {
+				valuesToSet[`data.${skill.field}Mod`] = abilityMod + value;
+			}
+			else {
+				valuesToSet[`data.${skill.field}Mod`] = abilityMod;
+			}
+		});
 
-		// TODO Skills
+		api.setValues(valuesToSet);
 	}
 
 	function getProficiencyBonus(level) {
@@ -200,6 +221,102 @@
 		]
 
 		return spellSlotsByLevel[spellCasterLevel];
+	}
+
+	// Returns all skills by name with their ability fields and defaults
+	function getSkills() {
+		return [
+			{
+				name: 'Acrobatics',
+				field: 'acrobatics',
+				ability: 'dexterity',
+			},
+			{
+				name: 'Animal Handling',
+				field: 'animalHandling',
+				ability: 'wisdom',
+			},
+			{
+				name: 'Arcana',
+				field: 'arcana',
+				ability: 'intelligence',
+			},
+			{
+				name: 'Athletics',
+				field: 'athletics',
+				ability: 'strength',
+			},
+			{
+				name: 'Deception',
+				field: 'deception',
+				ability: 'charisma',
+			},
+			{
+				name: 'History',
+				field: 'history',
+				ability: 'intelligence',
+			},
+			{
+				name: 'Insight',
+				field: 'insight',
+				ability: 'wisdom',
+			},
+			{
+				name: 'Intimidation',
+				field: 'intimidation',
+				ability: 'charisma',
+			},
+			{
+				name: 'Investigation',
+				field: 'investigation',
+				ability: 'intelligence',
+			},
+			{
+				name: 'Medicine',
+				field: 'medicine',
+				ability: 'wisdom',
+			},
+			{
+				name: 'Nature',
+				field: 'nature',
+				ability: 'intelligence',
+			},
+			{
+				name: 'Perception',
+				field: 'perception',
+				ability: 'wisdom',
+			},
+			{
+				name: 'Performance',
+				field: 'performance',
+				ability: 'charisma',
+			},
+			{
+				name: 'Persuasion',
+				field: 'persuasion',
+				ability: 'charisma',
+			},
+			{
+				name: 'Religion',
+				field: 'religion',
+				ability: 'intelligence',
+			},
+			{
+				name: 'Sleight of Hand',
+				field: 'sleightOfHand',
+				ability: 'dexterity',
+			},
+			{
+				name: 'Stealth',
+				field: 'stealth',
+				ability: 'dexterity',
+			},
+			{
+				name: 'Survival',
+				field: 'survival',
+				ability: 'wisdom',
+			}
+		]
 	}
 
 	function getNextLevelXp(level) {
