@@ -11,10 +11,10 @@ if (isNaN(dc)) {
 if (dc > 0) {
   const total = data?.roll?.total || 0;
   if (total >= dc) {
-    message = `[color=green]Success[/color] [gm]vs DC ${dc}[/gm]`
+    message = `**[center][color=green]SUCCESS[/color] [gm]vs DC ${dc}[/gm][/center]**`
   }
   else {
-    message = `[color=red]Failure[/color] [gm]vs DC ${dc}[/gm]`
+    message = `**[center][color=red]FAILURE[/color] [gm]vs DC ${dc}[/gm][/center]**`
   }
 }
 
