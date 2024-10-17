@@ -1111,7 +1111,12 @@
 	}
 
 	function rollDeathSave() {
-		// TODO Prompt roll of Death Save
+		const modifiers = [];
+		const metadata = {
+			"rollName": 'Death Save',
+		}
+
+		api.promptRoll(`Roll Death Save`, "1d20", modifiers, metadata, 'deathsave');
 	}
 
 	// On Change of Attributes, Set the Relavant Mods

@@ -32,8 +32,13 @@ api.getRecord('characters', recordId, (record) => {
 
     api.setValues(valuesToSet);
 
+    const tags = [{
+      name: "Hit Die",
+      tooltip: "Hit Die Roll"
+    }];
+
     // Send a message
-    api.sendMessage(`Used a Hit Die to Recover ${amountToAdd} HP`, data.roll, [], []);
+    api.sendMessage(`[center]Recovered ${amountToAdd} HP[/center]`, data.roll, [], tags);
   }
   else {
     api.showNotification(`No Hit Die Remaining for ${record?.name}`, 'red', "No Hit Dice");
