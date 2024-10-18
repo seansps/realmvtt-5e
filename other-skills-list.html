@@ -1,0 +1,128 @@
+<script>
+  function capitalize(string) {
+    if (!string || typeof string !== 'string') return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  function setProficiencyWithAbility(value, ability, modDataPath) {
+    // Skills can be also be half, proficient, or expertise
+    const proficiency = value || 'false';
+    const isHalfProficient = proficiency === 'half';
+    const isExpertise = proficiency === 'expertise';
+    const isProficient = proficiency === 'true';
+
+    const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || '0', 10);
+    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+    let proficiencyMod = 0;
+
+    const valuesToSet = {};
+
+    if (isHalfProficient) {
+      proficiencyMod = abilityMod + Math.floor(proficiencyBonus / 2);
+      valuesToSet[modDataPath] = proficiencyMod;
+    }
+    else if (isExpertise) {
+      proficiencyMod = abilityMod + (proficiencyBonus * 2);
+      valuesToSet[modDataPath] = proficiencyMod;
+    }
+    else if (isProficient) {
+      proficiencyMod = abilityMod + proficiencyBonus;
+      valuesToSet[modDataPath] = proficiencyMod;
+    }
+    else {
+      proficiencyMod = abilityMod;
+      valuesToSet[modDataPath] = proficiencyMod;
+    }
+
+    api.setValues(valuesToSet);
+  }
+
+  function onAbilityChange(value) {
+    const modDataPath = dataPath.replace('.ability', '.skillMod');
+    const proficiencyDataPath = dataPath.replace('.ability', '.skillProf');
+    const proficiencyValue = api.getValue(proficiencyDataPath);
+    setProficiencyWithAbility(proficiencyValue, value, modDataPath);
+  }
+
+  function setProficiency(value) {
+    const modDataPath = dataPath.replace('.skillProf', '.skillMod');
+    const abilityDataPath = dataPath.replace('.skillProf', '.ability');
+    const abilityValue = api.getValue(abilityDataPath);
+    setProficiencyWithAbility(value, abilityValue, modDataPath);
+  }
+
+  function rollCheck() {
+    const skillDataPath = dataPath.replace('.data.skillCheck', '.name');
+    const skillName = api.getValue(skillDataPath);
+    const abilityDataPath = dataPath.replace('.skillCheck', '.ability');
+    const abilityValue = api.getValue(abilityDataPath);
+    const mod = `${abilityValue}Mod`;
+
+    const modifiers = [];
+    let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
+    if (abilityMod === undefined || isNaN(abilityMod)) {
+      abilityMod = 0;
+    }
+
+    const proficiencyDataPath = dataPath.replace('.skillCheck', '.skillProf');
+    const proficiencyValue = api.getValue(proficiencyDataPath);
+    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+    const isHalfProficient = proficiencyValue === 'half';
+    const isExpertise = proficiencyValue === 'expertise';
+    const isProficient = proficiencyValue === 'true';
+
+    modifiers.push({
+      name: abilityValue,
+      value: abilityMod,
+      active: true,
+    });
+
+    if (isHalfProficient) {
+      modifiers.push({
+        name: 'Half Proficiency',
+        value: Math.floor(proficiencyBonus / 2),
+        active: true,
+      });
+    }
+    else if (isExpertise) {
+      modifiers.push({
+        name: 'Expertise',
+        value: proficiencyBonus * 2,
+        active: true,
+      });
+    }
+    else if (isProficient) {
+      modifiers.push({
+        name: 'Proficient',
+        value: proficiencyBonus,
+        active: true,
+      });
+    }
+
+    const metadata = {
+      "rollName": `${capitalize(skillName)}`,
+      "tooltip": `${capitalize(abilityValue)} (${capitalize(skillName)}) Check`,
+      "dc": 0,
+    }
+    api.promptRoll(`${capitalize(abilityValue)} (${capitalize(skillName)}) Check`, "1d20", modifiers, metadata, 'ability');
+  }
+</script>
+
+<div style="display: flex; flex-direction: row; gap: 4px;">
+  <namefield width="100%" size="xs" placeholder='Enter Skill Name...' field="namefield"></namefield>
+
+  <dropdown field="ability" placeholder='Select ability...' defaultvalue='strength' size="xs" width="100%"
+    onchange="onAbilityChange(value);"
+    options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+  </dropdown>
+
+  <numberfield size="xs" placeholder='+0' field="skillMod" showsign="true"></numberfield>
+
+  <iconbutton field="skillProf" size='md' color="blue" variant="outline"
+    options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+    onchange="setProficiency(value);" onclick=''></iconbutton>
+
+  <iconbutton field="skillCheck" size='md' color="blue" variant="filled"
+    options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck();">
+  </iconbutton>
+</div>
