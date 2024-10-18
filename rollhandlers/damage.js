@@ -1,3 +1,5 @@
+const isCritical = data.roll?.metadata?.critical === true;
+
 // Here we need to determine if it was a hit or miss and display in the chat.
 const tags = [{
   name: "Damage",
@@ -6,6 +8,7 @@ const tags = [{
 
 const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
 
+// Script to get the Resistance, Immunity, and Vulnerability of a target
 const getRIVScript = `
 function getRIV(target) {
   const resistString = target.data?.resistances || '';
@@ -123,6 +126,32 @@ function getRIV(target) {
 }
 `;
 
+// If the target is currently dying (0 hp) we add a death save failure
+// We add two if it it was from a critical hit
+// If they are then at 3, we add the 'Dead' effect
+const applyDeathFailures = `
+function applyDeathFailures(target) {
+  if (target.data?.curhp <= 0) {
+
+    let failures = parseInt(target.data.deathSaveFailures || '0', 10);
+    if (${isCritical}) {
+      failures += 2;
+    }
+    else {
+      failures += 1;
+    }
+
+    // Update death save failures
+    api.setValueOnToken(target, "data.deathSaveFailures", failures);
+
+    // If they have three, we add the 'Dead' effect
+    if (failures >= 3) {  
+      api.addEffect("Dead", target);
+    }
+  }
+}
+`;
+
 const damageMacro = `
 \`\`\`Apply_Damage
 let targets = api.getSelectedTokens().map(target => target.token);
@@ -141,6 +170,9 @@ if (!isGM && targets.length === 0) {
 
 // Add RIV script
 ${getRIVScript}
+
+// Add death save failure script
+${applyDeathFailures}
 
 targets.forEach(target => {
   // Apply damage
@@ -190,6 +222,11 @@ targets.forEach(target => {
       message = \`\$\{targetName\} took \$\{damage\} damage after deducting Temp HP.\`;
     }
 
+    // If damage was done, we apply death failures if necessary
+    if (damage > 0) {
+      applyDeathFailures(target);
+    }
+
     const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
 
     api.sendMessage(\`\$\{message\}\\n\$\{macro\}\`, undefined, undefined, undefined, target);
@@ -216,6 +253,9 @@ if (!isGM && targets.length === 0) {
 
 // Add RIV script
 ${getRIVScript}
+
+// Add death save failure script
+${applyDeathFailures}
 
 targets.forEach(target => {
   // Apply damage
@@ -263,6 +303,11 @@ targets.forEach(target => {
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {
       message = \`\$\{targetName\} took \$\{damage\} damage after deducting Temp HP.\`;
+    }
+
+    // If damage was done, we apply death failures if necessary
+    if (damage > 0) {
+      applyDeathFailures(target);
     }
 
     const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;

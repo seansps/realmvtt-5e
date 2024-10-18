@@ -53,9 +53,14 @@ const tags = [{
   tooltip: tooltip || "Attack Roll"
 }];
 
+const damageMetadata = {
+  // This is so that our damage handler script can tell if it was from a critical hit
+  "critical": isCritical,
+}
+
 // Add damage button to message
 const damageButton = damage ? `\`\`\`Roll_Damage
-api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(damageModifiers)}, {}, 'damage')
+api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(damageModifiers)}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\`` : '';
 
 message = `
