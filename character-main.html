@@ -166,6 +166,30 @@
 			}
 		});
 
+		// Also update otherSkills
+		const otherSkills = record?.data?.otherSkills || [];
+		otherSkills.forEach((skill, index) => {
+			const ability = skill?.data?.ability || 'strength';
+			const abilityMod = parseInt(thisRecord?.data?.[`${ability}Mod`] || '0', 10);
+			// Skills can be also be half, proficient, or expertise
+			const proficiency = skill?.data?.skillProf || 'false';
+			const isHalfProficient = proficiency === 'half';
+			const isExpertise = proficiency === 'expertise';
+			const isProficient = proficiency === 'true';
+			if (isHalfProficient) {
+				valuesToSet[`data.otherSkills.${index}.data.skillMod`] = abilityMod + (Math.floor(value / 2));
+			}
+			else if (isExpertise) {
+				valuesToSet[`data.otherSkills.${index}.data.skillMod`] = abilityMod + (value * 2);
+			}
+			else if (isProficient) {
+				valuesToSet[`data.otherSkills.${index}.data.skillMod`] = abilityMod + value;
+			}
+			else {
+				valuesToSet[`data.otherSkills.${index}.data.skillMod`] = abilityMod;
+			}
+		});
+
 		api.setValues(valuesToSet);
 	}
 
