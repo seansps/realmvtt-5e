@@ -343,6 +343,10 @@
 		]
 	}
 
+	function getDefaultAbilityForSkillField(skillField) {
+		return getSkills().find(s => s.field === skillField)?.ability || 'strength';
+	}
+
 	function getNextLevelXp(level) {
 		if (level < 1) {
 			return 0;
@@ -598,6 +602,85 @@
 		});
 	}
 
+	function getSkillChoices(classObj, isMulticlass) {
+		// From the given class object, parse the options of skill choices
+		// From the format: `Choose X: (Skill1, Skill2, Skill3)` OR `Y skill of your choice` where X is an int and Y is a spelled number 1-10
+		const skillProficiencies = classObj?.data?.skillProficiencies || '';
+		const skillProficienciesMulti = classObj?.data?.skillProficienciesMulti || '';
+
+		// Regular expression to extract the number of choices and the skills list
+		const choicePattern = /[Cc]hoose (\d+): ([^)]+)/;
+		const choiceMatch = skillProficiencies.match(choicePattern);
+
+		let numChoices = 0;
+		let skills = [];
+
+		if (choiceMatch) {
+			numChoices = parseInt(choiceMatch[1], 10); // Number of skills to choose
+			skills = choiceMatch[2].split(',').map(s => s.trim().replace('or ', '')).filter(s => s !== ''); // Array of skill names
+		}
+
+		// If we are multiclassing parse the number of choices we get
+		if (isMulticlass) {
+			// Handle the case where the format is "Y skill of your choice"
+			const spelledNumberPattern = /(\w+) skill of your choice/;
+			const spelledMatch = skillProficienciesMulti.toLowerCase().match(spelledNumberPattern);
+			if (spelledMatch) {
+				const numWords = {
+					one: 1, two: 2, three: 3, four: 4, five: 5,
+					six: 6, seven: 7, eight: 8, nine: 9, ten: 10
+				};
+				numChoices = numWords[spelledMatch[1].toLowerCase()] || 0;
+			}
+		}
+
+		// Return null if no valid format is found
+		return {
+			numChoices,
+			skills
+		};
+	}
+
+	function normalToCamelCase(str) {
+		return str.toLowerCase().replace(/\s+(.)/g, (match, char) => char.toUpperCase());
+	}
+
+	function promptSkillChoices(classObj, isMulticlass) {
+		const skillChoices = getSkillChoices(classObj, isMulticlass);
+		if (skillChoices.numChoices > 0 && skillChoices.skills.length > 0) {
+			// Prompt the user to choose the skills, on callback, we set proficiencies 
+			// on the chosen skills
+			const skillSelection = (values) => {
+				if (values.length > 0) {
+					const proficiencyBonus = parseInt(api.getValue('data.proficiencyBonus') || '2', 10);
+
+					const valuesToSet = {};
+					values.forEach(skill => {
+						valuesToSet[`data.${skill}Prof`] = 'true';
+						// We also need to get the relavant ability score and set the proficiency
+						const ability = api.getValue(`data.${skill}Ability`) || getDefaultAbilityForSkillField(skill);;
+						const abilityMod = parseInt(api.getValue(`data.${ability}Mod`) || '0', 10);
+						// Basic proficiency, so add the whole bonus to the modifier
+						valuesToSet[`data.${skill}Mod`] = abilityMod + proficiencyBonus;
+					});
+
+					api.setValues(valuesToSet);
+				}
+			}
+
+			// We need to prompt with options to select a subclass
+			const options = skillChoices.skills.map(skill => ({
+				label: skill,
+				// In code we use camelCase, so we need to convert from normal to camelCase
+				value: normalToCamelCase(skill)
+			}));
+
+			const adjective = isMulticlass ? 'Multiclass' : 'Starting';
+
+			api.showPrompt(`Choose ${adjective} Skills`, 'Skills', `Select ${skillChoices.numChoices} Skills...`, options, null, skillSelection, 'OK', 'Cancel', skillChoices.numChoices);
+		}
+	}
+
 	// Return a map of spell slot fields to set for the given list of 
 	// current classes, subclasses, the class object for the new class,
 	// and the total level of the character
@@ -846,8 +929,10 @@
 			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
 			valuesToSet[`data.armorTraining`] = currentArmorTraining;
 
-			// TODO prompt Skill choices
 			// TODO set Tool Proficiencies as Skills in skills tab
+
+			// Prompt Skill choices
+			promptSkillChoices(classObj, false);
 		}
 		else if (addingNewClass) {
 			// Multiclass do not get save proficiencies
@@ -882,8 +967,10 @@
 			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
 			valuesToSet[`data.armorTraining`] = currentArmorTraining;
 
-			// Add Tool Proficiencies as Skills in skills tab 
-			// Prompt for a skill choice if they get one 
+			// TODO ADD Tool Proficiencies as Skills in skills tab 
+
+			// Prompt Skill choices
+			promptSkillChoices(classObj, true);
 		}
 
 		const subclasses = record?.data?.subclasses || [];

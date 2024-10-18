@@ -1,9 +1,4 @@
 <script>
-  function capitalize(string) {
-    if (!string || typeof string !== 'string') return '';
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
   function getAbilityFromSkill(skill) {
     switch (skill) {
       case 'acrobatics':
@@ -94,6 +89,10 @@
     setProficiencyFor(skill, proficiency, ability);
   }
 
+  function camelToNormal(skill) {
+    return skill.replace(/([A-Z])/g, ' $1').replace(/^./, function (str) { return str.toUpperCase(); });
+  }
+
   function rollCheck(skill) {
     const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
     const mod = `${ability}Mod`;
@@ -139,11 +138,11 @@
     }
 
     const metadata = {
-      "rollName": `${capitalize(skill)}`,
-      "tooltip": `${capitalize(ability)} (${capitalize(skill)}) Check`,
+      "rollName": `${camelToNormal(skill)}`,
+      "tooltip": `${camelToNormal(ability)} (${camelToNormal(skill)}) Check`,
       "dc": 0,
     }
-    api.promptRoll(`${capitalize(ability)} (${capitalize(skill)}) Check`, "1d20", modifiers, metadata, 'ability');
+    api.promptRoll(`${camelToNormal(ability)} (${camelToNormal(skill)}) Check`, "1d20", modifiers, metadata, 'ability');
   }
 </script>
 

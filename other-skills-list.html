@@ -53,9 +53,9 @@
 
   function rollCheck() {
     const skillDataPath = dataPath.replace('.data.skillCheck', '.name');
-    const skillName = api.getValue(skillDataPath);
+    const skillName = api.getValue(skillDataPath) || 'New Skill';
     const abilityDataPath = dataPath.replace('.skillCheck', '.ability');
-    const abilityValue = api.getValue(abilityDataPath);
+    const abilityValue = api.getValue(abilityDataPath) || 'strength';
     const mod = `${abilityValue}Mod`;
 
     const modifiers = [];
