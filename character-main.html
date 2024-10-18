@@ -1368,6 +1368,7 @@
 		const message = 'Taking a Short Rest.';
 
 		// If we have pactmagic slots, we restore them
+		// Also reset death save failures / successes (we can assume they healed at this point)
 		const valuesToSet = {
 			'data.pactMagic1': 0,
 			'data.pactMagic2': 0,
@@ -1378,6 +1379,8 @@
 			'data.pactMagic7': 0,
 			'data.pactMagic8': 0,
 			'data.pactMagic9': 0,
+			'data.deathSaveFailures': 0,
+			'data.deathSaveSuccesses': 0,
 		};
 
 		// TODO add a check here after we add actions that restore on short rest
@@ -1389,9 +1392,11 @@
 
 	function longRest() {
 		const valuesToSet = {};
-		// Restore HP and Hit Die, clear Temp HP
+		// Restore HP and Hit Die, clear Temp HP, and reset death save failures / successes
 		valuesToSet['data.curhp'] = record?.data?.hitpoints || 0;
 		valuesToSet['data.tempHp'] = 0;
+		valuesToSet['data.deathSaveFailures'] = 0;
+		valuesToSet['data.deathSaveSuccesses'] = 0;
 
 		// Restore all Hit Die per 2024 rules
 		const hpByLevel = record?.data?.hpByLevel || '[]';

@@ -316,11 +316,20 @@
 
 <!-- Settings Accordion -->
 <accordion size="sm" field="casterSettingsOpen" label="Caster Settings" hideonlocked="true" variant="separated">
-  <div style='display: flex; flex-direction: column; gap: 4px'>
-    <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
-      onchange='updateSpellLevels();'
-      options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
-    </dropdown>
+  <div style='display: flex; flex-direction: column; gap: 4px; flex-wrap: wrap'>
+    <div style='display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap'>
+      <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
+        onchange='updateSpellLevels();' size="xs"
+        options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
+      </dropdown>
+
+      <numberfield field="spellDCBonus" label="Misc. Spell DC Bonus" placeholder='+0' showsign="true" size='xs'
+        width="150px">
+      </numberfield>
+      <numberfield field="spellModBonus" label="Misc. Spell Modifier Bonus" placeholder='+0' showsign="true" size='xs'
+        width="150px">
+      </numberfield>
+    </div>
 
     <checkbox field="usePactMagic" label="Use Pact Magic First" size='sm'></checkbox>
 
