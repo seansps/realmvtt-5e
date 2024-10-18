@@ -269,6 +269,10 @@ let targets = api.getSelectedTokens().map(target => target.token);
 if (!isGM) {
   targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
+// If we dropped this on a token, use that as target
+if (record !== undefined && record !== null) {
+  targets = [record];
+}
 targets.forEach(target => {
   api.addEffectById('${effectID}', target);
 });
