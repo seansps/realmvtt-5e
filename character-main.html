@@ -1277,7 +1277,6 @@
 			valuesToSet['data.hitpoints'] = newHp;
 		}
 
-		// TODO Get Skills we need to update
 		getSkills().forEach(skill => {
 			// Get the ability being used for this skill, fallback to the skill's default
 			const ability = record?.data?.[`${skill.field}Ability`] || skill.ability;
@@ -1298,6 +1297,30 @@
 				}
 				else {
 					valuesToSet[`data.${skill.field}Mod`] = modVal;
+				}
+			}
+		});
+
+		// Also update otherSkills
+		const otherSkills = record?.data?.otherSkills || [];
+		otherSkills.forEach((skill, index) => {
+			if (skill?.data?.ability === attribute) {
+				// Skills can be also be half, proficient, or expertise
+				const proficiency = skill?.data?.skillProf || 'false';
+				const isHalfProficient = proficiency === 'half';
+				const isExpertise = proficiency === 'expertise';
+				const isProficient = proficiency === 'true';
+				if (isHalfProficient) {
+					valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + (Math.floor(proficiencyBonus / 2));
+				}
+				else if (isExpertise) {
+					valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + (proficiencyBonus * 2);
+				}
+				else if (isProficient) {
+					valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + proficiencyBonus;
+				}
+				else {
+					valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal;
 				}
 			}
 		});
