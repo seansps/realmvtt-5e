@@ -6,10 +6,125 @@ const tags = [{
 
 const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
 
+const getRIVScript = `
+function getRIV(target) {
+  const resistString = target.data?.resistances || '';
+  const resistances = resistString.split(',').map(r => r.toLowerCase().trim());
+  const immuneString = target.data?.immunities || '';
+  const immunities = immuneString.split(',').map(i => i.toLowerCase().trim());
+  const vulnString = target.data?.vulnerabilities || '';
+  const vulnerabilities = vulnString.split(',').map(v => v.toLowerCase().trim());
+
+  if (resistString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
+    resistances = resistances.map(r => {
+      if (r.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (r.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (r.includes('slashing')) {
+        return 'slashing';
+      }
+      return r;
+    });
+  }
+  else if (resistString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
+    resistances = resistances.map(r => {
+      if (r.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (r.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (r.includes('slashing')) {
+        return 'slashing';
+      }
+      return r;
+    });
+    // Include silvered weapons
+    resistances.push('silvered bludgeoning');
+    resistances.push('silvered piercing');
+    resistances.push('silvered slashing');
+  }
+
+  // Do the above for immunities and vulnerabilities
+  if (immuneString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
+    immunities = immunities.map(immune => {
+      if (immune.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (immune.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (immune.includes('slashing')) {
+        return 'slashing';
+      }
+      return immune;
+    });
+  }
+  else if (immuneString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
+    immunities = immunities.map(immune => {
+      if (immune.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (immune.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (immune.includes('slashing')) {
+        return 'slashing';
+      }
+      return immune;
+    });
+    // Include silvered weapons
+    immunities.push('silvered bludgeoning');
+    immunities.push('silvered piercing');
+    immunities.push('silvered slashing');
+  }
+
+  if (vulnString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
+    vulnerabilities = vulnerabilities.map(vuln => {
+      if (vuln.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (vuln.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (vuln.includes('slashing')) {
+        return 'slashing';
+      }
+      return vuln;
+    });
+  }
+  else if (vulnString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
+    vulnerabilities = vulnerabilities.map(vuln => {
+      if (vuln.includes('bludgeoning')) {
+        return 'bludgeoning';
+      }
+      else if (vuln.includes('piercing')) {
+        return 'piercing';
+      }
+      else if (vuln.includes('slashing')) {
+        return 'slashing';
+      }
+      return vuln;
+    });
+    // Include silvered weapons
+    vulnerabilities.push('silvered bludgeoning');
+    vulnerabilities.push('silvered piercing');
+    vulnerabilities.push('silvered slashing');
+  }
+
+  return {
+    resistances,
+    immunities,
+    vulnerabilities
+  };
+}
+`;
+
 const damageMacro = `
 \`\`\`Apply_Damage
-let damage = ${data.roll.total};
-
 let targets = api.getSelectedTokens().map(target => target.token);
 
 // If record is not null, check if we're the GM or owner and use it
@@ -24,13 +139,30 @@ if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
 
-// TODO determine damage from data.roll.types, example:
-// types [ { die: 6, narrative: false, rollId: 0, type: "acid", value: 6 } ] 
+// Add RIV script
+${getRIVScript}
 
 targets.forEach(target => {
-  // Apply wounds
+  // Apply damage
   if (target && target.data) {
-    // TODO Check for Resistance and Immunities
+    let damage = 0;
+
+    const RIV = getRIV(target);
+
+    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    data.roll.types.forEach(type => {
+      let thisDamage = type.value;
+      if (RIV.resistances.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = Math.floor(thisDamage * 0.5);
+      }
+      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = 0;
+      }
+      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = Math.floor(thisDamage * 2);
+      }
+      damage += thisDamage;
+    });
 
     // First deduct from Temp HP
     const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
@@ -68,8 +200,6 @@ targets.forEach(target => {
 
 const halfDamageMacro = showHalf ? `
 \`\`\`Apply_Half_Damage
-let damage = Math.floor(${data.roll.total} / 2);
-
 let targets = api.getSelectedTokens().map(target => target.token);
 
 // If record is not null, check if we're the GM or owner and use it
@@ -84,10 +214,30 @@ if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
 
+// Add RIV script
+${getRIVScript}
+
 targets.forEach(target => {
-  // Apply wounds
+  // Apply damage
   if (target && target.data) {
-    // TODO Check for Resistance and Immunities
+    let damage = 0;
+
+    const RIV = getRIV(target);
+
+    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    data.roll.types.forEach(type => {
+      let thisDamage = Math.floor(type.value / 2);
+      if (RIV.resistances.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = Math.floor(thisDamage * 0.5);
+      }
+      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = 0;
+      }
+      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')) {
+        thisDamage = Math.floor(thisDamage * 2);
+      }
+      damage += thisDamage;
+    });
 
     // First deduct from Temp HP
     const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
