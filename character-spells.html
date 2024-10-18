@@ -13,6 +13,10 @@
     const spellDescription = api.richTextToMarkdown(spell?.data?.description || '');
     const spellIcon = spell?.portrait ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) ` : '';
 
+    // Get and additional modifiers from spell caster settings
+    const spellDCBonus = parseInt(api.getValue('data.spellDCBonus') || '0', 10);
+    const spellModBonus = parseInt(api.getValue('data.spellModBonus') || '0', 10);
+
     // Modifiers for Damage and Healing
     const modifiers = [];
     if ((spell?.data?.damage || spell?.data?.healing) && spell?.data?.addAbility) {
@@ -49,6 +53,13 @@
         value: proficiencyBonus,
         active: true,
       });
+      if (spellModBonus > 0) {
+        attackModifiers.push({
+          name: 'Additional Spell Modifier Bonus',
+          value: spellModBonus,
+          active: true,
+        });
+      }
     }
 
     // Deteremine damage or healing based on level of spell / (or character if cantrip)
@@ -183,7 +194,7 @@
     const spellcastingAbility = spell?.data?.ability || 'intelligence';
     const spellcastingAbilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
     const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ? api.getValue('data.proficiencyBonus') : 2;
-    const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10);
+    const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10) + spellDCBonus;
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
     const saveDamageMetadata = spell?.data?.isSave ? { save: savingThrow, saveDc: saveDc } : {};
