@@ -1389,8 +1389,9 @@
 
 	function longRest() {
 		const valuesToSet = {};
-		// Restore HP and Hit Die
+		// Restore HP and Hit Die, clear Temp HP
 		valuesToSet['data.curhp'] = record?.data?.hitpoints || 0;
+		valuesToSet['data.tempHp'] = 0;
 
 		// Restore all Hit Die per 2024 rules
 		const hpByLevel = record?.data?.hpByLevel || '[]';
