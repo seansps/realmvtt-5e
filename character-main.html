@@ -347,6 +347,91 @@
 		return getSkills().find(s => s.field === skillField)?.ability || 'strength';
 	}
 
+	// This function tries to guess the ability for a tool,
+	// defaults to strength if we do not know
+	function guessAbility(tool) {
+		const lower = tool.toLowerCase();
+		if (lower.includes("thieve")) {
+			return 'dexterity';
+		}
+		if (lower.includes('alchemist')) {
+			return 'intelligence';
+		}
+		if (lower === 'brewer') {
+			return 'intelligence';
+		}
+		if (lower.includes('calligrapher')) {
+			return 'dexterity';
+		}
+		if (lower.includes('carpenter')) {
+			return 'strength';
+		}
+		if (lower.includes('cartographer')) {
+			return 'wisdom';
+		}
+		if (lower.includes('cobbler')) {
+			return 'dexterity';
+		}
+		if (lower.includes('cook')) {
+			return 'wisdom';
+		}
+		if (lower.includes('glassblower')) {
+			return 'intelligence';
+		}
+		if (lower.includes('jeweler')) {
+			return 'intelligence';
+		}
+		if (lower.includes('leatherworker')) {
+			return 'dexterity';
+		}
+		if (lower.includes('mason')) {
+			return 'strength';
+		}
+		if (lower.includes('painter')) {
+			return 'wisdom';
+		}
+		if (lower.includes('potter')) {
+			return 'intelligence';
+		}
+		if (lower.includes('smith')) {
+			return 'strength';
+		}
+		if (lower.includes('tinker')) {
+			return 'dexterity';
+		}
+		if (lower.includes('weaver')) {
+			return 'dexterity';
+		}
+		if (lower.includes('woodcarver')) {
+			return 'dexterity';
+		}
+		if (lower.includes('disguise')) {
+			return 'charisma';
+		}
+		if (lower.includes('forgery')) {
+			return 'dexterity';
+		}
+		if (lower.includes('gaming')) {
+			return 'wisdom';
+		}
+		if (lower.includes('herbalism')) {
+			return 'intelligence';
+		}
+		if (lower.includes("navigator")) {
+			return 'wisdom';
+		}
+		if (lower.includes('poisoner')) {
+			return 'intelligence';
+		}
+		if (lower.includes('instrument') || lower.includes('lute') || lower.includes('harp')
+			|| lower.includes('lyre') || lower.includes('flute') || lower.includes('drum')
+			|| lower.includes('bagpipe') || lower.includes('dulcimer') || lower.includes('sing')) {
+			return 'charisma';
+		}
+
+		return "strength";
+	}
+
 	function getNextLevelXp(level) {
 		if (level < 1) {
 			return 0;
@@ -843,6 +928,24 @@
 		});
 	}
 
+	function addToolProficiency(proficienciesString) {
+		const toolProficiencies = (proficienciesString || '').split(',').map(s => s.trim());
+		toolProficiencies.forEach(tool => {
+			const toolAbility = guessAbility(tool);
+			const abilityMod = parseInt(record?.data?.[`${toolAbility}Mod`] || '0', 10);
+			const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
+			api.addValue('data.otherSkills', {
+				name: tool,
+				data: {
+					// Proficient by default 
+					skillProf: 'true',
+					ability: toolAbility,
+					skillMod: abilityMod + proficiencyBonus,
+				}
+			});
+		});
+	};
+
 	function onDropClass(type, recordLink) {
 		// Check if already on Character
 		const classes = record?.data?.classes || [];
@@ -901,6 +1004,7 @@
 		valuesToSet['data.xpNext'] = nextLevelXp;
 
 		// If we're level 1, set the initial proficiencies
+		let promptSkillChoicesLater = null;
 		if (level === 1) {
 			const saveProficiencies = classObj?.data?.saveProficiencies || [];
 			saveProficiencies.forEach(proficiency => {
@@ -929,7 +1033,9 @@
 			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
 			valuesToSet[`data.armorTraining`] = currentArmorTraining;
 
-			// TODO set Tool Proficiencies as Skills in skills tab
+			// Set Tool Proficiencies as Skills in skills tab
+			const toolProficiencies = (classObj?.data?.toolProficiencies || '');
+			addToolProficiency(toolProficiencies);
 
 			// Prompt Skill choices
 			promptSkillChoices(classObj, false);
@@ -967,10 +1073,14 @@
 			valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
 			valuesToSet[`data.armorTraining`] = currentArmorTraining;
 
-			// TODO ADD Tool Proficiencies as Skills in skills tab 
+			// Set Tool Proficiencies as Skills in skills tab
+			const toolProficiencies = (classObj?.data?.toolProficienciesMulti || '');
+			addToolProficiency(toolProficiencies);
 
-			// Prompt Skill choices
-			promptSkillChoices(classObj, true);
+			// Prompt Skill choices (we throw it in a function so we can call it later after they select their multiclass HP method)
+			promptSkillChoicesLater = () => {
+				promptSkillChoices(classObj, true);
+			}
 		}
 
 		const subclasses = record?.data?.subclasses || [];
@@ -1023,7 +1133,16 @@
 		// Get class hit die
 		const hitDie = recordLink?.value?.data?.hitDie;
 		if (hitDie !== undefined && hitDie !== '') {
-			updateHitPoints(className, newLevel, level, hitDie, promptSubclass);
+			const promptSubClassOrSkills = promptSubclass || promptSkillChoicesLater ? () => {
+				// Subclasses are always level 3, so we don't need to do both
+				if (promptSkillChoicesLater) {
+					promptSkillChoicesLater();
+				}
+				else if (promptSubclass) {
+					promptSubclass();
+				}
+			} : null;
+			updateHitPoints(className, newLevel, level, hitDie, promptSubClassOrSkills);
 		}
 	}
 
