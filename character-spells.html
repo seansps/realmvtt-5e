@@ -295,6 +295,10 @@ ${effectButtons}
 
     const castingTime = spell?.data?.castingTime;
     const range = spell?.data?.range;
+    let duration = spell?.data?.duration || '';
+    const hasConcentration = duration?.toLowerCase().startsWith('concentration');
+    duration = duration.replace('Concentration, ', '').trim();
+
     let components = spell?.data?.components;
     if (components) {
       components = components.split(',');
@@ -308,6 +312,8 @@ ${effectButtons}
           return 'Material';
         } else if (trimmedComponent === 'f') {
           return 'Focus';
+        } else if (trimmedComponent.startsWith('m (')) {
+          return 'Material';
         }
         return component.trim(); // Return the trimmed component if no match
       });
@@ -332,16 +338,54 @@ ${effectButtons}
       });
     }
 
+    if (hasConcentration) {
+      tags.push({
+        'tooltip': "This Spell Requires Concentration",
+        'name': "Concentration"
+      });
+    }
+
+    if (duration) {
+      tags.push({
+        'tooltip': "Duration",
+        'name': duration
+      });
+    }
+
     if (components && Array.isArray(components) && components.length > 0) {
       components.forEach(component => {
         tags.push({
-          'tooltip': 'Components',
+          'tooltip': 'Spell Components',
           'name': component
         });
       });
     }
 
+    let lostConcentrationOn = '';
+    if (hasConcentration) {
+      // Check for existing Concentration effect
+      const tokenForRecord = api.getToken();
+      const effects = tokenForRecord?.effects || [];
+      const hasEffect = effects.find(effect => effect?.name?.toLowerCase() === 'concentration');
+      if (tokenForRecord) {
+        const effectValue = spellName;
+        // Old spell name
+        let oldSpellName = '';
+        const oldValues = tokenForRecord?.effectValues || {};
+        if (oldValues[hasEffect?._id]) {
+          oldSpellName = oldValues[hasEffect?._id];
+        }
+        lostConcentrationOn = oldSpellName;
+        // Add concentration effect, which will replace any existing concentration effect
+        api.addEffect('Concentration', tokenForRecord, undefined, effectValue);
+      }
+    }
+
     api.sendMessage(message, undefined, [], tags);
+
+    if (lostConcentrationOn) {
+      api.sendMessage(`Lost concentration on ${lostConcentrationOn}.`, undefined, [], []);
+    }
   }
 
   // Returns the options for upcasting a spell
