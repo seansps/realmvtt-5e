@@ -154,7 +154,7 @@ function applyDeathFailures(target) {
 
 const damageMacro = `
 \`\`\`Apply_Damage
-let targets = api.getSelectedTokens().map(target => target.token);
+let targets = api.getSelectedOrDroppedToken();
 
 // If record is not null, check if we're the GM or owner and use it
 if (record) {
@@ -246,7 +246,7 @@ targets.forEach(target => {
 
 const halfDamageMacro = showHalf ? `
 \`\`\`Apply_Half_Damage
-let targets = api.getSelectedTokens().map(target => target.token);
+let targets = api.getSelectedOrDroppedToken();
 
 // If record is not null, check if we're the GM or owner and use it
 if (record) {
