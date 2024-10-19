@@ -231,12 +231,26 @@ targets.forEach(target => {
     let concentrationMacro = '';
     const effects = target.effects || [];
     const concentration = effects.find(effect => effect.name === 'Concentration');
-    if (concentration && damage > 0) {
-      // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30
+    let oldSpellName = '';
+    if (concentration && damage > 0 && curhp > 0) {
+      // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30      
       concentrationMacro = \`\\\`\\\`\\\`Concentration_Check\\n const tokens = api.getSelectedOrDroppedToken(); tokens.forEach(token => { const metadata = { dc: Math.min(Math.max(Math.floor(\$\{damage\} / 2), 10), 30), rollName: 'Constitution Save', tooltip: 'Constitution Saving Throw' }; const conMod = parseInt(token?.record?.data?.constitutionMod || '0', 10); const modifiers = conMod > 0 ? [{ name: 'Constitution Save Modifier', tooltip: 'Constitution Saving Throw', value: conMod, active: true }] : []; api.promptRollForToken(token, 'Constitution Save', '1d20', modifiers, metadata, 'concentration'); }); \\n\\\`\\\`\\\`\`;
+    }
+    else if (concentration && curhp <= 0) {
+      // Remove the Concentration effect
+      const oldValues = target?.effectValues || {};
+      if (oldValues[concentration?._id]) {
+        oldSpellName = oldValues[concentration?._id];
+      }
+      const conId = concentration?._id;
+      api.removeEffectById(conId, target);
     }
 
     const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+
+    if (oldSpellName) {
+      message += \`\nLost concentration on \$\{oldSpellName\}.\`;
+    }
 
     api.sendMessage(\`\$\{message\}\\n\$\{macro\}\\n\$\{concentrationMacro\}\`, undefined, undefined, undefined, target);
   }
@@ -323,12 +337,26 @@ targets.forEach(target => {
     let concentrationMacro = '';
     const effects = target.effects || [];
     const concentration = effects.find(effect => effect.name === 'Concentration');
-    if (concentration && damage > 0) {
+    let oldSpellName = '';
+    if (concentration && damage > 0 && curhp > 0) {
       // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30      
       concentrationMacro = \`\\\`\\\`\\\`Concentration_Check\\n const tokens = api.getSelectedOrDroppedToken(); tokens.forEach(token => { const metadata = { dc: Math.min(Math.max(Math.floor(\$\{damage\} / 2), 10), 30), rollName: 'Constitution Save', tooltip: 'Constitution Saving Throw' }; const conMod = parseInt(token?.record?.data?.constitutionMod || '0', 10); const modifiers = conMod > 0 ? [{ name: 'Constitution Save Modifier', tooltip: 'Constitution Saving Throw', value: conMod, active: true }] : []; api.promptRollForToken(token, 'Constitution Save', '1d20', modifiers, metadata, 'concentration'); }); \\n\\\`\\\`\\\`\`;
     }
+    else if (concentration && curhp <= 0) {
+      // Remove the Concentration effect
+      const oldValues = target?.effectValues || {};
+      if (oldValues[concentration?._id]) {
+        oldSpellName = oldValues[concentration?._id];
+      }
+      const conId = concentration?._id;
+      api.removeEffectById(conId, target);
+    }
 
     const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+
+    if (oldSpellName) {
+      message += \`\nLost concentration on \$\{oldSpellName\}.\`;
+    }
 
     api.sendMessage(\`\$\{message\}\\n\$\{macro\}\\n\$\{concentrationMacro\}\`, undefined, undefined, undefined, target);
   }
