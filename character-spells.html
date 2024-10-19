@@ -230,10 +230,10 @@ targets.forEach(target => {
     // Save Button for GM only - look up saves of selected tokens and prompt roll for each
     const rollSaveButton = spell?.data?.isSave ? `\`\`\`Roll_Save
 if (isGM) { 
-  const selectedTokens = api.getSelectedTokens();
+  const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach(token => {
     const saveModifiers = [];
-    const record = token?.token?.record;
+    const record = token?.record;
 
     const modifier = record?.data?.['${savingThrow}Save'] || 0;
     saveModifiers.push({
