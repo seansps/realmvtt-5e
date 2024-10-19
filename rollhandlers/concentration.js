@@ -15,7 +15,7 @@ if (dc > 0) {
   }
   else {
     // Here we need to remove the Concentration effect.
-    const effects = record?.data?.effects || [];
+    const effects = record?.effects || [];
     const concentrationEffect = effects.find(effect => effect.name === 'Concentration');
     let oldSpellName = '';
     if (concentrationEffect) {
