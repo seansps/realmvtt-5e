@@ -1572,6 +1572,10 @@
 			// Set our HP to be totalHp per level + conMod * level
 			valuesToSet['data.hitpoints'] = newHp;
 		}
+		else if (attribute === 'dexterity') {
+			// Update AC calculation
+			// TODO
+		}
 
 		getSkills().forEach(skill => {
 			// Get the ability being used for this skill, fallback to the skill's default

@@ -1,20 +1,30 @@
 <div style='min-height: 30px; display: flex; flex-direction: column; gap: 4px'>
   <div style='display: flex; gap: 4px'>
     <numberfield width='70px' size='xs' field="level" label="Level"></numberfield>
-    <namefield  width='100%' size='xs' label="Name" field="namefield"></namefield>
+    <namefield width='100%' size='xs' label="Name" field="namefield"></namefield>
   </div>
   <accordion size='xs' variant='default' field="descriptionAcc" label="Description">
     <stringfield multiline maxrows=6 variant="filled" field="description"></stringfield>
   </accordion>
   <accordion size='xs' variant='default' field="rulesAcc" label="Rules Elements">
-    <checkbox textalign='right' size='sm' field="isAction" label="Is Action"></checkbox>
-    <div style='margin-top: 4px'>
+    <div style='display: flex; gap: 8px;'>
+      <checkbox textalign='right' size='sm' field="isAction" label="Is Action"></checkbox>
       <checkbox textalign='right' size='sm' field="isRoll" label="Is Roll"></checkbox>
+      <checkbox textalign='right' size='sm' field="useProficiency" label="Use Proficiency Bonus"></checkbox>
     </div>
-    <stringfield label="Action Name" field="actionName"></stringfield>
-    <dropdown field="ability" label="Relavant Ability" options='[{"label": "N/A", "value": "na"}, {"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'></dropdown>
+    <div style='display: flex; gap: 8px;'>
+      <stringfield width="50%" label="Action Name" field="actionName" size='xs' placeholder='Enter Name if Action...'>
+      </stringfield>
+      <dropdown width="50%" field="ability" placeholder='Select Relevant Ability' label="Relevant Ability" size='xs'
+        options='[{"label": "N/A", "value": "na"}, {"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      </dropdown>
+    </div>
+    <!-- Todo replace this with list of modifiers -->
+    <div style='display: flex; gap: 8px; margin-top: 4px;'>
+      <checkbox textalign='right' size='sm' field="isModifier" label="Is Modifier"></checkbox>
+    </div>
+    <dropdown field="modifierType" placeholder='Select Modifier Type' label="Modifier Type" size='xs'
+      options='[{"label": "N/A", "value": "na"}, {"label": "Armor Class", "value": "armorClass"}]'>
+    </dropdown>
   </accordion>
 </div>
-
-
-
