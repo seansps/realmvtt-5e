@@ -3,7 +3,6 @@
   // if we need to apply any modifiers
   function getSpellAttackModifiers(spell) {
     // It could be a numerical modifier, or a die we are adding
-    let diceModifiers = ''; // Will be a string of dice, if any
     let attackModifiers = [];
 
     const spellModBonus = parseInt(api.getValue('data.spellModBonus') || '0', 10);
@@ -42,23 +41,22 @@
       rules.forEach(rule => {
         if (rule.type === 'attackBonus' || rule.type === 'attackPenalty') {
           const isPenalty = rule.type === 'attackPenalty';
-          // String is a dice modifier in this case
-          if (rule.valueType === 'string') {
-            diceModifiers += ` ${isPenalty ? '-' : '+'} `;
-            diceModifiers += rule.value;
-          }
-          else if (rule.valueType === 'number') {
-            let value = parseInt(rule.value, 10);
+          let value = rule.value;
+          if (rule.valueType === 'number') {
+            value = parseInt(rule.value, 10);
             if (isPenalty && value > 0) {
               value = -value;
             }
-            if (value !== 0) {
-              attackModifiers.push({
-                name: effect.name || 'Effect',
-                value: value,
-                active: true,
-              });
-            }
+          }
+          else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+            value = '-' + value;
+          }
+          if (value) {
+            attackModifiers.push({
+              name: effect.name || 'Effect',
+              value: value,
+              active: true,
+            });
           }
           else if (rule.valueType === 'stack') {
             // The value is the number of times they have this effect
@@ -92,17 +90,13 @@
       });
     });
 
-    return {
-      attackModifiers: attackModifiers,
-      diceModifiers: diceModifiers,
-    };
+    return attackModifiers;
   }
 
   // Injects a script to the Roll Save macro to get saving throw modifiers
   function getSaveModifiers(savingThrow) {
     return `
       const saveModifiers = [];
-      let diceModifiers = '';
 
       const record = token?.record;
 
@@ -122,22 +116,22 @@
           if ((rule.type === 'saveBonus' || rule.type === 'savePenalty') && 
             (rule.field === '${savingThrow}' || rule.field === 'all')) {
             const isPenalty = rule.type === 'savePenalty';
-            if (rule.valueType === 'string') {
-              diceModifiers += \` \$\{isPenalty ? '-' : '+'\} \`;
-              diceModifiers += rule.value;
-            }
-            else if (rule.valueType === 'number') {
-              let value = parseInt(rule.value, 10);
+            let value = rule.value;
+            if (rule.valueType === 'number') {
+              value = parseInt(rule.value, 10);
               if (isPenalty && value > 0) {
                 value = -value;
               }
-              if (value !== 0) {
-                saveModifiers.push({
-                  name: effect.name || 'Effect',
-                  value: value,
-                  active: true,
-                });
-              }
+            }
+            else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+              value = '-' + value;
+            }
+            if (value) {
+              saveModifiers.push({
+                name: effect.name || 'Effect',
+                value: value,
+                active: true,
+              });
             }
             else if (rule.valueType === 'api') {
               let value = parseInt(record?.effectValues?.[effect?._id] || '0', 10);
@@ -208,9 +202,7 @@
     }
 
     // Spell Attack Modifiers
-    const spellAttackModifiers = getSpellAttackModifiers(spell);
-    const attackModifiers = spellAttackModifiers.attackModifiers;
-    const diceModifiers = spellAttackModifiers.diceModifiers;
+    const attackModifiers = getSpellAttackModifiers(spell);
 
     // Deteremine damage or healing based on level of spell / (or character if cantrip)
     let spellDamage = spell?.data?.damage;
@@ -367,7 +359,7 @@ const targets = api.getTargets();
 targets.forEach(target => {
   const targetAc = parseInt(target?.token?.record?.data?.ac || '0', 10);
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
-  const diceRoll = '1d20${diceModifiers}';
+  const diceRoll = '1d20';
   const metadata = {
     "rollName": 'Attack',
     "attack": '${spellName}',
@@ -395,7 +387,7 @@ if (isGM) {
       "dc": ${saveDc}
     }
 
-    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', \`1d20\$\{diceModifiers}\`, saveModifiers, metadata, 'save');
+    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
   });
 }
 \`\`\`` : '';

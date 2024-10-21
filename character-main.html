@@ -1321,7 +1321,6 @@
 	function rollSave(save) {
 		const mod = `${save}Save`;
 		const modifiers = [];
-		let diceModifiers = '';
 		let saveMod = record?.data?.[mod] || '0';
 		if (saveMod === undefined) {
 			saveMod = 0;
@@ -1341,22 +1340,22 @@
 				if ((rule.type === 'saveBonus' || rule.type === 'savePenalty') &&
 					(rule.field === save || rule.field === 'all')) {
 					const isPenalty = rule.type === 'savePenalty';
-					if (rule.valueType === 'string') {
-						diceModifiers += ` ${isPenalty ? '-' : '+'} `;
-						diceModifiers += rule.value;
-					}
-					else if (rule.valueType === 'number') {
-						let value = parseInt(rule.value, 10);
+					let value = rule.value;
+					if (rule.valueType === 'number') {
+						value = parseInt(rule.value, 10);
 						if (isPenalty && value > 0) {
 							value = -value;
 						}
-						if (value !== 0) {
-							modifiers.push({
-								name: effect.name || 'Effect',
-								value: value,
-								active: true,
-							});
-						}
+					}
+					else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+						value = '-' + value;
+					}
+					if (value) {
+						modifiers.push({
+							name: effect.name || 'Effect',
+							value: value,
+							active: true,
+						});
 					}
 					else if (rule.valueType === 'api') {
 						let value = parseInt(record?.effectValues?.[effect?._id] || '0', 10);
@@ -1395,7 +1394,7 @@
 			"dc": 0
 		}
 
-		api.promptRoll(`${capitalize(save)} Save`, `1d20${diceModifiers}`, modifiers, metadata, 'save');
+		api.promptRoll(`${capitalize(save)} Save`, '1d20', modifiers, metadata, 'save');
 	}
 
 	function rollHitDie(hitdie) {
