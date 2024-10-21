@@ -1478,6 +1478,12 @@
 		const metadata = {
 			"rollName": `${capitalize(ability)}`
 		}
+
+		const checkModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], ability);
+		checkModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
 		api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
 	}
 
