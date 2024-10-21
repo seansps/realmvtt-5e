@@ -1527,7 +1527,8 @@
 		const abilityListGroups = record?.data?.abilityGroups || [];
 		abilityListGroups.forEach((abilityGroup, index) => {
 			const restoreOn = abilityGroup?.data?.restore || '';
-			if (restoreOn === 'longrest') {
+			// Assume that longrest includes shortrest too
+			if (restoreOn === 'longrest' || restoreOn === 'shortrest') {
 				const dailyUses = abilityGroup?.data?.dailyUses || 0;
 				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = 0;
 			}
