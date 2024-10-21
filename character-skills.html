@@ -25,7 +25,7 @@
         else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
           value = '-' + value;
         }
-        if (value) {
+        if (value !== 0) {
           results.push({
             name: effect.name || 'Effect',
             value: value,
@@ -96,7 +96,7 @@
         }
 
         // Only relevant if it has a value
-        if (value) {
+        if (value !== 0) {
           results.push({
             name: feature?.name || 'Feature',
             value: value,
