@@ -1,5 +1,6 @@
 const name = data?.roll?.metadata?.rollName;
 const tooltip = data?.roll?.metadata?.tooltip;
+const description = data?.roll?.metadata?.description || '';
 
 let message = '';
 
@@ -15,6 +16,15 @@ if (dc > 0) {
   }
   else {
     message = `**[center][color=red]FAILURE[/color] [gm]vs DC ${dc}[/gm][/center]**`
+  }
+}
+
+if (description) {
+  if (message) {
+    message += `\n\n${description}`;
+  }
+  else {
+    message = description;
   }
 }
 

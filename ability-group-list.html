@@ -27,7 +27,12 @@
   </dropdown>
   <div style='display: flex; gap: 4px;'>
     <numberfield width="50%" field="maxDailyUses" label="Number of Uses" placeholder='N/A' size='xs'
-      onchange="showHideCounter();"></numberfield>
-    <stringfield width="50%" field="effectValue" label="Effect Value" placeholder='N/A' size='xs'></stringfield>
+      description='Max number of times abilities can be used' onchange="showHideCounter();"></numberfield>
+    <stringfield width="50%" field="value" label="Ability Value" placeholder='N/A'
+      description='Dice string or number value for the ability group' size='xs'></stringfield>
   </div>
 </accordion>
+
+<div style='margin-top: 4px; width: 100%'>
+  <list listtype="ability_list" field='abilities' variant='striped' allowadd=''></list>
+</div>

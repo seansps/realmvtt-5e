@@ -1,6 +1,74 @@
 <script>
   function useAbility() {
+    // Get the spell by path to ensure most up-to-date value
+    const abilityDataPath = dataPath.replace('.data.useBtn', '');
+    const ability = api.getValue(abilityDataPath);
 
+    const abilityName = ability?.name || 'Unknown Ability';
+    const abilityCost = parseInt(ability?.data?.cost || '0', 10);
+    // Whether or not to prompt a roll for this ability
+    const promptRoll = ability?.data?.rollOnUse || false;
+    const abilityDescription = api.richTextToMarkdown(ability?.data?.description || '');
+    const abilityIcon = ability?.portrait ? `![${abilityName}](${assetUrl}${ability?.portrait}?width=40&height=40) ` : '';
+
+    // To get the uses we need maxDailyUses and dailUses from the parent ability group list
+    const abilityGroupListDataPath = dataPath.replace(/[.]data[.]abilities[.]\d+[.]data[.]useBtn/, '');
+    const abilityGroupList = api.getValue(abilityGroupListDataPath);
+
+    let dailyUses = parseInt(abilityGroupList?.data?.dailyUses, 10) || 0;
+    let maxDailyUses = parseInt(abilityGroupList?.data?.maxDailyUses, 10) || 1;
+
+    if (dailyUses < maxDailyUses) {
+      const dataPathToDaily = `${abilityGroupListDataPath}.data.dailyUses`;
+      api.setValue(dataPathToDaily, dailyUses + abilityCost);
+    }
+
+    // Get the configured value for the ability group
+    const abilityGroupValue = abilityGroupList?.data?.value || '';
+
+    // Create macros for all effects that this spell can apply
+    let effectButtons = '';
+    const effects = ability?.data?.effects || [];
+    effects.forEach(effectJson => {
+      const effect = JSON.parse(effectJson);
+      const effectName = effect?.name || '';
+      const effectID = effect?._id || '';
+      const effectTitle = `Apply_${effectName.replace(/ /g, '_')}`;
+      if (effectButtons !== '') {
+        effectButtons += '\n';
+      }
+      effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+  api.addEffectById('${effectID}', target);
+});
+\`\`\``;
+    });
+
+    const message = `
+#### ${abilityIcon}${abilityName}
+
+---
+&nbsp;
+
+${abilityDescription}
+
+---
+&nbsp;
+
+${effectButtons}
+`;
+
+    api.sendMessage(message, undefined, [], []);
+
+    const metadata = {
+      'rollName': abilityName,
+      'tooltip': `${abilityName} Result`
+    }
+
+    if (promptRoll) {
+      api.promptRoll(abilityName, abilityGroupValue || '1d20', undefined, metadata, 'ability');
+    }
   }
 </script>
 
