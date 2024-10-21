@@ -1,0 +1,22 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px; width: 100%'>
+    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+      <portrait width='125px' height='125px' field="portrait"></portrait>
+    </div>
+    <div>
+      <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
+        <numberfield width="50%" field="level" label="Required Level" placeholder='None'></numberfield>
+        <stringfield width="50%" field="classOrSubclass" label="Required Class or Subclass"></stringfield>
+      </div>
+      <dropdown size='sm' field="effects" label="Effects to Apply" searchable='true' multiselect='5'
+        optionsquery='{"type": "effects", "query": {}}' placeholder='Select Effects...'>
+      </dropdown>
+    </div>
+  </div>
+
+  <div style='margin-top: 8px; margin-bottom: 8px'>
+    <divider label='Description'></divider>
+  </div>
+
+  <richtextfield field="description" label="Description" placeholder='Enter Subclass description...'></richtextfield>
+</div>
