@@ -1444,8 +1444,15 @@
 			'data.deathSaveSuccesses': 0,
 		};
 
-		// TODO add a check here after we add actions that restore on short rest
-		// Check for all these actions and restore daily uses
+		// Check for all actions that restore on short rest and restore daily uses
+		const abilityListGroups = record?.data?.abilityGroups || [];
+		abilityListGroups.forEach((abilityGroup, index) => {
+			const restoreOn = abilityGroup?.data?.restore || '';
+			if (restoreOn === 'shortrest') {
+				const dailyUses = abilityGroup?.data?.dailyUses || 0;
+				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = 0;
+			}
+		});
 
 		api.setValues(valuesToSet);
 		api.sendMessage(message, undefined, [], []);
@@ -1516,7 +1523,15 @@
 			});
 		});
 
-		// TODO when actions with daily uses are added, restore them here also
+		// Check for all actions that restore on long rest and restore daily uses
+		const abilityListGroups = record?.data?.abilityGroups || [];
+		abilityListGroups.forEach((abilityGroup, index) => {
+			const restoreOn = abilityGroup?.data?.restore || '';
+			if (restoreOn === 'longrest') {
+				const dailyUses = abilityGroup?.data?.dailyUses || 0;
+				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = 0;
+			}
+		});
 
 		api.setValues(valuesToSet);
 
