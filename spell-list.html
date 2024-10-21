@@ -1,4 +1,126 @@
 <script>
+  // Collects all effects and modifiers for the record
+  // If types is provided, it will only return effects of those types
+  // If field is provided, it will only return effects that match that field
+  function getEffectsAndModifiers(types = [], field = '') {
+    let results = [];
+
+    // First collect modifiers from effects
+    const effects = record?.effects || [];
+    effects.forEach((effect) => {
+      const rules = effect.rules || [];
+      rules.forEach((rule) => {
+        const ruleType = rule?.type || '';
+        const isPenalty = ruleType.toLowerCase().includes('penalty');
+        let value = rule.value || '';
+        if (rule.valueType === 'number') {
+          value = parseInt(rule.value, 10);
+          if (isNaN(value)) {
+            value = 0;
+          }
+          if (isPenalty && value > 0) {
+            value = -value;
+          }
+        }
+        else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+          value = '-' + value;
+        }
+        if (value) {
+          results.push({
+            name: effect.name || 'Effect',
+            value: value,
+            active: true,
+            modifierType: ruleType,
+            field: rule?.field || '',
+            valueType: rule.valueType,
+            isPenalty: isPenalty
+          });
+        }
+        else if (rule.valueType === 'api') {
+          let value = parseInt(record?.effectValues?.[effect?._id] || '0', 10);
+          if (isPenalty && value > 0) {
+            value = -value;
+          }
+          if (value !== 0) {
+            results.push({
+              name: effect.name || 'Effect',
+              value: value,
+              active: true,
+              modifierType: ruleType,
+              field: rule?.field || '',
+              valueType: rule.valueType,
+              isPenalty: isPenalty
+            });
+          }
+        }
+        else if (rule.valueType === 'stack') {
+          // The value is the number of times they have this effect
+          let value = record?.effectIds?.filter(id => id === effect?._id).length;
+          if (isPenalty && value > 0) {
+            value = -value;
+          }
+          if (value !== 0) {
+            results.push({
+              name: effect.name || 'Effect',
+              value: value,
+              active: true,
+              modifierType: ruleType,
+              field: rule?.field || '',
+              valueType: rule.valueType,
+              isPenalty: isPenalty
+            });
+          }
+        }
+      });
+    });
+
+    // Now collect all modifiers from Features
+    const features = record?.data?.features || [];
+    features.forEach((feature) => {
+      const modifiers = feature.data?.modifiers || [];
+      modifiers.forEach((modifier) => {
+        const ruleType = modifier.data?.type || '';
+        const isPenalty = ruleType.toLowerCase().includes('penalty');
+        let value = modifier.data?.value || '';
+        if (modifier.data?.valueType === 'number') {
+          value = parseInt(modifier.data?.value, 10);
+          if (isNaN(value)) {
+            value = 0;
+          }
+          if (isPenalty && value > 0) {
+            value = -value;
+          }
+        }
+        else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+          value = '-' + value;
+        }
+
+        // Only relevant if it has a value
+        if (value) {
+          results.push({
+            name: feature?.name || 'Feature',
+            value: value,
+            active: modifier.data?.active === true,
+            modifierType: ruleType,
+            field: modifier.data?.field || '',
+            valueType: modifier.data?.valueType,
+            isPenalty: isPenalty
+          });
+        }
+      });
+    });
+
+    if (types && types.length > 0) {
+      results = results.filter(r => types.includes(r.modifierType));
+    }
+
+    if (field && field !== '') {
+      results = results.filter(r => r.field === field || r.field === 'all');
+    }
+
+    return results;
+  }
+
   // Goes through the effects of the attacker and determiners
   // if we need to apply any modifiers
   function getSpellAttackModifiers(spell) {
@@ -33,61 +155,9 @@
     }
 
     // Get effects
-    const effects = record?.effects || [];
-    const effectValues = record?.effectValues || {};
-    effects.forEach(effect => {
-      // Go through the effect rules
-      const rules = effect.rules || [];
-      rules.forEach(rule => {
-        if (rule.type === 'attackBonus' || rule.type === 'attackPenalty') {
-          const isPenalty = rule.type === 'attackPenalty';
-          let value = rule.value;
-          if (rule.valueType === 'number') {
-            value = parseInt(rule.value, 10);
-            if (isPenalty && value > 0) {
-              value = -value;
-            }
-          }
-          else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
-            value = '-' + value;
-          }
-          if (value) {
-            attackModifiers.push({
-              name: effect.name || 'Effect',
-              value: value,
-              active: true,
-            });
-          }
-          else if (rule.valueType === 'stack') {
-            // The value is the number of times they have this effect
-            let value = record?.effectIds?.filter(id => id === effect._id).length;
-            if (isPenalty && value > 0) {
-              value = -value;
-            }
-            if (value !== 0) {
-              attackModifiers.push({
-                name: effect.name || 'Effect',
-                value: value,
-                active: true,
-              });
-            }
-          }
-          else if (rule.valueType === 'api') {
-            // The value is set in the effectValues 
-            let value = parseInt(record?.effectValues?.[effect?._id] || '0', 10);
-            if (isPenalty && value > 0) {
-              value = -value;
-            }
-            if (value !== 0) {
-              attackModifiers.push({
-                name: effect.name || 'Effect',
-                value: value,
-                active: true,
-              });
-            }
-          }
-        }
-      });
+    const effectModifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty']);
+    effectModifiers.forEach(modifier => {
+      attackModifiers.push(modifier);
     });
 
     return attackModifiers;
@@ -159,6 +229,41 @@
                   active: true,
                 });
               }
+            }
+          }
+        });
+      });
+
+      // Now collect all modifiers from Features
+      const features = record?.data?.features || [];
+      features.forEach((feature) => {
+        const modifiers = feature.data?.modifiers || [];
+        modifiers.forEach((modifier) => {
+          const ruleType = modifier.data?.type || '';
+          const isPenalty = ruleType.toLowerCase().includes('penalty');
+          let value = modifier.data?.value || '';
+          const field = modifier.data?.field || '';
+          if ((ruleType === 'saveBonus' || ruleType === 'savePenalty') && (field === '${savingThrow}' || field === 'all')) {
+            if (modifier.data?.valueType === 'number') {
+              value = parseInt(modifier.data?.value, 10);
+              if (isNaN(value)) {
+                value = 0;
+              }
+              if (isPenalty && value > 0) {
+                value = -value;
+              }
+            }
+            else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+              value = '-' + value;
+            }
+
+            // Only relevant if it has a value
+            if (value) {
+              saveModifiers.push({
+                name: feature?.name || 'Feature',
+                value: value,
+                active: modifier.data?.active === true,
+              });
             }
           }
         });
