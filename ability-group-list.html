@@ -1,0 +1,33 @@
+<script>
+  function showHideCounter() {
+    const maxDailyUses = value;
+    // We're in a list, so we need to use the data path to the fields metadata
+    const dataPathToHideCounter = dataPath.replace('.data.maxDailyUses', '.fields.dailyUses.hidden');
+    if (maxDailyUses > 0) {
+      api.setValue(dataPathToHideCounter, false);
+    } else {
+      api.setValue(dataPathToHideCounter, true);
+    }
+  }
+</script>
+
+<label textalign='center' variant='bold' size='md' field='namefield'></label>
+
+<div style="width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
+  <counter hidden="true" textalign="center" label="Uses" field="dailyUses" maxvalue='1' maxvaluefield="maxDailyUses"
+    color='default' size="xs">
+  </counter>
+</div>
+
+<accordion size="sm" field="settingsOpen" label="Settings" hideonlocked="true" variant="contained">
+  <namefield width="100%" size='xs' label='Abilty List Name' placeholder='Enter Ability List Name...' field="namefield"
+    size='md'></namefield>
+  <dropdown field="restore" label="Restore Uses On" placeholder="N/A" size="xs"
+    options='[{"label": "Long Rest", "value": "longrest"}, {"label": "Short Rest", "value": "shortrest"}]'>
+  </dropdown>
+  <div style='display: flex; gap: 4px;'>
+    <numberfield width="50%" field="maxDailyUses" label="Number of Uses" placeholder='N/A' size='xs'
+      onchange="showHideCounter();"></numberfield>
+    <stringfield width="50%" field="effectValue" label="Effect Value" placeholder='N/A' size='xs'></stringfield>
+  </div>
+</accordion>

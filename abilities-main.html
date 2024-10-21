@@ -6,12 +6,25 @@
     <div>
       <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
         <numberfield width="50%" field="level" label="Required Level" placeholder='None'></numberfield>
-        <stringfield width="50%" field="classOrSubclass" label="Required Class or Subclass"></stringfield>
+        <numberfield width="50%" field="cost" label="Cost" placeholder='N/A'></numberfield>
       </div>
-      <dropdown size='sm' field="effects" label="Effects to Apply" searchable='true' multiselect='5'
-        optionsquery='{"type": "effects", "query": {}}' placeholder='Select Effects...'>
-      </dropdown>
+      <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
+        <stringfield width="50%" field="class" label="Required Class" placeholder="N/A"></stringfield>
+        <stringfield width="50%" field="subclass" label="Required Subclass" placeholder="N/A"></stringfield>
+      </div>
     </div>
+  </div>
+
+  <div style='margin-top: 4px;'>
+    <checkbox textalign="left" size="sm" field="rollOnUse" label="Roll on Use"
+      description="When the ability is used, a roll is requested using the Ability List's value field."></checkbox>
+  </div>
+
+  <div style='margin-top: 4px; margin-bottom: 4px'>
+    <dropdown size='sm' field="effects" label="Effects" searchable='true' multiselect='5'
+      description='Effects that this ability can apply' optionsquery='{"type": "effects", "query": {}}'
+      placeholder='Select Effects...'>
+    </dropdown>
   </div>
 
   <div style='margin-top: 8px; margin-bottom: 8px'>
