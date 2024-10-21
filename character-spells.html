@@ -221,7 +221,11 @@
 
     // Deduct spell slot or daily uses and update spell level
     const spellPrepared = spell?.data?.prepared || 'prepared';
-    const actualSpellLevel = parseInt(spell?.data?.level || '0', 10) || 0;
+    let actualSpellLevel = spell?.data?.level || 'Cantrip';
+    if (actualSpellLevel === 'Cantrip') {
+      actualSpellLevel = '0';
+    }
+    actualSpellLevel = parseInt(actualSpellLevel, 10);
     if (spellPrepared === 'prepared' && actualSpellLevel > 0) {
       let spellSlot = parseInt(spell?.data?.upcastLevel || `${actualSpellLevel}`, 10) || 1;
 

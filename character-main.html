@@ -931,18 +931,20 @@
 	function addToolProficiency(proficienciesString) {
 		const toolProficiencies = (proficienciesString || '').split(',').map(s => s.trim());
 		toolProficiencies.forEach(tool => {
-			const toolAbility = guessAbility(tool);
-			const abilityMod = parseInt(record?.data?.[`${toolAbility}Mod`] || '0', 10);
-			const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
-			api.addValue('data.otherSkills', {
-				name: tool,
-				data: {
-					// Proficient by default 
-					skillProf: 'true',
-					ability: toolAbility,
-					skillMod: abilityMod + proficiencyBonus,
-				}
-			});
+			if (tool !== 'None' && tool !== '') {
+				const toolAbility = guessAbility(tool);
+				const abilityMod = parseInt(record?.data?.[`${toolAbility}Mod`] || '0', 10);
+				const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
+				api.addValue('data.otherSkills', {
+					name: tool,
+					data: {
+						// Proficient by default 
+						skillProf: 'true',
+						ability: toolAbility,
+						skillMod: abilityMod + proficiencyBonus,
+					}
+				});
+			}
 		});
 	};
 

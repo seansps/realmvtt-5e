@@ -3,7 +3,10 @@
     const spell = recordLink?.value;
 
     // Determine which list to add the spell to
-    const spellLevel = spell?.data?.level || '0';
+    let spellLevel = spell?.data?.level || '0';
+    if (spellLevel === 'Cantrip') {
+      spellLevel = '0';
+    }
     let spellList = `cantrips`;
     if (spellLevel !== '0') {
       spellList = `spells${spellLevel}`;
@@ -233,7 +236,11 @@
 
   function canAddSpell(spellLevel) {
     // Return true if the given spell being added can be added to the given spell list
-    const levelOfSpell = parseInt(value?.data?.level || '0', 10);
+    let levelOfSpell = value?.data?.level || 'Cantrip'
+    if (levelOfSpell === 'Cantrip') {
+      levelOfSpell = '0';
+    }
+    levelOfSpell = parseInt(levelOfSpell, 10);
     const levelOfList = parseInt(spellLevel, 10);
     return levelOfSpell === levelOfList;
   }
@@ -321,7 +328,7 @@
       <div style='display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap'>
         <dropdown field="maxSpellLevel" label="Max Spell Level" placeholder='Select Max Spell Level...'
           onchange='updateSpellLevels();' size="xs"
-          options='[{"label": "Cantrip", "value": "0"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
+          options='[{"label": "Cantrip", "value": "Cantrip"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'>
         </dropdown>
 
         <numberfield field="spellDCBonus" label="Misc. Spell DC Bonus" placeholder='+0' showsign="true" size='xs'
