@@ -1,0 +1,19 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px'>
+    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+      <portrait width='125px' height='125px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <dropdown field="type" placeholder='Select Feat Type' label="Feat Type"
+        options='[{"label": "Origin Feat", "value": "origin"}, {"label": "General Feat", "value": "general"}, {"label": "Fighting Style Feat", "value": "fightingStyle"}, {"label": "Epic Boon Feat", "value": "epicBoon"}]'>
+      </dropdown>
+      <stringfield field="prerequisites" label="Prerequisites" placeholder='None'></stringfield>
+    </div>
+  </div>
+</div>
+
+<div style='margin-top: 8px; margin-bottom: 8px'>
+  <divider label='Description'></divider>
+</div>
+
+<richtextfield placeholder='Enter Feat description...' field="Description" label="Description"></richtextfield>

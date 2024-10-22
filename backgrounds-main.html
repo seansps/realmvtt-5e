@@ -1,0 +1,27 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px'>
+    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+      <portrait width='125px' height='125px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <dropdown field="abilityScores" placeholder='Select 3 Ability Scores' multiselect='3' label="Ability Scores"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      </dropdown>
+      <dropdown size='sm' field="feat" placeholder='Select a Feat' label="Feat" searchable='true'
+        optionsquery='{"type": "feats", "query": {}}' placeholder='Select Feat...'>
+      </dropdown>
+    </div>
+  </div>
+  <stringfield height="100%" multiline maxRows='2' field="skillProficiencies" label="Skill Proficiencies"
+    placeholder='None'></stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="toolProficiencies" label="Tool Proficiency"
+    placeholder='None'></stringfield>
+  <stringfield height="100%" multiline maxRows='2' field="startingEquipment" label="Equipment" placeholder='None'>
+  </stringfield>
+</div>
+
+<div style='margin-top: 8px; margin-bottom: 8px'>
+  <divider label='Description'></divider>
+</div>
+
+<richtextfield placeholder='Enter Background description...' field="Description" label="Description"></richtextfield>
