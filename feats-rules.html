@@ -1,0 +1,35 @@
+<div>
+  <label label="Ability" size='md' variant='bold' textalign="center"></label>
+  <label label="Details for Ability granted by this Feat, if applicable" size='sm' textalign="center"></label>
+</div>
+
+<div style='display: flex; gap: 8px;'>
+  <dropdown size='xs' width="50%" field="ability" label="Grants Ability" searchable='true'
+    description='If applicable, an Ability that this Feature grants' optionsquery='{"type": "abilities", "query": {}}'
+    placeholder='Select Ability...'>
+  </dropdown>
+  <stringfield width="50%" label="Ability Group Name" description='Adds an Ability Group with this Name'
+    field="abilityGroupName" size='xs' placeholder='N/A'>
+  </stringfield>
+</div>
+<div style='display: flex; gap: 8px;'>
+  <numberfield width="33%" label="Ability Uses per Day" field="maxDailyUses" description='Initial uses per day'
+    size='xs' placeholder='N/A'>
+  </numberfield>
+  <stringfield width="33%" label="Ability Value" description='Value of the Ability Group' field="value" size='xs'
+    placeholder='N/A'>
+  </stringfield>
+  <dropdown width="33%" size='xs' field="restoreOn" placeholder='N/A' description='How uses are restored'
+    label="Ability Restores On"
+    options='[{"label": "Short Rest", "value": "shortrest"}, {"label": "Long Rest", "value": "longrest"}]'>
+  </dropdown>
+</div>
+
+<div style='margin-top: 8px'>
+  <label label="Modifiers" size='md' variant='bold' textalign="center"></label>
+  <label label="Modifiers applied to Characters with this Feat" size='sm' textalign="center"></label>
+</div>
+
+<div style='width: 100%'>
+  <list listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
+</div>
