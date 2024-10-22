@@ -1508,11 +1508,13 @@
 		if (abilityMod === undefined || isNaN(abilityMod)) {
 			abilityMod = 0;
 		}
-		modifiers.push({
-			name: ability,
-			value: abilityMod,
-			active: true,
-		});
+		if (abilityMod !== 0) {
+			modifiers.push({
+				name: ability,
+				value: abilityMod,
+				active: true,
+			});
+		}
 		const metadata = {
 			"rollName": `${capitalize(ability)}`
 		}
