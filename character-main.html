@@ -1044,13 +1044,30 @@
 
 		[...features, ...subClassFeatures].forEach(feature => {
 			const level = feature?.data?.level || 0;
-			if (level <= newLevel && !curFeatures.includes(`${className}-${feature.name}`)) {
-				// Add this feature
-				api.addValue('data.features', {
-					...feature
-				});
-
-				// If this feature had an AC calc modifier, recalc AC
+			let featureAddedOrUpdated = false;
+			if (level <= newLevel) {
+				if (!curFeatures.includes(`${className}-${feature.name}`)) {
+					// Add this feature
+					api.addValue('data.features', {
+						...feature
+					});
+					featureAddedOrUpdated = true;
+				}
+				else {
+					// Update the existing feature if this one is a higher level
+					curFeatures.forEach((curFeature, curFeatureIndex) => {
+						const curFeatureLevel = curFeature?.data?.level || 0;
+						if (curFeature === `${className}-${feature.name}` && curFeatureLevel < level) {
+							api.setValue(`data.features.${curFeatureIndex}`, {
+								...feature
+							});
+							featureAddedOrUpdated = true;
+						}
+					})
+				}
+			}
+			// If a feature was added and had an AC calc modifier, recalc AC
+			if (featureAddedOrUpdated) {
 				const acCalculationMods = (feature?.data?.modifiers || []).filter(mod => mod.data.type === 'armorClassCalculation');
 				if (acCalculationMods.length > 0) {
 					// Get other mods
@@ -1853,7 +1870,6 @@
 
 		// Get HP Max modifier
 		const hpMaxMods = getEffectsAndModifiers(['hitpoints']);
-		console.log(hpMaxMods);
 		hpMaxMods.forEach(mod => {
 			// For string type in HP max, we'll use it as a field
 			// with a special case for the `field` value to mean a specific class here
@@ -1861,11 +1877,9 @@
 				// First check if it is in values we are setting
 				let bonus = mod.value === 'level' ? newLevel : parseInt(record?.data?.[mod.value] || '0', 10);
 				const relevantClass = mod.field;
-				console.log(mod);
 				if (relevantClass && mod.value === 'level') {
 					// Bonus = total level in the given class
 					newHpLevelArray.forEach(hpLevel => {
-						console.log(relevantClass, hpLevel.className, hpLevel);
 						if (hpLevel.className === relevantClass) {
 							bonus += 1;
 						}
