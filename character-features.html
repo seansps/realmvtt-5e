@@ -1,7 +1,59 @@
 <script>
-  function updateAbilitiesFromFeature(feat) {
+  function updateAbilitiesFromFeature(feature) {
     // If the feature has an ability, add it to the character
-    // TODO
+    // For each feature, we need to check for ability groups and add them if not there
+    const abilityGroupName = feature?.data?.abilityGroupName || '';
+    if (abilityGroupName !== '') {
+      const abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+      const abilityValue = feature?.data?.value || '';
+      const abilityRestoresOn = feature?.data?.restoreOn || '';
+      let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
+      // When the group is added, or found, we add abilities to it or set data on it
+      const recordDataPath = record?.dataPath || '';
+      const abilityAddedCallback = (record) => {
+        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
+        const fieldsToSet = {};
+        if (abilityGroupIndex !== -1) {
+          // Get the Ability to add if any
+          const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
+          if (abilityIdToAdd !== '') {
+            api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
+              api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+            });
+          }
+          // If abilityUsesPerDay > 0, un hide the counter
+          if (abilityUsesPerDay > 0) {
+            // Update the record's number of uses if lower
+            const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
+            if (curDailyUses < abilityUsesPerDay) {
+              // If ability uses per day went up, update it
+              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;
+            }
+            const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
+            if (abilityValue) {
+              // Update the ability value if it was previously set, as this might be a higher value now
+              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
+            }
+            fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
+          }
+        }
+        api.setValues(fieldsToSet);
+      };
+      if (!abilityGroup) {
+        api.addValue('data.abilityGroups', {
+          name: abilityGroupName,
+          data: {
+            abilities: [],
+            maxDailyUses: abilityUsesPerDay,
+            value: abilityValue,
+            restore: abilityRestoresOn,
+          }
+        }, abilityAddedCallback);
+      }
+      else {
+        abilityAddedCallback(record);
+      }
+    }
   }
 
   function onDropFeat(recordLink) {

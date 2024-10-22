@@ -7,6 +7,7 @@
     <stringfield multiline maxrows=6 variant="filled" field="description"></stringfield>
   </accordion>
   <accordion size='xs' variant='default' field="rulesAcc" label="Rules Elements">
+    <divider label='Ability' textalign="center"></divider>
     <div style='display: flex; gap: 8px;'>
       <dropdown size='xs' width="50%" field="ability" label="Grants Ability" searchable='true'
         description='If applicable, an Ability that this Feature grants'
@@ -30,7 +31,7 @@
     </div>
     <!-- List of Modifiers, if Any -->
     <div style='width: 100%; margin-top: 4px'>
-      <label size='xs' label='Modifiers' variant='bold'></label>
+      <divider label='Modifiers' textalign="center"></divider>
       <list listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
     </div>
   </accordion>
