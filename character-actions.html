@@ -59,35 +59,37 @@
         return;
       }
 
+      let spellValue = value === 'Cantrip' ? 0 : parseInt(value, 10);
+
       const valuesToUnhide = [];
-      if (value >= 9) {
+      if (spellValue >= 9) {
         valuesToUnhide.push('level9spellsOpen');
       }
-      if (value >= 8) {
+      if (spellValue >= 8) {
         valuesToUnhide.push('level8spellsOpen');
       }
-      if (value >= 7) {
+      if (spellValue >= 7) {
         valuesToUnhide.push('level7spellsOpen');
       }
-      if (value >= 6) {
+      if (spellValue >= 6) {
         valuesToUnhide.push('level6spellsOpen');
       }
-      if (value >= 5) {
+      if (spellValue >= 5) {
         valuesToUnhide.push('level5spellsOpen');
       }
-      if (value >= 4) {
+      if (spellValue >= 4) {
         valuesToUnhide.push('level4spellsOpen');
       }
-      if (value >= 3) {
+      if (spellValue >= 3) {
         valuesToUnhide.push('level3spellsOpen');
       }
-      if (value >= 2) {
+      if (spellValue >= 2) {
         valuesToUnhide.push('level2spellsOpen');
       }
-      if (value >= 1) {
+      if (spellValue >= 1) {
         valuesToUnhide.push('level1spellsOpen');
       }
-      if (value >= 0) {
+      if (spellValue >= 0) {
         valuesToUnhide.push('cantripsOpen');
       }
 

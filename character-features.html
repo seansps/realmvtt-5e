@@ -1,22 +1,48 @@
-<label variant="bold" textalign='center' label='Proficiencies'></label>
+<script>
+  function updateAbilitiesFromFeature(feat) {
+    // If the feature has an ability, add it to the character
+    // TODO
+  }
 
-<div style='margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 4px;'>
-  <stringfield multiline maxRows='2' field="weaponProficiencies" label="Weapon Proficiencies" placeholder='None'>
-  </stringfield>
-  <stringfield multiline maxRows='2' field="armorTraining" label="Armor Training" placeholder='None'></stringfield>
+  function onDropFeat(recordLink) {
+    const feat = recordLink?.value;
+
+    // We add feats to the features list so that
+    // All modifiers and are parsed by the same functions
+    const featToAdd = {
+      ...feat,
+      data: {
+        ...feat?.data,
+        // Set a field called featureType to 'feat' so that
+        // So that we can show and filter the two features_list fields properly
+        featureType: 'feat'
+      }
+    }
+
+    api.addValue(`data.features`, featToAdd, (updatedRecord) => {
+      // After adding the feat, we need to update abilities if one was attached to it
+      updateAbilitiesFromFeature(featToAdd);
+    });
+  }
+
+  function onDrop(type, recordLink) {
+    if (type === 'feats') {
+      onDropFeat(recordLink);
+    }
+  }
+</script>
+
+<div style='margin-top: 8px;'>
+  <label variant="bold" textalign='center' label='Feats'></label>
 </div>
 
-<label variant="bold" textalign='center' label='Resistances, Immunities, & Vulnerabilities'></label>
-
-<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
-  <stringfield width="33%" multiline maxRows='2' field="resistances" label="Resistances" placeholder='None'>
-  </stringfield>
-  <stringfield width="33%" multiline maxRows='2' field="immunities" label="Immunities" placeholder='None'></stringfield>
-  <stringfield width="33%" multiline maxRows='2' field="vulnerabilities" label="Vulnerabilities" placeholder='None'>
-  </stringfield>
+<div style='width: 100%'>
+  <list listtype="feats_list" field='features'></list>
 </div>
 
-<label variant="bold" textalign='center' label='Class Features'></label>
+<div style='margin-top: 8px;'>
+  <label variant="bold" textalign='center' label='Features'></label>
+</div>
 
 <table>
   <tbody>
@@ -37,4 +63,16 @@
 
 <div style='width: 100%'>
   <list listtype="character_feature_list" field='features'></list>
+</div>
+
+<div style='margin-top: 8px;'>
+  <label variant="bold" textalign='center' label='Resistances, Immunities, & Vulnerabilities'></label>
+</div>
+
+<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
+  <stringfield width="33%" multiline maxRows='2' field="resistances" label="Resistances" placeholder='None'>
+  </stringfield>
+  <stringfield width="33%" multiline maxRows='2' field="immunities" label="Immunities" placeholder='None'></stringfield>
+  <stringfield width="33%" multiline maxRows='2' field="vulnerabilities" label="Vulnerabilities" placeholder='None'>
+  </stringfield>
 </div>
