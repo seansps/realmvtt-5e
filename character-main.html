@@ -1126,6 +1126,17 @@
 							}
 							// If abilityUsesPerDay > 0, un hide the counter
 							if (abilityUsesPerDay > 0) {
+								// Update the record's number of uses if lower
+								const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
+								if (curDailyUses < abilityUsesPerDay) {
+									// If ability uses per day went up, update it
+									api.setValue(`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`, abilityUsesPerDay);
+								}
+								const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
+								if (abilityValue) {
+									// Update the ability value if it was previously set, as this might be a higher value now
+									api.setValue(`data.abilityGroups.${abilityGroupIndex}.data.value`, abilityValue);
+								}
 								api.setValue(`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`, false);
 							}
 						}
