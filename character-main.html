@@ -166,9 +166,12 @@
 					const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
 					// Add addHP + conMod
 					let hpToAdd = addHp + conMod;
+					// Add rolled value min of 1 after CON MOD
 					if (hpToAdd < 0) { hpToAdd = 1; }
-					const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
 					const curHp = parseInt(record?.data?.curhp || '0', 10);
+
+					// Calculate current max HP
+					let curHpMax = getHpForLevel(conMod, totalLevel, hpByLevelArr);
 
 					const hpValuesToSet = {
 						'data.curhp': curHp + hpToAdd,
@@ -1436,7 +1439,9 @@
 		let d10HitDie = 0;
 		let d12HitDie = 0;
 		newHpByLevel.forEach(hpLevel => {
-			newMaxHp += hpLevel.hp + conMod;
+			let hpToAdd = hpLevel.hp + conMod;
+			if (hpToAdd < 1) { hpToAdd = 1; }
+			newMaxHp += hpToAdd;
 			if (hpLevel.hitDie === 'd6') {
 				d6HitDie += 1;
 			}
@@ -1740,9 +1745,10 @@
 
 		// Update hit points if this is constitution
 		if (attribute === 'constitution') {
-			const totalHp = getHpForLevel();
 			const level = parseInt(record?.data?.level || '0', 10);
-			let newHp = totalHp + (modVal * level);
+			const hpByLevel = record?.data?.hpByLevel || '[]';
+			const hpByLevelArr = JSON.parse(hpByLevel);
+			const newHp = getHpForLevel(modVal, level, hpByLevelArr);
 			if (level > 0 && newHp < 1) {
 				// To a minimum of 1
 				newHp = 1;
@@ -1830,14 +1836,51 @@
 	}
 
 	// On update of Constitution, update HP
-	function getHpForLevel() {
+	function getHpForLevel(conMod, newLevel, newHpLevelArray) {
 		// Get the max HP we should have at our current level
 		const hpByLevel = record?.data?.hpByLevel || '[]';
 		const hpByLevelArr = JSON.parse(hpByLevel);
 		let totalHp = 0;
 		// Get all the HP we rolled or set for each level
 		hpByLevelArr.forEach(hpLevel => {
-			totalHp += hpLevel.hp;
+			let thisLevel = hpLevel.hp + conMod;
+			// Each time you level you roll or take average + CON MOD to a min of 1
+			if (thisLevel < 1) {
+				thisLevel = 1;
+			}
+			totalHp += thisLevel;
+		});
+
+		// Get HP Max modifier
+		const hpMaxMods = getEffectsAndModifiers(['hitpoints']);
+		console.log(hpMaxMods);
+		hpMaxMods.forEach(mod => {
+			// For string type in HP max, we'll use it as a field
+			// with a special case for the `field` value to mean a specific class here
+			if (mod.valueType === 'string') {
+				// First check if it is in values we are setting
+				let bonus = mod.value === 'level' ? newLevel : parseInt(record?.data?.[mod.value] || '0', 10);
+				const relevantClass = mod.field;
+				console.log(mod);
+				if (relevantClass && mod.value === 'level') {
+					// Bonus = total level in the given class
+					newHpLevelArray.forEach(hpLevel => {
+						console.log(relevantClass, hpLevel.className, hpLevel);
+						if (hpLevel.className === relevantClass) {
+							bonus += 1;
+						}
+					});
+				}
+				if (!isNaN(bonus)) {
+					totalHp += bonus;
+				}
+			}
+			else if (mod.valueType === 'number') {
+				const bonus = parseInt(mod.value || '0', 10);
+				if (!isNaN(bonus)) {
+					totalHp += bonus;
+				}
+			}
 		});
 
 		return totalHp;
