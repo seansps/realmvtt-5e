@@ -91,6 +91,12 @@
             value = -value;
           }
         }
+        else if (modifier.data?.valueType === 'field') {
+          const fieldToUse = modifier.data?.value || '';
+          if (fieldToUse) {
+            value = record?.data?.[fieldToUse] || '';
+          }
+        }
         else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
           value = '-' + value;
         }

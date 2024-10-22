@@ -109,6 +109,12 @@
 						value = -value;
 					}
 				}
+				else if (modifier.data?.valueType === 'field') {
+					const fieldToUse = modifier.data?.value || '';
+					if (fieldToUse) {
+						value = record?.data?.[fieldToUse] || '';
+					}
+				}
 				else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
 					value = '-' + value;
 				}
@@ -1038,6 +1044,7 @@
 
 	// Add class and subclass features
 	function addMissingClassFeatures(className, classObj, subclass, newLevel) {
+		const additionalFieldsToSet = {};
 		const curFeatures = (record?.data?.features || []).map(feature => `${className}-${feature.name}`);
 		const features = classObj?.data?.feature_list || [];
 		const subClassFeatures = subclass?.data?.feature_list || [];
@@ -1058,9 +1065,9 @@
 					curFeatures.forEach((curFeature, curFeatureIndex) => {
 						const curFeatureLevel = curFeature?.data?.level || 0;
 						if (curFeature === `${className}-${feature.name}` && curFeatureLevel < level) {
-							api.setValue(`data.features.${curFeatureIndex}`, {
+							additionalFieldsToSet[`data.features.${curFeatureIndex}`] = {
 								...feature
-							});
+							};
 							featureAddedOrUpdated = true;
 						}
 					})
@@ -1102,7 +1109,7 @@
 						}
 					});
 					armorClass += calcBonus;
-					api.setValue('data.ac', armorClass);
+					additionalFieldsToSet['data.ac'] = armorClass;
 				}
 
 				// For each feature, we need to check for ability groups and add them if not there
@@ -1116,6 +1123,7 @@
 					const recordDataPath = record?.dataPath || '';
 					const abilityAddedCallback = (record) => {
 						const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
+						const fieldsToSet = {};
 						if (abilityGroupIndex !== -1) {
 							// Get the Ability to add if any
 							const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
@@ -1130,16 +1138,17 @@
 								const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
 								if (curDailyUses < abilityUsesPerDay) {
 									// If ability uses per day went up, update it
-									api.setValue(`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`, abilityUsesPerDay);
+									fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;
 								}
 								const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
 								if (abilityValue) {
 									// Update the ability value if it was previously set, as this might be a higher value now
-									api.setValue(`data.abilityGroups.${abilityGroupIndex}.data.value`, abilityValue);
+									fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
 								}
-								api.setValue(`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`, false);
+								fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
 							}
 						}
+						api.setValues(fieldsToSet);
 					};
 					if (!abilityGroup) {
 						api.addValue('data.abilityGroups', {
@@ -1158,6 +1167,7 @@
 				}
 			}
 		});
+		return additionalFieldsToSet;
 	}
 
 	function addToolProficiency(proficienciesString) {
@@ -1341,11 +1351,11 @@
 						icon: 'IconBadges'
 					});
 					// Add subclass features for level 3
-					addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+					const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
 					// Get Spellcasting info for new subclass
 					const subclasses = [...(record?.data?.subclasses || []), subclass];
 					const spellSlotFieldsToSet = getSpellSlotFields(classes, subclasses, classLevels, classObj, level, newLevel);
-					api.setValues(spellSlotFieldsToSet);
+					api.setValues({ ...additionalFieldsToSet, ...spellSlotFieldsToSet });
 				}
 			}
 
@@ -1361,7 +1371,9 @@
 
 		// Add class features for added class at the new level, using the chosen subclass for it (if one)
 		const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
-		addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+		const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+
+		api.setValues(additionalFieldsToSet);
 
 		// Update HP and Hit Dice
 		// Get class hit die
