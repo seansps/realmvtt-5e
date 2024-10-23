@@ -1057,7 +1057,8 @@
 		[...features, ...subClassFeatures].forEach(feature => {
 			const level = feature?.data?.level || 0;
 			let featureAddedOrUpdated = false;
-			if (level <= newLevel) {
+			// If this feature is at the level we're adding, add or update it
+			if (level === newLevel) {
 				if (!curFeatures.includes(`${className}-${feature.name}`)) {
 					// Add this feature
 					api.addValue('data.features', {
