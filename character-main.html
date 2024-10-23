@@ -1397,6 +1397,166 @@
 		}
 	}
 
+	// Get the ability score increase from a feature (used for when Feats are added to a character 
+	// after dropping a Background)
+	function getAbilityScoreIncrease(feature) {
+		const asi = feature?.data?.abilityScores || '';
+		let max = 20;
+		let scores = [];
+		if (!asi) {
+			return { max, scores, promptChoice: false, count: 0 };
+		}
+
+		// Parse the maximum value from the phrase
+		const maxMatch = asi.toLowerCase().match(/to a maximum of (\d+)/);
+		if (maxMatch) {
+			max = parseInt(maxMatch[1], 10);
+		}
+
+		if (asi.toLowerCase().match(/one ability score of your choice/) && asi.toLowerCase().match(/or increase two ability scores/)) {
+			return { max, scores: ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'], promptChoice: true, count: 2 };
+		}
+
+		const abilityMatch = asi.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);
+		if (abilityMatch) {
+			scores = abilityMatch;
+		}
+
+		return { max, scores, promptChoice: scores.length > 1, count: 1 };
+	}
+
+	// Add abilities from a feat when added to a character
+	// (Called after adding a Feat on Background Drop)
+	function updateAbilitiesFromFeature(feature) {
+		// If the feature has an ability, add it to the character
+		// For each feature, we need to check for ability groups and add them if not there
+		const abilityGroupName = feature?.data?.abilityGroupName || '';
+		if (abilityGroupName !== '') {
+			const abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+			const abilityValue = feature?.data?.value || '';
+			const abilityRestoresOn = feature?.data?.restoreOn || '';
+			let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
+			// When the group is added, or found, we add abilities to it or set data on it
+			const recordDataPath = record?.dataPath || '';
+			const abilityAddedCallback = (record) => {
+				const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
+				const fieldsToSet = {};
+				if (abilityGroupIndex !== -1) {
+					// Get the Ability to add if any
+					const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
+					if (abilityIdToAdd !== '') {
+						api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
+							api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+						});
+					}
+					// If abilityUsesPerDay > 0, un hide the counter
+					if (abilityUsesPerDay > 0) {
+						// Update the record's number of uses if lower
+						const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
+						if (curDailyUses < abilityUsesPerDay) {
+							// If ability uses per day went up, update it
+							fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;
+						}
+						const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
+						if (abilityValue) {
+							// Update the ability value if it was previously set, as this might be a higher value now
+							fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
+						}
+						fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
+					}
+				}
+				api.setValues(fieldsToSet);
+			};
+			if (!abilityGroup) {
+				api.addValue('data.abilityGroups', {
+					name: abilityGroupName,
+					data: {
+						abilities: [],
+						maxDailyUses: abilityUsesPerDay,
+						value: abilityValue,
+						restore: abilityRestoresOn,
+					}
+				}, abilityAddedCallback);
+			}
+			else {
+				abilityAddedCallback(record);
+			}
+		}
+	}
+
+	// Add a feat to the character, called on Background drop
+	function addFeat(feat) {
+		// We add feats to the features list so that
+		// All modifiers and are parsed by the same functions
+		const featToAdd = {
+			...feat,
+			data: {
+				...feat?.data,
+				// Set a field called featureType to 'feat' so that
+				// So that we can show and filter the two features_list fields properly
+				featureType: 'feat'
+			}
+		}
+
+		api.addValue(`data.features`, featToAdd, (updatedRecord) => {
+			// After adding the feat, we need to update abilities if one was attached to it
+			updateAbilitiesFromFeature(featToAdd);
+		});
+
+		// Prompt the user to select ASIs or just add them all
+		const abilityScoreSelection = (values) => {
+			const fieldsToSet = {};
+			values.forEach(curV => {
+				// Get the current value
+				let value = curV.split('-')[0];
+				const curValue = record?.data?.[`${value}`] || 0;
+				// If we haven't chosen it yet, increase the current value by 1
+				if (fieldsToSet[`data.${value}`] === undefined) {
+					if (curValue < abilityIncrease.max) {
+						fieldsToSet[`data.${value}`] = curValue + 1;
+					}
+				}
+				else {
+					// Increase the value by 1 again
+					if (fieldsToSet[`data.${value}`] < abilityIncrease.max) {
+						fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;
+					}
+				}
+			});
+
+			// Set the attributes then...
+			api.setValues(fieldsToSet, () => {
+				// Use the setModifier function to set the modifiers, update proficiencies,
+				// and other re-calculations of modifiers as needed
+				Object.keys(fieldsToSet).forEach(key => {
+					const value = fieldsToSet[key];
+					const attribute = key.replace('data.', '');
+					setModifier(value, attribute);
+				});
+			});
+		}
+
+		const abilityIncrease = getAbilityScoreIncrease(featToAdd);
+		if (abilityIncrease.promptChoice) {
+			const options = [];
+			abilityIncrease.scores.forEach(score => {
+				options.push({ label: capitalize(score), value: score });
+			});
+			// IF we allow more than one selection, add them again
+			if (abilityIncrease.count > 1) {
+				abilityIncrease.scores.forEach(score => {
+					options.push({ label: `${capitalize(score)}`, value: `${score}-2` });
+				});
+			}
+
+			api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select ${abilityIncrease.count} Ability Score${abilityIncrease.count > 1 ? 's' : ''} to Raise (to a max of ${abilityIncrease.max})...`, options, null, abilityScoreSelection, 'OK', 'Cancel', abilityIncrease.count);
+		}
+		else if (abilityIncrease.scores.length > 0) {
+			// Add all ASIs
+			abilityScoreSelection(abilityIncrease.scores.map(score => score));
+		}
+	}
+
 	function onDropBackground(type, recordLink) {
 		// Check if already has a backgrpund
 		const backgrounds = record?.data?.backgrounds || [];
@@ -1419,6 +1579,21 @@
 			api.removeValue('data.backgrounds', 0, () => {
 				api.addValue('data.backgrounds', backgroundObj);
 			});
+		}
+
+		// After prompting for ASIs from Background and setting them, we will add the 
+		// Feat (which technically could, but should not, also have ASIs)
+		const getAndAddFeat = () => {
+			// Add the feat specified by the Background
+			const feat = backgroundObj?.data?.feat;
+			if (feat) {
+				const featId = JSON.parse(feat)?._id || '';
+				if (featId !== '') {
+					api.getRecord('feats', featId, (featRecord) => {
+						addFeat(featRecord);
+					});
+				}
+			}
 		}
 
 		// Prompt for Ability Scores to raise
@@ -1448,11 +1623,15 @@
 				const curValue = record?.data?.[`${value}`] || 0;
 				// If we haven't chosen it yet, increase the current value by 1
 				if (fieldsToSet[`data.${value}`] === undefined) {
-					fieldsToSet[`data.${value}`] = curValue + 1;
+					if (curValue < 20) {
+						fieldsToSet[`data.${value}`] = curValue + 1;
+					}
 				}
 				else {
 					// Increase the value by 1 again
-					fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;
+					if (fieldsToSet[`data.${value}`] < 20) {
+						fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;
+					}
 				}
 			});
 
@@ -1465,15 +1644,15 @@
 					const attribute = key.replace('data.', '');
 					setModifier(value, attribute);
 				});
-			});
 
+				// After setting the ASIs, add the feat
+				getAndAddFeat();
+			});
 		}
 
-		api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select 3 Ability Scores to Raise...`, options, null, abilityScoreSelection, 'OK', 'Cancel', 3);
+		api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select 3 Ability Scores to Raise (to a max of 20)...`, options, null, abilityScoreSelection, 'OK', 'Cancel', 3);
 
 		// TODO get Skill Proficiencies, Tool Proficiencies, and set on Skills lIst
-
-		// TODO Add the Feat to the features list
 
 		// Set the background name
 		fieldsToSet['data.backgroundName'] = backgroundName;
