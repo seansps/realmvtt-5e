@@ -1583,6 +1583,7 @@
 
 		// After prompting for ASIs from Background and setting them, we will add the 
 		// Feat (which technically could, but should not, also have ASIs)
+		// And then set the tool and skill proficiencies
 		const getAndAddFeat = () => {
 			// Add the feat specified by the Background
 			const feat = backgroundObj?.data?.feat;
@@ -1635,24 +1636,34 @@
 				}
 			});
 
+			// Add skill proficiencies to the fields we want to update
+			const skillProficiencies = backgroundObj?.data?.skillProficiencies || [];
+			const proficiencyBonus = parseInt(api.getValue('data.proficiencyBonus') || '2', 10);
+			skillProficiencies.forEach(skill => {
+				fieldsToSet[`data.${skill}Prof`] = 'true';
+			});
+
 			// Set the attributes then...
 			api.setValues(fieldsToSet, () => {
 				// Use the setModifier function to set the modifiers, update proficiencies,
 				// and other re-calculations of modifiers as needed
 				Object.keys(fieldsToSet).forEach(key => {
-					const value = fieldsToSet[key];
-					const attribute = key.replace('data.', '');
-					setModifier(value, attribute);
+					// Ignore skill prof changes
+					if (!key.includes('Prof')) {
+						const value = fieldsToSet[key];
+						const attribute = key.replace('data.', '');
+						setModifier(value, attribute, fieldsToSet);
+					}
 				});
 
-				// After setting the ASIs, add the feat
+				// Add the feat and tool proficiencies last
 				getAndAddFeat();
+				const toolProficiencies = backgroundObj?.data?.toolProficiencies || '';
+				addToolProficiency(toolProficiencies);
 			});
 		}
 
 		api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select 3 Ability Scores to Raise (to a max of 20)...`, options, null, abilityScoreSelection, 'OK', 'Cancel', 3);
-
-		// TODO get Skill Proficiencies, Tool Proficiencies, and set on Skills lIst
 
 		// Set the background name
 		fieldsToSet['data.backgroundName'] = backgroundName;
@@ -1660,6 +1671,7 @@
 		// Unhide the backagrounds list
 		fieldsToSet['fields.backgrounds.hidden'] = false;
 
+		// Set all values
 		api.setValues(fieldsToSet);
 	}
 
@@ -2043,7 +2055,7 @@
 	}
 
 	// On Change of Attributes, Set the Relavant Mods
-	function setModifier(value, attribute) {
+	function setModifier(value, attribute, skillProfOverrides = {}) {
 		const modField = `${attribute}Mod`;
 		const saveField = `${attribute}Save`;
 		const saveProf = `${attribute}Prof`;
@@ -2061,7 +2073,7 @@
 		}
 		valuesToSet[`data.${modField}`] = modValStr;
 
-		let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '0', 10);
+		let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '2', 10);
 		if (isNaN(proficiencyBonus)) {
 			proficiencyBonus = 0;
 		}
@@ -2114,9 +2126,10 @@
 		getSkills().forEach(skill => {
 			// Get the ability being used for this skill, fallback to the skill's default
 			const ability = record?.data?.[`${skill.field}Ability`] || skill.ability;
+
 			if (ability === attribute) {
 				// Skills can be also be half, proficient, or expertise
-				const proficiency = record?.data?.[`${skill.field}Prof`] || 'false';
+				const proficiency = skillProfOverrides[`data.${skill.field}Prof`] || record?.data?.[`${skill.field}Prof`] || 'false';
 				const isHalfProficient = proficiency === 'half';
 				const isExpertise = proficiency === 'expertise';
 				const isProficient = proficiency === 'true';
