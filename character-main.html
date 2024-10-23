@@ -154,7 +154,6 @@
 
 		const callback = (values) => {
 			if (values.length >= 1) {
-				;
 				const value = values[0];
 				// Here we set the HP by Level string for this level with the average roll
 				// or trigger a roll of type hitpoints with the given roll
@@ -827,6 +826,8 @@
 		// Regular expression to extract the number of choices and the skills list
 		const choicePattern = /[Cc]hoose (\d+): ([^)]+)/;
 		const choiceMatch = skillProficiencies.match(choicePattern);
+		const choiceAnyPattern = /[Cc]hoose any (\d+) skills/;
+		const choiceAnyMatch = skillProficiencies.match(choiceAnyPattern);
 
 		let numChoices = 0;
 		let skills = [];
@@ -834,6 +835,10 @@
 		if (choiceMatch) {
 			numChoices = parseInt(choiceMatch[1], 10); // Number of skills to choose
 			skills = choiceMatch[2].split(',').map(s => s.trim().replace('or ', '')).filter(s => s !== ''); // Array of skill names
+		}
+		else if (choiceAnyMatch) {
+			numChoices = parseInt(choiceAnyMatch[1], 10); // Number of skills to choose
+			skills = getSkills().map(s => s.name);
 		}
 
 		// If we are multiclassing parse the number of choices we get
@@ -1392,9 +1397,99 @@
 		}
 	}
 
+	function onDropBackground(type, recordLink) {
+		// Check if already has a backgrpund
+		const backgrounds = record?.data?.backgrounds || [];
+		const backgroundName = recordLink.tooltip;
+
+		const backgroundObj = {
+			...recordLink.value,
+			'_id': backgroundName,
+		};
+		const hasBackground = backgrounds.length > 0;
+
+		const fieldsToSet = {};
+
+		// Add the background to the the backgrounds list if needed
+		if (!hasBackground) {
+			api.addValue('data.backgrounds', backgroundObj);
+		}
+		else {
+			// Remove first background and add the new one
+			api.removeValue('data.backgrounds', 0, () => {
+				api.addValue('data.backgrounds', backgroundObj);
+			});
+		}
+
+		// Prompt for Ability Scores to raise
+		let options = [];
+		const abilityChoices = backgroundObj?.data?.abilityScores || [];
+		// We list each one twice since you can only pick one more than once twice
+		abilityChoices.forEach(ability => {
+			options.push({
+				label: capitalize(ability),
+				// In code we use camelCase, so we need to convert from normal to camelCase
+				value: normalToCamelCase(ability)
+			});
+		});
+		abilityChoices.forEach(ability => {
+			options.push({
+				label: capitalize(ability),
+				// In code we use camelCase, so we need to convert from normal to camelCase
+				value: `${normalToCamelCase(ability)}-2`
+			});
+		});
+
+		const abilityScoreSelection = (values) => {
+			const fieldsToSet = {};
+			values.forEach(curV => {
+				// Get the current value
+				let value = curV.split('-')[0];
+				const curValue = record?.data?.[`${value}`] || 0;
+				// If we haven't chosen it yet, increase the current value by 1
+				if (fieldsToSet[`data.${value}`] === undefined) {
+					fieldsToSet[`data.${value}`] = curValue + 1;
+				}
+				else {
+					// Increase the value by 1 again
+					fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;
+				}
+			});
+
+			// Set the attributes then...
+			api.setValues(fieldsToSet, () => {
+				// Use the setModifier function to set the modifiers, update proficiencies,
+				// and other re-calculations of modifiers as needed
+				Object.keys(fieldsToSet).forEach(key => {
+					const value = fieldsToSet[key];
+					const attribute = key.replace('data.', '');
+					setModifier(value, attribute);
+				});
+			});
+
+		}
+
+		api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select 3 Ability Scores to Raise...`, options, null, abilityScoreSelection, 'OK', 'Cancel', 3);
+
+		// TODO get Skill Proficiencies, Tool Proficiencies, and set on Skills lIst
+
+		// TODO Add the Feat to the features list
+
+		// Set the background name
+		fieldsToSet['data.backgroundName'] = backgroundName;
+
+		// Unhide the backagrounds list
+		fieldsToSet['fields.backgrounds.hidden'] = false;
+
+		api.setValues(fieldsToSet);
+	}
+
 	function onDrop(type, recordLink) {
 		if (type === 'class') {
 			onDropClass(type, recordLink);
+		}
+		else if (type === 'backgrounds') {
+			onDropBackground(type, recordLink);
 		}
 	}
 
@@ -1515,12 +1610,25 @@
 			valuesToSet['data.d12HitDie'] = d12HitDie || null;
 		}
 
+		// If this was the last class, hide the classes list
+		if (classes.length === 0) {
+			valuesToSet['fields.classes.hidden'] = true;
+		}
+
 		const bonus = getProficiencyBonus(level);
 		valuesToSet['data.proficiencyBonus'] = bonus;
 
 		// Set values then update proficiencies based on Level
 		api.setValues(valuesToSet, (record) => {
 			updateProficiencies(bonus, record);
+		});
+	}
+
+	function onDeleteBackground() {
+		// Update background text
+		api.setValues({
+			'data.backgroundName': '',
+			'fields.backgrounds.hidden': true
 		});
 	}
 
@@ -2111,7 +2219,8 @@
 		<div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
 			<stringfield width='100%' size='xs' field='className' placeholder='Drag and drop a Class to add a Level'
 				label='Class & Level'></stringfield>
-			<list width='30%' height='32px' hidden='true' listtype="class_list" field='classes' onchange='onDeleteClass();'>
+			<list width='fit-content' height='32px' hidden='true' listtype="class_list" field='classes'
+				onchange='onDeleteClass();'>
 			</list>
 		</div>
 
@@ -2120,9 +2229,12 @@
 			</stringfield>
 		</div>
 
-		<div style='width: 100%'>
-			<stringfield size='xs' field='backgroundName' placeholder='Drag and drop your chosen Background'
+		<div style='width: 100%; display: flex; gap: 4px; align-items: flex-end'>
+			<stringfield width='100%' size='xs' field='backgroundName' placeholder='Drag and drop your chosen Background'
 				label='Background'></stringfield>
+			<list width='fit-content' height='32px' hidden='true' listtype="background_list" field='backgrounds'
+				onchange='onDeleteBackground();'>
+			</list>
 		</div>
 
 		<div style='display: flex; flex-direction: row;'>
