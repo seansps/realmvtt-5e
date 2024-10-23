@@ -7,14 +7,15 @@
       <stringfield width="100%" field="creatureType" label="Creature Type" placeholder='Enter Creature Type...'>
       </stringfield>
       <div style='width: 100%; display: flex; gap: 4px;'>
-        <dropdown size='sm' width="50%" field="size" placeholder='Select Size' label="Size"
+        <dropdown size='sm' width="100%" field="size" placeholder='Select Size' label="Size"
           options='[{"label": "Tiny", "value": "tiny"}, {"label": "Small", "value": "small"}, {"label": "Medium", "value": "medium"}, {"label": "Large", "value": "large"}, {"label": "Huge", "value": "huge"}, {"label": "Gargantuan", "value": "gargantuan"}]'>
         </dropdown>
-        <stringfield width="50%" field="sizeInfo" label="Additional Size Info" placeholder='Enter Additional Info...'>
-        </stringfield>
       </div>
     </div>
   </div>
+  <stringfield width="100%" field="sizeInfo" label="Additional Size Info" multiline maxrows='2'
+    placeholder='Enter Additional Info...'>
+  </stringfield>
   <stringfield width="100%" field="speed" label="Speed" placeholder='Enter Speed...'>
   </stringfield>
   <stringfield width="100%" field="senses" label="Senses" placeholder='Enter Senses...'>
