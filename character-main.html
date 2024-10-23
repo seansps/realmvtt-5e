@@ -1559,7 +1559,7 @@
 	}
 
 	function onDropBackground(type, recordLink) {
-		// Check if already has a backgrpund
+		// Check if already has a background
 		const backgrounds = record?.data?.backgrounds || [];
 		const backgroundName = recordLink.tooltip;
 
@@ -1676,12 +1676,161 @@
 		api.setValues(fieldsToSet);
 	}
 
+	function onDropSpecies(type, recordLink) {
+		// Check if already has a species
+		const species = record?.data?.species || [];
+		const speciesName = recordLink.tooltip;
+
+		const speciesObj = {
+			...recordLink.value,
+			'_id': speciesName,
+		};
+		const hasSpecies = species.length > 0;
+
+		const fieldsToSet = {};
+
+		// Add the species to the the species list if needed
+		if (!hasSpecies) {
+			api.addValue('data.species', speciesObj);
+		}
+		else {
+			// Remove first species and add the new one
+			api.removeValue('data.species', 0, () => {
+				api.addValue('data.species', speciesObj);
+			});
+		}
+
+		// Get creatureType, size, speed, and senses and update fields
+		const creatureType = speciesObj?.data?.creatureType || '';
+		const size = speciesObj?.data?.size || '';
+		const speed = speciesObj?.data?.speed || '';
+		const senses = speciesObj?.data?.senses || '';
+
+		fieldsToSet['data.creatureType'] = creatureType;
+		fieldsToSet['data.size'] = capitalize(size);
+		fieldsToSet['data.speed'] = speed;
+		fieldsToSet['data.senses'] = senses;
+
+		// Set the species name
+		fieldsToSet['data.speciesName'] = speciesName;
+
+		// Unhide the species list
+		fieldsToSet['fields.species.hidden'] = false;
+
+		// Add features to the features list
+		const features = speciesObj?.data?.feature_list || [];
+		features.forEach(feature => {
+			// Add this feature
+			api.addValue('data.features', {
+				...feature
+			});
+			// Check for AC calc mods
+			const acCalculationMods = (feature?.data?.modifiers || []).filter(mod => mod.data.type === 'armorClassCalculation');
+			if (acCalculationMods.length > 0) {
+				// Get other mods
+				const allAcCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
+				acCalculationMods.forEach(mod => {
+					allAcCalculationMods.push({
+						name: feature.name || 'Feature',
+						value: mod.data?.value || 0,
+						field: mod.data?.field || '',
+					});
+				});
+				const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+				let armorClass = 10 + dexMod;
+				let calcBonus = 0;
+				allAcCalculationMods.forEach(mod => {
+					// We only benefit from the highest AC calculation modifier
+					if (mod.field && mod.field !== 'dexterity') {
+						const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10);
+						if (acBonus > calcBonus) {
+							calcBonus = acBonus;
+						}
+					}
+				});
+				// Get general AC bonuses
+				const acBonuses = getEffectsAndModifiers(['armorClassBonus']);
+				acBonuses.forEach(mod => {
+					if (mod.value) {
+						const acBonus = parseInt(mod.value || '0', 10);
+						if (!isNaN(acBonus)) {
+							calcBonus += acBonus;
+						}
+					}
+				});
+				armorClass += calcBonus;
+				fieldsToSet['data.ac'] = armorClass;
+			}
+
+			// For each feature, we need to check for ability groups and add them if not there
+			const abilityGroupName = feature?.data?.abilityGroupName || '';
+			if (abilityGroupName !== '') {
+				const abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+				const abilityValue = feature?.data?.value || '';
+				const abilityRestoresOn = feature?.data?.restoreOn || '';
+				let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
+				// When the group is added, or found, we add abilities to it or set data on it
+				const recordDataPath = record?.dataPath || '';
+				const abilityAddedCallback = (record) => {
+					const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
+					const fieldsToSet = {};
+					if (abilityGroupIndex !== -1) {
+						// Get the Ability to add if any
+						const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
+						if (abilityIdToAdd !== '') {
+							api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
+								api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+							});
+						}
+						// If abilityUsesPerDay > 0, un hide the counter
+						if (abilityUsesPerDay > 0) {
+							// Update the record's number of uses if lower
+							const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
+							if (curDailyUses < abilityUsesPerDay) {
+								// If ability uses per day went up, update it
+								fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;
+							}
+							const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
+							if (abilityValue) {
+								// Update the ability value if it was previously set, as this might be a higher value now
+								fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
+							}
+							fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
+						}
+					}
+					api.setValues(fieldsToSet);
+				};
+
+				if (!abilityGroup) {
+					api.addValue('data.abilityGroups', {
+						name: abilityGroupName,
+						data: {
+							abilities: [],
+							maxDailyUses: abilityUsesPerDay,
+							value: abilityValue,
+							restore: abilityRestoresOn,
+						}
+					}, abilityAddedCallback);
+				}
+				else {
+					abilityAddedCallback(record);
+				}
+			}
+		});
+
+		// Set all values
+		api.setValues(fieldsToSet);
+	}
+
 	function onDrop(type, recordLink) {
 		if (type === 'class') {
 			onDropClass(type, recordLink);
 		}
 		else if (type === 'backgrounds') {
 			onDropBackground(type, recordLink);
+		}
+		else if (type === 'species') {
+			onDropSpecies(type, recordLink);
 		}
 	}
 
@@ -1821,6 +1970,14 @@
 		api.setValues({
 			'data.backgroundName': '',
 			'fields.backgrounds.hidden': true
+		});
+	}
+
+	function onDeleteSpecies() {
+		// Update species text
+		api.setValues({
+			'data.speciesName': '',
+			'fields.species.hidden': true
 		});
 	}
 
@@ -2417,9 +2574,13 @@
 			</list>
 		</div>
 
-		<div style='width: 100%'>
-			<stringfield size='xs' field='speciesName' placeholder='Drag and drop your chosen Species' label='Species'>
+		<div style='width: 100%; display: flex; gap: 4px; align-items: flex-end'>
+			<stringfield width='100%' size='xs' field='speciesName' placeholder='Drag and drop your chosen Species'
+				label='Species'>
 			</stringfield>
+			<list width='fit-content' height='32px' hidden='true' listtype="species_list" field='species'
+				onchange='onDeleteSpecies();'>
+			</list>
 		</div>
 
 		<div style='width: 100%; display: flex; gap: 4px; align-items: flex-end'>
