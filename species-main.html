@@ -1,0 +1,28 @@
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px'>
+    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+      <portrait width='125px' height='125px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <stringfield width="100%" field="creatureType" label="Creature Type" placeholder='Enter Creature Type...'>
+      </stringfield>
+      <div style='width: 100%; display: flex; gap: 4px;'>
+        <dropdown size='sm' width="50%" field="size" placeholder='Select Size' label="Size"
+          options='[{"label": "Tiny", "value": "tiny"}, {"label": "Small", "value": "small"}, {"label": "Medium", "value": "medium"}, {"label": "Large", "value": "large"}, {"label": "Huge", "value": "huge"}, {"label": "Gargantuan", "value": "gargantuan"}]'>
+        </dropdown>
+        <stringfield width="50%" field="sizeInfo" label="Additional Size Info" placeholder='Enter Additional Info...'>
+        </stringfield>
+      </div>
+    </div>
+  </div>
+  <stringfield width="100%" field="speed" label="Speed" placeholder='Enter Speed...'>
+  </stringfield>
+  <stringfield width="100%" field="senses" label="Senses" placeholder='Enter Senses...'>
+  </stringfield>
+</div>
+
+<div style='margin-top: 8px; margin-bottom: 8px'>
+  <divider label='Description'></divider>
+</div>
+
+<richtextfield placeholder='Enter Species description...' field="description" label="Description"></richtextfield>
