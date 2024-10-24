@@ -8,115 +8,197 @@ const tags = [{
 
 const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
 
+// Script to get all modifier and effects affecting the target
+const getEffectsAndModifiers = `
+function getEffectsAndModifiersForToken(target, types = [], field = '') {
+  if (!target) {
+    return [];
+  }
+  let results = [];
+
+  // First collect modifiers from effects
+  const effects = target?.effects || [];
+  effects.forEach((effect) => {
+    const rules = effect.rules || [];
+    rules.forEach((rule) => {
+      const ruleType = rule?.type || '';
+      const isPenalty = ruleType.toLowerCase().includes('penalty');
+      let value = rule.value || '';
+      if (rule.valueType === 'number') {
+        value = parseInt(rule.value, 10);
+        if (isNaN(value)) {
+          value = 0;
+        }
+        if (isPenalty && value > 0) {
+          value = -value;
+        }
+      }
+      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+        value = '-' + value;
+      }
+      if (value !== 0) {
+        results.push({
+          name: effect.name || 'Effect',
+          value: value,
+          active: true,
+          modifierType: ruleType,
+          field: rule?.field || '',
+          valueType: rule.valueType,
+          isPenalty: isPenalty
+        });
+      }
+      else if (rule.valueType === 'api') {
+        let value = parseInt(target?.effectValues?.[effect?._id] || '0', 10);
+        if (isPenalty && value > 0) {
+          value = -value;
+        }
+        if (value !== 0) {
+          results.push({
+            name: effect.name || 'Effect',
+            value: value,
+            active: true,
+            modifierType: ruleType,
+            field: rule?.field || '',
+            valueType: rule.valueType,
+            isPenalty: isPenalty
+          });
+        }
+      }
+      else if (rule.valueType === 'stack') {
+        // The value is the number of times they have this effect
+        let value = target?.effectIds?.filter(id => id === effect?._id).length;
+        if (isPenalty && value > 0) {
+          value = -value;
+        }
+        if (value !== 0) {
+          results.push({
+            name: effect.name || 'Effect',
+            value: value,
+            active: true,
+            modifierType: ruleType,
+            field: rule?.field || '',
+            valueType: rule.valueType,
+            isPenalty: isPenalty
+          });
+        }
+      }
+    });
+  });
+
+  // Now collect all modifiers from Features
+  const features = target?.record?.data?.features || [];
+  features.forEach((feature) => {
+    const modifiers = feature.data?.modifiers || [];
+    modifiers.forEach((modifier) => {
+      const ruleType = modifier.data?.type || '';
+      const isPenalty = ruleType.toLowerCase().includes('penalty');
+      let value = modifier.data?.value || '';
+      if (modifier.data?.valueType === 'number') {
+        value = parseInt(modifier.data?.value, 10);
+        if (isNaN(value)) {
+          value = 0;
+        }
+        if (isPenalty && value > 0) {
+          value = -value;
+        }
+      }
+      else if (modifier.data?.valueType === 'field') {
+        const fieldToUse = modifier.data?.value || '';
+        if (fieldToUse) {
+          value = target?.record?.data?.[fieldToUse] || '';
+        }
+      }
+      else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+        value = '-' + value;
+      }
+
+      // Only relevant if it has a value
+      if (value !== 0) {
+        results.push({
+          name: feature?.name || 'Feature',
+          value: value,
+          active: modifier.data?.active === true,
+          modifierType: ruleType,
+          field: modifier.data?.field || '',
+          valueType: modifier.data?.valueType,
+          isPenalty: isPenalty
+        });
+      }
+    });
+  });
+
+  if (types && types.length > 0) {
+    results = results.filter(r => types.includes(r.modifierType));
+  }
+
+  if (field && field !== '') {
+    results = results.filter(r => r.field === field || r.field === 'all');
+  }
+
+  return results;
+}
+    `;
+
 // Script to get the Resistance, Immunity, and Vulnerability of a target
 const getRIVScript = `
 function getRIV(target) {
-  const resistString = target.data?.resistances || '';
-  const resistances = resistString.split(',').map(r => r.toLowerCase().trim());
-  const immuneString = target.data?.immunities || '';
-  const immunities = immuneString.split(',').map(i => i.toLowerCase().trim());
-  const vulnString = target.data?.vulnerabilities || '';
-  const vulnerabilities = vulnString.split(',').map(v => v.toLowerCase().trim());
+  const resistString = (target.data?.resistances || '').toLowerCase();
+  const immuneString = (target.data?.immunities || '').toLowerCase();
+  const vulnString = (target.data?.vulnerabilities || '').toLowerCase();
 
-  if (resistString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
-    resistances = resistances.map(r => {
-      if (r.includes('bludgeoning')) {
-        return 'bludgeoning';
+  // Use regular expressions to match specific patterns
+  const resistances = [];
+  const immunities = [];
+  const vulnerabilities = [];
+
+  const patterns = [
+    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
+    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
+    { type: 'resistance', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
+    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
+    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
+    { type: 'immunity', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
+    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
+    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
+    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] }
+  ];
+
+  // Function to extract and remove matched patterns
+  function extractPatterns(string, type) {
+    patterns.forEach(pattern => {
+      if (pattern.type === type && pattern.regex.test(string)) {
+        if (type === 'resistance') resistances.push(...pattern.values);
+        if (type === 'immunity') immunities.push(...pattern.values);
+        if (type === 'vulnerability') vulnerabilities.push(...pattern.values);
+        string = string.replace(pattern.regex, ''); // Remove matched pattern
       }
-      else if (r.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (r.includes('slashing')) {
-        return 'slashing';
-      }
-      return r;
     });
-  }
-  else if (resistString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
-    resistances = resistances.map(r => {
-      if (r.includes('bludgeoning')) {
-        return 'bludgeoning';
-      }
-      else if (r.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (r.includes('slashing')) {
-        return 'slashing';
-      }
-      return r;
-    });
-    // Include silvered weapons
-    resistances.push('silvered bludgeoning');
-    resistances.push('silvered piercing');
-    resistances.push('silvered slashing');
+    return string;
   }
 
-  // Do the above for immunities and vulnerabilities
-  if (immuneString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
-    immunities = immunities.map(immune => {
-      if (immune.includes('bludgeoning')) {
-        return 'bludgeoning';
-      }
-      else if (immune.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (immune.includes('slashing')) {
-        return 'slashing';
-      }
-      return immune;
-    });
-  }
-  else if (immuneString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
-    immunities = immunities.map(immune => {
-      if (immune.includes('bludgeoning')) {
-        return 'bludgeoning';
-      }
-      else if (immune.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (immune.includes('slashing')) {
-        return 'slashing';
-      }
-      return immune;
-    });
-    // Include silvered weapons
-    immunities.push('silvered bludgeoning');
-    immunities.push('silvered piercing');
-    immunities.push('silvered slashing');
-  }
+  // Extract complex patterns and remove them from the string
+  let remainingResistString = extractPatterns(resistString, 'resistance');
+  let remainingImmuneString = extractPatterns(immuneString, 'immunity');
+  let remainingVulnString = extractPatterns(vulnString, 'vulnerability');
 
-  if (vulnString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered")) {
-    vulnerabilities = vulnerabilities.map(vuln => {
-      if (vuln.includes('bludgeoning')) {
-        return 'bludgeoning';
-      }
-      else if (vuln.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (vuln.includes('slashing')) {
-        return 'slashing';
-      }
-      return vuln;
-    });
-  }
-  else if (vulnString.toLowerCase().includes("bludgeoning, piercing, and slashing from nonmagical attacks")) {
-    vulnerabilities = vulnerabilities.map(vuln => {
-      if (vuln.includes('bludgeoning')) {
-        return 'bludgeoning';
-      }
-      else if (vuln.includes('piercing')) {
-        return 'piercing';
-      }
-      else if (vuln.includes('slashing')) {
-        return 'slashing';
-      }
-      return vuln;
-    });
-    // Include silvered weapons
-    vulnerabilities.push('silvered bludgeoning');
-    vulnerabilities.push('silvered piercing');
-    vulnerabilities.push('silvered slashing');
-  }
+  // Split remaining strings by commas to capture additional values
+  resistances.push(...remainingResistString.split(',').map(r => r.toLowerCase().trim()).filter(r => r));
+  immunities.push(...remainingImmuneString.split(',').map(i => i.toLowerCase().trim()).filter(i => i));
+  vulnerabilities.push(...remainingVulnString.split(',').map(v => v.toLowerCase().trim()).filter(v => v));
+
+  // Then add RIV from modifiers
+  const modifiers = getEffectsAndModifiers(target, ['resistance', 'vulnerability', 'immunity']);
+  modifiers.forEach(mod => {
+    if (mod.modifierType === 'resistance') {
+      resistances.push(mod.value);
+    }
+    else if (mod.modifierType === 'vulnerability') {
+      vulnerabilities.push(mod.value);
+    }
+    else if (mod.modifierType === 'immunity') {
+      immunities.push(mod.value);
+    }
+  });
 
   return {
     resistances,
@@ -167,6 +249,9 @@ if (record) {
 if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
+
+// Add get effects and modifiers script
+${getEffectsAndModifiers}
 
 // Add RIV script
 ${getRIVScript}
@@ -273,6 +358,9 @@ if (record) {
 if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
+
+// Add get effects and modifiers script
+${getEffectsAndModifiers}
 
 // Add RIV script
 ${getRIVScript}
