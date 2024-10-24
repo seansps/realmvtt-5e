@@ -1,0 +1,87 @@
+<script>
+  // Show or hide relavant values based on the type of item
+  // gear, melee weapon, ranged weapon, armor, shield, tool, magic item
+  // Subtypes are optional and are generally one of:
+  // Simple Melee Weapon, Martial Melee Weapon, Simple Ranged Weapon, Martial Ranged Weapon, Light Armor, Medium Armor, Heavy Armor, Ammunition, Treasure, Art Object, Scroll, Potion, Jewelry, Staff, Wand, Clothing
+  // Weapon Type is used for weapon masteries and is one of
+  // Club, Dagger, Greatclub, Handaxe, Javelin, Light Hammer, Mace, Quarterstaff, Sickle, Spear, Dart, Light Crossbow, Shortbow, Sling, Battleaxe, Flail, Glaive, Greataxe, Greatsword, Halberd, Lance, Longsword, Maul, Morningstar, Pike, Rapier, Scimitar, Shortsword, Trident, Warhammer, War Pick, Whip, Blowgun, Hand Crossbow, Heavy Crossbow, Longbow, Musket, Pistol
+  function showHideValues(typeStr) {
+    const valuesToHide = [];
+    const valuesToShow = [];
+    if (typeStr === "melee weapon" || typeStr === "ranged weapon") {
+      valuesToShow.push("damage");
+      valuesToShow.push("weaponType");
+    }
+    else {
+      valuesToHide.push("damage");
+      valuesToHide.push("weaponType");
+    }
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+</script>
+
+<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+  <div style='display: flex; gap: 4px'>
+    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
+      <portrait width='125px' height='125px' field="portrait"></portrait>
+    </div>
+    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
+      <dropdown multiselect='1' placeholder='Select Type' onchange="showHideValues(value);" field="type" label="Type"
+        options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
+      {"label": "Ranged Weapon", "value": "ranged weapon"}, {"label": "Armor", "value": "armor"}, {"label": "Shield", "value": "shield"},
+      {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}]'></dropdown>
+      <stringfield width="100%" field="subtype" label="Subtype" placeholder='Enter Subtype...'></stringfield>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <stringfield width='50%' field="cost" label="Cost" placeholder='Enter cost...'></stringfield>
+    <numberfield width='50%' field="weight" label="Weight" placeholder='0'></numberfield>
+  </div>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <stringfield width='50%' hidden="true" field="damage" label="Damage"></stringfield>
+    <dropdown width='50%' hidden="true" field="weaponType" label='Weapon Type' placeholder='Select Weapon Type'
+      searchable='true' options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
+    {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"}, 
+    {"label": "Javelin", "value": "Javelin"}, {"label": "Light Hammer", "value": "Light Hammer"}, 
+    {"label": "Mace", "value": "Mace"}, {"label": "Quarterstaff", "value": "Quarterstaff"},
+    {"label": "Sickle", "value": "Sickle"}, {"label": "Spear", "value": "Spear"},
+    {"label": "Dart", "value": "Dart"}, {"label": "Light Crossbow", "value": "Light Crossbow"}, 
+    {"label": "Shortbow", "value": "Shortbow"},
+    {"label": "Sling", "value": "Sling"}, {"label": "Battleaxe", "value": "Battleaxe"}, 
+    {"label": "Flail", "value": "Flail"}, {"label": "Glaive", "value": "Glaive"}, 
+    {"label": "Greataxe", "value": "Greataxe"}, {"label": "Greatsword", "value": "Greatsword"},
+    {"label": "Halberd", "value": "Halberd"}, {"label": "Lance", "value": "Lance"},
+    {"label": "Longsword", "value": "Longsword"}, {"label": "Maul", "value": "Maul"},
+    {"label": "Morningstar", "value": "Morningstar"}, {"label": "Pike", "value": "Pike"},
+    {"label": "Rapier", "value": "Rapier"}, {"label": "Scimitar", "value": "Scimitar"},
+    {"label": "Shortsword", "value": "Shortsword"}, {"label": "Trident", "value": "Trident"},
+    {"label": "Warhammer", "value": "Warhammer"}, {"label": "War Pick", "value": "War Pick"},
+    {"label": "Whip", "value": "Whip"}, {"label": "Blowgun", "value": "Blowgun"},
+    {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
+    {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
+    {"label": "Pistol", "value": "Pistol"}]'>
+    </dropdown>
+  </div>
+
+</div>
+
+<div style='margin-top: 8px;'>
+  <divider label='Description'></divider>
+</div>
+
+<div style='margin-top: 8px;'>
+  <richtextfield field='description' label='Description' placeholder='Enter Item description...'
+    hidewhenidentified="false">
+  </richtextfield>
+</div>
+
+<stringfield field='unidentifiedDescription' label='Unidentified Description' placeholder='Enter description...'
+  multiline='true' maxrows='4' hidewhenidentified="true">
+</stringfield>
