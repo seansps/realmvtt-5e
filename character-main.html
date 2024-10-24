@@ -2115,6 +2115,14 @@
 				const dailyUses = abilityGroup?.data?.dailyUses || 0;
 				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = 0;
 			}
+			else if (restoreOn === 'shortrestonce') {
+				let curUses = abilityGroup?.data?.dailyUses || 0;
+				curUses = curUses - 1;
+				if (curUses < 0) {
+					curUses = 0;
+				}
+				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = curUses;
+			}
 		});
 
 		api.setValues(valuesToSet);
