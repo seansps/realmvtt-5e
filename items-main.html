@@ -12,12 +12,113 @@
       valuesToShow.push("damage");
       valuesToShow.push("weaponType");
       valuesToShow.push("weaponMastery");
+      valuesToShow.push("weaponProperties");
     }
     else {
       valuesToHide.push("damage");
       valuesToHide.push("weaponType");
       valuesToHide.push("weaponMastery");
+      valuesToHide.push("weaponProperties");
     }
+
+    if (typeStr === "shield" || typeStr === "armor") {
+      valuesToShow.push("armorClass");
+    }
+    else {
+      valuesToHide.push("armorClass");
+    }
+
+    if (typeStr === "armor") {
+      valuesToShow.push("armorCategory");
+      valuesToShow.push("addDex");
+      valuesToShow.push("maxDex");
+      valuesToShow.push("strength");
+      valuesToShow.push("stealth");
+    }
+    else {
+      valuesToHide.push("armorCategory");
+      valuesToHide.push("addDex");
+      valuesToHide.push("maxDex");
+      valuesToHide.push("strength");
+      valuesToHide.push("stealth");
+    }
+
+    if (typeStr === "armor" || typeStr === "shield" || typeStr === "melee weapon" || typeStr === "ranged weapon") {
+      valuesToHide.push("consumable");
+    }
+    else {
+      valuesToShow.push("consumable");
+    }
+
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+
+  function showHideValuesSubtype(subtype) {
+    const valuesToHide = [];
+    const valuesToShow = [];
+
+    if (subtype.toLowerCase().includes("scroll")) {
+      valuesToShow.push("spell");
+      valuesToShow.push("spellLevel");
+    }
+    else {
+      valuesToHide.push("spell");
+      valuesToHide.push("spellLevel");
+    }
+
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+
+  function showHideWeaponValues(values) {
+    const valuesToHide = [];
+    const valuesToShow = [];
+    if (values.includes("Ammunition")) {
+      valuesToShow.push("ammoType");
+      valuesToShow.push("normalRange");
+      valuesToShow.push("maxRange");
+      valuesToShow.push("rangeLabel");
+    }
+
+    if (values.includes("Range")) {
+      valuesToShow.push("normalRange");
+      valuesToShow.push("maxRange");
+      valuesToShow.push("rangeLabel");
+    }
+
+    if (values.includes("Thrown")) {
+      valuesToShow.push("normalRange");
+      valuesToShow.push("maxRange");
+      valuesToShow.push("rangeLabel");
+    }
+
+    if (values.includes("Versatile")) {
+      valuesToShow.push("versatileDamage");
+    }
+
+    if (!values.includes("Range") && !values.includes("Thrown") && !values.includes("Ammunition")) {
+      valuesToHide.push("normalRange");
+      valuesToHide.push("maxRange");
+      valuesToHide.push("rangeLabel");
+    }
+
+    if (!values.includes("Ammunition")) {
+      valuesToHide.push("ammoType");
+    }
+
+    if (!values.includes("Versatile")) {
+      valuesToHide.push("versatileDamage");
+    }
+
     if (valuesToHide.length > 0) {
       api.setHidden(valuesToHide, true);
     }
@@ -37,7 +138,8 @@
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
       {"label": "Ranged Weapon", "value": "ranged weapon"}, {"label": "Armor", "value": "armor"}, {"label": "Shield", "value": "shield"},
       {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}]'></dropdown>
-      <stringfield width="100%" field="subtype" label="Subtype" placeholder='Enter Subtype...'></stringfield>
+      <stringfield width="100%" field="subtype" label="Subtype" onchange="showHideValuesSubtype(value);"
+        placeholder='Enter Subtype...'></stringfield>
     </div>
   </div>
 
@@ -45,6 +147,20 @@
     <stringfield width='50%' field="cost" label="Cost" placeholder='Enter cost...'></stringfield>
     <numberfield width='50%' field="weight" label="Weight" placeholder='0'></numberfield>
   </div>
+
+  <!-- Other General Properties -->
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: center;">
+    <dropdown width='100%' field="rarity" label="Rarity" placeholder='--'
+      options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}]'>
+    </dropdown>
+
+    <checkbox hidden="true" width='150px' field="consumable" label="Consumable" textalign='left' size="sm"></checkbox>
+    <checkbox width='250px' field="attunement" label="Requires Attunement" textalign='left' size="sm">
+    </checkbox>
+  </div>
+
+  <!-- Weapon Properties -->
 
   <stringfield width='100%' hidden="true" field="damage" label="Damage"></stringfield>
 
@@ -79,6 +195,63 @@
     </dropdown>
   </div>
 
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <dropdown width='100%' hidden="true" field="weaponProperties" label='Weapon Properties'
+      onchange="showHideWeaponValues(value);" multiselect='10' placeholder='Select Weapon Properties' searchable='true'
+      options='[{"label": "Ammunition", "value": "Ammunition"}, {"label": "Finesse", "value": "Finesse"}, 
+    {"label": "Heavy", "value": "Heavy"}, {"label": "Light", "value": "Light"}, 
+    {"label": "Loading", "value": "Loading"}, {"label": "Range", "value": "Range"}, 
+    {"label": "Reach", "value": "Reach"}, {"label": "Thrown", "value": "Thrown"},
+    {"label": "Two-Handed", "value": "Two-Handed"}, {"label": "Versatile", "value": "Versatile"}]'>
+    </dropdown>
+  </div>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: flex-end;">
+    <numberfield width='100%' hidden="true" field="normalRange" label="Normal Range" placeholder='Enter Range...'>
+    </numberfield>
+    <label hidden="true" field="rangeLabel" label="/" variable="bold"></label>
+    <numberfield width='100%' hidden="true" field="maxRange" label="Max Range" placeholder='Enter Max Range...'>
+    </numberfield>
+    <stringfield width='100%' hidden="true" field="ammoType" label="Ammo Type" placeholder='Enter Ammo Type...'>
+    </stringfield>
+  </div>
+
+  <stringfield width='100%' hidden="true" field="versatileDamage" label="Versatile Damage"
+    placeholder='Enter damage for two-handed use...'></stringfield>
+
+  <!-- Armor Properties -->
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <numberfield width='100%' hidden="true" field="armorClass" label="AC (Armor Class)" placeholder='Enter AC...'>
+    </numberfield>
+    <dropdown width='100%' hidden="true" field="armorCategory" label='Armor Category'
+      placeholder='Select Armor Category' searchable='true'
+      options='[{"label": "Light", "value": "Light"}, {"label": "Medium", "value": "Medium"}, {"label": "Heavy", "value": "Heavy"}]'>
+    </dropdown>
+  </div>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: center;">
+    <checkbox hidden="true" width='170px' field="addDex" label="Add Dex Mod" textalign='left' size="sm"></checkbox>
+    <numberfield hidden="true" width='100%' field="maxDex" label="Max Dex Mod" placeholder='Enter Max Dex Mod...'>
+    </numberfield>
+  </div>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <numberfield width='100%' hidden="true" field="strength" label="Strength" placeholder='--'>
+    </numberfield>
+    <dropdown width='100%' hidden="true" field="stealth" label="Stealth" placeholder='--'
+      options='[{"label": "No Disadvantage", "value": "none"}, {"label": "Disadvantage", "value": "disadvantage"}]'>
+    </dropdown>
+  </div>
+
+  <!-- Magic Item (Scroll) Properties -->
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
+    <dropdown width='100%' hidden="true" field="spell" label="Spell" placeholder='Select Spell...'
+      optionsquery='{"type": "spells", "query": {}}'>
+    </dropdown>
+    <numberfield width='100%' hidden="true" field="spellLevel" label="Level" placeholder='Enter Level...'></numberfield>
+  </div>
 </div>
 
 <div style='margin-top: 8px;'>
