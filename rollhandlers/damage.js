@@ -187,7 +187,7 @@ function getRIV(target) {
   vulnerabilities.push(...remainingVulnString.split(',').map(v => v.toLowerCase().trim()).filter(v => v));
 
   // Then add RIV from modifiers
-  const modifiers = getEffectsAndModifiers(target, ['resistance', 'vulnerability', 'immunity']);
+  const modifiers = getEffectsAndModifiersForToken(target, ['resistance', 'vulnerability', 'immunity']);
   modifiers.forEach(mod => {
     if (mod.modifierType === 'resistance') {
       resistances.push(mod.value);
