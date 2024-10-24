@@ -11,10 +11,12 @@
     if (typeStr === "melee weapon" || typeStr === "ranged weapon") {
       valuesToShow.push("damage");
       valuesToShow.push("weaponType");
+      valuesToShow.push("weaponMastery");
     }
     else {
       valuesToHide.push("damage");
       valuesToHide.push("weaponType");
+      valuesToHide.push("weaponMastery");
     }
     if (valuesToHide.length > 0) {
       api.setHidden(valuesToHide, true);
@@ -44,8 +46,9 @@
     <numberfield width='50%' field="weight" label="Weight" placeholder='0'></numberfield>
   </div>
 
+  <stringfield width='100%' hidden="true" field="damage" label="Damage"></stringfield>
+
   <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <stringfield width='50%' hidden="true" field="damage" label="Damage"></stringfield>
     <dropdown width='50%' hidden="true" field="weaponType" label='Weapon Type' placeholder='Select Weapon Type'
       searchable='true' options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
     {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"}, 
@@ -67,6 +70,12 @@
     {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
     {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
     {"label": "Pistol", "value": "Pistol"}]'>
+    </dropdown>
+    <dropdown width='50%' hidden="true" field="weaponMastery" label='Mastery' placeholder='Select Mastery Property'
+      searchable='true' options='[{"label": "Cleave", "value": "Cleave"}, {"label": "Graze", "value": "Graze"}, 
+    {"label": "Nick", "value": "Nick"}, {"label": "Push", "value": "Push"}, 
+    {"label": "Sap", "value": "Sap"}, {"label": "Slow", "value": "Slow"}, 
+    {"label": "Topple", "value": "Topple"}, {"label": "Vex", "value": "Vex"}]'>
     </dropdown>
   </div>
 
