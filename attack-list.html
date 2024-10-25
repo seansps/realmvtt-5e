@@ -312,6 +312,12 @@
     return results;
   }
 
+  function getDamageType(rollString) {
+    const regex = /(\d+d\d+)(?:\s*\+\s*\d+)?(?:\s+(\w+))?/;
+    const match = rollString.match(regex);
+    return match && match[2] ? match[2] : "untyped";
+  }
+
   function getArmorClassForToken(token) {
     const record = token?.record;
     const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
@@ -342,13 +348,19 @@
   }
 
   function handleRoll() {
-    const name = record.name;
-    const atkRoll = '1d20';
-    const modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, record._id);
+    const attackDataPath = dataPath.replace('.data.rollBtn', '');
+    const attack = api.getValue(attackDataPath);
 
-    // TODO add a way to get damage modifiers from attack handler 
+    let name = attack?.name || 'New Item';
+    if (attack?.identified === false) {
+      name = attack?.unidentifiedName || 'Unidentified Item';
+    }
+
+    const atkRoll = '1d20';
+    const modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
+
     const icon = 'IconSword';
-    if (record.data.type.includes('ranged')) {
+    if (attack?.data?.type?.includes('ranged')) {
       icon = 'IconBow';
     }
 
@@ -359,7 +371,17 @@
 
     // TODO check for versatile property and use 2-handed damage if 2handed is set
 
-    const damage = record.data.damage;
+    const damage = attack?.data?.damage || '1d4';
+
+    let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
+    // Get the default damage type of the attack and apply that to damage modifiers
+    const damageType = getDamageType(damage);
+    damageModifiers = damageModifiers.map(mod => {
+      return {
+        ...mod,
+        type: damageType
+      }
+    });
 
     const targets = api.getTargets();
     targets.forEach(target => {
@@ -375,16 +397,10 @@
         "tooltip": `Attack Roll for ${name}`,
         "dc": targetAc,
         "damage": damage,
-        "damageModifiers": `${JSON.stringify(modifiers)}`
+        "damageModifiers": damageModifiers
       }
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     });
-  }
-
-  function getDamageType(rollString) {
-    const regex = /(\d+d\d+)(?:\s*\+\s*\d+)?(?:\s+(\w+))?/;
-    const match = rollString.match(regex);
-    return match && match[2] ? match[2] : "untyped";
   }
 
   function rollDamage() {
