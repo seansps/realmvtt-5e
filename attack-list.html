@@ -401,6 +401,20 @@
       }
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     });
+
+    if (!targets.length) {
+      const diceRoll = '1d20';
+      const metadata = {
+        "rollName": 'Attack',
+        "attack": `${name}`,
+        "icon": "IconSword",
+        "tooltip": `Attack Roll for ${name}`,
+        "dc": 0,
+        "damage": damage,
+        "damageModifiers": damageModifiers
+      }
+      api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
+    }
   }
 
   function rollDamage() {
