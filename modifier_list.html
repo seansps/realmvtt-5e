@@ -28,5 +28,8 @@
 
   <stringfield width='35%' size='xs' field="value" label="Value" placeholder='Enter Value'></stringfield>
 
-  <checkbox width='30%' size='xs' field="active" label="Active by Default"></checkbox>
+  <div style='display: flex; flex-direction: column; gap: 4px;'>
+    <checkbox size='xs' field="active" label="Active by Default"></checkbox>
+    <checkbox size='xs' hidden='true' width="175px" field="itemOnly" label="Only Applies To This Item"></checkbox>
+  </div>
 </div>

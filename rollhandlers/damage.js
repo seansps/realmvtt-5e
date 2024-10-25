@@ -10,7 +10,31 @@ const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?
 
 // Script to get all modifier and effects affecting the target
 const getEffectsAndModifiers = `
-function getEffectsAndModifiersForToken(target, types = [], field = '') {
+function applyMath(value, math) {
+  // Trim spaces and split the string into operator and number
+  const trimmedMath = math.trim();
+  const operator = trimmedMath.charAt(0);
+  const number = parseInt(trimmedMath.slice(1).trim(), 10);
+
+  if (isNaN(number)) {
+    return value;
+  }
+
+  switch (operator) {
+    case '+':
+      return value + number;
+    case '-':
+      return value - number;
+    case '*':
+      return value * number;
+    case '/':
+      return Math.floor(value / number); // Always round down
+    default:
+      return value;
+  }
+}
+
+function getEffectsAndModifiersForToken(target, types = [], field = '', itemId = undefined) {
   if (!target) {
     return [];
   }
@@ -36,7 +60,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
       else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
         value = '-' + value;
       }
-      if (value !== 0) {
+      if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
         results.push({
           name: effect.name || 'Effect',
           value: value,
@@ -70,6 +94,14 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
         if (isPenalty && value > 0) {
           value = -value;
         }
+        // Check if there is addtional math to apply to it
+        const math = rule?.value || '';
+        if (math) {
+          value = applyMath(value, math);
+        }
+        if (isPenalty && value > 0) {
+          value = -value;
+        }
         if (value !== 0) {
           results.push({
             name: effect.name || 'Effect',
@@ -85,9 +117,13 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
     });
   });
 
-  // Now collect all modifiers from Features
+  // Now collect all modifiers from Features and Items
   const features = target?.record?.data?.features || [];
-  features.forEach((feature) => {
+  const items = target?.record?.data?.inventory || [];
+  // Filter items that are not equipped or that require attunement and not attuned
+  const equippedItems = items.filter(item => item.data?.carried === 'equipped'
+    && (!item.data?.attunement || item.data?.attuned === 'true'));
+  [...features, ...equippedItems].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
     modifiers.forEach((modifier) => {
       const ruleType = modifier.data?.type || '';
@@ -114,6 +150,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
 
       // Only relevant if it has a value
       if (value !== 0) {
+        // Check if this only applies to equipped item and mark it with ID if so 
+        const itemOnly = modifier.data?.itemOnly || false;
         results.push({
           name: feature?.name || 'Feature',
           value: value,
@@ -121,6 +159,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
           modifierType: ruleType,
           field: modifier.data?.field || '',
           valueType: modifier.data?.valueType,
+          itemId: itemOnly ? feature?._id : undefined,
           isPenalty: isPenalty
         });
       }
@@ -132,12 +171,15 @@ function getEffectsAndModifiersForToken(target, types = [], field = '') {
   }
 
   if (field && field !== '') {
-    results = results.filter(r => r.field === field || r.field === 'all');
+    results = results.filter(r => r.field === field || r.field === 'all' || !r.field);
   }
+
+  // Filter by itemId if provided
+  results = results.filter(r => r.itemId === itemId || r.itemId === undefined);
 
   return results;
 }
-    `;
+`;
 
 // Script to get the Resistance, Immunity, and Vulnerability of a target
 const getRIVScript = `

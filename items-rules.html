@@ -1,3 +1,19 @@
+<script>
+  function onChangeModifiers() {
+    // Set itemOnly field visible on all modifiers
+    const modifiers = value;
+    const valuesToSet = {};
+
+    modifiers.forEach((modifier, index) => {
+      valuesToSet[`data.modifiers.${index}.fields.itemOnly.hidden`] = false;
+    });
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }  
+</script>
+
 <div>
   <label label="Modifiers" size='md' variant='bold' textalign="center"></label>
   <label label="Modifiers applied When Equipped" size='sm' textalign="center"></label>
@@ -6,5 +22,6 @@
 <label hidewhenidentified="true" label="Item Unidentified" size='sm' textalign="center"></label>
 
 <div style='width: 100%'>
-  <list hidewhenidentified="false" listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
+  <list hidewhenidentified="false" listtype="modifier_list" field='modifiers' variant='striped' allowadd=''
+    onchange='onChangeModifiers();'></list>
 </div>
