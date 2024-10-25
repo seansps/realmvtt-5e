@@ -407,10 +407,11 @@
       }
     }
 
-    // TODO check for range if ranged or thrown and add disadvantage to targets beyond normal range
-    // and a message if beyond max range
+    const normalRange = parseInt(attack?.data?.normalRange || '0', 10);
+    const maxRange = parseInt(attack?.data?.maxRange || '0', 10);
 
     // TODO if ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
+    // Get range to all other tokens
 
     let damage = attack?.data?.damage || '1d4';
 
@@ -449,6 +450,25 @@
       // Get calculated AC from modifiers - use if any
       const targetAc = getArmorClassForToken(target?.token);
       const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
+      const targetDistance = target?.distance || 0;
+
+      // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
+      // and if it was greater than the max, make it apparent in the roll prompt
+      if (ranged && targetDistance > maxRange && maxRange > 0) {
+        modifiers.push({
+          name: 'Target is Beyond Max Range',
+          value: 'disadvantage',
+          active: true
+        });
+      }
+      else if (ranged && targetDistance > normalRange && normalRange > 0) {
+        modifiers.push({
+          name: 'Target is Beyond Normal Range',
+          value: 'disadvantage',
+          active: true
+        });
+      }
+
       const diceRoll = '1d20';
       const metadata = {
         "rollName": 'Attack',
