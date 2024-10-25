@@ -1,0 +1,108 @@
+<script>
+	function updateTotalWeight(record) {
+		// Update total weight
+		const items = record?.data?.inventory || [];
+		let totalWeight = 0;
+		items.forEach((item, index) => {
+			let weight = parseFloat(item.data?.weight || '0');
+			let count = parseFloat(item.data?.count || '0');
+			if (count === undefined || isNaN(count)) {
+				count = 0;
+			}
+			if (weight !== undefined && !isNaN(weight)) {
+				totalWeight += (weight * count);
+			}
+		});
+
+		api.setValue('data.totalWeight', totalWeight);
+	}
+
+	function onDropItem(recordLink) {
+		const item = recordLink?.value;
+
+		const hasAttunement = item.data?.attunement || false;
+
+		// Add the item and set the attunement hidden field to visible if requires attunement
+		const itemToAdd = {
+			...item,
+			data: {
+				...item?.data,
+				// Default count to 1
+				count: 1
+			},
+			fields: {
+				attuned: {
+					hidden: !hasAttunement
+				}
+			}
+		}
+
+		// Determine if we are adding the item or adding count to an existing item
+		const items = record?.data?.inventory || [];
+		const index = items.findIndex(i => i._id === item._id);
+		const existingItem = index !== -1 ? items[index] : undefined;
+		if (existingItem) {
+			// Add count to existing item
+			const count = parseFloat(existingItem.data?.count || '0');
+			// Update the value
+			api.setValue(`data.inventory.${index}.data.count`, count + 1, (record) => {
+				// Update total weight
+				updateTotalWeight(record);
+			});
+		}
+		else {
+			// Add the item to the list
+			api.addValue(`data.inventory`, itemToAdd, (record) => {
+				// Update total weight
+				updateTotalWeight(record);
+			});
+		}
+	}
+
+	function onDrop(type, recordLink) {
+		if (type === 'items') {
+			onDropItem(recordLink);
+		}
+	}
+
+	function onItemDeleted() {
+		// Fetch the character record again to get latest data
+		updateTotalWeight(record);
+	}
+</script>
+
+<div>
+	<label variant="bold" textalign='center' label='Inventory'></label>
+</div>
+
+<div style="display: flex; flex-direction: column; flex-grow:1">
+	<list listtype='inventory_list' radius='none' variant='striped' field='inventory' onchange='onItemDeleted();' />
+	</list>
+</div>
+
+<div style="margin-top: 8px;">
+	<divider label="Encumbrance" textalign="center"></divider>
+</div>
+
+<div style="display: flex; flex-direction: row; gap: 4px;">
+	<numberfield width="33%" placeholder='0' field="totalWeight" label="Total Weight"></numberfield>
+	<numberfield width="33%" placeholder='0' field="maxCarryWeight" label="Max Carry Weight"></numberfield>
+	<numberfield width="33%" placeholder='0' field="dragLiftPush" label="Drag/Lift/Push"></numberfield>
+</div>
+
+<div style="margin-top: 8px;">
+	<divider label="Treasure" textalign="center"></divider>
+</div>
+
+<div style="display: flex; flex-direction: row; gap: 4px;">
+	<numberfield placeholder='0' field="cp" label="CP"></numberfield>
+	<numberfield placeholder='0' field="sp" label="SP"></numberfield>
+	<numberfield placeholder='0' field="ep" label="EP"></numberfield>
+	<numberfield placeholder='0' field="gp" label="GP"></numberfield>
+	<numberfield placeholder='0' field="pp" label="PP"></numberfield>
+</div>
+
+<div style="margin-top: 8px;">
+	<stringfield placeholder='None' field="otherTreasure" label="Other Treasure" multiline='true' maxrows='4'>
+	</stringfield>
+</div>

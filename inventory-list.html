@@ -1,0 +1,39 @@
+<script>
+  function setTotalWeight() {
+    // Fetch the character record again to get latest data
+    const items = record.data?.inventory || [];
+    let totalWeight = 0;
+
+    items.forEach(item => {
+      let weight = parseFloat(item.data?.weight || '0');
+      let count = parseFloat(item.data?.count || '0');
+      if (count === undefined || isNaN(count)) {
+        count = 0;
+      }
+      if (weight !== undefined && !isNaN(weight)) {
+        totalWeight += (weight * count);
+      }
+    });
+
+    api.setValue('data.totalWeight', totalWeight);
+  }
+</script>
+
+<div style='height: 30px; display: flex; gap: 4px; align-items: center'>
+  <div style='width: 30px; min-width: 30px'>
+    <portrait width='30px' height='30px' name='portrait'></portrait>
+  </div>
+  <div style='width: 60px'>
+    <numberfield size='xs' variant='tooltip' label='Count' field='count' placeholder='0' onchange='setTotalWeight();' />
+    </numberfield>
+  </div>
+  <div style='flex-grow: 1'>
+    <namefield size='xs' variant='tooltip' label='Name' placeholder='Item' field='namefield' />
+  </div>
+  <iconbutton hidden="true" size='sm' field="attuned" variant="default"
+    options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "attuned"}]'
+    onchange='' onclick=''></iconbutton>
+  <iconbutton size='sm' field="carried" variant="default"
+    options='[{"icon": "IconMoneybag", "label": "Carried", "value": "carried"}, {"icon": "IconShirt", "label": "Equipped", "value": "equipped"}, {"icon": "IconArrowDown", "label": "Dropped", "value": "dropped"}]'
+    onchange='' onclick=''></iconbutton>
+</div>

@@ -17,6 +17,47 @@
 		};
 	}
 
+	// Get the carry and drag/lift/push weights for a creature
+	function getCarryWeight(strength, size) {
+		let carry = 0;
+		let dragLiftPush = 0;
+
+		if (size.toLowerCase() === 'tiny') {
+			carry = strength * 7.5;
+			dragLiftPush = strength * 15;
+		}
+		else if (size.toLowerCase() === 'small') {
+			carry = strength * 15;
+			dragLiftPush = strength * 30;
+		}
+		else if (size.toLowerCase() === 'medium') {
+			carry = strength * 15;
+			dragLiftPush = strength * 30;
+		}
+		else if (size.toLowerCase() === 'large') {
+			carry = strength * 30;
+			dragLiftPush = strength * 60;
+		}
+		else if (size.toLowerCase() === 'huge') {
+			carry = strength * 60;
+			dragLiftPush = strength * 120;
+		}
+		else if (size.toLowerCase() === 'gargantuan') {
+			carry = strength * 120;
+			dragLiftPush = strength * 240;
+		}
+		else {
+			// Default to Medium
+			carry = strength * 15;
+			dragLiftPush = strength * 30;
+		}
+
+		return {
+			carry: carry,
+			dragLiftPush: dragLiftPush
+		};
+	}
+
 	// Collects all effects and modifiers for the record
 	// If types is provided, it will only return effects of those types
 	// If field is provided, it will only return effects that match that field
@@ -2260,6 +2301,14 @@
 			}
 			// Set our HP to be totalHp per level + conMod * level
 			valuesToSet['data.hitpoints'] = newHp;
+		}
+
+		// Update carry weight if strength
+		if (attribute === 'strength') {
+			const size = record?.data?.size || 'Medium';
+			const { carry, dragLiftPush } = getCarryWeight(val, size);
+			valuesToSet['data.maxCarryWeight'] = carry;
+			valuesToSet['data.dragLiftPush'] = dragLiftPush;
 		}
 
 		// Update AC calculation as needed
