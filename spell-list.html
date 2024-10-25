@@ -736,6 +736,19 @@ targets.forEach(target => {
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, ${JSON.stringify(attackModifiers)}, metadata, 'attack');
 });
+if (!targets.length) {
+  const diceRoll = '1d20';
+  const metadata = {
+    "rollName": 'Attack',
+    "attack": '${spellName}',
+    "icon": "IconWand",
+    "tooltip": 'Attack Roll for ${spellName}',
+    "dc": 0,
+    "damage": "${spellDamage}",
+    "damageModifiers": ${JSON.stringify(modifiers)}
+  }
+  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, ${JSON.stringify(attackModifiers)}, metadata, 'attack');
+}
 \`\`\`` : '';
 
     // Save Button for GM only - look up saves of selected tokens and prompt roll for each
