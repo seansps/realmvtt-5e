@@ -22,6 +22,7 @@
 
 		const hasAttunement = item.data?.attunement || false;
 		const isConsumable = item.data?.consumable || false;
+		const isTwoHanded = item.data?.weaponProperties?.includes('Two-Handed');
 
 		// Add the item and set the attunement hidden field to visible if requires attunement
 		const itemToAdd = {
@@ -38,6 +39,9 @@
 				},
 				useBtn: {
 					hidden: !isConsumable
+				},
+				handBtn: {
+					hidden: isTwoHanded
 				}
 			}
 		}
