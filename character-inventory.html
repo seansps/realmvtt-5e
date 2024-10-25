@@ -84,6 +84,18 @@
 	<label variant="bold" textalign='center' label='Inventory'></label>
 </div>
 
+<div style="display: flex; flex-direction: row;">
+	<div style="margin-left: 34px;">
+		<label variant="bold" size="xs" textalign='left' label='Count'></label>
+	</div>
+	<div style="margin-left: 30px;">
+		<label variant="bold" size="xs" textalign='left' label='Item'></label>
+	</div>
+	<div style="margin-left: auto;">
+		<label variant="bold" size="xs" textalign='left' label='Location / Equipped'></label>
+	</div>
+</div>
+
 <div style="display: flex; flex-direction: column; flex-grow:1">
 	<list listtype='inventory_list' radius='none' variant='striped' field='inventory' onchange='onItemDeleted();' />
 	</list>
