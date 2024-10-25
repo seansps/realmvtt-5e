@@ -21,6 +21,7 @@
 		const item = recordLink?.value;
 
 		const hasAttunement = item.data?.attunement || false;
+		const isConsumable = item.data?.consumable || false;
 
 		// Add the item and set the attunement hidden field to visible if requires attunement
 		const itemToAdd = {
@@ -34,6 +35,9 @@
 				...item?.fields,
 				attuned: {
 					hidden: !hasAttunement
+				},
+				useBtn: {
+					hidden: !isConsumable
 				}
 			}
 		}

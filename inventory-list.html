@@ -17,6 +17,44 @@
 
     api.setValue('data.totalWeight', totalWeight);
   }
+
+  function useItem() {
+    // Deduct count by 1, delete item if count is 0,
+    // and output the description to Chat
+    // If it is a scoll with a spell set, output a link to the spell
+    const itemDataPath = dataPath.replace('.data.useBtn', '');
+    const itemCount = api.getValue(`${itemDataPath}.data.count`);
+    const indexValue = parseInt(itemDataPath.split('.').pop());
+
+    // Output the description to Chat
+    const description = api.getValue(`${itemDataPath}.data.description`) || '';
+    const markdownDescription = api.richTextToMarkdown(description || '');
+    let recordLinks;
+    const spell = api.getValue(`${itemDataPath}.data.spell`);
+    if (spell) {
+      const spellName = JSON.parse(spell)?.name || '';
+      const spellId = JSON.parse(spell)?._id || '';
+      if (spellId) {
+        recordLinks = [{
+          tooltip: spellName,
+          type: 'records',
+          value: {
+            _id: spellId,
+            recordType: 'spells'
+          }
+        }];
+      }
+    }
+    api.sendMessage(markdownDescription, undefined, recordLinks);
+
+    const count = parseFloat(itemCount || '0');
+    if (count - 1 > 0) {
+      api.setValue(`${itemDataPath}.data.count`, count - 1);
+    }
+    else if (!isNaN(indexValue)) {
+      api.removeValue(`data.inventory`, indexValue);
+    }
+  }
 </script>
 
 <div style='height: 30px; display: flex; gap: 4px; align-items: center'>
@@ -30,6 +68,7 @@
   <div style='flex-grow: 1'>
     <namefield size='xs' variant='standard' placeholder='Item' field='namefield' />
   </div>
+  <button hidden="true" size='xs' radius='xs' field="useBtn" variant="light" onclick='useItem();' label='Use'></button>
   <stringfield width='100px' size='xs' variant='tooltip' label='Location' field='location' onchange='setIndent(value);'>
   </stringfield>
   <iconbutton hidden="true" size='sm' field="attuned" variant="default"
