@@ -410,7 +410,7 @@
     const normalRange = parseInt(attack?.data?.normalRange || '0', 10);
     const maxRange = parseInt(attack?.data?.maxRange || '0', 10);
 
-    // TODO if ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
+    // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
     // Get range to all other tokens
     let disDueToProximity = false;
     if (ranged) {
@@ -420,7 +420,7 @@
           // Short circuit if we already have disadvantage due to proximity
           return;
         }
-        if (token?.faction === 'enemy') {
+        if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
           // Check if they have incapacitated condition
           const hasIncapacitated = (token?.effects || []).some(eff => eff.name === 'Incapacitated');
           if (!hasIncapacitated) {

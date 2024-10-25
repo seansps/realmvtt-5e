@@ -694,6 +694,10 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
       }
     }
 
+    // Spell range if set
+    const spellRange = parseInt(spell?.data?.range || '0', 10);
+    const rangedSpell = spellRange > 0;
+
     // Get save info, if Save
     const savingThrow = spell?.data?.savingThrow || 'dexterity'; // Default to dexterity if not set 
     // Spell Save DC is 8 + Spellcasting Ability Modifier + Proficiency Bonus (We assume they are proficient)
@@ -718,13 +722,48 @@ api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modif
 ${getEffectsAndModifiersScript()}
 ${getArmorClassScript()}
 const targets = api.getTargets();
+let disDueToProximity = false;
+if (${rangedSpell}) {
+  const ourToken = api.getToken();
+  api.getOtherTokens().forEach(token => {
+    if (disDueToProximity) {
+      // Short circuit if we already have disadvantage due to proximity
+      return;
+    }
+    if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
+      // Check if they have incapacitated condition
+      const hasIncapacitated = (token?.effects || []).some(eff => eff.name === 'Incapacitated');
+      if (!hasIncapacitated) {
+        // Check distance
+        const distance = api.getDistance(ourToken, token);
+        if (distance <= 5) {
+          disDueToProximity = true;
+        }
+      }
+    }
+  });
+}
+
+const attackModifiers = ${JSON.stringify(attackModifiers)};
+
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
   const diceRoll = '1d20';
-  const metadata = {  
 
+  const targetDistance = target?.distance || 0;
+
+  // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
+  if (disDueToProximity) {
+    attackModifiers.push({
+      name: 'Enemy is Within 5 Feet',
+      value: 'disadvantage',
+      active: true
+    });
+  }
+
+  const metadata = {  
     "rollName": 'Attack',
     "attack": '${spellName}',
     "icon": "IconWand",
@@ -734,7 +773,7 @@ targets.forEach(target => {
     "damage": "${spellDamage}",
     "damageModifiers": ${JSON.stringify(modifiers)}
   }
-  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, ${JSON.stringify(attackModifiers)}, metadata, 'attack');
+  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
 if (!targets.length) {
   const diceRoll = '1d20';
