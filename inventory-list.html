@@ -28,8 +28,10 @@
     </numberfield>
   </div>
   <div style='flex-grow: 1'>
-    <namefield size='xs' variant='tooltip' label='Name' placeholder='Item' field='namefield' />
+    <namefield size='xs' variant='standard' placeholder='Item' field='namefield' />
   </div>
+  <stringfield width='100px' size='xs' variant='tooltip' label='Location' field='location' onchange='setIndent(value);'>
+  </stringfield>
   <iconbutton hidden="true" size='sm' field="attuned" variant="default"
     options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "attuned"}]'
     onchange='' onclick=''></iconbutton>
