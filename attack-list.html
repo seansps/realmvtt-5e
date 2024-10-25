@@ -356,22 +356,68 @@
       name = attack?.unidentifiedName || 'Unidentified Item';
     }
 
+    const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+    const strMod = parseInt(record?.data?.strengthMod || '0', 10);
+    let dexOrStr = 'Strength';
+    let modToUse = strMod;
+
+
     const atkRoll = '1d20';
     const modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
 
-    const icon = 'IconSword';
+    let ranged = false;
+    // Always ranged attack for ranged weapons
     if (attack?.data?.type?.includes('ranged')) {
+      ranged = true;
+    }
+    // If this is a thrown weapon, check the rangeToggleBtn
+    if (attack?.data?.weaponProperties?.includes('Thrown')) {
+      ranged = attack?.data?.rangeToggleBtn === 'ranged';
+    }
+
+    // Ranged is always dexterity
+    dexOrStrMod = attack?.data?.type?.includes('ranged') ? 'Dexterity' : 'Strength';
+    // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
+    if (attack?.data?.weaponProperties?.includes('Finesse')) {
+      dexOrStrMod = strMod > dexMod ? 'Strength' : 'Dexterity';
+    }
+    if (dexOrStrMod === 'Dexterity') {
+      modToUse = dexMod;
+    }
+
+    // Add the modifier to the modifiers array
+    if (modToUse !== 0) {
+      modifiers.push({
+        name: dexOrStrMod,
+        value: modToUse,
+        active: true
+      });
+    }
+
+    let icon = 'IconSword';
+    if (ranged) {
       icon = 'IconBow';
+    }
+
+    // If ranged, deduct 1 ammo if set
+    if (ranged && attack?.data?.ammo) {
+      const newAmmo = parseInt(attack?.data?.ammo || '0', 10) - 1;
+      if (newAmmo >= 0) {
+        api.setValue(`${attackDataPath}.data.ammo`, newAmmo);
+      }
     }
 
     // TODO check for range if ranged or thrown and add disadvantage to targets beyond normal range
     // and a message if beyond max range
 
-    // TODO if ranged deduct 1 ammo if set
+    // TODO if ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
 
-    // TODO check for versatile property and use 2-handed damage if 2handed is set
+    let damage = attack?.data?.damage || '1d4';
 
-    const damage = attack?.data?.damage || '1d4';
+    // Check for versatile property and use 2-handed damage if 2handed is set
+    if (attack?.data?.weaponProperties?.includes('Versatile') && attack?.data?.handBtn === 'two') {
+      damage = attack?.data?.versatileDamage || damage;
+    }
 
     let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
     // Get the default damage type of the attack and apply that to damage modifiers
@@ -383,6 +429,21 @@
       }
     });
 
+    // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
+    if (damage.includes('d') && !name.toLowerCase().includes('unarmed')) {
+      // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
+      let active = true;
+      if (attack?.data?.handBtn === 'off' && modToUse > 0) {
+        active = false;
+      }
+      damageModifiers.push({
+        name: dexOrStrMod,
+        type: damageType,
+        value: modToUse,
+        active: active
+      });
+    }
+
     const targets = api.getTargets();
     targets.forEach(target => {
       // Get calculated AC from modifiers - use if any
@@ -392,14 +453,14 @@
       const metadata = {
         "rollName": 'Attack',
         "attack": `${name}`,
-        "icon": "IconSword",
+        "icon": icon,
         "targetName": targetName,
         "tooltip": `Attack Roll for ${name}`,
         "dc": targetAc,
         "damage": damage,
         "damageModifiers": damageModifiers
       }
-      api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
+      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
     });
 
     if (!targets.length) {
@@ -407,7 +468,7 @@
       const metadata = {
         "rollName": 'Attack',
         "attack": `${name}`,
-        "icon": "IconSword",
+        "icon": icon,
         "tooltip": `Attack Roll for ${name}`,
         "dc": 0,
         "damage": damage,
@@ -470,7 +531,7 @@
   }
 </script>
 
-<div style='display: flex; flex-direction: column; gap: 2px'>
+<div style='display: flex; flex-direction: column'>
   <!-- Main row for icon, name, buttons -->
   <div style='display: flex; flex-direction: row; gap: 4px; align-items: center'>
     <div style='width: 30px; height: 30px; min-width: 30px; min-height: 30px;'>
@@ -479,10 +540,23 @@
     <div style='width: 100%'>
       <namefield field='namefield' variant="standard"></namefield>
     </div>
-    <!--  TODO add a way to change to thrown if Throw type is there -->
+    <!-- Ammo Field for Ranged Weapons -->
+    <numberfield hidden='true' width='100px' field="ammo" placeholder='0' maxvalue='100' minvalue='0' variant="tooltip"
+      label='Ammo Remaining' size="xs">
+    </numberfield>
+    <!--  A way to change to thrown if Throw type is there -->
+    <iconbutton size="md" hidden="true" field="meleeToggleBtnDisabled" variant="default"
+      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}]'>
+    </iconbutton>
+    <iconbutton size="md" hidden="true" field="rangeToggleBtnDisabled" variant="default"
+      options='[{"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'>
+    </iconbutton>
+    <iconbutton size="md" hidden="true" field="rangeToggleBtn" variant="default"
+      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}, {"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'>
+    </iconbutton>
     <!-- Select Hand, hidden for two-handed weapons -->
     <iconbutton size="md" field="handBtn" variant="default"
-      options='[{"icon": "IconCircleNumber1Filled", "label": "One Handed", "value": "one"}, {"icon": "IconCircleNumber2Filled", "label": "Main Hand", "value": "two"}, {"icon": "IconCircleLetterOFilled", "label": "Off Hand", "value": "off"}]'>
+      options='[{"icon": "IconCircleNumber1Filled", "label": "Main Hand", "value": "one"}, {"icon": "IconCircleNumber2Filled", "label": "Two-Handed", "value": "two"}, {"icon": "IconCircleLetterOFilled", "label": "Off Hand", "value": "off"}]'>
     </iconbutton>
     <!-- Roll Attack -->
     <iconbutton size="md" field="rollBtn" variant="outline"
@@ -493,6 +567,4 @@
       <button size="xs" radius="xs" field="button" label="Damage" variant='light' onclick='rollDamage();'></button>
     </div>
   </div>
-
-  <!-- Row for ammo and ammo counter -->
 </div>

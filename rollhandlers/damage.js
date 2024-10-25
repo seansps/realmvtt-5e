@@ -308,20 +308,32 @@ targets.forEach(target => {
 
     const RIV = getRIV(target);
 
-    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    // First, just get the total of all damage for each type
+    const damageByType = {};
     data.roll.types.forEach(type => {
-      let thisDamage = type.value;
-      if (RIV.resistances.includes(type?.type?.toLowerCase() || '')) {
+      const damageType = type.type || 'untyped';
+      damageByType[damageType] = (damageByType[damageType] || 0) + type.value;
+    });
+
+    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    Object.keys(damageByType).forEach(type => {
+      let thisDamage = damageByType[type];
+      if (RIV.resistances.includes(type.toLowerCase() || '')) {
         thisDamage = Math.floor(thisDamage * 0.5);
       }
-      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')) {
+      if (RIV.immunities.includes(type.toLowerCase() || '')) {
         thisDamage = 0;
       }
-      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')) {
+      if (RIV.vulnerabilities.includes(type.toLowerCase() || '')) {
         thisDamage = Math.floor(thisDamage * 2);
       }
       damage += thisDamage;
     });
+
+    // Finally, we cannot deal negative damage
+    if (damage < 0) {
+      damage = 0;
+    }
 
     // First deduct from Temp HP
     const oldTempHp = parseInt(target.data?.tempHp || '0', 10);

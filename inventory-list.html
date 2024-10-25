@@ -68,12 +68,13 @@
   <div style='flex-grow: 1'>
     <namefield size='xs' variant='standard' placeholder='Item' field='namefield' />
   </div>
-  <button hidden="true" size='xs' radius='xs' field="useBtn" variant="light" onclick='useItem();' label='Use'></button>
-  <stringfield width='100px' size='xs' variant='tooltip' label='Location' field='location' onchange='setIndent(value);'>
-  </stringfield>
   <iconbutton hidden="true" size='sm' field="attuned" variant="default"
     options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "true"}]'
     onchange='' onclick=''></iconbutton>
+  <button hidden="true" size='xs' radius='xs' field="useBtn" variant="light" onclick='useItem();' label='Use'></button>
+  <stringfield width='100px' size='xs' variant='tooltip' label='Location' field='location' placeholder='Location...'
+    onchange='setIndent(value);'>
+  </stringfield>
   <iconbutton size='sm' field="carried" variant="default"
     options='[{"icon": "IconMoneybag", "label": "Carried", "value": "carried"}, {"icon": "IconShirt", "label": "Equipped", "value": "equipped"}, {"icon": "IconArrowDown", "label": "Dropped", "value": "dropped"}]'
     onchange='' onclick=''></iconbutton>

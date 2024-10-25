@@ -23,6 +23,8 @@
 		const hasAttunement = item.data?.attunement || false;
 		const isConsumable = item.data?.consumable || false;
 		const isTwoHanded = item.data?.weaponProperties?.includes('Two-Handed');
+		const isThrown = item.data?.weaponProperties?.includes('Thrown'); // Only thrown weapons can be toggled melee/range
+		const isMelee = (item.data?.type || '').toLowerCase().includes('melee'); // Melee shown only melee icon
 
 		// Add the item and set the attunement hidden field to visible if requires attunement
 		const itemToAdd = {
@@ -42,6 +44,18 @@
 				},
 				handBtn: {
 					hidden: isTwoHanded
+				},
+				rangeToggleBtn: {
+					hidden: !isThrown
+				},
+				rangeToggleBtnDisabled: {
+					hidden: isMelee || isThrown
+				},
+				meleeToggleBtnDisabled: {
+					hidden: !isMelee || isThrown
+				},
+				ammo: {
+					hidden: isMelee && !isThrown
 				}
 			}
 		}
