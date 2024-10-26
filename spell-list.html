@@ -722,9 +722,9 @@ api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modif
 ${getEffectsAndModifiersScript()}
 ${getArmorClassScript()}
 const targets = api.getTargets();
+const ourToken = api.getToken();
 let disDueToProximity = false;
-if (${rangedSpell}) {
-  const ourToken = api.getToken();
+if (${rangedSpell} && ourToken) {
   api.getOtherTokens().forEach(token => {
     if (disDueToProximity) {
       // Short circuit if we already have disadvantage due to proximity
@@ -751,8 +751,6 @@ targets.forEach(target => {
   const targetAc = getArmorClassForToken(target?.token);
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
   const diceRoll = '1d20';
-
-  const targetDistance = target?.distance || 0;
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
   if (disDueToProximity) {
@@ -786,7 +784,17 @@ if (!targets.length) {
     "damage": "${spellDamage}",
     "damageModifiers": ${JSON.stringify(modifiers)}
   }
-  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, ${JSON.stringify(attackModifiers)}, metadata, 'attack');
+
+  // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
+  if (disDueToProximity) {
+    attackModifiers.push({
+      name: 'Enemy is Within 5 Feet',
+      value: 'disadvantage',
+      active: true
+    });
+  }
+
+  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 }
 \`\`\`` : '';
 

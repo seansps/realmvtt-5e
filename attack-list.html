@@ -460,8 +460,8 @@
     // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
     // Get range to all other tokens
     let disDueToProximity = false;
-    if (ranged) {
-      const ourToken = api.getToken();
+    const ourToken = api.getToken();
+    if (ranged && ourToken) {
       api.getOtherTokens().forEach(token => {
         if (disDueToProximity) {
           // Short circuit if we already have disadvantage due to proximity
@@ -525,6 +525,14 @@
       }
     }
 
+    if (disDueToProximity) {
+      modifiers.push({
+        name: 'Enemy is Within 5 Feet',
+        value: 'disadvantage',
+        active: true
+      });
+    }
+
     const targets = api.getTargets();
     targets.forEach(target => {
       // Get calculated AC from modifiers - use if any
@@ -544,14 +552,6 @@
       else if (ranged && targetDistance > normalRange && normalRange > 0) {
         modifiers.push({
           name: 'Target is Beyond Normal Range',
-          value: 'disadvantage',
-          active: true
-        });
-      }
-
-      if (disDueToProximity) {
-        modifiers.push({
-          name: 'Enemy is Within 5 Feet',
           value: 'disadvantage',
           active: true
         });
