@@ -511,5 +511,4 @@ ${damageMacro}
 ${halfDamageMacro}
 `;
 
-// Here you would check targets and apply damage, etc.
 api.sendMessage(message, data.roll, [], tags);

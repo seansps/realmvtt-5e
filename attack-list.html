@@ -513,7 +513,17 @@
       });
     }
 
-    // TODO add section for weapon mastery prooerties w/ text if they can use them
+    // Get weapon masteries that the character has and check if this weapon is in the list
+    const masteryProperties = [];
+    const characterWeaponMasteries = record?.data?.weaponMasteries || [];
+    const weaponType = attack?.data?.weaponType || '';
+    if (characterWeaponMasteries.includes(weaponType)) {
+      // Add the mastery property to the attack
+      const masteryProperty = attack?.data?.weaponMastery || '';
+      if (masteryProperty) {
+        masteryProperties.push(masteryProperty);
+      }
+    }
 
     const targets = api.getTargets();
     targets.forEach(target => {
@@ -556,7 +566,8 @@
         "tooltip": `Attack Roll for ${name}`,
         "dc": targetAc,
         "damage": damage,
-        "damageModifiers": damageModifiers
+        "damageModifiers": damageModifiers,
+        "masteryProperties": masteryProperties
       }
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
     });
@@ -570,7 +581,8 @@
         "tooltip": `Attack Roll for ${name}`,
         "dc": 0,
         "damage": damage,
-        "damageModifiers": damageModifiers
+        "damageModifiers": damageModifiers,
+        "masteryProperties": masteryProperties
       }
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     }
