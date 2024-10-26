@@ -22,7 +22,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
           value = -value;
         }
       }
-      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
         value = '-' + value;
       }
       if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {

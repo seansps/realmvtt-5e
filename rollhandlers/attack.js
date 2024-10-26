@@ -47,7 +47,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
           value = -value;
         }
       }
-      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
+      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
         value = '-' + value;
       }
       if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
@@ -409,19 +409,19 @@ const getMasteryProperties = (masterProperty, damageModifiers) => {
     };
     case 'Nick': return {
       name: 'Nick',
-      description: '',
+      description: 'When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.',
       effect: null,
       macro: null,
     };
     case 'Push': return {
       name: 'Push',
-      description: '',
+      description: 'If you hit a creature with this weapon, you can push the creature up to 10 feet straight away from yourself if it is Large or smaller.',
       effect: null,
       macro: null,
     };
     case 'Sap': return {
       name: 'Sap',
-      description: '',
+      description: 'If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.',
       effect: null,
       macro: null,
     };
