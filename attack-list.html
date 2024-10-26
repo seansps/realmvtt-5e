@@ -169,6 +169,43 @@
     return results;
   }
 
+  // Parse profciencies and determine from weapon subtype if proficient with it
+  function getIsProficient(attack) {
+    const weaponSubtype = attack?.data?.subtype || 'simple';
+    const weaponName = (attack?.name || '').trim().toLowerCase();
+    const weaponProperties = (attack?.data?.weaponProperties || []).map(p => p.trim().toLowerCase()).filter(p => p !== '');
+
+    const weaponProficiencies = record?.data?.weaponProficiencies || '';
+    // Convert the string to an array of proficiencies
+    const proficienciesArray = weaponProficiencies.split(/,| and /).map(p => p.trim().toLowerCase()).filter(p => p !== '');
+
+    let isProficient = false;
+
+    let martialOrSimple = 'simple';
+    if (weaponSubtype.toLowerCase().includes('martial')) {
+      martialOrSimple = 'martial';
+    }
+
+    proficienciesArray.forEach(prof => {
+      // If it requires a trait, check trait, check for string `that have the X or Y property`
+      if (prof.includes('that have the') && prof.includes(martialOrSimple)) {
+        weaponProperties.forEach(wp => {
+          if (prof.includes(wp)) {
+            isProficient = true;
+          }
+        });
+      }
+      else if (prof.includes(martialOrSimple)) {
+        isProficient = true;
+      }
+      else if (prof.includes(weaponName)) {
+        isProficient = true;
+      }
+    });
+
+    return isProficient;
+  }
+
   // Collects all effects and modifiers for the record
   // If types is provided, it will only return effects of those types
   // If field is provided, it will only return effects that match that field
@@ -394,6 +431,16 @@
       });
     }
 
+    const isProficient = getIsProficient(attack);
+    if (isProficient) {
+      const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
+      modifiers.push({
+        name: 'Proficient',
+        value: proficiencyBonus,
+        active: true
+      });
+    }
+
     let icon = 'IconSword';
     if (ranged) {
       icon = 'IconBow';
@@ -466,6 +513,8 @@
       });
     }
 
+    // TODO add section for weapon mastery prooerties w/ text if they can use them
+
     const targets = api.getTargets();
     targets.forEach(target => {
       // Get calculated AC from modifiers - use if any
@@ -526,6 +575,8 @@
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     }
   }
+
+  // Todo implement the Damage Roll button
 
   function rollDamage() {
     const dmgRoll = record.data.damage;
