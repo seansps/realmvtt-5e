@@ -1,9 +1,4 @@
 <script>
-  function capitalize(string) {
-    if (!string || typeof string !== 'string') return '';
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
   function setProficiencyWithAbility(value, ability, modDataPath) {
     // Skills can be also be half, proficient, or expertise
     const proficiency = value || 'false';

@@ -8,274 +8,6 @@ const tags = [{
 
 const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
 
-// Script to get all modifier and effects affecting the target
-const getEffectsAndModifiers = `
-function applyMath(value, math) {
-  // Trim spaces and split the string into operator and number
-  const trimmedMath = math.trim();
-  const operator = trimmedMath.charAt(0);
-  const number = parseInt(trimmedMath.slice(1).trim(), 10);
-
-  if (isNaN(number)) {
-    return value;
-  }
-
-  switch (operator) {
-    case '+':
-      return value + number;
-    case '-':
-      return value - number;
-    case '*':
-      return value * number;
-    case '/':
-      return Math.floor(value / number); // Always round down
-    default:
-      return value;
-  }
-}
-
-function getEffectsAndModifiersForToken(target, types = [], field = '', itemId = undefined) {
-  if (!target) {
-    return [];
-  }
-  let results = [];
-
-  // First collect modifiers from effects
-  const effects = target?.effects || [];
-  effects.forEach((effect) => {
-    const rules = effect.rules || [];
-    rules.forEach((rule) => {
-      const ruleType = rule?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = rule.value || '';
-      if (rule.valueType === 'number') {
-        value = parseInt(rule.value, 10);
-        if (isNaN(value)) {
-          value = 0;
-        }
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-      }
-      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
-        value = '-' + value;
-      }
-      if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
-        results.push({
-          name: effect.name || 'Effect',
-          value: value,
-          active: true,
-          modifierType: ruleType,
-          field: rule?.field || '',
-          valueType: rule.valueType,
-          isPenalty: isPenalty
-        });
-      }
-      else if (rule.valueType === 'api') {
-        let value = parseInt(target?.effectValues?.[effect?._id] || '0', 10);
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-        if (value !== 0) {
-          results.push({
-            name: effect.name || 'Effect',
-            value: value,
-            active: true,
-            modifierType: ruleType,
-            field: rule?.field || '',
-            valueType: rule.valueType,
-            isPenalty: isPenalty
-          });
-        }
-      }
-      else if (rule.valueType === 'stack') {
-        // The value is the number of times they have this effect
-        let value = target?.effectIds?.filter(id => id === effect?._id).length;
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-        // Check if there is addtional math to apply to it
-        const math = rule?.value || '';
-        if (math) {
-          value = applyMath(value, math);
-        }
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-        if (value !== 0) {
-          results.push({
-            name: effect.name || 'Effect',
-            value: value,
-            active: true,
-            modifierType: ruleType,
-            field: rule?.field || '',
-            valueType: rule.valueType,
-            isPenalty: isPenalty
-          });
-        }
-      }
-    });
-  });
-
-  // Now collect all modifiers from Features and Items
-  const features = target?.record?.data?.features || [];
-  const items = target?.record?.data?.inventory || [];
-  // Filter items that are not equipped or that require attunement and not attuned
-  const equippedItems = items.filter(item => item.data?.carried === 'equipped'
-    && (!item.data?.attunement || item.data?.attuned === 'true'));
-  [...features, ...equippedItems].forEach((feature) => {
-    const modifiers = feature.data?.modifiers || [];
-    modifiers.forEach((modifier) => {
-      const ruleType = modifier.data?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = modifier.data?.value || '';
-      if (modifier.data?.valueType === 'number') {
-        value = parseInt(modifier.data?.value, 10);
-        if (isNaN(value)) {
-          value = 0;
-        }
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-      }
-      else if (modifier.data?.valueType === 'field') {
-        const fieldToUse = modifier.data?.value || '';
-        if (fieldToUse) {
-          value = target?.record?.data?.[fieldToUse] || '';
-        }
-      }
-      else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
-        value = '-' + value;
-      }
-
-      // Only relevant if it has a value
-      if (value !== 0) {
-        // Check if this only applies to equipped item and mark it with ID if so 
-        const itemOnly = modifier.data?.itemOnly || false;
-        results.push({
-          name: feature?.name || 'Feature',
-          value: value,
-          active: modifier.data?.active === true,
-          modifierType: ruleType,
-          field: modifier.data?.field || '',
-          valueType: modifier.data?.valueType,
-          itemId: itemOnly ? feature?._id : undefined,
-          isPenalty: isPenalty
-        });
-      }
-    });
-  });
-
-  if (types && types.length > 0) {
-    results = results.filter(r => types.includes(r.modifierType));
-  }
-
-  if (field && field !== '') {
-    results = results.filter(r => r.field === field || r.field === 'all' || !r.field);
-  }
-
-  // Filter by itemId if provided
-  results = results.filter(r => r.itemId === itemId || r.itemId === undefined);
-
-  return results;
-}
-`;
-
-// Script to get the Resistance, Immunity, and Vulnerability of a target
-const getRIVScript = `
-function getRIV(target) {
-  const resistString = (target.data?.resistances || '').toLowerCase();
-  const immuneString = (target.data?.immunities || '').toLowerCase();
-  const vulnString = (target.data?.vulnerabilities || '').toLowerCase();
-
-  // Use regular expressions to match specific patterns
-  const resistances = [];
-  const immunities = [];
-  const vulnerabilities = [];
-
-  const patterns = [
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] }
-  ];
-
-  // Function to extract and remove matched patterns
-  function extractPatterns(string, type) {
-    patterns.forEach(pattern => {
-      if (pattern.type === type && pattern.regex.test(string)) {
-        if (type === 'resistance') resistances.push(...pattern.values);
-        if (type === 'immunity') immunities.push(...pattern.values);
-        if (type === 'vulnerability') vulnerabilities.push(...pattern.values);
-        string = string.replace(pattern.regex, ''); // Remove matched pattern
-      }
-    });
-    return string;
-  }
-
-  // Extract complex patterns and remove them from the string
-  let remainingResistString = extractPatterns(resistString, 'resistance');
-  let remainingImmuneString = extractPatterns(immuneString, 'immunity');
-  let remainingVulnString = extractPatterns(vulnString, 'vulnerability');
-
-  // Split remaining strings by commas to capture additional values
-  resistances.push(...remainingResistString.split(',').map(r => r.toLowerCase().trim()).filter(r => r));
-  immunities.push(...remainingImmuneString.split(',').map(i => i.toLowerCase().trim()).filter(i => i));
-  vulnerabilities.push(...remainingVulnString.split(',').map(v => v.toLowerCase().trim()).filter(v => v));
-
-  // Then add RIV from modifiers
-  const modifiers = getEffectsAndModifiersForToken(target, ['resistance', 'vulnerability', 'immunity']);
-  modifiers.forEach(mod => {
-    if (mod.modifierType === 'resistance') {
-      resistances.push(mod.value);
-    }
-    else if (mod.modifierType === 'vulnerability') {
-      vulnerabilities.push(mod.value);
-    }
-    else if (mod.modifierType === 'immunity') {
-      immunities.push(mod.value);
-    }
-  });
-
-  return {
-    resistances,
-    immunities,
-    vulnerabilities
-  };
-}
-`;
-
-// If the target is currently dying (0 hp) we add a death save failure
-// We add two if it it was from a critical hit
-// If they are then at 3, we add the 'Dead' effect
-const applyDeathFailures = `
-function applyDeathFailures(target) {
-  if (target.data?.curhp <= 0) {
-
-    let failures = parseInt(target.data.deathSaveFailures || '0', 10);
-    if (${isCritical}) {
-      failures += 2;
-    }
-    else {
-      failures += 1;
-    }
-
-    // Update death save failures
-    api.setValueOnToken(target, "data.deathSaveFailures", failures);
-
-    // If they have three, we add the 'Dead' effect
-    if (failures >= 3) {  
-      api.addEffect("Dead", target);
-    }
-  }
-}
-`;
-
 const damageMacro = `
 \`\`\`Apply_Damage
 let targets = api.getSelectedOrDroppedToken();
@@ -291,15 +23,6 @@ if (record) {
 if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
-
-// Add get effects and modifiers script
-${getEffectsAndModifiers}
-
-// Add RIV script
-${getRIVScript}
-
-// Add death save failure script
-${applyDeathFailures}
 
 targets.forEach(target => {
   // Apply damage
@@ -363,7 +86,7 @@ targets.forEach(target => {
 
     // If damage was done, we apply death failures if necessary
     if (damage > 0) {
-      applyDeathFailures(target);
+      applyDeathFailures(target, ${isCritical});
     }
 
     // Check for Concentration effect, and add a button to Roll Concentration Check
@@ -412,15 +135,6 @@ if (record) {
 if (!isGM && targets.length === 0) {
     targets = api.getSelectedOwnedTokens().map(target => target.token);
 }
-
-// Add get effects and modifiers script
-${getEffectsAndModifiers}
-
-// Add RIV script
-${getRIVScript}
-
-// Add death save failure script
-${applyDeathFailures}
 
 targets.forEach(target => {
   // Apply damage
@@ -472,7 +186,7 @@ targets.forEach(target => {
 
     // If damage was done, we apply death failures if necessary
     if (damage > 0) {
-      applyDeathFailures(target);
+      applyDeathFailures(target, ${isCritical});
     }
       
     // Check for Concentration effect, and add a button to Roll Concentration Check
