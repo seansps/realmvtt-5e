@@ -27,5 +27,6 @@ dextertyCheckModifiers.forEach(modifier => {
 api.promptRollForToken(token, 'Initiative', roll, modifiers, {
   "rollName": "Initiative",
   "tooltip": "Initiative Roll",
+  "token": token,
   "dc": 0
 }, 'initiative');
