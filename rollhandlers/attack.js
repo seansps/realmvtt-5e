@@ -172,10 +172,8 @@ const getMasteryProperties = (masterProperty, damageModifiers) => {
 
 function getWeaponMasteryMetadata(weaponMasteries, damageModifiers) {
   let results = [];
-  console.log('weaponMasteries', weaponMasteries);
 
   weaponMasteries.forEach(wm => {
-    console.log('wm', wm);
     const mastery = getWeaponMastery(wm, damageModifiers);
     if (mastery) {
       results.push(mastery);
