@@ -223,7 +223,7 @@ const rollName = data?.roll?.metadata?.rollName;
 const attack = data?.roll?.metadata?.attack;
 const targetName = data?.roll?.metadata?.targetName;
 const tooltip = data?.roll?.metadata?.tooltip;
-const damageModifiers = data?.roll?.metadata?.damageModifiers || [];
+let damageModifiers = data?.roll?.metadata?.damageModifiers || [];
 const icon = data?.roll?.metadata?.icon;
 const masteryProperties = data?.roll?.metadata?.masteryProperties || [];
 const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
@@ -247,10 +247,18 @@ const total = data?.roll?.total || 0;
 if (isCritical) {
   message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]CRITICAL HIT[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**
 `
-  // If damage was defined, we need to double the dice 
+  // If damage was defined, we need to double the dice in the damage string and modifiers
   if (damage) {
     damage = doubleDamageDice(damage);
   }
+
+  // Double any damage modifiers
+  damageModifiers = damageModifiers.map(mod => {
+    return {
+      ...mod,
+      value: doubleDamageDice(mod.value),
+    }
+  });
 }
 else if (isMiss) {
   message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**`

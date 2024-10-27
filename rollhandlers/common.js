@@ -303,10 +303,13 @@ function applyMath(value, math) {
 
 // Doubles the dice in the damage string
 function doubleDamageDice(damage) {
-  return damage.replace(/(\d+)?d(\d+)/g, (match, n, d) => {
-    n = n ? parseInt(n) * 2 : 2; // If n is undefined, it means 1d, so we use 2
-    return `${n}d${d}`;
-  });
+  if (damage && typeof damage === 'string' && damage.includes('d')) {
+    return damage.replace(/(\d+)?d(\d+)/g, (match, n, d) => {
+      n = n ? parseInt(n) * 2 : 2; // If n is undefined, it means 1d, so we use 2
+      return `${n}d${d}`;
+    });
+  }
+  return damage;
 }
 
 // Collects all effects and modifiers for the record (assuming this is

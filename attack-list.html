@@ -249,8 +249,8 @@
     }
   }
 
-  function rollDamage() {
-    const attackDataPath = dataPath.replace('.data.damageBtn', '');
+  function rollDamage(isCritical) {
+    const attackDataPath = isCritical ? dataPath.replace('.data.critBtn', '') : dataPath.replace('.data.damageBtn', '');
     const attack = api.getValue(attackDataPath);
 
     let name = attack?.name || 'New Item';
@@ -292,12 +292,17 @@
       damage = attack?.data?.versatileDamage || damage;
     }
 
+    if (isCritical) {
+      damage = doubleDamageDice(damage);
+    }
+
     let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
     // Get the default damage type of the attack and apply that to damage modifiers
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map(mod => {
       return {
         ...mod,
+        value: isCritical ? doubleDamageDice(mod.value) : mod.value,
         type: damageType
       }
     });
@@ -305,7 +310,7 @@
     const damageMetadata = {
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
-      "critical": false,
+      "critical": isCritical,
     }
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
@@ -360,7 +365,13 @@
     </iconbutton>
     <div>
       <!-- Roll Damage -->
-      <button size="xs" radius="xs" field="damageBtn" label="Damage" variant='light' onclick='rollDamage();'></button>
+      <button size="xs" radius="xs" field="damageBtn" label="Damage" variant='light'
+        onclick='rollDamage(false);'></button>
+    </div>
+    <!-- Roll Crit -->
+    <div>
+      <button size="xs" radius="xs" field="critBtn" label="Critical" variant='light' color="red"
+        onclick='rollDamage(true);'></button>
     </div>
   </div>
 </div>
