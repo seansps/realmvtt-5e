@@ -158,7 +158,7 @@
     });
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
-    if (damage.includes('d') && !name.toLowerCase().includes('unarmed')) {
+    if (damage.includes('d') || name.toLowerCase().includes('unarmed')) {
       // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
       let active = true;
       if (attack?.data?.handBtn === 'off' && modToUse > 0) {
@@ -249,58 +249,81 @@
     }
   }
 
-  // Todo implement the Damage Roll button
-
   function rollDamage() {
-    const dmgRoll = record.data.damage;
-    const name = record.name;
+    const attackDataPath = dataPath.replace('.data.damageBtn', '');
+    const attack = api.getValue(attackDataPath);
 
-    const damage = (record.data?.damage || '');
+    let name = attack?.name || 'New Item';
+    if (attack?.identified === false) {
+      name = attack?.unidentifiedName || 'Unidentified Item';
+    }
+
+    const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+    const strMod = parseInt(record?.data?.strengthMod || '0', 10);
+
+    let dexOrStr = 'Strength';
+    let modToUse = strMod;
+
+    let ranged = false;
+
+    // Always ranged attack for ranged weapons
+    if (attack?.data?.type?.includes('ranged')) {
+      ranged = true;
+    }
+    // If this is a thrown weapon, check the rangeToggleBtn
+    if (attack?.data?.weaponProperties?.includes('Thrown')) {
+      ranged = attack?.data?.rangeToggleBtn === 'ranged';
+    }
+
+    // Ranged is always dexterity
+    dexOrStrMod = attack?.data?.type?.includes('ranged') ? 'Dexterity' : 'Strength';
+    // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
+    if (attack?.data?.weaponProperties?.includes('Finesse')) {
+      dexOrStrMod = strMod > dexMod ? 'Strength' : 'Dexterity';
+    }
+    if (dexOrStrMod === 'Dexterity') {
+      modToUse = dexMod;
+    }
+
+    let damage = attack?.data?.damage || '1d4';
+
+    // Check for versatile property and use 2-handed damage if 2handed is set
+    if (attack?.data?.weaponProperties?.includes('Versatile') && attack?.data?.handBtn === 'two') {
+      damage = attack?.data?.versatileDamage || damage;
+    }
+
+    let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
+    // Get the default damage type of the attack and apply that to damage modifiers
     const damageType = getDamageType(damage);
-
-    const modifiers = [];
-
-    parentRecord.effects.forEach((eff) => {
-      eff.rules.forEach(rule => {
-        if (rule.type === "damage_bonus") {
-          let baseValue = parseInt(rule.value, 10);
-          let adjustedValue = baseValue;
-          if (rule.valueType === "stack") {
-            adjustedValue = parentRecord.effectIds.reduce((count, current) => {
-              return count + (current === eff._id ? 1 : 0);
-            }, 0);
-          }
-          let mod = {
-            name: eff.name,
-            type: damageType,
-            value: adjustedValue,
-            active: true
-          };
-          modifiers.push(mod);
-        }
-        else if (rule.type === "damage_penalty") {
-          let baseValue = parseInt(rule.value, 10);
-          let adjustedValue = baseValue;
-          if (rule.valueType === "stack") {
-            adjustedValue = parentRecord.effectIds.reduce((count, current) => {
-              return count + (current === eff._id ? 1 : 0);
-            }, 0);
-          }
-          if (adjustedValue > 0) {
-            adjustedValue *= -1;
-          }
-          let mod = {
-            name: eff.name,
-            type: damageType,
-            value: adjustedValue,
-            active: true
-          };
-          modifiers.push(mod);
-        }
-      });
+    damageModifiers = damageModifiers.map(mod => {
+      return {
+        ...mod,
+        type: damageType
+      }
     });
 
-    api.promptRoll(`Damage (${name})`, dmgRoll, modifiers, {}, "damage");
+    const damageMetadata = {
+      // This is so that our damage handler script can tell if it was from a critical hit
+      // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
+      "critical": false,
+    }
+
+    // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
+    if (damage.includes('d') || name.toLowerCase().includes('unarmed')) {
+      // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
+      let active = true;
+      if (attack?.data?.handBtn === 'off' && modToUse > 0) {
+        active = false;
+      }
+      damageModifiers.push({
+        name: dexOrStrMod,
+        type: damageType,
+        value: modToUse,
+        active: active
+      });
+    }
+
+    api.promptRoll(`${name} Damage`, damage, damageModifiers, damageMetadata, 'damage')
   }
 </script>
 
@@ -337,7 +360,7 @@
     </iconbutton>
     <div>
       <!-- Roll Damage -->
-      <button size="xs" radius="xs" field="button" label="Damage" variant='light' onclick='rollDamage();'></button>
+      <button size="xs" radius="xs" field="damageBtn" label="Damage" variant='light' onclick='rollDamage();'></button>
     </div>
   </div>
 </div>
