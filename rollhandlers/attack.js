@@ -110,9 +110,44 @@ targets.forEach(target => {
 `;
 }
 
+function getToppleMacro(abilityMod, proficiencyBonus) {
+  const dc = 8 + abilityMod.value + proficiencyBonus;
+  const savingThrow = 'constitution';
+  return `
+\`\`\`Roll_Constitution_Save
+if (isGM) { 
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach(token => {
+    const saveModifiers = [];
+    const record = token?.record;
+    const modifier = record?.data?.['${savingThrow}Save'] || 0;
+    saveModifiers.push({
+      name: '${capitalize(savingThrow)} Save',
+      value: modifier,
+      active: true,
+    });
+
+    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+    saveMods.forEach(mod => {
+      saveModifiers.push(mod);
+    });
+
+    const metadata = {
+      "rollName": '${capitalize(savingThrow)} Save',
+      "tooltip": '${capitalize(savingThrow)} Saving Throw',
+      "dc": ${dc}
+    }
+
+    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  });
+}
+  \`\`\`
+`;
+}
+
 // Get metadata for a given mastery property
 // Some have effects to apply, some are just tags
-const getMasteryProperties = (masterProperty, damageModifiers) => {
+const getMasteryProperties = (masterProperty, damageModifiers, proficiencyBonus) => {
   // For Graze, determine the ability mod of the attack roll
   const abilityMod = damageModifiers.find(dm => ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].includes(dm.name.toLowerCase().trim()));
 
@@ -150,19 +185,19 @@ const getMasteryProperties = (masterProperty, damageModifiers) => {
     };
     case 'Slow': return {
       name: 'Slow',
-      description: '',
-      effect: null,
+      description: "If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn't exceed 10 feet.",
+      effect: "Slow",
       macro: null,
     };
     case 'Topple': return {
       name: 'Topple',
-      description: '',
-      effect: null,
-      macro: null,
+      description: 'If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.',
+      effect: "Prone",
+      macro: getToppleMacro(abilityMod, proficiencyBonus),
     };
     case 'Vex': return {
       name: 'Vex',
-      description: '',
+      description: 'If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.',
       effect: null,
       macro: null,
     };
@@ -191,6 +226,7 @@ const tooltip = data?.roll?.metadata?.tooltip;
 const damageModifiers = data?.roll?.metadata?.damageModifiers || [];
 const icon = data?.roll?.metadata?.icon;
 const masteryProperties = data?.roll?.metadata?.masteryProperties || [];
+const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
 
 // If the d20 was a 20, it's a critical hit
@@ -248,7 +284,7 @@ let effectMacros = '';
 
 // Get weapon masteries
 masteryProperties.forEach(mp => {
-  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers);
+  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers, proficiencyBonus);
   tags.push({
     name: masteryPropertyMetadata.name,
     tooltip: masteryPropertyMetadata.description
@@ -272,7 +308,7 @@ api.addEffect('${effect}', target);
 
 // Get weapon mastery macros
 const macros = masteryProperties.map(mp => {
-  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers);
+  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers, proficiencyBonus);
   return masteryPropertyMetadata?.macro;
 }).filter(macro => macro).join('\n');
 

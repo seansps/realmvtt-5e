@@ -53,6 +53,8 @@
 
     const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
     const strMod = parseInt(record?.data?.strengthMod || '0', 10);
+    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
+
     let dexOrStr = 'Strength';
     let modToUse = strMod;
 
@@ -91,7 +93,6 @@
 
     const isProficient = getIsProficient(attack);
     if (isProficient) {
-      const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
       modifiers.push({
         name: 'Proficient',
         value: proficiencyBonus,
@@ -225,7 +226,8 @@
         "dc": targetAc,
         "damage": damage,
         "damageModifiers": damageModifiers,
-        "masteryProperties": masteryProperties
+        "masteryProperties": masteryProperties,
+        "attackerProficiencyBonus": proficiencyBonus
       }
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
     });
@@ -240,7 +242,8 @@
         "dc": 0,
         "damage": damage,
         "damageModifiers": damageModifiers,
-        "masteryProperties": masteryProperties
+        "masteryProperties": masteryProperties,
+        "attackerProficiencyBonus": proficiencyBonus
       }
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     }
