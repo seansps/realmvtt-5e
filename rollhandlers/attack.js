@@ -422,7 +422,7 @@ const getMasteryProperties = (masterProperty, damageModifiers) => {
     case 'Sap': return {
       name: 'Sap',
       description: 'If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.',
-      effect: null,
+      effect: 'Sap',
       macro: null,
     };
     case 'Slow': return {
@@ -530,6 +530,8 @@ const damageButton = damage ? `\`\`\`Roll_Damage
 api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(damageModifiers)}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\`` : '';
 
+let effectMacros = '';
+
 // Get weapon masteries
 masteryProperties.forEach(mp => {
   const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers);
@@ -537,9 +539,24 @@ masteryProperties.forEach(mp => {
     name: masteryPropertyMetadata.name,
     tooltip: masteryPropertyMetadata.description
   });
+
+  // Create macros for all effects that this property can apply
+  const effect = masteryPropertyMetadata?.effect || '';
+  if (effect) {
+    const effectTitle = `Apply_${effect.replace(/ /g, '_')}`;
+    if (effectMacros !== '') {
+      effectMacros += '\n';
+    }
+    effectMacros += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+api.addEffect('${effect}', target);
+});
+\`\`\``;
+  }
 });
 
-// Get weapon master macros
+// Get weapon mastery macros
 const macros = masteryProperties.map(mp => {
   const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers);
   return masteryPropertyMetadata?.macro;
@@ -550,6 +567,7 @@ ${message}
 
 ${damageButton}
 ${macros}
+${effectMacros}
 `;
 
 api.sendMessage(message, data.roll, [], tags);
