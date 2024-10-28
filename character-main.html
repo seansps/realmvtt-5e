@@ -893,10 +893,10 @@
 					// Check for best equipped armor and use this instead if set
 					if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
 						armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
-						// Add shield if it is equipped
-						if (bestEquippedArmor.shieldAc) {
-							armorClass += bestEquippedArmor.shieldAc;
-						}
+					}
+					// Add shield if it is equipped
+					if (bestEquippedArmor?.shieldAc) {
+						armorClass += bestEquippedArmor.shieldAc;
 					}
 					armorClass += calcBonus;
 					additionalFieldsToSet['data.ac'] = armorClass;
@@ -1549,10 +1549,10 @@
 				// Check for best equipped armor and use this instead if set
 				if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
 					armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
-					// Add shield if it is equipped
-					if (bestEquippedArmor.shieldAc) {
-						armorClass += bestEquippedArmor.shieldAc;
-					}
+				}
+				// Add shield if it is equipped
+				if (bestEquippedArmor?.shieldAc) {
+					armorClass += bestEquippedArmor.shieldAc;
 				}
 				armorClass += calcBonus;
 				fieldsToSet['data.ac'] = armorClass;

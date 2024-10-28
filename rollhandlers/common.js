@@ -208,10 +208,6 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
     armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
-    // Add shield if it is equipped
-    if (bestEquippedArmor.shieldAc) {
-      armorClass += bestEquippedArmor.shieldAc;
-    }
   }
   let calcBonus = 0;
   // Only add acCalculationMods if we are unarmored
@@ -236,6 +232,10 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
       }
     }
   });
+  // Add shield if it is equipped
+  if (bestEquippedArmor?.shieldAc) {
+    armorClass += bestEquippedArmor.shieldAc;
+  }
   armorClass += calcBonus;
   valuesToSet['data.ac'] = armorClass;
 
@@ -634,10 +634,6 @@ function getArmorClassForToken(token) {
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
     armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
-    // Add shield if it is equipped
-    if (bestEquippedArmor.shieldAc) {
-      armorClass += bestEquippedArmor.shieldAc;
-    }
   }
 
   let calcBonus = 0;
@@ -663,6 +659,10 @@ function getArmorClassForToken(token) {
       }
     }
   });
+  // Add shield if it is equipped
+  if (bestEquippedArmor?.shieldAc) {
+    armorClass += bestEquippedArmor.shieldAc;
+  }
   armorClass += calcBonus;
   return armorClass;
 }
@@ -682,10 +682,6 @@ function getArmorClass(bestEquippedArmor) {
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
     armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
-    // Add shield if it is equipped
-    if (bestEquippedArmor.shieldAc) {
-      armorClass += bestEquippedArmor.shieldAc;
-    }
   }
 
   let calcBonus = 0;
@@ -711,6 +707,11 @@ function getArmorClass(bestEquippedArmor) {
       }
     }
   });
+  // Add shield if it is equipped
+  if (bestEquippedArmor?.shieldAc) {
+    armorClass += bestEquippedArmor.shieldAc;
+  }
+  // Add the bonuses
   armorClass += calcBonus;
 
   return armorClass;
