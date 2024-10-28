@@ -1,0 +1,40 @@
+<script>
+	function rollInit() {
+
+	}
+</script>
+
+<div style="display: flex; margin-top: 4px; flex-direction: row">
+	<!-- Column 1 for Portrait, and Attributes -->
+	<div style='display: flex; flex-direction: column; width: 50%;'>
+		<div style="display: flex; flex-direction: row; gap: 4px;">
+			<div style="width: 115px; min-width: 115px; max-width: 115px; min-height: 115px; max-height: 115px">
+				<portrait width='115px' height='115px'></portrait>
+			</div>
+			<div style='display: flex; flex-direction: column; gap: 4px;'>
+				<div style='display: flex; flex-direction: row; gap: 4px;'>
+					<dropdown size="xs" field="size" label="Size" placeholder="Select Size..."
+						options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
+					</dropdown>
+					<stringfield size="xs" field="creatureType" label="Creature Type" placeholder="Creature Type...">
+					</stringfield>
+				</div>
+				<div style='display: flex; flex-direction: row; gap: 4px;'>
+					<dropdown width="100%" size="xs" field="alignment" label="Alignment" placeholder="Select Alignment..."
+						options='[
+				{"value": "unaligned", "label": "Unaligned"},
+				{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"}, 
+				{"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"}, 
+				{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
+				{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
+				{"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Column 2 -->
+	<div style='display: flex; flex-direction: column; width: 50%;'>
+
+	</div>
+</div>

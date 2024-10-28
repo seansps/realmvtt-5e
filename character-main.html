@@ -1491,7 +1491,7 @@
 		const senses = speciesObj?.data?.senses || '';
 
 		fieldsToSet['data.creatureType'] = creatureType;
-		fieldsToSet['data.size'] = capitalize(size);
+		fieldsToSet['data.size'] = size;
 		fieldsToSet['data.speed'] = speed;
 		fieldsToSet['data.senses'] = senses;
 
@@ -2274,13 +2274,14 @@
 				<stringfield size='xs' field='senses' label='Senses' placeholder='None'></stringfield>
 			</div>
 			<div style='width: 30%; margin-left: 4px'>
-				<stringfield size='xs' field='size' placeholder='Medium' label='Size'></stringfield>
+				<dropdown size="xs" field="size" label="Size" placeholder="Medium"
+					options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
+				</dropdown>
 			</div>
 			<div style='width: 20%; margin-left: 4px'>
 				<stringfield size='xs' field='speed' placeholder='0 ft' label='Speed'></stringfield>
 			</div>
 		</div>
-
 
 		<div style='display: flex; flex-direction:row; gap: 4px; width: 100%'>
 			<div style='display: flex; flex-direction:column; width: 50%'>
