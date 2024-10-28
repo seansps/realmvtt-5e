@@ -198,20 +198,34 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
     valuesToSet['data.dragLiftPush'] = dragLiftPush;
   }
 
-  // Update AC calculation as needed
+  // Update AC as needed
   const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
   const dexMod = attribute !== 'dexterity' ? parseInt(record?.data?.dexterityMod || '0', 10) : modVal;
+  const bestEquippedArmor = record?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
-  let calcBonus = 0;
-  acCalculationMods.forEach(mod => {
-    // We only benefit from the highest AC calculation modifier
-    if (mod.field && mod.field !== 'dexterity') {
-      const acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
-      if (acBonus > calcBonus) {
-        calcBonus = acBonus;
-      }
+  if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+    // PC's base class is the best equipped armor if provided
+    // Add the dex bonus to the ac, using max dex as the max.
+    // If maxDex is not set, we assume it is 0
+    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    // Add shield if it is equipped
+    if (bestEquippedArmor.shieldAc) {
+      armorClass += bestEquippedArmor.shieldAc;
     }
-  });
+  }
+  let calcBonus = 0;
+  // Only add acCalculationMods if we are unarmored
+  if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
+    acCalculationMods.forEach(mod => {
+      // We only benefit from the highest AC calculation modifier
+      if (mod.field && mod.field !== 'dexterity') {
+        const acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
+        if (acBonus > calcBonus) {
+          calcBonus = acBonus;
+        }
+      }
+    });
+  }
   // Get general AC bonuses
   const acBonuses = getEffectsAndModifiers(['armorClassBonus']);
   acBonuses.forEach(mod => {
@@ -606,18 +620,39 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
 function getArmorClassForToken(token) {
   const record = token?.record;
   const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
+
+  // If this is a character, we use their dexterity modifier
   const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+  const bestEquippedArmor = record?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
-  let calcBonus = 0;
-  acCalculationMods.forEach(mod => {
-    // We only benefit from the highest AC calculation modifier
-    if (mod.field && mod.field !== 'dexterity') {
-      const acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
-      if (acBonus > calcBonus) {
-        calcBonus = acBonus;
-      }
+  // Else, we use the armor class value
+  if (record?.recordType === 'npcs') {
+    armorClass = parseInt(record?.data?.ac || '0', 10);
+  }
+  else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+    // PC's base class is the best equipped armor if provided
+    // Add the dex bonus to the ac, using max dex as the max.
+    // If maxDex is not set, we assume it is 0
+    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    // Add shield if it is equipped
+    if (bestEquippedArmor.shieldAc) {
+      armorClass += bestEquippedArmor.shieldAc;
     }
-  });
+  }
+
+  let calcBonus = 0;
+  // Only add acCalculationMods if we are unarmored
+  if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
+    acCalculationMods.forEach(mod => {
+      // We only benefit from the highest AC calculation modifier
+      if (mod.field && mod.field !== 'dexterity') {
+        const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10);
+        if (acBonus > calcBonus) {
+          calcBonus = acBonus;
+        }
+      }
+    });
+  }
   // Get general AC bonuses
   const acBonuses = getEffectsAndModifiersForToken(token, ['armorClassBonus', 'armorClassPenalty']);
   acBonuses.forEach(mod => {
@@ -630,6 +665,87 @@ function getArmorClassForToken(token) {
   });
   armorClass += calcBonus;
   return armorClass;
+}
+
+function getArmorClass(bestEquippedArmor) {
+  const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
+
+  // If this is a character, we use their dexterity modifier
+  const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+  let armorClass = 10 + dexMod;
+  // Else, we use the armor class value
+  if (record?.recordType === 'npcs') {
+    armorClass = parseInt(record?.data?.ac || '0', 10);
+  }
+  else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+    // PC's base class is the best equipped armor if provided
+    // Add the dex bonus to the ac, using max dex as the max.
+    // If maxDex is not set, we assume it is 0
+    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    // Add shield if it is equipped
+    if (bestEquippedArmor.shieldAc) {
+      armorClass += bestEquippedArmor.shieldAc;
+    }
+  }
+
+  let calcBonus = 0;
+  // Only add acCalculationMods if we are unarmored
+  if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
+    acCalculationMods.forEach(mod => {
+      // We only benefit from the highest AC calculation modifier
+      if (mod.field && mod.field !== 'dexterity') {
+        const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10);
+        if (acBonus > calcBonus) {
+          calcBonus = acBonus;
+        }
+      }
+    });
+  }
+  // Get general AC bonuses
+  const acBonuses = getEffectsAndModifiers(['armorClassBonus', 'armorClassPenalty']);
+  acBonuses.forEach(mod => {
+    if (mod.value) {
+      const acBonus = parseInt(mod.value || '0', 10);
+      if (!isNaN(acBonus)) {
+        calcBonus += acBonus;
+      }
+    }
+  });
+  armorClass += calcBonus;
+
+  return armorClass;
+}
+
+// Gets the best equipped armor for the context of the current PC
+function getBestEquippedArmor() {
+  // Get the current ac due to armor
+  let bestEquippedArmor = {
+    ac: 0,
+    maxDex: 0,
+    shieldAc: 0,
+    stealthPenalty: false,
+  };
+
+  const items = record.data?.inventory || [];
+  items.forEach(item => {
+    if (item.data?.carried === 'equipped' && item.data?.type === 'armor') {
+      const ac = item?.data?.armorClass || 0;
+      const maxDex = item?.data?.addDex ? item?.data?.maxDex || 0 : 0;
+      if (ac > bestEquippedArmor.ac) {
+        bestEquippedArmor.ac = ac;
+        bestEquippedArmor.maxDex = maxDex;
+        bestEquippedArmor.stealthPenalty = item?.data?.stealth === 'disadvantage';
+      }
+    }
+    else if (item.data?.carried === 'equipped' && item.data?.type === 'shield') {
+      const ac = item?.data?.armorClass || 0;
+      if (ac > bestEquippedArmor.shieldAc) {
+        bestEquippedArmor.shieldAc = ac;
+      }
+    }
+  });
+
+  return bestEquippedArmor;
 }
 
 // Gets the Resistance, Immunity, and Vulnerability from a token

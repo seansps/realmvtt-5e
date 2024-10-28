@@ -1,5 +1,5 @@
 <script>
-	function updateTotalWeight(record) {
+	function updateTotalWeight(record, setValue = true) {
 		// Update total weight
 		const items = record?.data?.inventory || [];
 		let totalWeight = 0;
@@ -14,7 +14,12 @@
 			}
 		});
 
-		api.setValue('data.totalWeight', totalWeight);
+		if (setValue) {
+			api.setValue('data.totalWeight', totalWeight);
+		}
+		else {
+			return totalWeight;
+		}
 	}
 
 	function onDropItem(recordLink) {
@@ -90,7 +95,28 @@
 
 	function onItemDeleted() {
 		// Fetch the character record again to get latest data
-		updateTotalWeight(record);
+		const valuesToSet = {};
+		const totalWeight = updateTotalWeight(record, false);
+		if (totalWeight !== record?.data?.totalWeight) {
+			valuesToSet['data.totalWeight'] = totalWeight;
+		}
+
+		// Get the current ac due to armor and set it on the 
+		// record
+		const bestEquippedArmor = getBestEquippedArmor();
+
+		if (JSON.stringify(record?.data?.armor || '{}') !== JSON.stringify(bestEquippedArmor)) {
+			valuesToSet['data.armor'] = bestEquippedArmor;
+		}
+
+		const totalAc = getArmorClass(bestEquippedArmor);
+		if (record?.data?.ac !== totalAc) {
+			valuesToSet['data.ac'] = totalAc;
+		}
+
+		if (Object.keys(valuesToSet).length > 0) {
+			api.setValues(valuesToSet);
+		}
 	}
 </script>
 

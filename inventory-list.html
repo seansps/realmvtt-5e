@@ -1,21 +1,28 @@
 <script>
-  function setTotalWeight() {
+  function setTotalWeight(setValues = true) {
     // Fetch the character record again to get latest data
     const items = record.data?.inventory || [];
     let totalWeight = 0;
 
     items.forEach(item => {
-      let weight = parseFloat(item.data?.weight || '0');
-      let count = parseFloat(item.data?.count || '0');
-      if (count === undefined || isNaN(count)) {
-        count = 0;
-      }
-      if (weight !== undefined && !isNaN(weight)) {
-        totalWeight += (weight * count);
+      if (item.data?.carried !== 'dropped') {
+        let weight = parseFloat(item.data?.weight || '0');
+        let count = parseFloat(item.data?.count || '0');
+        if (count === undefined || isNaN(count)) {
+          count = 0;
+        }
+        if (weight !== undefined && !isNaN(weight)) {
+          totalWeight += (weight * count);
+        }
       }
     });
 
-    api.setValue('data.totalWeight', totalWeight);
+    if (setValues) {
+      api.setValue('data.totalWeight', totalWeight);
+    }
+    else {
+      return totalWeight;
+    }
   }
 
   function useItem() {
@@ -55,6 +62,34 @@
       api.removeValue(`data.inventory`, indexValue);
     }
   }
+
+  // Then update AC calculation in character-main.html and getArmorClassForToken
+  function onItemEquipped() {
+    // If an item's equipped status changes, we need to recalculate the total weight
+    // and update any bonuses such as AC if it's a piece of armor
+    const valuesToSet = {};
+    const totalWeight = setTotalWeight(false);
+    if (totalWeight !== record?.data?.totalWeight) {
+      valuesToSet['data.totalWeight'] = totalWeight;
+    }
+
+    // Get the current ac due to armor and set it on the 
+    // record
+    const bestEquippedArmor = getBestEquippedArmor();
+
+    if (JSON.stringify(record?.data?.armor || '{}') !== JSON.stringify(bestEquippedArmor)) {
+      valuesToSet['data.armor'] = bestEquippedArmor;
+    }
+
+    const totalAc = getArmorClass(bestEquippedArmor);
+    if (record?.data?.ac !== totalAc) {
+      valuesToSet['data.ac'] = totalAc;
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
 </script>
 
 <div style='height: 30px; display: flex; gap: 4px; align-items: center'>
@@ -76,5 +111,5 @@
   </stringfield>
   <iconbutton size='sm' field="carried" variant="default"
     options='[{"icon": "IconMoneybag", "label": "Carried", "value": "carried"}, {"icon": "IconShirt", "label": "Equipped", "value": "equipped"}, {"icon": "IconArrowDown", "label": "Dropped", "value": "dropped"}]'
-    onchange='' onclick=''></iconbutton>
+    onchange='onItemEquipped();' onclick=''></iconbutton>
 </div>
