@@ -456,6 +456,21 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
     });
   });
 
+  // Special case for armor, if this is a stealth check
+  if (field === 'stealth') {
+    const bestEquippedArmor = record?.data?.armor || undefined;
+    if (bestEquippedArmor?.stealthPenalty) {
+      results.push({
+        name: 'Disadvantage due to Armor',
+        value: 'disadvantage',
+        active: true,
+        modifierType: 'skillPenalty',
+        isPenalty: true,
+        field: 'stealth'
+      });
+    }
+  }
+
   if (types && types.length > 0) {
     results = results.filter(r => types.includes(r.modifierType));
   }
@@ -602,6 +617,21 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
       }
     });
   });
+
+  // Special case for armor, if this is a stealth check
+  if (field === 'stealth') {
+    const bestEquippedArmor = target?.record?.data?.armor || undefined;
+    if (bestEquippedArmor?.stealthPenalty) {
+      results.push({
+        name: 'Disadvantage due to Armor',
+        value: 'disadvantage',
+        active: true,
+        modifierType: 'skillPenalty',
+        isPenalty: true,
+        field: 'stealth'
+      });
+    }
+  }
 
   if (types && types.length > 0) {
     results = results.filter(r => types.includes(r.modifierType));
