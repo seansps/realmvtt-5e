@@ -37,9 +37,9 @@
   }
 
   function getDamageType(rollString) {
-    const regex = /(\d+d\d+)(?:\s*\+\s*\d+)?(?:\s+(\w+))?/;
+    const regex = /(?:\d*d\d+|\+\d+)?(?:\s*\+?-?\s*\d+)?(?:\s+(\w+))?/;
     const match = rollString.match(regex);
-    return match && match[2] ? match[2] : "untyped";
+    return match && match[1] ? match[1] : "untyped";
   }
 
   function handleRoll() {
