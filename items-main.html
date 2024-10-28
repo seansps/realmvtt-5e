@@ -1,6 +1,6 @@
 <script>
   // Show or hide relavant values based on the type of item
-  // gear, melee weapon, ranged weapon, armor, shield, tool, magic item
+  // gear, melee weapon, ranged weapon, armor, shield, tool, magic item, pack
   // Subtypes are optional and are generally one of:
   // Simple Melee Weapon, Martial Melee Weapon, Simple Ranged Weapon, Martial Ranged Weapon, Light Armor, Medium Armor, Heavy Armor, Ammunition, Treasure, Art Object, Scroll, Potion, Jewelry, Staff, Wand, Clothing
   // Weapon Type is used for weapon masteries and is one of
@@ -46,8 +46,22 @@
     if (typeStr === "armor" || typeStr === "shield" || typeStr === "melee weapon" || typeStr === "ranged weapon") {
       valuesToHide.push("consumable");
     }
-    else {
+    else if (typeStr !== "pack") {
       valuesToShow.push("consumable");
+    }
+
+    if (typeStr === "pack") {
+      valuesToShow.push("itemListLabel");
+      valuesToShow.push("items");
+      valuesToHide.push("rarity");
+      valuesToHide.push("consumable");
+      valuesToHide.push("attunement");
+    }
+    else {
+      valuesToHide.push("itemListLabel");
+      valuesToHide.push("items");
+      valuesToShow.push("rarity");
+      valuesToShow.push("attunement");
     }
 
     if (valuesToHide.length > 0) {
@@ -137,7 +151,8 @@
       <dropdown multiselect='1' placeholder='Select Type' onchange="showHideValues(value);" field="type" label="Type"
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
       {"label": "Ranged Weapon", "value": "ranged weapon"}, {"label": "Armor", "value": "armor"}, {"label": "Shield", "value": "shield"},
-      {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}]'></dropdown>
+      {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}, {"label": "Item Pack", "value": "pack"}]'>
+      </dropdown>
       <stringfield width="100%" field="subtype" label="Subtype" onchange="showHideValuesSubtype(value);"
         placeholder='Enter Subtype...'></stringfield>
     </div>
@@ -252,6 +267,14 @@
     </dropdown>
     <numberfield width='100%' hidden="true" field="spellLevel" label="Level" placeholder='Enter Level...'></numberfield>
   </div>
+</div>
+
+<div style='margin-top: 8px;'>
+  <label hidden="true" field='itemListLabel' label='Items in Pack' size="sm" variant='bold'></label>
+</div>
+
+<div>
+  <list hidden="true" listtype="item_list" field='items' variant='striped' allowadd=''></list>
 </div>
 
 <div style='margin-top: 8px;'>
