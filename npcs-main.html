@@ -135,7 +135,7 @@
 </script>
 
 <div style="display: flex; margin-top: 4px; flex-direction: row">
-	<div style='display: flex; flex-direction: column;'>
+	<div style='display: flex; flex-direction: column; width: 100%;'>
 		<div style="display: flex; flex-direction: row; gap: 4px;">
 			<div style='display: flex; flex-direction: column; gap: 0px; width: 110px;'>
 				<div style="width: 110px; min-width: 110px; max-width: 110px; min-height: 110px; max-height: 110px">
@@ -146,7 +146,7 @@
 					options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}]'>
 				</dropdown>
 			</div>
-			<div style='display: flex; flex-direction: column; gap: 0px;'>
+			<div style='display: flex; flex-direction: column; gap: 0px; width: 100%;'>
 				<div style='display: flex; flex-direction: row; gap: 4px;'>
 					<dropdown size="xs" width="100%" field="size" label="Size" placeholder="Select Size..."
 						options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
@@ -161,7 +161,7 @@
 			{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
 			{"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
 				</div>
-				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end; width: 100%;'>
 					<numberfield size="xs" icon="IconShield" color="blue" width="100%" field="ac" label="AC" placeholder="AC...">
 					</numberfield>
 					<numberfield showsign='true' size="xs" width="100%" field="initiativeMod" label="Initiative" placeholder="0">
@@ -172,12 +172,14 @@
 						options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]' onclick='rollInitiative();'>
 					</iconbutton>
 				</div>
-				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-					<numberfield size="xs" icon="IconHeart" placeholder='0' field='curhp' label='Hit Points' color='pink'>
+				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end; width: 100%;'>
+					<numberfield size="xs" width="22%" icon="IconHeart" placeholder='0' field='curhp' label='HP' color='pink'>
 					</numberfield>
-					<numberfield size="xs" icon="IconHeartFilled" placeholder='0' field='hitpoints' label='Max Hit Points'
+					<numberfield size="xs" width="22%" icon="IconHeartFilled" placeholder='0' field='hitpoints' label='Max HP'
 						color='green'></numberfield>
-					<stringfield size="xs" field="hitDice" label="Hit Dice" placeholder="Hit Dice...">
+					<numberfield size="xs" width="22%" icon="IconHeartFilled" placeholder='0' field='tempHp' label='Temp HP'
+						color='blue'></numberfield>
+					<stringfield size="xs" width="34%" field="hitDice" label="Hit Dice" placeholder="Hit Dice...">
 					</stringfield>
 				</div>
 			</div>
