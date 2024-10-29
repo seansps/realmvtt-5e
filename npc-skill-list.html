@@ -1,0 +1,61 @@
+<script>
+	function onNameChange(skillName) {
+		// Set the tooltip to the name
+		const tooltipDataPath = dataPath.replace('.name', '.data.rollTooltip');
+		const skillWithModDataPath = dataPath.replace('.name', '.data.skillWithMod');
+		const valuesToSet = {};
+		// Remove modifier from the name used by the tag
+		let skillNameWithoutMod = skillName;
+		if (skillNameWithoutMod.includes('+')) {
+			skillNameWithoutMod = skillNameWithoutMod.split('+')[0].trim();
+		}
+		else if (skillNameWithoutMod.includes('-')) {
+			skillNameWithoutMod = skillNameWithoutMod.split('-')[0].trim();
+		}
+		valuesToSet[tooltipDataPath] = `Roll ${skillNameWithoutMod} Check`;
+		valuesToSet[skillWithModDataPath] = `${skillName}`;
+		// Set the values
+		api.setValues(valuesToSet);
+	}
+
+	function rollCheck() {
+		// Parse the skill name to get the skill name and modifier
+		const skillPath = dataPath.replace('.skillWithMod', '');
+		const skillName = api.getValue(`${skillPath}.skillWithMod`);
+		let skillNameWithoutMod = skillName;
+		let modValue = '0';
+		if (skillNameWithoutMod.includes('+')) {
+			skillNameWithoutMod = skillNameWithoutMod.split('+')[0].trim();
+			modValue = skillName.split('+')[1].trim();
+		}
+		else if (skillNameWithoutMod.includes('-')) {
+			skillNameWithoutMod = skillNameWithoutMod.split('-')[0].trim();
+			modValue = `-${skillName.split('-')[1].trim()}`;
+		}
+		modValue = parseInt(modValue, 10);
+		if (isNaN(modValue)) {
+			modValue = 0;
+		}
+		// Roll the check
+		const modifiers = [
+			{
+				name: `${skillNameWithoutMod} Modifier`,
+				value: modValue,
+				active: true,
+			}
+		];
+		const metadata = {
+			"rollName": `${capitalize(skillNameWithoutMod)}`,
+			"tooltip": `${capitalize(skillNameWithoutMod)} Check`,
+			"dc": 0,
+		}
+		api.promptRoll(`${capitalize(skillNameWithoutMod)} Check`, "1d20", modifiers, metadata, 'ability');
+	}
+</script>
+
+<div style='display: flex; flex-direction: row; gap: 4px;'>
+	<tag field="skillWithMod" defaultvalue="New Skill" tooltip="rollTooltip" onclick='rollCheck()'></tag>
+	<namefield hideonlocked='true' size='xs' width='100px' field="namefield" placeholder='Enter Skill...'
+		onchange='onNameChange(value)'></namefield>
+	<stringfield hidden="true" field="rollTooltip"></stringfield>
+</div>
