@@ -186,7 +186,7 @@
 		</div>
 
 		<div style='margin-top: 4px;'>
-			<divider label="Ability Scores" textalign="center"></divider>
+			<divider size='sm' color='pink' label="Ability Scores" textalign="center"></divider>
 		</div>
 
 		<!-- Attributes -->
@@ -385,7 +385,7 @@
 		</div>
 
 		<div style='margin-top: 4px;'>
-			<divider></divider>
+			<divider size='sm' color='pink'></divider>
 		</div>
 
 		<!-- Skills -->
@@ -431,6 +431,12 @@
 			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="immunities" label="Immunities"
 				placeholder='None'>
 			</stringfield>
+		</div>
+
+		<divider size='sm' color='pink' label='Traits' field="featuresDivider" textalign="center"></divider>
+
+		<div style='width: 100%'>
+			<list listtype="npc_traits_list" field='features'></list>
 		</div>
 	</div>
 </div>
