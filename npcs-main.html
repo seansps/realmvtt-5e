@@ -394,13 +394,16 @@
 
 		<!-- Additional Attributes -->
 		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield width="100%" size="xs" field="speed" label="Speed" placeholder="Speed...">
+			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="speed" label="Speed"
+				placeholder="Speed...">
 			</stringfield>
-			<stringfield width="100%" size="xs" field="senses" label="Senses" placeholder="Senses..."></stringfield>
+			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="senses" label="Senses"
+				placeholder="Senses..."></stringfield>
 		</div>
 
 		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield width="100%" size="xs" field="Languages" label="Languages" placeholder="Enter Languages...">
+			<stringfield width="100%" size="xs" multiline='true' maxrows='2' field="languages" label="Languages"
+				placeholder="Enter Languages...">
 			</stringfield>
 		</div>
 
@@ -414,6 +417,18 @@
 			</numberfield>
 			<!-- Hidden field to store level for spell casting -->
 			<numberfield size="xs" field="level" label="Level" placeholder="0" hidden="true"></numberfield>
+		</div>
+
+		<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="vulnerabilities" label="Vulnerabilities"
+				placeholder='None'>
+			</stringfield>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="resistances" label="Resistances"
+				placeholder='None'>
+			</stringfield>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="immunities" label="Immunities"
+				placeholder='None'>
+			</stringfield>
 		</div>
 	</div>
 </div>
