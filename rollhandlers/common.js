@@ -570,8 +570,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   });
 
   // Now collect all modifiers from Features and Items
-  const features = target?.record?.data?.features || [];
-  const items = target?.record?.data?.inventory || [];
+  const features = target?.data?.features || [];
+  const items = target?.data?.inventory || [];
   // Filter items that are not equipped or that require attunement and not attuned
   const equippedItems = items.filter(item => item.data?.carried === 'equipped'
     && (!item.data?.attunement || item.data?.attuned === 'true'));
@@ -593,7 +593,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
       else if (modifier.data?.valueType === 'field') {
         const fieldToUse = modifier.data?.value || '';
         if (fieldToUse) {
-          value = target?.record?.data?.[fieldToUse] || '';
+          value = target?.data?.[fieldToUse] || '';
         }
       }
       else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
@@ -620,7 +620,7 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
 
   // Special case for armor, if this is a stealth check
   if (field === 'stealth') {
-    const bestEquippedArmor = target?.record?.data?.armor || undefined;
+    const bestEquippedArmor = target?.data?.armor || undefined;
     if (bestEquippedArmor?.stealthPenalty) {
       results.push({
         name: 'Disadvantage due to Armor',
@@ -655,9 +655,9 @@ function getArmorClassForToken(token) {
   const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
   const bestEquippedArmor = record?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
-  // Else, we use the armor class value
+  // Else, we use the armor class value (for tokens)
   if (record?.recordType === 'npcs') {
-    armorClass = parseInt(record?.data?.ac || '0', 10);
+    armorClass = parseInt(token?.data?.ac || '0', 10);
   }
   else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
     // PC's base class is the best equipped armor if provided
