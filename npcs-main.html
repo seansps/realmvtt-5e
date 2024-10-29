@@ -3,6 +3,34 @@
 		// TODO: Implement
 	}
 
+	function updateCR(value) {
+		// Update the level based on the challenge rating
+		let level = 0;
+		if (value.trim() === '1/8') {
+			level = 1;
+		} else if (value.trim() === '1/4') {
+			level = 1;
+		} else if (value.trim() === '1/2') {
+			level = 1;
+		} else {
+			level = parseInt(value.trim(), 10);
+		}
+
+		const valuesToSet = {
+			'data.level': level
+		}
+
+		// Get PB for the level
+		const pb = getProficiencyBonus(level);
+		valuesToSet['data.proficiencyBonus'] = pb;
+
+		// Get XP for the Challenge Rating
+		const xp = getXPForCR(value.trim());
+		valuesToSet['data.xp'] = xp;
+
+		api.setValues(valuesToSet);
+	}
+
 	function setModifier(value, ability) {
 		// Set the modifier and save modifier	(if not already set)
 		const modifier = Math.floor((value - 10) / 2);
@@ -366,9 +394,26 @@
 
 		<!-- Additional Attributes -->
 		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield size="xs" field="speed" label="Speed" placeholder="Speed...">
+			<stringfield width="100%" size="xs" field="speed" label="Speed" placeholder="Speed...">
+			</stringfield>
+			<stringfield width="100%" size="xs" field="senses" label="Senses" placeholder="Senses..."></stringfield>
+		</div>
+
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+			<stringfield width="100%" size="xs" field="Languages" label="Languages" placeholder="Enter Languages...">
 			</stringfield>
 		</div>
 
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+			<stringfield width="100%" size="xs" field="challengeRating" label="CR" placeholder="Enter Challenge Rating..."
+				onchange='updateCR(value);'>
+			</stringfield>
+			<stringfield width="100%" size="xs" field="xp" label="XP" placeholder="Enter XP...">
+			</stringfield>
+			<numberfield showsign='true' width="100%" size="xs" field="proficiencyBonus" label="PB" placeholder="+2">
+			</numberfield>
+			<!-- Hidden field to store level for spell casting -->
+			<numberfield size="xs" field="level" label="Level" placeholder="0" hidden="true"></numberfield>
+		</div>
 	</div>
 </div>

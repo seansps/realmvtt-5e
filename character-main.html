@@ -195,31 +195,6 @@
 		api.setValues(valuesToSet);
 	}
 
-	function getProficiencyBonus(level) {
-		if (level <= 4) {
-			return 2;
-		}
-		if (level <= 8) {
-			return 3;
-		}
-		if (level <= 12) {
-			return 4;
-		}
-		if (level <= 16) {
-			return 5;
-		}
-		if (level <= 20) {
-			return 6;
-		}
-		if (level <= 24) {
-			return 7;
-		}
-		if (level <= 28) {
-			return 8;
-		}
-		return 9;
-	}
-
 	// Get spell slots for a given level caster level
 	function getSpellSlotCount(spellCasterLevel) {
 		const spellSlotsByLevel = [

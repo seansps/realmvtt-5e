@@ -11,6 +11,109 @@ function camelToNormal(skill) {
   return skill.replace(/([A-Z])/g, ' $1').replace(/^./, function (str) { return str.toUpperCase(); });
 }
 
+function getProficiencyBonus(level) {
+  if (level <= 4) {
+    return 2;
+  }
+  if (level <= 8) {
+    return 3;
+  }
+  if (level <= 12) {
+    return 4;
+  }
+  if (level <= 16) {
+    return 5;
+  }
+  if (level <= 20) {
+    return 6;
+  }
+  if (level <= 24) {
+    return 7;
+  }
+  if (level <= 28) {
+    return 8;
+  }
+  return 9;
+}
+
+function getXPForCR(cr) {
+  switch (cr) {
+    case '0':
+      return '10';
+    case '1/8':
+      return '25';
+    case '1/4':
+      return '50';
+    case '1/2':
+      return '100';
+    case '1':
+      return '200';
+    case '2':
+      return '450';
+    case '3':
+      return '700';
+    case '4':
+      return '1,100';
+    case '5':
+      return '1,800';
+    case '6':
+      return '2,300';
+    case '7':
+      return '2,900';
+    case '8':
+      return '3,900';
+    case '9':
+      return '5,000';
+    case '10':
+      return '5,900';
+    case '11':
+      return '7,200';
+    case '12':
+      return '8,400';
+    case '13':
+      return '10,000';
+    case '14':
+      return '11,500';
+    case '15':
+      return '13,000';
+    case '16':
+      return '15,000';
+    case '17':
+      return '18,000';
+    case '18':
+      return '20,000';
+    case '19':
+      return '22,000';
+    case '20':
+      return '25,000';
+    case '21':
+      return '33,000';
+    case '22':
+      return '41,000';
+    case '23':
+      return '50,000';
+    case '24':
+      return '62,000';
+    case '25':
+      return '75,000';
+    case '26':
+      return '90,000';
+    case '27':
+      return '105,000';
+    case '28':
+      return '120,000';
+    case '29':
+      return '135,000';
+    case '30':
+      return '155,000';
+    default:
+      if (parseInt(cr, 10) > 30) {
+        return '155,000';
+      }
+      return '0';
+  }
+}
+
 // Returns all skills by name with their ability fields and defaults
 function getSkills() {
   return [
