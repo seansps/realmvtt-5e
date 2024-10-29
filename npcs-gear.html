@@ -1,0 +1,434 @@
+<script>
+	function onTypeChange(npcType) {
+		// TODO: Implement
+	}
+
+	function updateCR(value) {
+		// Update the level based on the challenge rating
+		let level = 0;
+		if (value.trim() === '1/8') {
+			level = 1;
+		} else if (value.trim() === '1/4') {
+			level = 1;
+		} else if (value.trim() === '1/2') {
+			level = 1;
+		} else {
+			level = parseInt(value.trim(), 10);
+		}
+
+		const valuesToSet = {
+			'data.level': level
+		}
+
+		// Get PB for the level
+		const pb = getProficiencyBonus(level);
+		valuesToSet['data.proficiencyBonus'] = pb;
+
+		// Get XP for the Challenge Rating
+		const xp = getXPForCR(value.trim());
+		valuesToSet['data.xp'] = xp;
+
+		api.setValues(valuesToSet);
+	}
+
+	function setModifier(value, ability) {
+		// Set the modifier and save modifier	(if not already set)
+		const modifier = Math.floor((value - 10) / 2);
+		const saveModifierDataPath = `data.${ability}Save`;
+		const valuesToSet = {
+			[`data.${ability}Mod`]: modifier,
+		}
+		valuesToSet[saveModifierDataPath] = modifier;
+		api.setValues(valuesToSet);
+	}
+
+	function rollInitiative() {
+		// Roll initiative for the npc
+		const roll = '1d20';
+
+		// Get modifiers for initiative, which is a dexterity check
+		const modifiers = [];
+
+		// Add initiative modifier, which is what NPCs use 
+		const initiativeMod = parseInt(record.data?.initiativeMod || '0', 10);
+		modifiers.push({
+			name: 'Initiative Modifier',
+			value: initiativeMod,
+			active: true
+		});
+
+		// Check effects for all initiative bonuses and penalties
+		const initiativeModifiers = getEffectsAndModifiers(['initiativeBonus', 'initiativePenalty']);
+		initiativeModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
+		const dexterityCheckModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], 'dexterity');
+		dexterityCheckModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
+		api.promptRoll('Initiative', roll, modifiers, {
+			"rollName": "Initiative",
+			"tooltip": "Initiative Roll",
+			"dc": 0
+		}, 'initiative');
+	}
+
+	function rollCheck(ability) {
+		const mod = `${ability}Mod`;
+
+		const modifiers = [];
+		let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
+		if (abilityMod === undefined || isNaN(abilityMod)) {
+			abilityMod = 0;
+		}
+		if (abilityMod !== 0) {
+			modifiers.push({
+				name: ability,
+				value: abilityMod,
+				active: true,
+			});
+		}
+		const metadata = {
+			"rollName": `${capitalize(ability)}`
+		}
+
+		const checkModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], ability);
+		checkModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
+		api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
+	}
+
+	function rollSave(save) {
+		const mod = `${save}Save`;
+		const modifiers = [];
+		let saveMod = record?.data?.[mod] || '0';
+		if (saveMod === undefined) {
+			saveMod = 0;
+		}
+
+		if (saveMod !== '0') {
+			modifiers.push({
+				name: `${capitalize(save)} Save Modifier`,
+				value: saveMod,
+				active: true,
+			});
+		}
+
+		// Check effects for all save bonuses and penalties for saves
+		const saveModifiers = getEffectsAndModifiers(['saveBonus', 'savePenalty'], save);
+		saveModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
+		const metadata = {
+			"rollName": `${capitalize(save)} Save`,
+			"tooltip": `${capitalize(save)} Saving Throw`,
+			"dc": 0
+		}
+
+		api.promptRoll(`${capitalize(save)} Save`, '1d20', modifiers, metadata, 'save');
+	}
+</script>
+
+<div style="display: flex; margin-top: 4px; flex-direction: row">
+	<div style='display: flex; flex-direction: column;'>
+		<div style="display: flex; flex-direction: row; gap: 4px;">
+			<div style='display: flex; flex-direction: column; gap: 0px; width: 110px;'>
+				<div style="width: 110px; min-width: 110px; max-width: 110px; min-height: 110px; max-height: 110px">
+					<portrait width='110px' height='110px'></portrait>
+				</div>
+				<dropdown size="xs" width="100%" field="type" label="Type" placeholder="NPC Type..."
+					onchange='onTypeChange(value)'
+					options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}]'>
+				</dropdown>
+			</div>
+			<div style='display: flex; flex-direction: column; gap: 0px;'>
+				<div style='display: flex; flex-direction: row; gap: 4px;'>
+					<dropdown size="xs" width="100%" field="size" label="Size" placeholder="Select Size..."
+						options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
+					</dropdown>
+					<stringfield size="xs" width="100%" field="creatureType" label="Creature Type" placeholder="Creature Type...">
+					</stringfield>
+					<dropdown size="xs" width="100%" field="alignment" label="Alignment" placeholder="Alignment..." options='[
+			{"value": "unaligned", "label": "Unaligned"},
+			{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"}, 
+			{"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"}, 
+			{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
+			{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
+			{"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
+				</div>
+				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+					<numberfield size="xs" icon="IconShield" color="blue" width="100%" field="ac" label="AC" placeholder="AC...">
+					</numberfield>
+					<numberfield showsign='true' size="xs" width="100%" field="initiativeMod" label="Initiative" placeholder="0">
+					</numberfield>
+					<numberfield size="xs" width="100%" field="initiativeScore" label="Initiative Score" placeholder="0">
+					</numberfield>
+					<iconbutton size="md" field="rollInitiativeBtn" variant="outline"
+						options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]' onclick='rollInitiative();'>
+					</iconbutton>
+				</div>
+				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+					<numberfield size="xs" icon="IconHeart" placeholder='0' field='curhp' label='Hit Points' color='pink'>
+					</numberfield>
+					<numberfield size="xs" icon="IconHeartFilled" placeholder='0' field='hitpoints' label='Max Hit Points'
+						color='green'></numberfield>
+					<stringfield size="xs" field="hitDice" label="Hit Dice" placeholder="Hit Dice...">
+					</stringfield>
+				</div>
+			</div>
+		</div>
+
+		<div style='margin-top: 4px;'>
+			<divider label="Ability Scores" textalign="center"></divider>
+		</div>
+
+		<!-- Attributes -->
+		<div style='display: flex; flex-direction: row; gap: 0px; align-items: flex-end; flex-wrap: wrap;'>
+			<table style='width: 50%; min-width: 240px; flex-grow: 1;'>
+				<thead>
+					<tr>
+						<th></th>
+						<th></th>
+						<th><label label="MOD" variant="bold" size="xs"></label></th>
+						<th><label label="SAVE" variant="bold" size="xs"></label></th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<label label="STR" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="strength" onchange="setModifier(value, 'strength')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="strengthMod" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Strength Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Strength Check", "value": "roll"}]'
+									onclick='rollCheck("strength");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="strengthSave" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Strength Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Strength Save", "value": "roll"}]'
+									onclick='rollSave("strength");'>
+
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label label="DEX" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="dexterity" onchange="setModifier(value, 'dexterity')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="dexterityMod" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Dexterity Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Dexterity Check", "value": "roll"}]'
+									onclick='rollCheck("dexterity");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="dexteritySave" placeholder="+0">
+								</numberfield>
+								<iconbutton size="md" field="Dexterity Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Dexterity Save", "value": "roll"}]'
+									onclick='rollSave("dexterity");'>
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label label="CON" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="constitution" onchange="setModifier(value, 'constitution')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="constitutionMod" placeholder="+0">
+								</numberfield>
+								<iconbutton size="md" field="Constitution Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Constitution Check", "value": "roll"}]'
+									onclick='rollCheck("constitution");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="constitutionSave" placeholder="+0">
+								</numberfield>
+								<iconbutton size="md" field="Constitution Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Constitution Save", "value": "roll"}]'
+									onclick='rollSave("constitution");'>
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+			</table>
+			<table style='width: 50%; min-width: 240px; flex-grow: 1;'>
+				<thead>
+					<tr>
+						<th></th>
+						<th></th>
+						<th><label label="MOD" variant="bold" size="xs"></label></th>
+						<th><label label="SAVE" variant="bold" size="xs"></label></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<label label="INT" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="intelligence" onchange="setModifier(value, 'intelligence')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="intelligenceMod" placeholder="+0">
+								</numberfield>
+								<iconbutton size="md" field="Intelligence Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Intelligence Check", "value": "roll"}]'
+									onclick='rollCheck("intelligence");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="intelligenceSave" placeholder="+0">
+								</numberfield>
+								<iconbutton size="md" field="Intelligence Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Intelligence Save", "value": "roll"}]'
+									onclick='rollSave("intelligence");'>
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label label="WIS" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="wisdom" onchange="setModifier(value, 'wisdom')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="wisdomMod" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Wisdom Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Wisdom Check", "value": "roll"}]'
+									onclick='rollCheck("wisdom");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="wisdomSave" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Wisdom Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Wisdom Save", "value": "roll"}]'
+									onclick='rollSave("wisdom");'>
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label label="CHA" variant="bold" size="xs"></label>
+						</td>
+						<td>
+							<numberfield size="xs" width="100%" field="charisma" onchange="setModifier(value, 'charisma')"
+								placeholder="0"></numberfield>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="charismaMod" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Charisma Check" variant="light"
+									options='[{"icon": "D20", "label": "Roll Charisma Check", "value": "roll"}]'
+									onclick='rollCheck("charisma");'>
+								</iconbutton>
+							</div>
+						</td>
+						<td>
+							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+								<numberfield showsign='true' size="xs" width="100%" field="charismaSave" placeholder="+0"></numberfield>
+								<iconbutton size="md" field="Charisma Save" variant="default"
+									options='[{"icon": "D20", "label": "Roll Charisma Save", "value": "roll"}]'
+									onclick='rollSave("charisma");'>
+								</iconbutton>
+							</div>
+						</td>
+					</tr>
+			</table>
+		</div>
+
+		<div style='margin-top: 4px;'>
+			<divider></divider>
+		</div>
+
+		<!-- Skills -->
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-start; margin-top: 4px;'>
+			<label label="Skills" variant="bold" size="xs"></label>
+			<list listtype="skill_list" field='skill_list'></list>
+		</div>
+
+		<!-- Additional Attributes -->
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="speed" label="Speed"
+				placeholder="Speed...">
+			</stringfield>
+			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="senses" label="Senses"
+				placeholder="Senses..."></stringfield>
+		</div>
+
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+			<stringfield width="100%" size="xs" multiline='true' maxrows='2' field="languages" label="Languages"
+				placeholder="Enter Languages...">
+			</stringfield>
+		</div>
+
+		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
+			<stringfield width="100%" size="xs" field="challengeRating" label="CR" placeholder="Enter Challenge Rating..."
+				onchange='updateCR(value);'>
+			</stringfield>
+			<stringfield width="100%" size="xs" field="xp" label="XP" placeholder="Enter XP...">
+			</stringfield>
+			<numberfield showsign='true' width="100%" size="xs" field="proficiencyBonus" label="PB" placeholder="+2">
+			</numberfield>
+			<!-- Hidden field to store level for spell casting -->
+			<numberfield size="xs" field="level" label="Level" placeholder="0" hidden="true"></numberfield>
+		</div>
+
+		<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="vulnerabilities" label="Vulnerabilities"
+				placeholder='None'>
+			</stringfield>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="resistances" label="Resistances"
+				placeholder='None'>
+			</stringfield>
+			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="immunities" label="Immunities"
+				placeholder='None'>
+			</stringfield>
+		</div>
+	</div>
+</div>
