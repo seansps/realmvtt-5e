@@ -1,0 +1,111 @@
+<script>
+	function updateSpellSlots() {
+		// Determine if we should hide/unhide spell slots and labels
+		const valuesToHide = [];
+		const valuesToUnhide = [];
+		if (record?.data?.numSpellSlots1 > 0 || record?.data?.numSpellSlots2 > 0
+			|| record?.data?.numSpellSlots3 > 0 || record?.data?.numSpellSlots4 > 0 ||
+			record?.data?.numSpellSlots5 > 0 || record?.data?.numSpellSlots6 > 0 ||
+			record?.data?.numSpellSlots7 > 0 || record?.data?.numSpellSlots8 > 0 ||
+			record?.data?.numSpellSlots9 > 0) {
+			valuesToUnhide.push('spellSlotsLabel');
+		}
+		else {
+			valuesToHide.push('spellSlotsLabel');
+		}
+		if (record?.data?.numSpellSlots1 > 0) {
+			valuesToUnhide.push('spellSlots1');
+		}
+		else {
+			valuesToHide.push('spellSlots1');
+		}
+		if (record?.data?.numSpellSlots2 > 0) {
+			valuesToUnhide.push('spellSlots2');
+		}
+		else {
+			valuesToHide.push('spellSlots2');
+		}
+		if (record?.data?.numSpellSlots3 > 0) {
+			valuesToUnhide.push('spellSlots3');
+		}
+		else {
+			valuesToHide.push('spellSlots3');
+		}
+		if (record?.data?.numSpellSlots4 > 0) {
+			valuesToUnhide.push('spellSlots4');
+		}
+		else {
+			valuesToHide.push('spellSlots4');
+		}
+		if (record?.data?.numSpellSlots5 > 0) {
+			valuesToUnhide.push('spellSlots5');
+		}
+		else {
+			valuesToHide.push('spellSlots5');
+		}
+		if (record?.data?.numSpellSlots6 > 0) {
+			valuesToUnhide.push('spellSlots6');
+		}
+		else {
+			valuesToHide.push('spellSlots6');
+		}
+		if (record?.data?.numSpellSlots7 > 0) {
+			valuesToUnhide.push('spellSlots7');
+		}
+		else {
+			valuesToHide.push('spellSlots7');
+		}
+		if (record?.data?.numSpellSlots8 > 0) {
+			valuesToUnhide.push('spellSlots8');
+		}
+		else {
+			valuesToHide.push('spellSlots8');
+		}
+		if (record?.data?.numSpellSlots9 > 0) {
+			valuesToUnhide.push('spellSlots9');
+		}
+		else {
+			valuesToHide.push('spellSlots9');
+		}
+
+		api.setHidden(valuesToHide, true, () => {
+			api.setHidden(valuesToUnhide, false);
+		});
+	}
+</script>
+
+<div style='margin-bottom: 4px'>
+	<divider label="Spellcasting"></divider>
+</div>
+
+<div style='display: flex; flex-direction: row; gap: 4px; margin-bottom: 4px'>
+	<numberfield width="50%" field="spellDC" label="Spellcasting DC" placeholder='N/A' size='xs'
+		description="The DC used for Saves against this NPC's Spells">
+	</numberfield>
+	<numberfield width="50%" field="spellDCBonus" label="Spell Casting Modifier" placeholder='N/A' showsign="true"
+		size='xs' description="The modifier used for this NPC's Spell Attack Rolls">
+	</numberfield>
+</div>
+
+<label variant="bold" label="Spell Slots by Level" size='sm'></label>
+<label label="If this NPC has Spell Slots, enter the number of slots below" size='xs'></label>
+<div style='display: flex; flex-direction: row; gap: 4px; flex-wrap: wrap'>
+	<numberfield field="numSpellSlots1" placeholder='--' label="Level 1" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots2" placeholder='--' label="Level 2" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots3" placeholder='--' label="Level 3" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots4" placeholder='--' label="Level 4" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots5" placeholder='--' label="Level 5" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots6" placeholder='--' label="Level 6" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots7" placeholder='--' label="Level 7" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots8" placeholder='--' label="Level 8" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+	<numberfield field="numSpellSlots9" placeholder='--' label="Level 9" size='xs' width='50px'
+		onchange='updateSpellSlots();'></numberfield>
+</div>

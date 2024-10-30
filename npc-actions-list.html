@@ -1,0 +1,15 @@
+<script>
+	function updateSettings(description) {
+		// Here we parse the description to extract the settings for an NPC action to try to set them automatically
+		console.log(description);
+	}
+</script>
+
+<div style='width: 100%'>
+	<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"></namefield>
+	<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...'
+		onchange="updateSettings(value);" multiline='true' maxrows='6'></stringfield>
+	<accordion hideonlocked='true' field='settingsAccordion' label='Settings' size="xs">
+		<!-- Here we list all the settings for an NPC action (Attack, Recharge, Spellcasting) -->
+	</accordion>
+</div>

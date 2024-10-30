@@ -489,10 +489,43 @@
 			</checkbox>
 		</div>
 
-		<divider hidden="true" color='pink' label='Has Traits' field="featuresDivider" textalign="center"></divider>
+		<divider hidden="true" color='pink' label='Traits' field="featuresDivider" textalign="center"></divider>
 
 		<div style='width: 100%'>
 			<list hidden="true" listtype="npc_traits_list" field='features'></list>
+		</div>
+
+		<divider hidden="true" color='pink' label='Actions' field="actionsDivider" textalign="center"></divider>
+
+		<!-- We'll list spell slots here, if they have them -->
+		<div style="margin-top: 8px">
+			<label hidden="true" variant="bold" field="spellSlotsLabel" label="Spell Slots" size='sm'
+				textalign="center"></label>
+		</div>
+		<div
+			style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
+			<counter field='spellSlots1' hidden="true" maxvaluefield="numSpellSlots1" label='Level 1' size='xs'
+				textalign="center" color='violet'></counter>
+			<counter field='spellSlots2' hidden="true" maxvaluefield="numSpellSlots2" label='Level 2' size='xs'
+				textalign="center" color='blue'></counter>
+			<counter field='spellSlots3' hidden="true" maxvaluefield="numSpellSlots3" label='Level 3' size='xs'
+				textalign="center" color='cyan'></counter>
+			<counter field='spellSlots4' hidden="true" maxvaluefield="numSpellSlots4" label='Level 4' size='xs'
+				textalign="center" color='teal'></counter>
+			<counter field='spellSlots5' hidden="true" maxvaluefield="numSpellSlots5" label='Level 5' size='xs'
+				textalign="center" color='green'></counter>
+			<counter field='spellSlots6' hidden="true" maxvaluefield="numSpellSlots6" label='Level 6' size='xs'
+				textalign="center" color='lime'></counter>
+			<counter field='spellSlots7' hidden="true" maxvaluefield="numSpellSlots7" label='Level 7' size='xs'
+				textalign="center" color='yellow'></counter>
+			<counter field='spellSlots8' hidden="true" maxvaluefield="numSpellSlots8" label='Level 8' size='xs'
+				textalign="center" color='orange'></counter>
+			<counter field='spellSlots9' hidden="true" maxvaluefield="numSpellSlots9" label='Level 9' size='xs'
+				textalign="center" color='red'></counter>
+		</div>
+
+		<div style='width: 100%'>
+			<list hidden="true" listtype="npc_actions_list" field='actions'></list>
 		</div>
 	</div>
 </div>
