@@ -132,6 +132,36 @@
 
 		api.promptRoll(`${capitalize(save)} Save`, '1d20', modifiers, metadata, 'save');
 	}
+
+	function onHasTraitsChange() {
+		// Toggle the visibility of the traits accordion
+		api.setHidden(['featuresDivider', 'features'], !record.data.hasTraits);
+	}
+
+	function onHasActionsChange() {
+		// Toggle the visibility of the actions accordion
+		api.setHidden(['actionsDivider', 'actions'], !record.data.hasActions);
+	}
+
+	function onHasBonusActionsChange() {
+		// Toggle the visibility of the bonus actions accordion
+		api.setHidden(['bonusActionsDivider', 'bonusActions'], !record.data.hasBonusActions);
+	}
+
+	function onHasReactionsChange() {
+		// Toggle the visibility of the reactions accordion
+		api.setHidden(['reactionsDivider', 'reactions'], !record.data.hasReactions);
+	}
+
+	function onHasLegendaryActionsChange() {
+		// Toggle the visibility of the legendary actions accordion
+		api.setHidden(['legendaryActionsDivider', 'legendaryActions'], !record.data.hasLegendaryActions);
+	}
+
+	function onHasLairActionsChange() {
+		// Toggle the visibility of the lair actions accordion
+		api.setHidden(['lairActionsDivider', 'lairActions'], !record.data.hasLairActions);
+	}
 </script>
 
 <div style="display: flex; margin-top: 4px; flex-direction: row">
@@ -186,7 +216,7 @@
 		</div>
 
 		<div style='margin-top: 4px;'>
-			<divider size='sm' color='pink' label="Ability Scores" textalign="center"></divider>
+			<divider color='pink' label="Ability Scores" textalign="center"></divider>
 		</div>
 
 		<!-- Attributes -->
@@ -385,7 +415,7 @@
 		</div>
 
 		<div style='margin-top: 4px;'>
-			<divider size='sm' color='pink'></divider>
+			<divider color='pink'></divider>
 		</div>
 
 		<!-- Skills -->
@@ -433,10 +463,36 @@
 			</stringfield>
 		</div>
 
-		<divider size='sm' color='pink' label='Traits' field="featuresDivider" textalign="center"></divider>
+		<divider hideonlocked='true' color='pink' label='Subsection Settings' field="settingsDivider" textalign="center">
+		</divider>
+
+		<div style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap;'>
+			<checkbox hideonlocked='true' field="hasTraits" label="Has Traits" size="sm" onchange='onHasTraitsChange()'>
+			</checkbox>
+
+			<checkbox hideonlocked='true' field="hasActions" label="Has Actions" size="sm" onchange='onHasActionsChange()'>
+			</checkbox>
+
+			<checkbox hideonlocked='true' field="hasBonusActions" label="Has Bonus Actions" size="sm"
+				onchange='onHasBonusActionsChange()'>
+			</checkbox>
+
+			<checkbox hideonlocked='true' field="hasReactions" label="Has Reactions" size="sm"
+				onchange='onHasReactionsChange()'></checkbox>
+
+			<checkbox hideonlocked='true' field="hasLegendaryActions" label="Has Legendary Actions" size="sm"
+				onchange='onHasLegendaryActionsChange()'>
+			</checkbox>
+
+			<checkbox hideonlocked='true' field="hasLairActions" label="Has Lair Actions" size="sm"
+				onchange='onHasLairActionsChange()'>
+			</checkbox>
+		</div>
+
+		<divider hidden="true" color='pink' label='Has Traits' field="featuresDivider" textalign="center"></divider>
 
 		<div style='width: 100%'>
-			<list listtype="npc_traits_list" field='features'></list>
+			<list hidden="true" listtype="npc_traits_list" field='features'></list>
 		</div>
 	</div>
 </div>

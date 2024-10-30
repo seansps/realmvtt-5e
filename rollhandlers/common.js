@@ -429,6 +429,25 @@ function doubleDamageDice(damage) {
   return damage;
 }
 
+// Checks for replacements in a string modifier
+function checkForReplacements(value) {
+  // Case for 'Half <class> Level'
+  const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
+  if (matchLevel) {
+    const className = matchLevel[1];
+    const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
+    if (characterClassLevel) {
+      value = value.replace(matchLevel[0], Math.floor(parseInt(characterClassLevel, 10) / 2));
+    }
+  }
+  // Case for 'Proficiency Bonus'
+  const matchProficiencyBonus = value.match(/[Pp]roficiency [Bb]onus/);
+  if (matchProficiencyBonus) {
+    value = value.replace(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
+  }
+  return value;
+}
+
 // Collects all effects and modifiers for the record (assuming this is
 // called in the context of a record.)
 // If types is provided, it will only return effects of those types
@@ -455,6 +474,10 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
       }
       else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
         value = '-' + value;
+      }
+      // Check for strings that require replacements
+      if (rule.valueType === 'string') {
+        value = checkForReplacements(value);
       }
       if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
         results.push({
@@ -541,6 +564,11 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
         value = '-' + value;
       }
 
+      // Check for strings that require replacements
+      if (modifier.data?.valueType === 'string') {
+        value = checkForReplacements(value);
+      }
+
       // Only relevant if it has a value
       if (value !== 0) {
         // Check if this only applies to equipped item and mark it with ID if so 
@@ -614,6 +642,10 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
       }
       else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
         value = '-' + value;
+      }
+      // Check for strings that require replacements
+      if (rule.valueType === 'string') {
+        value = checkForReplacements(value);
       }
       if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
         results.push({
@@ -701,6 +733,11 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
       }
       else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
         value = '-' + value;
+      }
+
+      // Check for strings that require replacements
+      if (modifier.data?.valueType === 'string') {
+        value = checkForReplacements(value);
       }
 
       // Only relevant if it has a value
