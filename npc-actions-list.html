@@ -20,6 +20,18 @@
 		return damageString;
 	}
 
+	function updateName(name) {
+		const actionDataPath = dataPath.replace('.name', '');
+
+		// Parse name for (x/Day)
+		const usesPerDay = parseInt(name.match(/\(\s*(\d+)\s*\/Day\s*\)/)?.[1] || '0', 10);
+		if (usesPerDay > 0) {
+			api.setValue(`${actionDataPath}.data.usesPerDay`, usesPerDay);
+			api.setValue(`${actionDataPath}.fields.useBtn.hidden`, false);
+			api.setValue(`${actionDataPath}.fields.uses.hidden`, false);
+		}
+	}
+
 	function updateSettings(description) {
 		// Here we parse the description to extract the settings for an NPC action to try to set them automatically
 		// e.g. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.
@@ -60,7 +72,15 @@
 			valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
 		}
 
-		const isSave = description.toLowerCase().includes('save');
+		// Parse for a saving throw such as `Strength Saving Throw: DC 12`
+		const saveMatch = description.match(/([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/);
+		if (saveMatch) {
+			valuesToSet[`${actionDataPath}.data.saveDC`] = parseInt(saveMatch[2], 10);
+			valuesToSet[`${actionDataPath}.fields.isSave.value`] = true;
+			valuesToSet[`${actionDataPath}.data.savingThrows`] = [saveMatch[1].toLowerCase()];
+			valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
+		}
+
 		const isRecharge = description.toLowerCase().includes('recharge');
 		const isSpellcasting = description.toLowerCase().includes('spellcasting');
 
@@ -76,13 +96,33 @@
 		valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = !isAttack;
 		valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = !isAttack;
 		valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = !isAttack;
-
 		api.setValues(valuesToSet);
 	}
 
 	function showHideSpellcasting(isSpellcasting) {
 		const spellListDataPath = dataPath.replace('.data.isSpellcasting', '.fields.spells.hidden');
 		api.setValue(spellListDataPath, !isSpellcasting);
+	}
+
+	function updateUsesPerDay(usesPerDay) {
+		const actionDataPath = dataPath.replace('.data.usesPerDay', '');
+		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !usesPerDay);
+		api.setValue(`${actionDataPath}.fields.uses.hidden`, !usesPerDay);
+	}
+
+	function updateHealing(healing) {
+		const actionDataPath = dataPath.replace('.data.healing', '');
+		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !healing);
+	}
+
+	function updateIsSave(isSave) {
+		const actionDataPath = dataPath.replace('.data.isSave', '');
+		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !isSave);
+	}
+
+	function updateEffects(effects) {
+		const actionDataPath = dataPath.replace('.data.effects', '');
+		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, (effects || []).length === 0);
 	}
 
 	// Roll Attack
@@ -250,13 +290,122 @@
 
 		api.promptRoll(`${name} Damage`, damage, damageModifiers, damageMetadata, 'damage')
 	}
+
+	function useAction() {
+		const actionDataPath = dataPath.replace('.data.useBtn', '');
+		const action = api.getValue(actionDataPath);
+		const name = action?.name || '';
+		const description = action?.data?.description || '';
+
+		const uses = parseInt(action?.data?.uses || '0', 10);
+		const maxUses = parseInt(action?.data?.usesPerDay || '0', 10);
+
+		if (maxUses > 0) {
+			if (uses < maxUses) {
+				// Deduct one use
+				api.setValue(`${actionDataPath}.data.uses`, uses + 1);
+			}
+		}
+
+		// We'll send a message with the description of the action as well as macros as relevant
+		let savingThrowButtons = '';
+		if (action?.data?.isSave) {
+			const savingThrows = action?.data?.savingThrows || [];
+			const saveDc = action?.data?.saveDC || 0;
+			savingThrows.forEach(savingThrow => {
+				// Save Button for GM only - look up saves of selected tokens and prompt roll for each
+				const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
+if (isGM) { 
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach(token => {
+    const saveModifiers = [];
+    const record = token?.record;
+    const modifier = record?.data?.['${savingThrow}Save'] || 0;
+    saveModifiers.push({
+      name: '${capitalize(savingThrow)} Save',
+      value: modifier,
+      active: true,
+    });
+
+    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+    saveMods.forEach(mod => {
+      saveModifiers.push(mod);
+    });
+
+    const metadata = {
+      "rollName": '${capitalize(savingThrow)} Save',
+      "tooltip": '${capitalize(savingThrow)} Saving Throw',
+      "dc": ${saveDc}
+    }
+
+    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  });
+}
+\`\`\``;
+				// Add the rollSaveButton to the savingThrowButtons
+				savingThrowButtons += rollSaveButton + '\n';
+			});
+		}
+
+		const healingButton = action?.data?.healing ? `\`\`\`Roll_Healing
+api.promptRoll('${name} Healing', '${action?.data?.healing}', [], {}, 'healing')
+\`\`\`` : '';
+
+
+		// Create macros for all effects that this action can apply
+		let effectButtons = '';
+		const effects = action?.data?.effects || [];
+		effects.forEach(effectJson => {
+			const effect = JSON.parse(effectJson);
+			const effectName = effect?.name || '';
+			const effectID = effect?._id || '';
+			const effectTitle = `Apply_${effectName.replace(/ /g, '_')}`;
+			if (effectButtons !== '') {
+				effectButtons += '\n';
+			}
+			effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+  api.addEffectById('${effectID}', target);
+});
+\`\`\``;
+		});
+
+		const message = `
+#### ${name}
+
+---
+&nbsp;
+
+${description}
+
+---
+
+${savingThrowButtons}
+${healingButton}
+${effectButtons}
+`;
+
+		api.sendMessage(message, undefined, [], []);
+	}
 </script>
 
 <div style='width: 100%'>
 
 	<!-- Name and Buttons -->
 	<div style='display: flex; flex-direction: row; gap: 4px;'>
-		<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"></namefield>
+		<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"
+			onchange="updateName(value);"></namefield>
+		<!-- Uses / Day  Counter -->
+		<div style="min-width: 50px;">
+			<counter hidden="true" field='uses' maxvaluefield='usesPerDay' label='Uses' size='xs'>
+			</counter>
+		</div>
+		<!-- Use Button -->
+		<div>
+			<button hidden="true" size="xs" radius="xs" field="useBtn" label="Use" variant='light'
+				onclick='useAction();'></button>
+		</div>
 		<!-- Roll Attack -->
 		<iconbutton hidden="true" size="md" field="rollAttackBtn" variant="outline"
 			options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]' onchange='() => { }'
@@ -275,31 +424,45 @@
 	</div>
 
 	<!-- Description -->
-	<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...'
-		onchange="updateSettings(value);" multiline='true' maxrows='6'></stringfield>
+	<div style='margin-top: 2px;'>
+		<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...'
+			onchange="updateSettings(value);" multiline='true' maxrows='6'></stringfield>
+	</div>
 
 	<!-- Settings -->
 	<accordion hideonlocked='true' field='settingsAccordion' label='Settings' size="xs">
-		<div style='display: flex; flex-direction: row; gap: 8px; align-items: flex-start'>
+		<div style='display: flex; flex-direction: row; gap: 8px;'>
 			<div style='display: flex; flex-direction: column; gap: 4px;'>
 				<checkbox field='isAttack' label='Is Attack' size='sm' textalign="left" onchange='onAttackChange(value);'>
 				</checkbox>
 				<checkbox field='isRanged' label='Is Ranged' size='sm' textalign="left" onchange=''></checkbox>
 			</div>
-			<numberfield showsign="true" field='normalRange' label='Normal Range' width="80px" size='xs' placeholder='0'>
+			<numberfield field='normalRange' label='Normal Range' width="80px" size='xs' placeholder='0'>
 			</numberfield>
-			<numberfield showsign="true" field='maxRange' label='Max Range' width="80px" size='xs' placeholder='0'>
+			<numberfield field='maxRange' label='Max Range' width="80px" size='xs' placeholder='0'>
 			</numberfield>
 		</div>
-		<numberfield showsign="true" field='attackMod' label='Attack Modifier' size='xs' width='200px' placeholder='+0'>
-		</numberfield>
 		<div style='display: flex; flex-direction: row; gap: 8px; align-items: flex-end'>
-			<stringfield field='damage' label='Damage' size='xs' width='200px' placeholder='Enter Damage...'></stringfield>
-			<stringfield field='healing' label='Healing' size='xs' width='200px' placeholder='Enter Healing...'></stringfield>
+			<numberfield showsign="true" field='attackMod' label='Attack Modifier' size='xs' width='50%' placeholder='+0'>
+			</numberfield>
+			<stringfield field='damage' label='Damage' size='xs' width='50%' placeholder='Enter Damage...'></stringfield>
 		</div>
+		<div style='display: flex; flex-direction: row; gap: 8px; align-items: flex-end'>
+			<numberfield field='usesPerDay' label='Uses per Day' description='Number of Action Uses / Day' size='xs'
+				width='50%' placeholder='0' onchange='updateUsesPerDay(value);'>
+			</numberfield>
+			<stringfield field='healing' label='Is Healing' description='Healing roll, if applicable' size='xs' width='50%'
+				placeholder='Enter Healing...' onchange='updateHealing(value);'>
+			</stringfield>
+		</div>
+		<dropdown size='xs' width='100%' field="effects" label="Effects" searchable='true' multiselect='5'
+			description='Effects that this Action can apply' optionsquery='{"type": "effects", "query": {}}'
+			placeholder='Select Effects...' onchange='updateEffects(value);'>
+		</dropdown>
 		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px; align-items: flex-end'>
-			<checkbox field='isSave' label='Is Save' size='sm' textalign="left"></checkbox>
-			<numberfield field='saveDC' size='xs' width='100px' placeholder='Enter DC...'></numberfield>
+			<checkbox field='isSave' label='Is Save' size='sm' textalign="left" onchange='updateIsSave(value);'></checkbox>
+			<numberfield field='saveDC' size='xs' width='100px' placeholder='Enter DC...'>
+			</numberfield>
 			<dropdown size='xs' width="250px" field='savingThrows' placeholder='Select up to 2 Saving Throws...'
 				multiselect='2'
 				options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
