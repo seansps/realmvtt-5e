@@ -418,6 +418,12 @@ function applyMath(value, math) {
   }
 }
 
+function getDamageType(rollString) {
+  const regex = /(?:\d*d\d+|\+\d+)?(?:\s*\+?-?\s*\d+)?(?:\s+(\w+))?/;
+  const match = rollString.match(regex);
+  return match && match[1] ? match[1] : "untyped";
+}
+
 // Doubles the dice in the damage string
 function doubleDamageDice(damage) {
   if (damage && typeof damage === 'string' && damage.includes('d')) {

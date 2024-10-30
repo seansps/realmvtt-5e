@@ -36,12 +36,6 @@
     return isProficient;
   }
 
-  function getDamageType(rollString) {
-    const regex = /(?:\d*d\d+|\+\d+)?(?:\s*\+?-?\s*\d+)?(?:\s+(\w+))?/;
-    const match = rollString.match(regex);
-    return match && match[1] ? match[1] : "untyped";
-  }
-
   function handleRoll() {
     const attackDataPath = dataPath.replace('.data.rollBtn', '');
     const attack = api.getValue(attackDataPath);
@@ -148,12 +142,14 @@
     }
 
     let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
-    // Get the default damage type of the attack and apply that to damage modifiers
+    // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map(mod => {
+      const modType = getDamageType(mod?.value?.toString() || '');
+      const type = modType === 'untyped' ? mod?.type || damageType : '';
       return {
         ...mod,
-        type: damageType
+        type: type
       }
     });
 
@@ -297,13 +293,15 @@
     }
 
     let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
-    // Get the default damage type of the attack and apply that to damage modifiers
+    // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map(mod => {
+      const modType = getDamageType(mod?.value?.toString() || '');
+      const type = modType === 'untyped' ? mod?.type || damageType : '';
       return {
         ...mod,
         value: isCritical ? doubleDamageDice(mod.value) : mod.value,
-        type: damageType
+        type: type
       }
     });
 
