@@ -31,6 +31,12 @@
     <stringfield width="50%" field="value" label="Ability Value" placeholder='N/A'
       description='Dice string or number value for the ability group' size='xs'></stringfield>
   </div>
+  <div style='display: flex; gap: 4px;'>
+    <dropdown width="50%" field="savingThrowAbility" label="Saving Throw Ability" placeholder='N/A' size='xs'
+      description='How to calculate the DC for relevant Saving Throws'
+      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+    </dropdown>
+  </div>
 </accordion>
 
 <div style='margin-top: 8px; width: 100%'>

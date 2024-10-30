@@ -45,6 +45,50 @@ targets.forEach(target => {
 \`\`\``;
     });
 
+    // Create macros for all saving throws that this ability can apply
+    let savingThrowButtons = '';
+    if (ability?.data?.isSave) {
+      const savingThrows = ability?.data?.savingThrows || [];
+      // Save DC ability is set in the ability group list settings
+      const saveDcAbility = abilityGroupList?.data?.savingThrowAbility || '';
+      const abilityModifier = parseInt(record?.data?.[`${saveDcAbility}Mod`] || '0', 10);
+      const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+      const saveDc = 8 + abilityModifier + proficiencyBonus;
+      savingThrows.forEach(savingThrow => {
+        // Save Button for GM only - look up saves of selected tokens and prompt roll for each
+        const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
+if (isGM) { 
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach(token => {
+    const saveModifiers = [];
+    const record = token?.record;
+    const modifier = record?.data?.['${savingThrow}Save'] || 0;
+    saveModifiers.push({
+      name: '${capitalize(savingThrow)} Save',
+      value: modifier,
+      active: true,
+    });
+
+    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+    saveMods.forEach(mod => {
+      saveModifiers.push(mod);
+    });
+
+    const metadata = {
+      "rollName": '${capitalize(savingThrow)} Save',
+      "tooltip": '${capitalize(savingThrow)} Saving Throw',
+      "dc": ${saveDc}
+    }
+
+    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  });
+}
+\`\`\``;
+        // Add the rollSaveButton to the savingThrowButtons
+        savingThrowButtons += rollSaveButton + '\n';
+      });
+    }
+
     const message = `
 #### ${abilityIcon}${abilityName}
 
@@ -57,6 +101,7 @@ ${abilityDescription}
 &nbsp;
 
 ${effectButtons}
+${savingThrowButtons}
 `;
 
     api.sendMessage(message, undefined, [], []);
