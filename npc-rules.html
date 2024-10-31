@@ -72,7 +72,32 @@
 			api.setHidden(valuesToUnhide, false);
 		});
 	}
+
+	function updateLairState(inLair) {
+		// Go through traits and check if uses need updating
+		const npcDataPath = dataPath.replace('.inLair', '');
+		const traits = record?.data?.features || [];
+		const valuesToSet = {};
+		traits.forEach((trait, index) => {
+			const traitDataPath = `${npcDataPath}.features.${index}.data`;
+			if (trait?.data?.maxUsesOutsideLair && trait?.data?.maxUsesInLair) {
+				valuesToSet[`${traitDataPath}.maxUses`] = inLair ? trait?.data?.maxUsesInLair : trait?.data?.maxUsesOutsideLair;
+			}
+		});
+
+		if (Object.keys(valuesToSet).length > 0) {
+			api.setValues(valuesToSet);
+		}
+	}
 </script>
+
+<div style='margin-bottom: 4px'>
+	<divider label="Settings"></divider>
+</div>
+
+<checkbox field="inLair" label="In Lair"
+	description="Toggles the 'In Lair' State for Legendary Resistances and Reactions" onchange='updateLairState(value);'>
+</checkbox>
 
 <div style='margin-bottom: 4px'>
 	<divider label="Spellcasting"></divider>
