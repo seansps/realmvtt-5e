@@ -85,9 +85,23 @@
 			}
 		});
 
+		valuesToSet['data.maxReactions'] = inLair ? record?.data?.maxReactionsInLair || 1 : record?.data?.maxReactionsOutsideLair || 1;
+
 		if (Object.keys(valuesToSet).length > 0) {
 			api.setValues(valuesToSet);
 		}
+	}
+
+	function updateMaxReactions() {
+		// Update the max reactions based on the inLair state
+		const valuesToSet = {};
+		if (record?.data?.inLair) {
+			valuesToSet['data.maxReactions'] = record?.data?.maxReactionsInLair || 1;
+		}
+		else {
+			valuesToSet['data.maxReactions'] = record?.data?.maxReactionsOutsideLair || 1;
+		}
+		api.setValues(valuesToSet);
 	}
 </script>
 
@@ -98,6 +112,14 @@
 <checkbox field="inLair" label="In Lair"
 	description="Toggles the 'In Lair' State for Legendary Resistances and Reactions" onchange='updateLairState(value);'>
 </checkbox>
+
+<div style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap'>
+	<numberfield size='xs' description="The total amount of Reactions this NPC can take" field="maxReactionsOutsideLair"
+		label="Max Reactions" onchange='updateMaxReactions();' placeholder="1"></numberfield>
+	<numberfield size='xs' description="The total amount of Reactions this NPC can take when in their Lair"
+		field="maxReactionsInLair" label="Max Reactions In Lair" onchange='updateMaxReactions();' placeholder="1">
+	</numberfield>
+</div>
 
 <div style='margin-bottom: 4px'>
 	<divider label="Spellcasting"></divider>

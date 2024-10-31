@@ -150,7 +150,19 @@
 
 	function onHasReactionsChange() {
 		// Toggle the visibility of the reactions accordion
-		api.setHidden(['reactionsDivider', 'reactions'], !record.data.hasReactions);
+		// And set maxReactions 1 if it is undefined
+		const valuesToSet = {};
+		if (record?.data?.maxReactions === undefined && record?.data?.hasReactions) {
+			valuesToSet['data.maxReactions'] = 1;
+		}
+		if (record?.data?.usedReactions === undefined && record?.data?.hasReactions) {
+			valuesToSet['data.usedReactions'] = 0;
+		}
+		valuesToSet['fields.reactions.hidden'] = !record.data.hasReactions;
+		valuesToSet['fields.reactionsDivider.hidden'] = !record.data.hasReactions;
+		valuesToSet['fields.reactionsLabel.hidden'] = !record.data.hasReactions;
+		valuesToSet['fields.usedReactions.hidden'] = !record.data.hasReactions;
+		api.setValues(valuesToSet);
 	}
 
 	function onHasLairActionsChange() {
@@ -518,9 +530,27 @@
 		<div style='width: 100%'>
 			<list hidden="true" listtype="npc_actions_list" field='actions'></list>
 		</div>
+
+		<!-- Bonus Actions -->
+		<divider hidden="true" color='pink' label='Bonus Actions' field="bonusActionsDivider" textalign="center"></divider>
+
+		<div style='width: 100%'>
+			<list hidden="true" listtype="npc_actions_list" field='bonusActions'></list>
+		</div>
+
+		<!-- Reactions -->
+		<divider hidden="true" color='pink' label='Reactions' field="reactionsDivider" textalign="center"></divider>
+
+		<div style="margin-top: 8px">
+			<label hidden="true" variant="bold" field="reactionsLabel" label="Reactions" size='sm' textalign="center"></label>
+		</div>
+		<div
+			style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
+			<counter hidden="true" field='usedReactions' size='xs' maxvaluefield='maxReactions' textalign="center"></counter>
+		</div>
+
+		<div style='width: 100%'>
+			<list hidden="true" listtype="npc_actions_list" field='reactions'></list>
+		</div>
 	</div>
-
-	<!-- Bonus Actions -->
-
-	<!-- Reactions -->
 </div>

@@ -143,6 +143,17 @@
 		api.setValues(valuesToSet);
 	}
 
+	function updateReactions() {
+		// If this is a reaction, we update the amount used by 1 up to the max
+		if (dataPath.includes('data.reactions')) {
+			const maxReactions = record?.data?.maxReactions || 1;
+			const usedReactions = record?.data?.usedReactions || 0;
+			if (usedReactions < maxReactions) {
+				api.setValue('data.usedReactions', usedReactions + 1);
+			}
+		}
+	}
+
 	function updateRecharge(recharge) {
 		const actionDataPath = dataPath.replace('.data.isRecharge', '');
 		const action = api.getValue(actionDataPath);
@@ -298,6 +309,8 @@
 			}
 			api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
 		}
+
+		updateReactions();
 	}
 
 	function rollDamage(isCritical) {
@@ -445,6 +458,7 @@ ${effectButtons}
 `;
 
 		api.sendMessage(message, undefined, [], []);
+		updateReactions();
 	}
 </script>
 
