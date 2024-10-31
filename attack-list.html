@@ -218,6 +218,8 @@
         modifiers.push(r);
       });
 
+      const autoCritical = modifiers.some(m => m.value === 'critical');
+
       const diceRoll = '1d20';
       const metadata = {
         "rollName": 'Attack',
@@ -225,6 +227,7 @@
         "icon": icon,
         "targetName": targetName,
         "tooltip": `Attack Roll for ${name}`,
+        "autoCritical": autoCritical,
         "dc": targetAc,
         "damage": damage,
         "damageModifiers": damageModifiers,

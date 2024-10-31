@@ -288,6 +288,8 @@
 				modifiers.push(r);
 			});
 
+			const autoCritical = modifiers.some(m => m.value === 'critical');
+
 			const diceRoll = '1d20';
 			const metadata = {
 				"rollName": 'Attack',
@@ -298,6 +300,7 @@
 				"dc": targetAc,
 				"damage": damage,
 				"damageModifiers": damageModifiers,
+				"autoCritical": autoCritical,
 			}
 			api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
 		});

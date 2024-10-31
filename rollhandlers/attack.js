@@ -228,10 +228,12 @@ const icon = data?.roll?.metadata?.icon;
 const masteryProperties = data?.roll?.metadata?.masteryProperties || [];
 const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
+// This means it's automatically a critical hit, if it was a hit
+let autoCritical = data?.roll?.metadata?.autoCritical;
 
 // If the d20 was a 20, it's a critical hit
 const d20 = (data?.roll?.dice || []).find(d => d.type === 20 && d.reason !== 'dropped');
-const isCritical = d20 && d20.value === 20;
+let isCritical = d20 && d20.value === 20;
 // If the d20 was a 1, it's a miss
 const isMiss = d20 && d20.value === 1;
 
@@ -244,8 +246,20 @@ if (isNaN(dc)) {
 }
 
 const total = data?.roll?.total || 0;
+const isHit = total >= dc && dc > 0;
+
+// If it's an auto critical, we need to set isCritical to true
+if (isHit && autoCritical && !isCritical) {
+  isCritical = true;
+}
+else {
+  // Mark auto critical false if it was already a critical hit (or a miss)
+  autoCritical = false;
+}
+
 if (isCritical) {
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]CRITICAL HIT[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**
+  const automatic = autoCritical ? 'AUTOMATIC ' : '';
+  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]${automatic}CRITICAL HIT[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**
 `
   // If damage was defined, we need to double the dice in the damage string and modifiers
   if (damage) {
@@ -263,7 +277,7 @@ if (isCritical) {
 else if (isMiss) {
   message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**`
 }
-else if (total >= dc && dc > 0) {
+else if (isHit) {
   message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]HIT[/color] [gm](vs AC ${dc})[/gm][/center]**`
 }
 else if (dc > 0) {
@@ -284,7 +298,8 @@ const damageMetadata = {
 }
 
 // Add damage button to message
-const damageButton = damage ? `\`\`\`Roll_Damage
+const dmgRollName = isCritical ? 'Roll_Critical_Damage' : 'Roll_Damage';
+const damageButton = damage ? `\`\`\`${dmgRollName}
 api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(damageModifiers)}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\`` : '';
 

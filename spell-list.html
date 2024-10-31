@@ -258,7 +258,7 @@ targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
-  const targetDistance = target?.distance;
+  const targetDistance = api.getDistance(ourToken, target?.token);
   const diceRoll = '1d20';
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
@@ -276,6 +276,8 @@ targets.forEach(target => {
     attackModifiers.push(r);
   });
 
+  const autoCritical = attackModifiers.some(m => m.value === 'critical');
+
   const metadata = {  
     "rollName": 'Attack',
     "attack": '${spellName}',
@@ -284,7 +286,8 @@ targets.forEach(target => {
     "tooltip": 'Attack Roll for ${spellName}',
     "dc": targetAc,
     "damage": "${spellDamage}",
-    "damageModifiers": ${JSON.stringify(modifiers)}
+    "damageModifiers": ${JSON.stringify(modifiers)},
+    "autoCritical": autoCritical,
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
