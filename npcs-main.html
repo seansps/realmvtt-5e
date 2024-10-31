@@ -153,11 +153,6 @@
 		api.setHidden(['reactionsDivider', 'reactions'], !record.data.hasReactions);
 	}
 
-	function onHasLegendaryActionsChange() {
-		// Toggle the visibility of the legendary actions accordion
-		api.setHidden(['legendaryActionsDivider', 'legendaryActions'], !record.data.hasLegendaryActions);
-	}
-
 	function onHasLairActionsChange() {
 		// Toggle the visibility of the lair actions accordion
 		api.setHidden(['lairActionsDivider', 'lairActions'], !record.data.hasLairActions);
@@ -480,10 +475,6 @@
 			<checkbox hideonlocked='true' field="hasReactions" label="Has Reactions" size="sm"
 				onchange='onHasReactionsChange()'></checkbox>
 
-			<checkbox hideonlocked='true' field="hasLegendaryActions" label="Has Legendary Actions" size="sm"
-				onchange='onHasLegendaryActionsChange()'>
-			</checkbox>
-
 			<checkbox hideonlocked='true' field="hasLairActions" label="Has Lair Actions" size="sm"
 				onchange='onHasLairActionsChange()'>
 			</checkbox>
@@ -528,4 +519,8 @@
 			<list hidden="true" listtype="npc_actions_list" field='actions'></list>
 		</div>
 	</div>
+
+	<!-- Bonus Actions -->
+
+	<!-- Reactions -->
 </div>

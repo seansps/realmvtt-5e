@@ -1,8 +1,57 @@
+<script>
+	function onTraitNameChange(name) {
+		const traitDataPath = dataPath.replace('.name', '');
+		const trait = api.getValue(traitDataPath);
+
+		const valuesToSet = {};
+
+		// Parse name for (x/Day or y/Day in Lair)
+		const usesPerDay = parseInt(name.match(/\(\s*(\d+)\s*\/day\s*/i)?.[1] || '0', 10);
+		const usesPerDayInLair = parseInt(name.match(/(\d+)\s*\/day in lair/i)?.[1] || '0', 10);
+		if (!isNaN(usesPerDay) && usesPerDay > 0) {
+			if (trait.data.uses === undefined) {
+				valuesToSet[`${traitDataPath}.data.uses`] = 0;
+			}
+			valuesToSet[`${traitDataPath}.data.maxUsesOutsideLair`] = usesPerDay;
+			valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDay;
+			valuesToSet[`${traitDataPath}.fields.uses.hidden`] = false;
+
+			if (!isNaN(usesPerDayInLair) && usesPerDayInLair > 0) {
+				valuesToSet[`${traitDataPath}.data.maxUsesInLair`] = usesPerDayInLair;
+				if (record?.data?.inLair) {
+					valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDayInLair;
+				}
+			}
+		}
+		else {
+			if (trait?.fields?.uses?.hidden === false) {
+				valuesToSet[`${traitDataPath}.fields.uses.hidden`] = true;
+			}
+		}
+
+		if (Object.keys(valuesToSet).length > 0) {
+			api.setValues(valuesToSet);
+		}
+	}
+</script>
+
 <div style='width: 100%'>
-	<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"></namefield>
+	<div style='display: flex; flex-direction: row; gap: 4px;'>
+		<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"
+			onchange='onTraitNameChange(value)'></namefield>
+		<div style='align-self: center'>
+			<checkbox hidden='true' field="inLair" width='70px' label="In Lair" size='xs'></checkbox>
+		</div>
+		<div style='margin-bottom: 2px'>
+			<counter hidden='true' width='100px' size='xs' field="uses" label='Uses' maxvaluefield='maxUses'></counter>
+		</div>
+	</div>
 	<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...' multiline='true'
 		maxrows='6'></stringfield>
 	<accordion hideonlocked='true' field='modifiersAccordion' label='Modifiers' size="xs">
 		<list listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
 	</accordion>
+	<numberfield field="maxUses" hidden='true'></numberfield>
+	<numberfield field="maxUsesOutsideLair" hidden='true'></numberfield>
+	<numberfield field="maxUsesInLair" hidden='true'></numberfield>
 </div>
