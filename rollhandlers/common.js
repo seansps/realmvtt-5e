@@ -1015,3 +1015,9 @@ function applyDeathFailures(target, isCritical) {
     }
   }
 }
+
+function applyInstantDeath(target) {
+  // Update death save failures
+  api.setValueOnToken(target, "data.deathSaveFailures", 3);
+  api.addEffect("Dead", target);
+}

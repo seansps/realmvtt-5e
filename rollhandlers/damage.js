@@ -76,10 +76,17 @@ targets.forEach(target => {
       usedTempHp = true;
     }
 
-    // Then deduct from Current HP
+    // Then deduct from Current HP and check for Instant Death
+    let instantDeath = false;
     var curhp = target.data?.curhp || 0;
     curhp -= damage;
-    if (curhp < 0) { curhp = 0; }
+    if (curhp < 0) { 
+      // If the remainder of damage >= max HP, we apply Instant Death (if it's a character)
+      if (Math.abs(curhp) >= target.data?.hitpoints && target.recordType === 'characters') {
+        instantDeath = true;
+      }
+      curhp = 0;
+    }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
@@ -95,8 +102,12 @@ targets.forEach(target => {
       message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
     }
 
-    // If damage was done, we apply death failures if necessary
-    if (damage > 0) {
+    if (instantDeath && target.recordType === 'characters') {
+      message += \`\n**[center][color=red]INSTANT DEATH[/color][/center]**\`;
+      applyInstantDeath(target);
+    }
+    else if (damage > 0 && target.recordType === 'characters') {
+      // If damage was done, we apply death failures if necessary and not instant death
       applyDeathFailures(target, ${isCritical});
     }
 
@@ -119,7 +130,7 @@ targets.forEach(target => {
       api.removeEffectById(conId, target);
     }
 
-    const macro = damage > 0 ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
+    const macro = damage > 0 && !instantDeath ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
 
     if (oldSpellName) {
       message += \`\nLost concentration on \$\{oldSpellName\}.\`;
@@ -192,10 +203,17 @@ targets.forEach(target => {
       usedTempHp = true;
     }
 
-    // Then deduct from Current HP
+    // Then deduct from Current HP and check for Instant Death
+    let instantDeath = false;
     var curhp = target.data?.curhp || 0;
     curhp -= damage;
-    if (curhp < 0) { curhp = 0; }
+    if (curhp < 0) { 
+      // If the remainder of damage >= max HP, we apply Instant Death (if it's a character)
+      if (Math.abs(curhp) >= target.data?.hitpoints && target.recordType === 'characters') {
+        instantDeath = true;
+      }
+      curhp = 0;
+    }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
@@ -211,8 +229,12 @@ targets.forEach(target => {
       message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
     }
 
-    // If damage was done, we apply death failures if necessary
-    if (damage > 0) {
+    if (instantDeath) {
+      message += \`\n**[center][color=red]INSTANT DEATH[/color][/center]**\`;
+      applyInstantDeath(target);
+    }
+    else if (damage > 0 && target.recordType === 'characters') {
+      // If damage was done, we apply death failures if necessary and not instant death
       applyDeathFailures(target, ${isCritical});
     }
       
@@ -235,7 +257,7 @@ targets.forEach(target => {
       api.removeEffectById(conId, target);
     }
 
-    const macro = damage > 0 ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
+    const macro = damage > 0 && !instantDeath ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
 
     if (oldSpellName) {
       message += \`\nLost concentration on \$\{oldSpellName\}.\`;
