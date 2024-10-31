@@ -41,7 +41,7 @@
     // Add the spell to the list
     api.addValue(`data.${spellList}`, spellToAdd, (updatedRecord) => {
       // If cantrip was added, hide the upcast button
-      if (spellLevel === '0') {
+      if (spellLevel === '0' || spellLevel === 'Cantrip') {
         api.setValue(`data.${spellList}.${curLength}.fields.upcastLevel.hidden`, true);
       }
     });

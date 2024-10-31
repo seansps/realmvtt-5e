@@ -99,7 +99,21 @@
 			valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
 		}
 
-		const isSpellcasting = description.toLowerCase().includes('spellcasting');
+		// Parse for spellcasting from the description, such as 'casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12):'
+		const spellcastingMatch = description.match(/using (\w+) as the spellcasting ability \(spell save DC (\d+)\)/i);
+		if (spellcastingMatch) {
+			const spellcastingAbility = spellcastingMatch[1].toLowerCase();
+			const spellSaveDC = parseInt(spellcastingMatch[2] || '0', 10);
+			// Determine spell casting modifier
+			const spellcastingAbilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
+			const proficiencyBonus = api.getValue('data.proficiencyBonus') || 2;
+			valuesToSet[`${actionDataPath}.data.isSpellcasting`] = true;
+			valuesToSet[`${actionDataPath}.data.spellcastingAbility`] = spellcastingAbility;
+			valuesToSet[`${actionDataPath}.data.spellMod`] = spellcastingAbilityMod + proficiencyBonus;
+			valuesToSet[`${actionDataPath}.data.spellDC`] = spellSaveDC;
+			valuesToSet[`${actionDataPath}.fields.spells.hidden`] = false;
+		}
+
 
 		if (Object.keys(valuesToSet).length > 0) {
 			api.setValues(valuesToSet);
@@ -520,10 +534,16 @@ ${effectButtons}
 		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px; align-items: flex-end'>
 			<checkbox field='isSpellcasting' label='Is Spellcasting' size='sm' textalign="left"
 				onchange='showHideSpellcasting(value);'></checkbox>
+			<dropdown field='spellcastingAbility' size='xs' label='Spellcasting Ability'
+				placeholder='Select Spellcasting Ability...'
+				options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+			</dropdown>
+		</div>
+		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px;'>
 			<numberfield width="150px" field="spellDC" label="Spellcasting DC" placeholder='N/A' size='xs'
 				description="The DC used for Saves against this NPC's Spells">
 			</numberfield>
-			<numberfield width="150px" field="spellDCBonus" label="Spell Casting Modifier" placeholder='N/A' showsign="true"
+			<numberfield width="150px" field="spellMod" label="Spell Casting Modifier" placeholder='N/A' showsign="true"
 				size='xs' description="The modifier used for this NPC's Spell Attack Rolls">
 			</numberfield>
 		</div>

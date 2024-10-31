@@ -177,7 +177,7 @@
       }
     }
 
-    if (spell?.data?.level === '0') {
+    if (spell?.data?.level === 'Cantrip') {
       // Cantrip handling
       // Get the character's level
       const characterLevel = parseInt(api.getValue('data.level') || '1', 10);
@@ -491,13 +491,15 @@ ${effectButtons}
     // We're in a list, so we need to use the data path to the fields metadata
     const dataPathToHideDaily = dataPath.replace('.data.prepared', '.fields.maxDailyUses.hidden');
     const dataPathToHideCounter = dataPath.replace('.data.prepared', '.fields.dailyUses.hidden');
+    const valuesToSet = {};
     if (prepared === 'daily') {
-      api.setValue(dataPathToHideDaily, false);
-      api.setValue(dataPathToHideCounter, false);
+      valuesToSet[dataPathToHideDaily] = false;
+      valuesToSet[dataPathToHideCounter] = false;
     } else {
-      api.setValue(dataPathToHideDaily, true);
-      api.setValue(dataPathToHideCounter, true);
+      valuesToSet[dataPathToHideDaily] = true;
+      valuesToSet[dataPathToHideCounter] = true;
     }
+    api.setValues(valuesToSet);
   }
 </script>
 
@@ -530,7 +532,7 @@ ${effectButtons}
   <div style='display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center'>
     <numberfield hidden='true' width='100px' field="maxDailyUses" placeholder='1' label='Uses Per Day' size="xs">
     </numberfield>
-    <counter hidden='true' width="80%" field="dailyUses" maxvalue='1' maxvaluefield="maxDailyUses" color='default'>
+    <counter hidden='true' width="80%" field="dailyUses" maxvalue='1' maxvaluefield="maxDailyUses">
     </counter>
   </div>
   <accordion size='xs' field="descriptionOpen" label="Description">
