@@ -1,6 +1,47 @@
 <script>
 	function onTypeChange(npcType) {
-		// TODO: Implement
+		const fieldsToHide = [];
+		const fieldsToShow = [];
+		if (npcType === 'vehicle') {
+			// Hide creature fields
+			fieldsToHide.push('tempHp');
+			fieldsToHide.push('creatureType');
+			fieldsToHide.push('alignment');
+			fieldsToHide.push('hitDice');
+			fieldsToHide.push('senses');
+			fieldsToHide.push('skills');
+			fieldsToHide.push('skillsLabel');
+			fieldsToHide.push('languages');
+			// Show vehicle fields
+			fieldsToShow.push('weight');
+			fieldsToShow.push('crew');
+			fieldsToShow.push('passengers');
+			fieldsToShow.push('cargo');
+			fieldsToShow.push('damageThreshold');
+			fieldsToShow.push('cost');
+		}
+		else {
+			// Show creature fields
+			fieldsToShow.push('tempHp');
+			fieldsToShow.push('creatureType');
+			fieldsToShow.push('alignment');
+			fieldsToShow.push('hitDice');
+			fieldsToShow.push('senses');
+			fieldsToShow.push('skills');
+			fieldsToShow.push('skillsLabel');
+			fieldsToShow.push('languages');
+			// Hide vehicle fields
+			fieldsToHide.push('weight');
+			fieldsToHide.push('crew');
+			fieldsToHide.push('passengers');
+			fieldsToHide.push('cargo');
+			fieldsToHide.push('damageThreshold');
+			fieldsToHide.push('cost');
+		}
+		api.setHidden(fieldsToHide, true, () => {
+			// Do this in callback to avoid race condition
+			api.setHidden(fieldsToShow, false);
+		});
 	}
 
 	function updateCR(value) {
@@ -197,6 +238,11 @@
 			{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
 			{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
 			{"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
+					<!-- Vehicle fields -->
+					<numberfield hidden="true" size="xs" width="100%" field="weight" label="Weight" placeholder="Weight...">
+					</numberfield>
+					<stringfield hidden="true" size="xs" width="100%" field="cost" label="Cost" placeholder="Cost...">
+					</stringfield>
 				</div>
 				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end; width: 100%;'>
 					<numberfield size="xs" icon="IconShield" color="blue" width="100%" field="ac" label="AC" placeholder="AC...">
@@ -218,6 +264,10 @@
 						color='blue'></numberfield>
 					<stringfield size="xs" width="34%" field="hitDice" label="Hit Dice" placeholder="Hit Dice...">
 					</stringfield>
+					<!-- Vehicle fields -->
+					<numberfield hidden="true" size="xs" width="34%" field="damageThreshold" label="Damage Threshold" color="blue"
+						placeholder="0" icon="IconShieldFilled">
+					</numberfield>
 				</div>
 			</div>
 		</div>
@@ -427,8 +477,8 @@
 
 		<!-- Skills -->
 		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-start; margin-top: 4px;'>
-			<label label="Skills" variant="bold" size="xs"></label>
-			<list listtype="skill_list" field='skill_list'></list>
+			<label label="Skills" variant="bold" size="xs" field="skillsLabel"></label>
+			<list listtype="skill_list" field='skills'></list>
 		</div>
 
 		<!-- Additional Attributes -->
@@ -438,11 +488,20 @@
 			</stringfield>
 			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="senses" label="Senses"
 				placeholder="Senses..."></stringfield>
+			<!-- Vehicle fields -->
+			<stringfield hidden="true" size="xs" width="100%" field="crew" label="Crew" placeholder="Crew...">
+			</stringfield>
 		</div>
 
 		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
 			<stringfield width="100%" size="xs" multiline='true' maxrows='2' field="languages" label="Languages"
 				placeholder="Enter Languages...">
+			</stringfield>
+			<!-- Vehicle fields -->
+			<stringfield hidden="true" size="xs" width="100%" field="passengers" label="Passengers"
+				placeholder="Passengers...">
+			</stringfield>
+			<stringfield hidden="true" size="xs" width="100%" field="cargo" label="Cargo" placeholder="Cargo...">
 			</stringfield>
 		</div>
 
