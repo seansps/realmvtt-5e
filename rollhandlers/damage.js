@@ -53,9 +53,17 @@ targets.forEach(target => {
       damage += thisDamage;
     });
 
-    // Finally, we cannot deal negative damage
+    // We cannot deal negative damage
     if (damage < 0) {
       damage = 0;
+    }
+
+    // Finally, if the target has a damage threshold, we need to check if the damage done meets or exceeds the threshold
+    let dueToThreshold = false;
+    if (target.data?.damageThreshold && damage < target.data?.damageThreshold) {
+      // If the damage is less than the threshold, it takes no damage
+      damage = 0;
+      dueToThreshold = true;
     }
 
     // First deduct from Temp HP
@@ -83,6 +91,9 @@ targets.forEach(target => {
     if (usedTempHp) {
       message = \`\$\{targetName\} took \$\{damage\} damage after deducting Temp HP.\`;
     }
+    if (dueToThreshold) {
+      message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
+    }
 
     // If damage was done, we apply death failures if necessary
     if (damage > 0) {
@@ -108,7 +119,7 @@ targets.forEach(target => {
       api.removeEffectById(conId, target);
     }
 
-    const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+    const macro = damage > 0 ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
 
     if (oldSpellName) {
       message += \`\nLost concentration on \$\{oldSpellName\}.\`;
@@ -158,6 +169,19 @@ targets.forEach(target => {
       damage += thisDamage;
     });
 
+    // We cannot deal negative damage
+    if (damage < 0) {
+      damage = 0;
+    }
+
+    // Finally, if the target has a damage threshold, we need to check if the damage done meets or exceeds the threshold
+    let dueToThreshold = false;
+    if (target.data?.damageThreshold && damage < target.data?.damageThreshold) {
+      // If the damage is less than the threshold, it takes no damage
+      damage = 0;
+      dueToThreshold = true;
+    }
+
     // First deduct from Temp HP
     const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
     const newTempHp = Math.max(oldTempHp - damage, 0);
@@ -182,6 +206,9 @@ targets.forEach(target => {
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {
       message = \`\$\{targetName\} took \$\{damage\} damage after deducting Temp HP.\`;
+    }
+    if (dueToThreshold) {
+      message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
     }
 
     // If damage was done, we apply death failures if necessary
@@ -208,7 +235,7 @@ targets.forEach(target => {
       api.removeEffectById(conId, target);
     }
 
-    const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+    const macro = damage > 0 ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
 
     if (oldSpellName) {
       message += \`\nLost concentration on \$\{oldSpellName\}.\`;
