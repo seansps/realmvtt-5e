@@ -22,3 +22,11 @@ if (rechargeEffect) {
     dc: effectDc
   }, 'recharge');
 }
+
+// Update reactions if needed
+if (token?.data?.usedReactions) {
+  const maxReactions = token?.data?.maxReactions || 1;
+  if (token?.data?.usedReactions < maxReactions) {
+    api.setValueOnToken(token, 'data.usedReactions', 0);
+  }
+}

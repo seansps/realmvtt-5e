@@ -473,7 +473,7 @@
 		<divider hideonlocked='true' color='pink' label='Subsection Settings' field="settingsDivider" textalign="center">
 		</divider>
 
-		<div style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap;'>
+		<div style='display: flex; flex-direction: row; gap: 18px; flex-wrap: wrap;'>
 			<checkbox hideonlocked='true' field="hasTraits" label="Has Traits" size="sm" onchange='onHasTraitsChange()'>
 			</checkbox>
 
@@ -551,6 +551,13 @@
 
 		<div style='width: 100%'>
 			<list hidden="true" listtype="npc_actions_list" field='reactions'></list>
+		</div>
+
+		<!-- Lair Actions -->
+		<divider hidden="true" color='pink' label='Lair Actions' field="lairActionsDivider" textalign="center"></divider>
+
+		<div style='width: 100%'>
+			<list hidden="true" listtype="npc_actions_list" field='lairActions'></list>
 		</div>
 	</div>
 </div>
