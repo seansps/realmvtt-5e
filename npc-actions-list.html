@@ -282,6 +282,12 @@
 				});
 			}
 
+			// Get effects and modifiers for the target
+			const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
+			targetEffects.forEach(r => {
+				modifiers.push(r);
+			});
+
 			const diceRoll = '1d20';
 			const metadata = {
 				"rollName": 'Attack',

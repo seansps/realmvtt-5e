@@ -458,6 +458,8 @@ function checkForReplacements(value) {
 // called in the context of a record.)
 // If types is provided, it will only return effects of those types
 // If field is provided, it will only return effects that match that field
+// If a target is provided, we look for effects for relevant to the caller and the target
+// such as attackTargeting, attackTargetingFive, attackTargetingGreaterFive
 function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
   let results = [];
 
@@ -493,7 +495,8 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
           modifierType: ruleType,
           field: rule?.field || '',
           valueType: rule.valueType,
-          isPenalty: isPenalty
+          isPenalty: isPenalty,
+          isEffect: true,
         });
       }
       else if (rule.valueType === 'api') {
@@ -509,7 +512,8 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
             modifierType: ruleType,
             field: rule?.field || '',
             valueType: rule.valueType,
-            isPenalty: isPenalty
+            isPenalty: isPenalty,
+            isEffect: true,
           });
         }
       }
@@ -532,7 +536,8 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
             modifierType: ruleType,
             field: rule?.field || '',
             valueType: rule.valueType,
-            isPenalty: isPenalty
+            isPenalty: isPenalty,
+            isEffect: true,
           });
         }
       }
@@ -587,7 +592,8 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
           field: modifier.data?.field || '',
           valueType: modifier.data?.valueType,
           itemId: itemOnly ? feature?._id : undefined,
-          isPenalty: isPenalty
+          isPenalty: isPenalty,
+          isEffect: false,
         });
       }
     });
@@ -603,7 +609,8 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
         active: true,
         modifierType: 'skillPenalty',
         isPenalty: true,
-        field: 'stealth'
+        field: 'stealth',
+        isEffect: false,
       });
     }
   }
@@ -618,6 +625,35 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
 
   // Filter by itemId if provided
   results = results.filter(r => r.itemId === itemId || r.itemId === undefined);
+
+  return results;
+}
+
+// In this call, we look for effects that are relevant to the caller and the target
+function getAttackModifiersForTarget(target, distance) {
+  if (!target) {
+    return [];
+  }
+
+  let results = [];
+
+  // Get effects that are relevant to the target
+  const effectsToCheck = ['attackTargeting'];
+  // If we're within 5 feet, add the attackTargetingFive effect
+  if (distance <= 5) {
+    effectsToCheck.push('attackTargetingFive');
+  }
+  // If we're greater than 5 feet, add the attackTargetingGreaterFive effect
+  if (distance > 5) {
+    effectsToCheck.push('attackTargetingGreaterFive');
+  }
+  const attackTargetingEffects = getEffectsAndModifiersForToken(target, effectsToCheck);
+  attackTargetingEffects.forEach(r => {
+    results.push({
+      ...r,
+      name: r.isEffect ? `Target Has the ${r.name} Effect` : r.name,
+    });
+  });
 
   return results;
 }
@@ -661,7 +697,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
           modifierType: ruleType,
           field: rule?.field || '',
           valueType: rule.valueType,
-          isPenalty: isPenalty
+          isPenalty: isPenalty,
+          isEffect: true,
         });
       }
       else if (rule.valueType === 'api') {
@@ -677,7 +714,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
             modifierType: ruleType,
             field: rule?.field || '',
             valueType: rule.valueType,
-            isPenalty: isPenalty
+            isPenalty: isPenalty,
+            isEffect: true,
           });
         }
       }
@@ -703,7 +741,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
             modifierType: ruleType,
             field: rule?.field || '',
             valueType: rule.valueType,
-            isPenalty: isPenalty
+            isPenalty: isPenalty,
+            isEffect: true,
           });
         }
       }
@@ -758,7 +797,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
           field: modifier.data?.field || '',
           valueType: modifier.data?.valueType,
           itemId: itemOnly ? feature?._id : undefined,
-          isPenalty: isPenalty
+          isPenalty: isPenalty,
+          isEffect: false,
         });
       }
     });
@@ -774,7 +814,8 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
         active: true,
         modifierType: 'skillPenalty',
         isPenalty: true,
-        field: 'stealth'
+        field: 'stealth',
+        isEffect: false,
       });
     }
   }

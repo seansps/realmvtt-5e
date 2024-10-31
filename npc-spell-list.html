@@ -194,6 +194,7 @@ targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
+  const targetDistance = target?.distance;
   const diceRoll = '1d20';
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
@@ -204,6 +205,12 @@ targets.forEach(target => {
       active: true
     });
   }
+
+  // Get effects and modifiers for the target
+  const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
+  targetEffects.forEach(r => {
+    attackModifiers.push(r);
+  });
 
   const metadata = {  
     "rollName": 'Attack',
