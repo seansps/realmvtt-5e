@@ -352,17 +352,26 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
       const isHalfProficient = proficiency === 'half';
       const isExpertise = proficiency === 'expertise';
       const isProficient = proficiency === 'true';
+      let totalVal = modVal;
       if (isHalfProficient) {
-        valuesToSet[`data.${skill.field}Mod`] = modVal + (Math.floor(proficiencyBonus / 2));
+        totalVal = modVal + (Math.floor(proficiencyBonus / 2));
+        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
       else if (isExpertise) {
-        valuesToSet[`data.${skill.field}Mod`] = modVal + (proficiencyBonus * 2);
+        totalVal = modVal + (proficiencyBonus * 2);
+        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
       else if (isProficient) {
-        valuesToSet[`data.${skill.field}Mod`] = modVal + proficiencyBonus;
+        totalVal = modVal + proficiencyBonus;
+        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
       else {
-        valuesToSet[`data.${skill.field}Mod`] = modVal;
+        totalVal = modVal;
+        valuesToSet[`data.${skill.field}Mod`] = totalVal;
+      }
+
+      if (skill.field === 'perception') {
+        valuesToSet['data.passivePerception'] = 10 + totalVal;
       }
     }
   });

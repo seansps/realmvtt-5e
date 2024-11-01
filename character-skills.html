@@ -73,10 +73,19 @@
 
     // Set a hidden field for passivePerception if this is for perception
     if (skill === 'perception') {
-      valuesToSet['data.passivePerception'] = proficiencyMod;
+      valuesToSet['data.passivePerception'] = 10 + proficiencyMod;
     }
 
     api.setValues(valuesToSet);
+  }
+
+  function onPerceptionChange(value) {
+    // Set a hidden field for passivePerception
+    let perceptionValue = parseInt(value, 10);
+    if (perceptionValue === undefined || isNaN(perceptionValue)) {
+      perceptionValue = 0;
+    }
+    api.setValue('data.passivePerception', perceptionValue + 10);
   }
 
   function setProficiency(value, skill) {
@@ -268,7 +277,8 @@
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="perceptionMod" showsign="true"></numberfield>
+        <numberfield onchange="onPerceptionChange(value);" width="100%" size="xs" placeholder='+0' field="perceptionMod"
+          showsign="true"></numberfield>
       </td>
       <td style="align-content: flex-end;">
         <iconbutton field="perceptionProf" size='md' color="blue" variant="outline"

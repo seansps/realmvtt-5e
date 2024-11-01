@@ -154,17 +154,27 @@
 			// Get the ability being used for this skill, fallback to the skill's default
 			const ability = thisRecord?.data?.[`${skill.field}Ability`] || skill.ability;
 			const abilityMod = parseInt(thisRecord?.data?.[`${ability}Mod`] || '0', 10);
+			let totalVal = 0;
 			if (isHalfProficient) {
-				valuesToSet[`data.${skill.field}Mod`] = abilityMod + (Math.floor(value / 2));
+				totalVal = abilityMod + (Math.floor(value / 2));
+				valuesToSet[`data.${skill.field}Mod`] = totalVal;
 			}
 			else if (isExpertise) {
-				valuesToSet[`data.${skill.field}Mod`] = abilityMod + (value * 2);
+				totalVal = abilityMod + (value * 2);
+				valuesToSet[`data.${skill.field}Mod`] = totalVal;
 			}
 			else if (isProficient) {
-				valuesToSet[`data.${skill.field}Mod`] = abilityMod + value;
+				totalVal = abilityMod + value;
+				valuesToSet[`data.${skill.field}Mod`] = totalVal;
 			}
 			else {
-				valuesToSet[`data.${skill.field}Mod`] = abilityMod;
+				totalVal = abilityMod;
+				valuesToSet[`data.${skill.field}Mod`] = totalVal;
+			}
+
+			if (skill.field === 'perception') {
+				// Set a hidden field for passivePerception
+				valuesToSet['data.passivePerception'] = 10 + totalVal;
 			}
 		});
 
@@ -630,6 +640,10 @@
 						const abilityMod = parseInt(api.getValue(`data.${ability}Mod`) || '0', 10);
 						// Basic proficiency, so add the whole bonus to the modifier
 						valuesToSet[`data.${skill}Mod`] = abilityMod + proficiencyBonus;
+						if (skill === 'perception') {
+							// Set a hidden field for passivePerception
+							valuesToSet['data.passivePerception'] = 10 + abilityMod + proficiencyBonus;
+						}
 					});
 
 					api.setValues(valuesToSet);
