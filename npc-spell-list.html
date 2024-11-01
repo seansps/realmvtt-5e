@@ -180,7 +180,7 @@ if (${rangedSpell} && ourToken) {
       if (!hasIncapacitated) {
         // Check distance
         const distance = api.getDistance(ourToken, token);
-        if (distance <= 5) {
+        if (distance !== undefined && distance !== null && distance <= 5) {
           disDueToProximity = true;
         }
       }

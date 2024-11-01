@@ -649,7 +649,7 @@ function getAttackModifiersForTarget(target, distance) {
   // Get effects that are relevant to the target
   const effectsToCheck = ['attackTargeting'];
   // If we're within 5 feet, add the attackTargetingFive effect
-  if (distance !== undefined && distance <= 5) {
+  if (distance !== undefined && distance !== null && distance <= 5) {
     effectsToCheck.push('attackTargetingFive');
   }
   // If we're greater than 5 feet, add the attackTargetingGreaterFive effect
