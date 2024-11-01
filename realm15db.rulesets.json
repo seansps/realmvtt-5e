@@ -1370,20 +1370,33 @@
           "field": "curhp",
           "label": "Hit Points",
           "type": "healthbar",
-          "width": 100,
+          "width": 80,
           "maxField": "hitpoints"
+        },
+        {
+          "field": "tempHp",
+          "label": "Temp HP",
+          "type": "number",
+          "width": 70
+        },
+        {
+          "field": "passivePerception",
+          "label": "Pas. Per.",
+          "type": "number",
+          "width": 70
         },
         {
           "field": "className",
           "label": "Class & Level",
           "type": "string",
-          "width": 150
+          "width": 100
         },
         {
           "field": "speciesName",
           "label": "Species",
           "type": "string",
-          "width": 100
+          "width": 100,
+          "maxField": ""
         },
         {
           "field": "backgroundName",
@@ -1395,20 +1408,14 @@
           "field": "senses",
           "label": "Senses",
           "type": "string",
-          "width": 100,
+          "width": 150,
           "maxField": ""
-        },
-        {
-          "field": "tempHp",
-          "label": "Temp HP",
-          "type": "number",
-          "width": 70
         },
         {
           "field": "xp",
           "label": "XP",
           "type": "progressbar",
-          "width": 100,
+          "width": 145,
           "maxField": "xpNext"
         }
       ],
@@ -2084,6 +2091,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1730420587408,
+  "updatedAt": 1730421849411,
   "published": true
 }]
