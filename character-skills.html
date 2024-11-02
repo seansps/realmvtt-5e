@@ -1,47 +1,4 @@
 <script>
-  function getAbilityFromSkill(skill) {
-    switch (skill) {
-      case 'acrobatics':
-        return 'dexterity';
-      case 'animalHandling':
-        return 'wisdom';
-      case 'arcana':
-        return 'intelligence';
-      case 'athletics':
-        return 'strength';
-      case 'deception':
-        return 'charisma';
-      case 'history':
-        return 'intelligence';
-      case 'insight':
-        return 'wisdom';
-      case 'intimidation':
-        return 'charisma';
-      case 'investigation':
-        return 'intelligence';
-      case 'medicine':
-        return 'wisdom';
-      case 'nature':
-        return 'intelligence';
-      case 'perception':
-        return 'wisdom';
-      case 'performance':
-        return 'charisma';
-      case 'persuasion':
-        return 'charisma';
-      case 'religion':
-        return 'intelligence';
-      case 'sleightOfHand':
-        return 'dexterity';
-      case 'stealth':
-        return 'dexterity';
-      case 'survival':
-        return 'wisdom';
-      default:
-        return 'strength'; // Default to strength if no match
-    }
-  }
-
   function setProficiencyFor(skill, proficiencyValue, ability) {
     // Skills can be also be half, proficient, or expertise
     const proficiency = proficiencyValue || 'false';

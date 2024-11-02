@@ -1302,11 +1302,15 @@
 			api.setValues(fieldsToSet, () => {
 				// Use the setModifier function to set the modifiers, update proficiencies,
 				// and other re-calculations of modifiers as needed
+				const moreValuesToSet = {};
 				Object.keys(fieldsToSet).forEach(key => {
 					const value = fieldsToSet[key];
 					const attribute = key.replace('data.', '');
-					setModifier(value, attribute);
+					setModifier(value, attribute, {}, moreValuesToSet);
 				});
+				if (Object.keys(moreValuesToSet).length > 0) {
+					api.setValues(moreValuesToSet);
+				}
 			});
 		}
 
@@ -1421,14 +1425,18 @@
 			api.setValues(fieldsToSet, () => {
 				// Use the setModifier function to set the modifiers, update proficiencies,
 				// and other re-calculations of modifiers as needed
+				const moreValuesToSet = {};
 				Object.keys(fieldsToSet).forEach(key => {
 					// Ignore skill prof changes
 					if (!key.includes('Prof')) {
 						const value = fieldsToSet[key];
 						const attribute = key.replace('data.', '');
-						setModifier(value, attribute, fieldsToSet);
+						setModifier(value, attribute, fieldsToSet, moreValuesToSet);
 					}
 				});
+				if (Object.keys(moreValuesToSet).length > 0) {
+					api.setValues(moreValuesToSet);
+				}
 
 				// Add the feat and tool proficiencies last
 				getAndAddFeat();

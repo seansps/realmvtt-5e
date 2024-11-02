@@ -1,3 +1,46 @@
+function getAbilityFromSkill(skill) {
+  switch (skill) {
+    case 'acrobatics':
+      return 'dexterity';
+    case 'animalHandling':
+      return 'wisdom';
+    case 'arcana':
+      return 'intelligence';
+    case 'athletics':
+      return 'strength';
+    case 'deception':
+      return 'charisma';
+    case 'history':
+      return 'intelligence';
+    case 'insight':
+      return 'wisdom';
+    case 'intimidation':
+      return 'charisma';
+    case 'investigation':
+      return 'intelligence';
+    case 'medicine':
+      return 'wisdom';
+    case 'nature':
+      return 'intelligence';
+    case 'perception':
+      return 'wisdom';
+    case 'performance':
+      return 'charisma';
+    case 'persuasion':
+      return 'charisma';
+    case 'religion':
+      return 'intelligence';
+    case 'sleightOfHand':
+      return 'dexterity';
+    case 'stealth':
+      return 'dexterity';
+    case 'survival':
+      return 'wisdom';
+    default:
+      return 'strength'; // Default to strength if no match
+  }
+}
+
 function capitalize(string) {
   if (!string || typeof string !== 'string') return '';
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -252,7 +295,7 @@ function getCarryWeight(strength, size) {
 }
 
 // On Change of Attributes, Set the Relavant Mods
-function setModifier(value, attribute, skillProfOverrides = {}) {
+function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet = null) {
   const modField = `${attribute}Mod`;
   const saveField = `${attribute}Save`;
   const saveProf = `${attribute}Prof`;
@@ -303,7 +346,12 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
 
   // Update AC as needed
   const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
-  const dexMod = attribute !== 'dexterity' ? parseInt(record?.data?.dexterityMod || '0', 10) : modVal;
+  let dexMod = attribute !== 'dexterity' ? parseInt(record?.data?.dexterityMod || '0', 10) : modVal;
+  if (moreValuesToSet && moreValuesToSet[`data.dexterityMod`]
+    && parseInt(moreValuesToSet[`data.dexterityMod`] || '0', 10) > dexMod
+  ) {
+    dexMod = parseInt(moreValuesToSet[`data.dexterityMod`] || '0', 10);
+  }
   const bestEquippedArmor = record?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
   if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
@@ -318,7 +366,12 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
     acCalculationMods.forEach(mod => {
       // We only benefit from the highest AC calculation modifier
       if (mod.field && mod.field !== 'dexterity') {
-        const acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
+        let acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
+        if (moreValuesToSet && moreValuesToSet[`data.${mod.field}Mod`]
+          && parseInt(moreValuesToSet[`data.${mod.field}Mod`] || '0', 10) > acBonus
+        ) {
+          acBonus = parseInt(moreValuesToSet[`data.${mod.field}Mod`] || '0', 10);
+        }
         if (acBonus > calcBonus) {
           calcBonus = acBonus;
         }
@@ -400,7 +453,16 @@ function setModifier(value, attribute, skillProfOverrides = {}) {
     }
   });
 
-  api.setValues(valuesToSet);
+  if (Object.keys(valuesToSet).length > 0) {
+    if (moreValuesToSet) {
+      Object.keys(valuesToSet).forEach(key => {
+        moreValuesToSet[key] = valuesToSet[key];
+      });
+    }
+    else {
+      api.setValues(valuesToSet);
+    }
+  }
 }
 
 function applyMath(value, math) {

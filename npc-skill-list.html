@@ -44,6 +44,20 @@
 				active: true,
 			}
 		];
+
+		// Get any bonus or penalties for abilities and skills
+		// Try to guess the ability from the skill name
+		const ability = getAbilityFromSkill(skillNameWithoutMod.split(' ')[0].toLowerCase());
+		const checkModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], ability);
+		checkModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
+		const skillModifiers = getEffectsAndModifiers(['skillBonus', 'skillPenalty'], skillNameWithoutMod.toLowerCase());
+		skillModifiers.forEach(modifier => {
+			modifiers.push(modifier);
+		});
+
 		const metadata = {
 			"rollName": `${capitalize(skillNameWithoutMod)}`,
 			"tooltip": `${capitalize(skillNameWithoutMod)} Check`,
