@@ -2075,6 +2075,16 @@
         "label": "Attacks Targeting You Greater Than 5 Feet",
         "type": "attackTargetingGreaterFive",
         "fields": []
+      },
+      {
+        "label": "Initiative Bonus",
+        "type": "initiativeBonus",
+        "fields": []
+      },
+      {
+        "label": "Initiative Penalty",
+        "type": "initiativePenalty",
+        "fields": []
       }
     ],
     "otherSettings": {
@@ -2091,6 +2101,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1730505065280,
+  "updatedAt": 1730511597803,
   "published": true
 }]
