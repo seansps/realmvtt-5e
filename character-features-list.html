@@ -1,9 +1,10 @@
 <div style='min-height: 30px; display: flex; flex-direction: column; gap: 4px'>
   <div style='display: flex; gap: 4px'>
     <numberfield hidden='true' size='xs' field="level" label="Level"></numberfield>
-    <namefield  width='100%' size='xs' label="Name" field="namefield"></namefield>
+    <namefield width='100%' size='xs' label="Name" field="namefield"></namefield>
   </div>
   <accordion size='xs' variant='default' field="descriptionAcc" label="Description">
-    <stringfield multiline maxrows=10 variant="filled" field="description"></stringfield>
+    <richtextfield disablecontrols='true' field="description" placeholder='Enter Feature description...'>
+    </richtextfield>
   </accordion>
 </div>
