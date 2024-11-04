@@ -10,7 +10,7 @@ const roll = '1d20';
 const modifiers = [];
 
 // Add dexterity modifier
-const dexMod = parseInt(token?.record?.data?.dexterityMod || '0', 10);
+const dexMod = parseInt(token?.data?.dexterityMod || '0', 10);
 modifiers.push({
   name: 'Dexterity',
   value: dexMod,
