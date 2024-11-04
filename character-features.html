@@ -81,6 +81,7 @@
       const abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
       const abilityValue = feature?.data?.value || '';
       const abilityRestoresOn = feature?.data?.restoreOn || '';
+      const savingThrowAbility = feature?.data?.savingThrowAbility || '';
       let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
       // When the group is added, or found, we add abilities to it or set data on it
       const recordDataPath = record?.dataPath || '';
@@ -121,6 +122,7 @@
             maxDailyUses: abilityUsesPerDay,
             value: abilityValue,
             restore: abilityRestoresOn,
+            savingThrowAbility: savingThrowAbility
           }
         }, abilityAddedCallback);
       }
