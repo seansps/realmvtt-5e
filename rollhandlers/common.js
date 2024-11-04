@@ -910,8 +910,8 @@ function getArmorClassForToken(token) {
   const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
 
   // If this is a character, we use their dexterity modifier
-  const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
-  const bestEquippedArmor = record?.data?.armor || undefined;
+  const dexMod = parseInt(token?.data?.dexterityMod || '0', 10);
+  const bestEquippedArmor = token?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
   // Else, we use the armor class value (for tokens)
   if (record?.recordType === 'npcs') {
@@ -930,7 +930,7 @@ function getArmorClassForToken(token) {
     acCalculationMods.forEach(mod => {
       // We only benefit from the highest AC calculation modifier
       if (mod.field && mod.field !== 'dexterity') {
-        const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10);
+        const acBonus = parseInt(token?.data?.[`${mod.field}Mod`] || '0', 10);
         if (acBonus > calcBonus) {
           calcBonus = acBonus;
         }

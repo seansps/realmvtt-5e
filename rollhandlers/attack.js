@@ -119,8 +119,7 @@ if (isGM) {
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach(token => {
     const saveModifiers = [];
-    const record = token?.record;
-    const modifier = record?.data?.['${savingThrow}Save'] || 0;
+    const modifier = token?.data?.['${savingThrow}Save'] || 0;
     saveModifiers.push({
       name: '${capitalize(savingThrow)} Save',
       value: modifier,
