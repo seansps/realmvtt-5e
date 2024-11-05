@@ -453,6 +453,17 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
     }
   });
 
+  // Go through abilityGroups and update maxDailyUses if needed
+  const abilityGroups = record?.data?.abilityGroups || [];
+  abilityGroups.forEach((abilityGroup, index) => {
+    if (abilityGroup?.data?.fieldsToAddToUses && abilityGroup?.data?.fieldsToAddToUses.length > 0) {
+      const totalUses = getTotalValueFromFields(record, abilityGroup?.data?.fieldsToAddToUses || [], valuesToSet);
+      if (totalUses > 0) {
+        valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] = totalUses;
+      }
+    }
+  });
+
   if (Object.keys(valuesToSet).length > 0) {
     if (moreValuesToSet) {
       Object.keys(valuesToSet).forEach(key => {
@@ -523,6 +534,24 @@ function checkForReplacements(value) {
     value = value.replace(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
   }
   return value;
+}
+
+function getTotalValueFromFields(recordContext, fieldsToAddToUses, fieldValueOverrides) {
+  let total = 0;
+  fieldsToAddToUses.forEach((field) => {
+    let value = parseInt(recordContext?.data?.[field] || '0', 10);
+    if (isNaN(value)) {
+      value = 0;
+    }
+    if (fieldValueOverrides && fieldValueOverrides[`data.${field}`]) {
+      value = parseInt(fieldValueOverrides[`data.${field}`], 10);
+      if (isNaN(value)) {
+        value = 0;
+      }
+    }
+    total += value;
+  });
+  return total;
 }
 
 // Collects all effects and modifiers for the record (assuming this is

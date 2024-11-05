@@ -78,7 +78,10 @@
     // For each feature, we need to check for ability groups and add them if not there
     const abilityGroupName = feature?.data?.abilityGroupName || '';
     if (abilityGroupName !== '') {
-      const abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+      let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+      if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
+        abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);
+      }
       const abilityValue = feature?.data?.value || '';
       const abilityRestoresOn = feature?.data?.restoreOn || '';
       const savingThrowAbility = feature?.data?.savingThrowAbility || '';
@@ -122,7 +125,8 @@
             maxDailyUses: abilityUsesPerDay,
             value: abilityValue,
             restore: abilityRestoresOn,
-            savingThrowAbility: savingThrowAbility
+            savingThrowAbility: savingThrowAbility,
+            fieldsToAddToUses: feature?.data?.fieldsToAddToUses || []
           }
         }, abilityAddedCallback);
       }
