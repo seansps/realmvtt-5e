@@ -112,6 +112,10 @@
               // Update the ability value if it was previously set, as this might be a higher value now
               fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
             }
+            // If restoreOn is set, update it
+            if (abilityRestoresOn !== '') {
+              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.restore`] = abilityRestoresOn;
+            }
             fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
           }
         }

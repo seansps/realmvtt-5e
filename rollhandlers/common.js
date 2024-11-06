@@ -551,6 +551,10 @@ function getTotalValueFromFields(recordContext, fieldsToAddToUses, fieldValueOve
     }
     total += value;
   });
+  // Minimum of 1
+  if (total < 1) {
+    total = 1;
+  }
   return total;
 }
 
