@@ -110,8 +110,11 @@ ${savingThrowButtons}
       'tooltip': `${abilityName} Result`
     }
 
+    let rollValue = abilityGroupValue || '1d20';
+    rollValue = checkForReplacements(rollValue);
+
     if (promptRoll) {
-      api.promptRoll(abilityName, abilityGroupValue || '1d20', undefined, metadata, 'ability');
+      api.promptRoll(abilityName, rollValue, undefined, metadata, 'ability');
     }
   }
 </script>
