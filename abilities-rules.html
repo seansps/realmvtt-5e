@@ -7,6 +7,17 @@
     description="When the ability is used, a roll is requested using the Ability List's value field."></checkbox>
 </div>
 
+<div style='margin-top: 4px; display: flex; flex-direction: column; gap: 4px'>
+  <dropdown size='sm' width='100%' field="damageTypes" label="Damage Types" multiselect='5'
+    description='Damage types that this ability can apply based on the roll' placeholder="Select damage types..."
+    options='[{"label": "Acid", "value": "acid"}, {"label": "Bludgeoning", "value": "bludgeoning"}, {"label": "Cold", "value": "cold"}, {"label": "Fire", "value": "fire"}, {"label": "Force", "value": "force"}, {"label": "Lightning", "value": "lightning"}, {"label": "Necrotic", "value": "necrotic"}, {"label": "Piercing", "value": "piercing"}, {"label": "Poison", "value": "poison"}, {"label": "Psychic", "value": "psychic"}, {"label": "Radiant", "value": "radiant"}, {"label": "Slashing", "value": "slashing"}, {"label": "Thunder", "value": "thunder"}]'>
+  </dropdown>
+  <div style='margin-top: 4px;'>
+    <checkbox size='md' textalign="right" field="showHalf" label="Show Half Damage"
+      description="Show option to apply half damage"></checkbox>
+  </div>
+</div>
+
 <div style='margin-top: 4px; margin-bottom: 4px'>
   <divider label="Effects"></divider>
 </div>

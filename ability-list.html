@@ -107,7 +107,9 @@ ${savingThrowButtons}
 
     const metadata = {
       'rollName': abilityName,
-      'tooltip': `${abilityName} Result`
+      'tooltip': `${abilityName} Result`,
+      'damageTypes': ability?.data?.damageTypes || [],
+      'showHalf': ability?.data?.showHalf || false
     }
 
     let rollValue = abilityGroupValue || '1d20';
