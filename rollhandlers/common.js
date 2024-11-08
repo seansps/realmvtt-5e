@@ -533,6 +533,11 @@ function checkForReplacements(value) {
   if (matchProficiencyBonus) {
     value = value.replace(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
   }
+  // Case for Strength|Dexterity|Constitution|Wisdom|Intelligence|Charisma Modifier
+  const matchModifier = value.match(/[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/);
+  if (matchModifier) {
+    value = value.replace(matchModifier[0], record?.data?.[`${matchModifier[0].toLowerCase().replace(' ', '').replace('modifier', '')}Mod`] || 0);
+  }
   return value;
 }
 
