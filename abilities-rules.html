@@ -7,6 +7,12 @@
     description="When the ability is used, a roll is requested using the Ability List's value field."></checkbox>
 </div>
 
+<div style='margin-top: 4px;'>
+  <stringfield field="rollOverride" label="Roll Override" placeholder="Enter custom roll..."
+    description="Override the Ability List's value with a custom roll">
+  </stringfield>
+</div>
+
 <div style='margin-top: 4px; display: flex; flex-direction: column; gap: 4px'>
   <dropdown size='sm' width='100%' field="damageTypes" label="Damage Types" multiselect='5'
     description='Damage types that this ability can apply based on the roll' placeholder="Select damage types..."
@@ -15,6 +21,10 @@
   <div style='margin-top: 4px;'>
     <checkbox size='md' textalign="right" field="showHalf" label="Show Half Damage"
       description="Show option to apply half damage"></checkbox>
+  </div>
+  <div style='margin-top: 4px;'>
+    <checkbox size='md' textalign="right" field="showHealing" label="Show Healing"
+      description="Show option to apply healing"></checkbox>
   </div>
 </div>
 

@@ -109,10 +109,14 @@ ${savingThrowButtons}
       'rollName': abilityName,
       'tooltip': `${abilityName} Result`,
       'damageTypes': ability?.data?.damageTypes || [],
-      'showHalf': ability?.data?.showHalf || false
+      'showHalf': ability?.data?.showHalf || false,
+      'showHealing': ability?.data?.showHealing || false
     }
 
     let rollValue = abilityGroupValue || '1d20';
+    if (ability?.data?.rollOverride) {
+      rollValue = ability?.data?.rollOverride;
+    }
     rollValue = checkForReplacements(rollValue);
 
     if (promptRoll) {

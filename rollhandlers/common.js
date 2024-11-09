@@ -521,11 +521,20 @@ function doubleDamageDice(damage) {
 function checkForReplacements(value) {
   // Case for 'Half <class> Level'
   const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
+  const matchClassLevel = value.match(/(\w+) [Ll]evel/);
   if (matchLevel) {
     const className = matchLevel[1];
     const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
     if (characterClassLevel) {
-      value = value.replace(matchLevel[0], Math.floor(parseInt(characterClassLevel, 10) / 2));
+      value = value.replace(matchLevel[0], Math.floor(parseInt(characterClassLevel || '1', 10) / 2));
+    }
+  }
+  // Case for '<class> Level'
+  else if (matchClassLevel) {
+    const className = matchClassLevel[1];
+    const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
+    if (characterClassLevel) {
+      value = value.replace(matchClassLevel[0], parseInt(characterClassLevel || '1', 10));
     }
   }
   // Case for 'Proficiency Bonus'
