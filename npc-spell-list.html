@@ -168,6 +168,23 @@
       }
     }
 
+    // Now that we know the spell level, go through all string modifiers and
+    // replaced "Spell Level" with the actual spell level
+    let levelToReplace = spellLevel;
+    if (spell?.data?.level.toLowerCase() === 'cantrip') {
+      levelToReplace = 0;
+    }
+    modifiers.forEach(modifier => {
+      if (modifier?.valueType?.toLowerCase() === 'string') {
+        modifier.value = modifier.value.replace(/[Ss]pell [Ll]evel/g, levelToReplace);
+      }
+    });
+    attackModifiers.forEach(modifier => {
+      if (modifier?.valueType?.toLowerCase() === 'string') {
+        modifier.value = modifier.value.replace(/[Ss]pell [Ll]evel/g, levelToReplace);
+      }
+    });
+
     // Spell range if set
     const spellRange = parseInt(spell?.data?.range || '0', 10);
     const rangedSpell = spellRange > 0;
