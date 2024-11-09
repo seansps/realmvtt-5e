@@ -827,7 +827,10 @@
 		const features = classObj?.data?.feature_list || [];
 		const subClassFeatures = subclass?.data?.feature_list || [];
 
-		[...features, ...subClassFeatures].forEach(feature => {
+		const abilityGroupsToAdd = new Set();
+
+		const allFeatures = [...features, ...subClassFeatures];
+		allFeatures.forEach(feature => {
 			const level = feature?.data?.level || 0;
 			let featureAddedOrUpdated = false;
 			// If this feature is at the level we're adding, add or update it
@@ -905,7 +908,16 @@
 
 				// For each feature, we need to check for ability groups and add them if not there
 				const abilityGroupName = feature?.data?.abilityGroupName || '';
-				if (abilityGroupName !== '') {
+				if (abilityGroupName !== '' && !abilityGroupsToAdd.has(abilityGroupName)) {
+					// We only add each ability group once
+					abilityGroupsToAdd.add(abilityGroupName);
+
+					// First, determine if there are other features being added that have the same name,
+					// if so, we use the first one in the list for the values, and just collect the abilities they add
+					const allAbilities = allFeatures.filter(f =>
+						(f?.data?.level || 0) === newLevel && f.data.abilityGroupName === abilityGroupName
+					).map(f => f?.data?.ability).filter(ability => ability !== undefined && ability !== '');
+
 					let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
 					if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
 						abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);
@@ -916,17 +928,20 @@
 					let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
 					// When the group is added, or found, we add abilities to it or set data on it
 					const recordDataPath = record?.dataPath || '';
+
 					const abilityAddedCallback = (record) => {
 						const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
 						const fieldsToSet = {};
 						if (abilityGroupIndex !== -1) {
-							// Get the Ability to add if any
-							const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
-							if (abilityIdToAdd !== '') {
-								api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
-									api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
-								});
-							}
+							// Get the Abilities to add if any
+							allAbilities.forEach(ability => {
+								const abilityIdToAdd = JSON.parse(ability || '{}')?._id || '';
+								if (abilityIdToAdd !== '') {
+									api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
+										api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+									});
+								}
+							});
 							// If abilityUsesPerDay > 0, un hide the counter
 							if (abilityUsesPerDay > 0) {
 								// Update the record's number of uses if lower
@@ -949,6 +964,7 @@
 						}
 						api.setValues(fieldsToSet);
 					};
+
 					if (!abilityGroup) {
 						api.addValue('data.abilityGroups', {
 							name: abilityGroupName,
@@ -1532,6 +1548,7 @@
 
 		// Add features to the features list
 		const features = speciesObj?.data?.feature_list || [];
+		const abilityGroupsToAdd = new Set();
 		features.forEach(feature => {
 			// Add this feature
 			api.addValue('data.features', {
@@ -1589,7 +1606,14 @@
 
 			// For each feature, we need to check for ability groups and add them if not there
 			const abilityGroupName = feature?.data?.abilityGroupName || '';
-			if (abilityGroupName !== '') {
+			if (abilityGroupName !== '' && !abilityGroupsToAdd.has(abilityGroupName)) {
+				// We only add each ability group once
+				abilityGroupsToAdd.add(abilityGroupName);
+
+				// First, determine if there are other features being added that have the same name,
+				// if so, we use the first one in the list for the values, and just collect the abilities they add
+				const allAbilities = features.filter(f => f.data.abilityGroupName === abilityGroupName).map(f => f?.data?.ability).filter(ability => ability !== undefined && ability !== '');
+
 				let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
 				if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
 					abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);
@@ -1604,13 +1628,15 @@
 					const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
 					const fieldsToSet = {};
 					if (abilityGroupIndex !== -1) {
-						// Get the Ability to add if any
-						const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
-						if (abilityIdToAdd !== '') {
-							api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
-								api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
-							});
-						}
+						// Get the Abilities to add if any
+						allAbilities.forEach(ability => {
+							const abilityIdToAdd = JSON.parse(ability || '{}')?._id || '';
+							if (abilityIdToAdd !== '') {
+								api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
+									api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+								});
+							}
+						});
 						// If abilityUsesPerDay > 0, un hide the counter
 						if (abilityUsesPerDay > 0) {
 							// Update the record's number of uses if lower
@@ -2029,7 +2055,7 @@
 		abilityListGroups.forEach((abilityGroup, index) => {
 			const restoreOn = abilityGroup?.data?.restore || '';
 			// Assume that longrest includes shortrest too
-			if (restoreOn === 'longrest' || restoreOn === 'shortrest') {
+			if (restoreOn === 'longrest' || restoreOn === 'shortrest' || restoreOn === 'shortrestonce') {
 				const dailyUses = abilityGroup?.data?.dailyUses || 0;
 				valuesToSet[`data.abilityGroups.${index}.data.dailyUses`] = 0;
 			}
