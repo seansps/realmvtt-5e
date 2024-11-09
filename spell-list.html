@@ -33,7 +33,7 @@
     }
 
     // Get effects
-    const effectModifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty']);
+    const effectModifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty', 'spellAttackBonus', 'spellAttackPenalty']);
     effectModifiers.forEach(modifier => {
       attackModifiers.push(modifier);
     });
@@ -68,6 +68,30 @@
         type: spell?.data?.damage ? damageType : 'healing',
         value: abilityMod,
         active: true,
+      });
+    }
+
+    if (spell?.data?.damage) {
+      // Get damage modifiers
+      const damageModifiers = spell?.data?.level?.toLowerCase() === 'cantrip' ?
+        getEffectsAndModifiers(['cantripDamageBonus', 'cantripDamagePenalty']) :
+        getEffectsAndModifiers(['spellDamageBonus', 'spellDamagePenalty']);
+      // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
+      const damageString = spell?.data?.damage || '';
+      const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
+      const damageType = damageParts.length > 1 ? damageParts[1] : 'untyped';
+      damageModifiers.forEach(modifier => {
+        modifiers.push({
+          ...modifier,
+          type: damageType,
+        });
+      });
+    }
+    else if (spell?.data?.healing) {
+      // Get healing modifiers
+      const healingModifiers = getEffectsAndModifiers(['healingBonus', 'healingPenalty']);
+      healingModifiers.forEach(modifier => {
+        modifiers.push(modifier);
       });
     }
 
@@ -214,7 +238,10 @@
     const spellcastingAbility = spell?.data?.ability || 'intelligence';
     const spellcastingAbilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
     const proficiencyBonus = api.getValue('data.proficiencyBonus') !== undefined ? api.getValue('data.proficiencyBonus') : 2;
-    const saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10) + spellDCBonus;
+    let saveDc = 8 + parseInt(spellcastingAbilityMod, 10) + parseInt(proficiencyBonus, 10) + spellDCBonus;
+    // Get spell dc modifiers
+    const spellDcModifiers = getEffectsAndModifiers(['spellDCBonus']);
+    saveDc += spellDcModifiers.reduce((acc, mod) => acc + parseInt(mod?.value || '0', 10), 0);
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
     const saveDamageMetadata = spell?.data?.isSave ? { save: savingThrow, saveDc: saveDc } : {};
