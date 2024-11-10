@@ -1,5 +1,3 @@
-
-
 const name = data?.roll?.metadata?.rollName;
 const tooltip = data?.roll?.metadata?.tooltip;
 const description = data?.roll?.metadata?.description || '';
@@ -298,9 +296,46 @@ ${halfDamageMacro}
 }
 
 if (showHealing) {
-  const healingMacro = showHealing ? `
+  // Separate roll by temp healing and regular healing 
+  const tempHealing = data.roll.types.reduce((acc, type) => type.type == 'temp' ? acc + type.value : acc, 0);
+  const regularHealing = data.roll.types.reduce((acc, type) => type.type != 'temp' ? acc + type.value : acc, 0);
+
+  const tempMacro = tempHealing ? `
+\`\`\`Apply_Temporary_HP
+const tempHp = ${tempHealing};
+
+let targets = api.getSelectedOrDroppedToken();
+  
+// If record is not null, check if we're the GM or owner and use it
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
+}
+
+// If we're a player and we did not drop on a record, get our owned tokens
+if (!isGM && targets.length === 0) {
+    targets = api.getSelectedOwnedTokens().map(target => target.token);
+}
+
+targets.forEach(target => {
+  const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
+  // Temp HP always overrides existing temp HP, if it is higher
+  const newTempHp = Math.max(tempHp, oldTempHp);
+  api.setValueOnToken(target, "data.tempHp", newTempHp);
+  const unIdentified = target.identified === false;
+  const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+  
+  const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+  
+  api.sendMessage(\`\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
+});
+\`\`\`
+` : '';
+
+  const healingMacro = regularHealing ? `
   \`\`\`Apply_Healing
-  const healing = ${data.roll.total};
+  const healing = ${regularHealing};
   
   let targets = api.getSelectedOrDroppedToken();
   
@@ -337,6 +372,7 @@ if (showHealing) {
 
   message = `${message}
   ${healingMacro}
+  ${tempMacro}
   `;
 }
 
