@@ -220,7 +220,7 @@
     const valuesToSet = {};
 
     // If wildshape, we only set physical stats, polymorph sets all stats
-
+    let hasCircleForms = false; // True if we're wild shaping and have Circle Forms
     if (selectedValue === 'polymorph') {
       // Polymorph
       valuesToSet['fields.polymorphNpc.hidden'] = false;
@@ -249,6 +249,7 @@
         const circleFormsFeature = record?.data?.features?.find(feature => feature?.name === 'Circle Forms');
         if (circleFormsFeature) {
           valuesToSet['data.tempHp'] = druidLevel * 3;
+          hasCircleForms = true;
         }
         else {
           valuesToSet['data.tempHp'] = druidLevel;
@@ -301,7 +302,20 @@
         // Target retains their hitpoints
         moreValuesToSet[`data.hitpoints`] = record?.data?.hitpoints;
         // Override AC settings with what NPC had
-        moreValuesToSet['data.ac'] = npc?.data?.ac;
+        if (!hasCircleForms) {
+          moreValuesToSet['data.ac'] = npc?.data?.ac;
+        }
+        else {
+          // AC equals 13 plus your Wisdom modifier if that total is higher than the Beast’s AC.
+          const wisdomMod = parseInt(record?.data?.wisdomMod || '0', 10);
+          const newFormAc = 13 + wisdomMod;
+          if (newFormAc > npc?.data?.ac) {
+            moreValuesToSet['data.ac'] = newFormAc;
+          }
+          else {
+            moreValuesToSet['data.ac'] = npc?.data?.ac;
+          }
+        }
 
         api.setValues(moreValuesToSet);
 

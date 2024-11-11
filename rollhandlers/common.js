@@ -957,6 +957,11 @@ function getArmorClassForToken(token) {
   const record = token?.record;
   const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
 
+  // If token is shapeshifted, we use whatever our AC is currently set to
+  if (token?.data?.wildShapeNpc || token?.data?.polymorphNpc) {
+    return parseInt(token?.data?.ac || '0', 10);
+  }
+
   // If this is a character, we use their dexterity modifier
   const dexMod = parseInt(token?.data?.dexterityMod || '0', 10);
   const bestEquippedArmor = token?.data?.armor || undefined;
@@ -1004,6 +1009,11 @@ function getArmorClassForToken(token) {
 }
 
 function getArmorClass(bestEquippedArmor) {
+  // If we are shapeshifted, we use whatever our AC is currently set to
+  if (record?.data?.wildShapeNpc || record?.data?.polymorphNpc) {
+    return parseInt(record?.data?.ac || '0', 10);
+  }
+
   const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
 
   // If this is a character, we use their dexterity modifier
