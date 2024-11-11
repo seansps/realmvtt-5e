@@ -25,8 +25,7 @@ if (rechargeEffect) {
 
 // Update reactions if needed
 if (token?.data?.usedReactions) {
-  const maxReactions = token?.data?.maxReactions || 1;
-  if (token?.data?.usedReactions < maxReactions) {
+  if (token?.data?.usedReactions > 0) {
     api.setValueOnToken(token, 'data.usedReactions', 0);
   }
 }
