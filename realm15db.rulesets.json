@@ -1,5 +1,1906 @@
 [{
   "_id": {
+    "$oid": "666da788de80aa4891676c3d"
+  },
+  "name": "Basic 2",
+  "description": "Test",
+  "records": [
+    {
+      "name": "Characters",
+      "type": "characters",
+      "minX": 650,
+      "minY": 800,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function clickWounds() {\n    console.log(\"CLICKED WOUNDS\");\n  }\n\n  function apiClick() {\n    console.log(api.getTargets());\n  }\n\n  function showHideDropdown(show) {\n    api.setHidden(\"initSkill\", show);\n  }\n\n  function setCurHpNewMax() {\n    var newHp = value - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > value) { newHp = value; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n\n  function setCurHpNewWounds() {\n    var newHp = (record.data?.hitpoints || 0) - value;\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n  function setCurHp(newMax, newWounds) {\n    var newHp = (record.data?.hitpoints || 0) - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style=\"width: 150px; height: 150px\">\n    <portrait />\n  </div>\n  \n  <div style=\"margin-left: 4px; display: flex; flex-direction:column; gap: 8px;\">\n    <div>\n      <stringfield field='senses' label='Senses'\n         variant='outlined' />\n      </stringfield>\n    </div>\n\n    <div>\n      <stringfield field='size' label='Size'\n         variant='outlined' />\n      </stringfield>\n    </div>\n\n    <div style='display: flex; gap: 8px'>\n      <div style='height: 60px; width: 84px;'>\n        <numberfield field='hitpoints' label='HP' onchange='setCurHpNewMax();'\n          color='success' variant='outlined' horizontalalign='center' />\n        </numberfield>\n      </div>\n      \n      <div style='height: 60px; width: 84px;'>\n        <numberfield field='wounds' label='Wounds'\n          color='success' variant='outlined'\n          horizontalalign='center'\n          onclick=\"clickWounds();\" onchange=\"setCurHpNewWounds();\" />\n        </numberfield>\n      </div>\n    </div>\n  </div>\n\n  <div style=\"margin-left: 8px; margin-right: 8px\">\n    <divider orientation='vertical' />\n  </div>\n\n  <div style=\"margin-left: 4px; display: flex; flex-direction:column; gap: 4px;\">\n    <div>\n      <checkbox field='showDropdown' label='Show Dropdown' onchange='showHideDropdown(!value);' color='primary' />\n    </div>\n\n    <div>\n      <dropdown field='initSkill' label='Skill' options='[\n        {\"label\": \"Persuasion\", \"value\": \"persuasion\"},\n        {\"label\": \"Perception\", \"value\": \"perception\"}\n        ]' hidden='true' />\n    </div>\n\n    <div>\n      <radio field='defense' label='Shield Up' color='primary' />\n    </div>\n\n    <div>\n      <radio field='defense' label='Shield Down' color='primary' />\n    </div>\n  </div>\n\n  <div style=\"height:70px; margin-left: 8px; margin-top: 8px; width: 30px;\">\n    <progressbar currentvaluefield='curhp' maxvaluefield='hitpoints' \n      orientation='vertical' color='health'></progressbar>\n  </div>\n</div>\n\n\n<div style=\"margin-top: 8px; margin-bottom: 8px\">\n  <divider orientation='horizontal' />\n</div>\n\n<div style=\"width: 100%\">\n  <label field='label' label='Test Tools' horizontalalign='center'></label>\n</div>\n\n<div>\n  <button field='buttonapi' label='Test API' color='success' variant='contained'\n    onclick=\"apiClick();\" />\n</div>\n\n<div>\n  <numberfield field='curhp' hidden='true' onload='setCurHp();' />\n  </numberfield>\n</div>\n<div>test</div>\n<div style=\"display: flex; flex-direction: column; margin-top: 8px; height: 445px;\">\n  <list listtype='inventorylist' variant='outlined' \n    field='inventory' label='Inventory' /></list>\n</div>\n",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "layout": "<div style=\"height:100%; width: 100%\">\n  <stringfield field='notes' label='Notes' variant='outlined' /></stringfield>\n</div>",
+          "fields": []
+        }
+      ],
+      "isList": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {}
+    },
+    {
+      "name": "NPCs",
+      "type": "npcs",
+      "minX": 350,
+      "minY": 450,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='width: 100px; height: 100px;'>\n  <portrait field=\"portrait\"></portraitfield>\n</div>\n<div>\n  <namefield label=\"Name\" variant=\"outlined\"></namefield>\n</div>\n<div>\n  <stringfield field=\"stringfield\" label=\"stringfield\" variant=\"outlined\"></stringfield>\n</div>\n<div>test</div>\n<div>test</div>\n<div>\n  <numberfield field=\"numberfield\" label=\"numberfield\" variant=\"outlined\"></numberfield>\n</div>\n",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            },
+            {
+              "name": "list_testfield",
+              "type": "list_test",
+              "key": "list_test_a2c1be24-c43a-4d02-9017-d0ec250d531c",
+              "isList": true
+            }
+          ]
+        },
+        {
+          "name": "Test",
+          "layout": "<div>test</div>\n<div>test</div>"
+        }
+      ],
+      "isList": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {}
+    },
+    {
+      "name": "Test type",
+      "type": "test",
+      "isList": false,
+      "minX": 500,
+      "minY": 500,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='height: 100%; display: flex; flex-direction: column'>\n<div style='height:150px; width: 150px'>\n  <portrait field='portrait'></portrait>\n</div>\n<div style=\"margin-top: 4px; flex-grow: 1\">\n  <stringfield field='description' label='Description'></stringfield>\n</div>\n</div>\n<div>test</div>\n<div>test</div>",
+          "fields": [
+            {
+              "name": "stringfield",
+              "type": "string",
+              "key": "string_7f4aa545-e27f-4094-828f-38e332434240",
+              "isList": false
+            },
+            {
+              "name": "numberfield",
+              "type": "number",
+              "key": "number_c961bb49-c543-4213-87fc-7cc0182eaf8f",
+              "isList": false
+            },
+            {
+              "name": "checkboxfield",
+              "type": "checkbox",
+              "key": "checkbox_20acdb20-3af5-4e36-9953-f45c3ad9f498",
+              "isList": false
+            }
+          ]
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {}
+    },
+    {
+      "name": "Inventory",
+      "type": "inventorylist",
+      "isList": true,
+      "minX": 300,
+      "minY": 40,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='height: 30px; display: flex'>\n  <div style='width: 30px'>\n    <portrait name='portrait'>\n  </div>\n  <div style='margin-left: 4px;width: 60px'>\n    <numberfield label='Count' field='count' /></numberfield>\n  </div>\n  <div style='margin-left: 4px; flex-grow: 1'>\n    <namefield label='Name' field='name' /></numberfield>\n  </div>\n</div>",
+          "fields": [
+            {
+              "name": "numberfield",
+              "type": "number",
+              "key": "number_afb0b54d-43eb-4779-b966-bf1973ff7f5f",
+              "isList": false
+            },
+            {
+              "name": "stringfield",
+              "type": "string",
+              "key": "string_07aed44b-9482-4d44-b4a3-3692ac7769b6",
+              "isList": false
+            }
+          ]
+        }
+      ],
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Item",
+      "allowedListTypes": [
+        "test"
+      ],
+      "newItemName": "New Item",
+      "newItemUnidentifiedName": "Unidentified Item",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "orderCriteria": [
+        {
+          "field": "name",
+          "descending": false
+        },
+        {
+          "field": "count",
+          "descending": true
+        }
+      ],
+      "canGrow": false,
+      "maxLength": 0
+    }
+  ],
+  "version": 0,
+  "ownerId": "65e24e77d1d78ddf0805a94b",
+  "createdAt": 1718462344522,
+  "updatedAt": 1728672599512,
+  "published": false,
+  "settings": {
+    "healthIndicator": {
+      "disabled": true,
+      "maxHealthField": "",
+      "currentHealthField": "",
+      "color": []
+    }
+  }
+},
+{
+  "_id": {
+    "$oid": "66bfb27fc2d7c1ea1658a50a"
+  },
+  "name": "Pathfinder Second Edition",
+  "description": "Unofficial Pathfinder Second Edition ruleset for Realm VTT.",
+  "records": [
+    {
+      "name": "Characters",
+      "type": "characters",
+      "minX": 450,
+      "minY": 500,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function onDrop(type, recordLink) {\n    console.log(type, recordLink);\n    if (type === 'items') {\n      api.setRecordLink('data.classLink', recordLink);\n    }\n  }\n\n  function rollInit() {\n    api.roll(`1d20-${record.data?.wounds || 0}`, {}, 'initiative');\n  }\n</script>\n\n<!-- TODO add Traits list and set traits when class/ancestry is selected -->\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: row\">\n  <div style='display: flex; flex-direction: column'>\n    <div style=\"width: 150px; min-width: 150px; height: 150px\">\n      <portrait />\n    </div>\n    <div style=\"width: 100px; margin-top: 8px;\">\n      <numberfield field=\"xp\" label=\"XP\" variant=\"outlined\"></numberfield>\n    </div>\n    <div style='width: 100px; height: 10px; margin-top: 8px;'>\n      <progressbar color=\"success\" currentvaluefield='xp' maxvalue=1000 orientation='horizontal'></progressbar>\n    </div>\n  </div>\n    \n  \n</div>\n\n<div style=\"margin-top: 8px; display: flex; flex-direction:column; gap: 8px;\">\n  <div>\n    <stringfield field='senses' label='Senses'\n       variant='outlined' />\n    </stringfield>\n  </div>\n\n  <div>\n    <stringfield field='size' label='Size'\n       variant='outlined' />\n    </stringfield>\n  </div>\n\n  <div style='display: flex; gap: 8px'>\n    <div style='height: 60px; width: 84px;'>\n      <numberfield field='currentHP' label='Current HP'\n        color='success' variant='outlined' horizontalalign='center' />\n      </numberfield>\n    </div>\n    \n    <div style='height: 60px; width: 84px;'>\n      <numberfield field='maxHP' label='Max HP'\n        color='success' variant='outlined'\n        horizontalalign='center' />\n    </div>\n  </div>\n</div>\n",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            },
+            {
+              "name": "size",
+              "type": "string",
+              "key": "string_58b7ddc4-b7d2-4c1f-89ff-0e29e2d91a39",
+              "label": "Size",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "senses",
+              "type": "string",
+              "key": "string_edc933e0-b899-463d-b32b-e707ec6860f2",
+              "label": "Senses",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "testApi",
+              "type": "button",
+              "key": "button_39347214-153e-4a8b-901a-544e29b95c0b",
+              "label": "Test Api",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "onClick": "console.log(api.getTargets());",
+              "icon": "Computer",
+              "variant": "contained",
+              "color": "success",
+              "hidden": false
+            },
+            {
+              "name": "stat1",
+              "type": "number",
+              "key": "number_8fc050c5-def4-4151-9ea7-f24ab4c91d36",
+              "label": "Stat 1",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "color": "primary",
+              "hidden": false,
+              "minValue": 0,
+              "variant": "outlined"
+            },
+            {
+              "name": "stat2",
+              "type": "number",
+              "key": "number_679bf374-3927-493b-9e7d-c70f7a487dfb",
+              "label": "Stat 2",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "inventory_list",
+              "type": "inventory_list",
+              "key": "inventory_list_6f66a1ac-0d5f-4f35-bbec-a09808a0a003",
+              "isList": true,
+              "label": "Inventory",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false,
+              "variant": "outlined"
+            },
+            {
+              "name": "testDrop",
+              "type": "dropdown",
+              "key": "dropdown_2b80ced9-5eed-455b-a8b4-46dcfe21ee2e",
+              "isList": false,
+              "label": "Drop Test",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "options": [
+                {
+                  "label": "Op1",
+                  "value": "opt1"
+                },
+                {
+                  "label": "Opt2",
+                  "value": "opt2"
+                }
+              ],
+              "hidden": false
+            },
+            {
+              "name": "wounds",
+              "type": "number",
+              "key": "number_dcba291b-9721-4eb2-b5bb-ab4cfbec2947",
+              "isList": false,
+              "label": "Wounds",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "variant": "outlined",
+              "color": "primary",
+              "hidden": false,
+              "minValue": 0
+            },
+            {
+              "name": "hpMax",
+              "type": "number",
+              "key": "number_9e213a0b-902c-42b4-afb2-2298924eee87",
+              "isList": false,
+              "label": "HP Max",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "variant": "outlined",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "testHide",
+              "type": "checkbox",
+              "key": "checkbox_cfc7e862-0c61-48b6-aece-ac89faab3410",
+              "isList": false,
+              "label": "Hide Dropdown",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false,
+              "onLoad": "api.setHidden(\"testDrop\", value);",
+              "onChange": "api.setHidden(\"testDrop\", value);"
+            }
+          ]
+        },
+        {
+          "name": "Inventory",
+          "layout": "<div style=\"width: 100%\">\n  <label label=\"Treasure\" horizontalalign=\"center\"></label>\n</div>\n\n<div style=\"display: flex; column-gap: 4px;\">\n  <numberfield field=\"cp\" label=\"cp\" variant=\"outlined\"></numberfield>\n  <numberfield field=\"sp\" label=\"sp\" variant=\"outlined\"></numberfield>\n  <numberfield field=\"gp\" label=\"gp\" variant=\"outlined\"></numberfield>\n</div>\n\n<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow:1\">\n  <list listtype='inventory_list' variant='outlined' \n    field='inventory_list' label='Inventory' /></list>\n</div>\n",
+          "fields": [
+            {
+              "name": "notes",
+              "type": "string",
+              "key": "string_5c3144ac-890f-46b1-b282-08d9bd008374",
+              "isList": false,
+              "label": "Notes",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false,
+              "variant": "outlined"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "layout": "<div>\n  <richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>"
+        },
+        {
+          "name": "Actions",
+          "layout": "<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow: 1\">\n  <list listtype='attack_list' variant='outlined' \n    field='inventory_list' label='Attacks' /></list>\n</div>\n"
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      }
+    },
+    {
+      "name": "NPCs",
+      "type": "npcs",
+      "minX": 350,
+      "minY": 450,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function setCurHpNewMax() {\n    var newHp = value - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > value) { newHp = value; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n\n  function setCurHpNewWounds() {\n    var newHp = (record.data?.hitpoints || 0) - value;\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n  function setCurHp(newMax, newWounds) {\n    var newHp = (record.data?.hitpoints || 0) - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    if (newHp !== record.data?.curhp) {\n      api.setValue(\"data.curhp\", newHp);\n    }\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style=\"width: 150px; min-width: 100px; height: 150px\">\n    <portrait />\n  </div>\n  \n  <div style=\"margin-left: 4px; display: flex; flex-direction:column; gap: 8px;\">\n    <div>\n      <stringfield field='senses' label='Senses'\n         variant='outlined' />\n      </stringfield>\n    </div>\n\n    <div>\n      <stringfield field='size' label='Size'\n         variant='outlined' />\n      </stringfield>\n    </div>\n\n      <div style='display: flex; gap: 8px'>\n        <div style='height: 60px; width: 84px;'>\n          <numberfield field='hitpoints' label='HP' onchange='setCurHpNewMax();'\n            color='success' variant='outlined' horizontalalign='center' />\n          </numberfield>\n        </div>\n        \n        <div style='height: 60px; width: 84px;'>\n          <numberfield field='wounds' label='Wounds'\n            color='success' variant='outlined'\n            horizontalalign='center'\n            onchange=\"setCurHpNewWounds();\" />\n          </numberfield>\n        </div>\n\n    </div>\n\n    <div>\n      <numberfield field='curhp' hidden='true' onload='setCurHp();' />\n      </numberfield>\n    </div>\n  </div>\n</div>\n\n<div style='display: flex; margin-top: 4px; min-height: 120px; width: 100%; flex-grow: 1;'>\n  <list listtype=\"skills\" label='Skills' field='skills' variant='outlined'></list>\n</div>",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            },
+            {
+              "name": "senses",
+              "type": "string",
+              "key": "string_41a9c1d5-bac0-40d7-951b-ed3a795cf274",
+              "label": "Senses",
+              "defaultValue": ""
+            },
+            {
+              "name": "size",
+              "type": "string",
+              "key": "string_458a99b6-d2a2-4571-a059-caadaae68757",
+              "label": "Size",
+              "defaultValue": ""
+            },
+            {
+              "name": "creatureType",
+              "type": "string",
+              "key": "string_bec7dd35-e7a2-4889-b29e-ba81cf34313a",
+              "label": "Creature Type",
+              "defaultValue": ""
+            },
+            {
+              "name": "notes",
+              "type": "string",
+              "key": "string_fbd52d67-a546-4b1f-b4cf-33a866fd69ad",
+              "label": "Notes",
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      }
+    },
+    {
+      "name": "Abilities",
+      "type": "abilities",
+      "minX": 300,
+      "minY": 300,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='height: 100px'>\n  <stringfield field=\"description\" label=\"Description\" \n    variant=\"outlined\"></stringfield>\n</div>\n\n<div style='width: 50%'>\n  <checkbox field=\"isSpell\" label=\"Is Spell\" \n    color=\"primary\"></checkbox>\n</div>\n\n<div style='width: 50%'>\n  <checkbox field=\"isSkill\" label=\"Is Skill\"\n    color=\"primary\"></checkbox>\n</div>",
+          "fields": [
+            {
+              "name": "description",
+              "type": "string",
+              "key": "string_cd718bad-5efb-4542-b26d-1c17274c90a8",
+              "label": "Description",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top"
+            },
+            {
+              "name": "isSpell",
+              "type": "checkbox",
+              "key": "checkbox_1854b53e-974f-4d91-b295-778b1c2c9c65",
+              "label": "Is Spell?",
+              "defaultValue": "false",
+              "horizontalAlign": "left",
+              "verticalAlign": "top"
+            },
+            {
+              "name": "isSkill",
+              "type": "checkbox",
+              "key": "checkbox_48bf7f24-9340-41a8-9958-78083cb6e8e5",
+              "label": "Is Skill?",
+              "defaultValue": "true",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": ""
+    },
+    {
+      "name": "Items",
+      "type": "items",
+      "minX": 500,
+      "minY": 245,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n    function showHideValues(typeStr) {\n      if (typeStr === \"weapon\") {\n        api.setHidden(\"damage\", false);\n      }\n      else {\n        api.setHidden(\"damage\", true);\n      }\n    }\n</script>\n\n<div style='display: flex; flex-direction: row'>\n<div style='height:100px; width: 100px'>\n  <portrait field='portrait'></portrait>\n</div>\n<div style=\"margin-left: 4px; flex-grow: 1; margin-right: 4px;\">\n  <stringfield field='description' label='Description'></stringfield>\n</div>\n</div>\n<div style='display: flex; margin-top: 8px;'>\n  <div style='width: 100px;'>\n    <numberfield field=\"weight\" label=\"Weight\" variant=\"outlined\"></numberfield>\n  </div>\n  <div style='margin-left: 4px; margin-right: 4px; width: 200px'>\n    <dropdown onchange=\"showHideValues(value);\" field=\"type\" label=\"Type\" color=\"primary\" options='[{\"label\": \"Gear\", \"value\": \"gear\"}, {\"label\": \"Weapon\", \"value\": \"weapon\"}]'></dropdown>\n  </div>\n  <div>\n    <stringfield hidden=\"true\" field=\"damage\" label=\"Damage\" variant=\"outlined\"></stringfield>\n  </div>\n</div>",
+          "fields": [
+            {
+              "name": "description",
+              "type": "string",
+              "key": "string_ad7f9d6b-e2d0-4740-a2bf-8a6861b233f1",
+              "label": "Description",
+              "defaultValue": ""
+            },
+            {
+              "name": "portraitfield",
+              "type": "portrait",
+              "key": "portrait_2001d18e-70c0-469b-aa04-d9fa211c671a",
+              "label": "",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "Backpack",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "type": "weapon,gear"
+      }
+    },
+    {
+      "name": "Attack List",
+      "type": "attack_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 50,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\nfunction handleRoll() {\n  console.log(\"Rolling attack\", record, parentRecord);\n  const name = record.name;\n  \n  const modifiers = [\n    {\n      name: \"strength\",\n      type: \"attribute\",\n      value: 1,\n      active: true\n    }\n  ];\n\n  var highestCirPenModifier = null;\n  \n  parentRecord.effects.forEach((eff) => {\n    eff.rules.forEach(rule => {\n      if ((rule.field === \"strength\" || rule.field === \"all\") && rule.type === \"cir_pen\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = parentRecord.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        if (adjustedValue > 0) {\n          adjustedValue *= -1;\n        }\n        if (!highestCirPenModifier || adjustedValue < highestCirPenModifier.value) {\n          highestCirPenModifier = {\n            name: eff.name,\n            type: \"Circumstance Penalty\",\n            value: adjustedValue,\n            active: true\n          };\n        }\n      }\n    });\n  });\n\n  if (highestCirPenModifier) {\n    modifiers.push(highestCirPenModifier);\n  }\n\n  api.promptRoll(`Attack (${name})`, \"1d20\", modifiers, {}, \"attack\");\n}\n\nfunction getDamageType(rollString) {\n    const regex = /(\\d+d\\d+)(?:\\s*\\+\\s*\\d+)?(?:\\s+(\\w+))?/;\n    const match = rollString.match(regex);\n    return match && match[2] ? match[2] : \"untyped\";\n}\n\nfunction rollDamage() {\n  const dmgRoll = record.data.damage;\n  const name = record.name;\n\n  const damage = (record.data?.damage || '');\n  const damageType = getDamageType(damage);\n\n  // Normally you'd get these from the character sheet\n  // and maybe check if it's dex based, etc.\n  const modifiers = [\n    {\n      name: \"strength\",\n      type: damageType,\n      value: 1,\n      active: true\n    }\n  ];\n  \n  api.promptRoll(`Damage (${name})`, dmgRoll, modifiers, {}, \"damage\");\n}\n</script>\n\n<div style='height: 30px; display: flex; flex-direction: row'>\n  <div style='width: 30px; min-width: 30px;'>\n    <portrait name='portrait'>\n  </div>\n  <div style='margin-left: 4px; width: 100%'>\n    <namefield label='Name' field='namefield' />\n  </div>\n  <div style='margin-top: -4px; margin-left: 4px;'>\n    <iconbutton field=\"rollBtn\" color=\"default\" options='[{\"icon\": \"D20\", \"label\": \"Roll\", \"value\": \"roll\"}]' onchange='() => { }' onclick='handleRoll();'></iconbutton>\n  </div>\n  <div>\n    <button field=\"button\" label=\"Damage\" variant='outlined' color=\"primary\" onclick='rollDamage();'></button>\n  </div>\n</div>\n",
+          "fields": []
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        }
+      ],
+      "maxLength": 0,
+      "singleRow": false,
+      "filterCriteria": [
+        {
+          "field": "type",
+          "operator": "equals",
+          "value": "weapon"
+        }
+      ]
+    },
+    {
+      "name": "Inventory List",
+      "type": "inventory_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 45,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='height: 30px; display: flex'>\n  <div style='width: 30px'>\n    <portrait name='portrait'>\n  </div>\n  <div style='margin-left: 4px;width: 60px'>\n    <numberfield label='Count' field='count' /></numberfield>\n  </div>\n  <div style='margin-left: 4px; flex-grow: 1'>\n    <namefield label='Name' field='namefield' />\n  </div>\n</div>",
+          "fields": [
+            {
+              "name": "portraitfield",
+              "type": "portrait",
+              "key": "portrait_29559cec-2ee3-4288-b23e-953322e3af2b",
+              "label": "",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false
+            },
+            {
+              "name": "count",
+              "type": "number",
+              "key": "number_e48a9a2b-e35c-48ae-ba19-61c89ad26491",
+              "isList": false,
+              "label": "Count",
+              "defaultValue": "0",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "minValue": 0,
+              "showSign": false,
+              "color": "primary",
+              "hidden": false,
+              "variant": "outlined"
+            },
+            {
+              "name": "namefield",
+              "type": "name",
+              "key": "name_84b41f7a-262a-4973-ae18-1159c1503186",
+              "isList": false,
+              "label": "Name",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false,
+              "variant": "standard"
+            }
+          ]
+        }
+      ],
+      "allowedListTypes": [
+        "items"
+      ],
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Item",
+      "newItemName": "New Item",
+      "newItemUnidentifiedName": "Unidentified Item",
+      "stackDuplicates": true,
+      "countFieldName": "count",
+      "emptyListText": "Drag Items Here",
+      "icon": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        },
+        {
+          "field": "count",
+          "descending": true
+        }
+      ],
+      "canGrow": false,
+      "maxLength": 0,
+      "singleRow": false
+    },
+    {
+      "name": "Skills",
+      "type": "skills",
+      "isList": true,
+      "minX": 100,
+      "minY": 45,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style=\"min-width: 50px; max-width: 120px;\">\n  <namefield label=\"Name\" variant=\"standard\"></namefield>\n</div>",
+          "fields": []
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": true,
+      "addButtonText": "",
+      "allowedListTypes": [
+        "abilities"
+      ],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "Add a Skill",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "singleRow": true
+    }
+  ],
+  "settings": {
+    "healthIndicator": {
+      "disabled": false,
+      "maxHealthField": "maxHP",
+      "currentHealthField": "currentHP",
+      "color": [
+        {
+          "percentage": 0,
+          "color": "#ff0000",
+          "label": "Dying"
+        },
+        {
+          "percentage": 10,
+          "color": "#ff0000",
+          "label": "Near Death"
+        },
+        {
+          "percentage": 30,
+          "color": "#ff4d00",
+          "label": "Seriously Wounded"
+        },
+        {
+          "percentage": 50,
+          "color": "#ffd600",
+          "label": "Badly Wounded"
+        },
+        {
+          "percentage": 70,
+          "color": "#dbff00",
+          "label": "Moderately Wounded"
+        },
+        {
+          "percentage": 90,
+          "color": "#87c91b",
+          "label": "Lightly Wounded"
+        },
+        {
+          "percentage": 99,
+          "color": "#1bc91b",
+          "label": "Barely Wounded"
+        },
+        {
+          "percentage": 100,
+          "color": "#00FF00",
+          "label": "Healthy"
+        }
+      ]
+    },
+    "damage": {
+      "enableDamage": true,
+      "enableHealing": true,
+      "damageScript": "// Apply damage\nvar currentHP = record.data?.currentHP || 0;\ncurrentHP -= value;\nif (currentHP < 0) { currentHP = 0; }\nif (currentHP > record.data?.maxHP) { currentHP = record.data?.maxHP; }\napi.setValue(\"data.currentHP\", currentHP);\n",
+      "healingScript": "// Apply healing\nvar currentHP = record.data?.currentHP || 0;\ncurrentHP += value;\nif (currentHP < 0) { currentHP = 0; }\nif (currentHP > record.data?.maxHP) { currentHP = record.data?.maxHP; }\napi.setValue(\"data.currentHP\", currentHP);\n"
+    },
+    "combatTracker": {
+      "initiative": "initiative",
+      "order": "desc",
+      "roundTime": 6,
+      "additionalFields": [
+        {
+          "field": "wounds",
+          "label": "Wounds",
+          "type": "number",
+          "width": 80,
+          "editable": true,
+          "onChange": "// Update current hp\nvar wounds = record.data?.wounds;\nvar newHp = (record.data?.hitpoints || 0) - wounds;\nif (newHp < 0) { newHp = 0; }\nif (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\napi.setValue(\"data.curhp\", newHp);"
+        }
+      ],
+      "onTokenAdd": "",
+      "onEncounterStart": "",
+      "onEncounterEnd": "",
+      "onTurnStart": "console.log(\"TURN START\", data);",
+      "onTurnEnd": "",
+      "onRoundStart": "",
+      "onRoundEnd": "",
+      "onRollInitiative": "// TODO GET INIT SKILL AND VALUE FOR IT AND PROMPT ROLL INSTEAD\nconst initBonus = 0;\napi.roll(`1d20-${initBonus || 0}`, {}, 'initiative');"
+    },
+    "rollTypes": [
+      {
+        "name": "initiative",
+        "handleResult": "// Example initiative roll result logic\napi.setValue('data.initiative', data.roll.total);\napi.sendMessage(\"\", data.roll, [], [{\n  name: \"Init\",\n  tooltip: \"Initiative Roll\"\n}])"
+      },
+      {
+        "name": "attack",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Attack\",\n  tooltip: \"Attack Roll\"\n}];\nconst mods = data.roll?.metadata?.modifiers || [];\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\n// Here you would check targets and their AC, etc.\nconsole.log(data);\napi.sendMessage(\"\", data.roll, [], tags);"
+      },
+      {
+        "name": "damage",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Damage\",\n  tooltip: \"Damage Roll\"\n}];\n\nconst mods = data.roll?.metadata?.modifiers || [];\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\n// Here you would check targets and apply damage, etc.\nconsole.log(data);\napi.sendMessage(\"\", data.roll, [], tags);"
+      }
+    ],
+    "partySheet": {
+      "additionalFields": [
+        {
+          "field": "currentHP",
+          "label": "Current HP",
+          "type": "number",
+          "width": 90
+        },
+        {
+          "field": "maxHP",
+          "label": "Max HP",
+          "type": "number",
+          "width": 90
+        }
+      ],
+      "inventory": {
+        "enabled": true,
+        "recordType": "items",
+        "additionalFields": [
+          {
+            "field": "weight",
+            "label": "Weight",
+            "type": "number",
+            "width": 80
+          }
+        ]
+      },
+      "awards": {
+        "enabled": true,
+        "xpName": "XP",
+        "xpField": "xp",
+        "xpMethod": "award_equally",
+        "currencyFields": [
+          {
+            "field": "cp",
+            "label": "cp"
+          },
+          {
+            "field": "sp",
+            "label": "sp"
+          },
+          {
+            "field": "gp",
+            "label": "gp"
+          }
+        ]
+      }
+    },
+    "tokenSize": [
+      {
+        "label": "Tiny",
+        "size": 0.5
+      },
+      {
+        "label": "Small",
+        "size": 0.75
+      },
+      {
+        "label": "Medium",
+        "size": 1
+      },
+      {
+        "label": "Large",
+        "size": 2
+      },
+      {
+        "label": "Huge",
+        "size": 3
+      },
+      {
+        "label": "Gargantuan",
+        "size": 4
+      }
+    ],
+    "calendars": [
+      {
+        "default": false,
+        "name": "Calendar of Harptos (Faerun)",
+        "months": [
+          {
+            "name": "Hammer",
+            "days": 30
+          },
+          {
+            "name": "Midwinter",
+            "days": 1
+          },
+          {
+            "name": "Alturiak",
+            "days": 30
+          },
+          {
+            "name": "Ches",
+            "days": 30
+          },
+          {
+            "name": "Tarsakh",
+            "days": 30
+          },
+          {
+            "name": "Greengrass",
+            "days": 1
+          },
+          {
+            "name": "Mirtul",
+            "days": 30
+          },
+          {
+            "name": "Kythorn",
+            "days": 30
+          },
+          {
+            "name": "Flamerule",
+            "days": 30
+          },
+          {
+            "name": "Midsummer",
+            "days": 1
+          },
+          {
+            "name": "Eleasis",
+            "days": 30
+          },
+          {
+            "name": "Eleint",
+            "days": 30
+          },
+          {
+            "name": "Highharvestide",
+            "days": 1
+          },
+          {
+            "name": "Marpenoth",
+            "days": 30
+          },
+          {
+            "name": "Uktar",
+            "days": 30
+          },
+          {
+            "name": "Feast of the Moon",
+            "days": 1
+          },
+          {
+            "name": "Nightal",
+            "days": 30
+          }
+        ],
+        "days": [
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          }
+        ],
+        "startYear": 1491,
+        "leapYear": 4,
+        "leapMonth": 10,
+        "leapDayName": "Shieldmeet",
+        "repeatDays": true,
+        "eraName": "DR"
+      },
+      {
+        "default": true,
+        "name": "Calendar of Golarion",
+        "months": [
+          {
+            "name": "Abadius",
+            "days": 31
+          },
+          {
+            "name": "Calistril",
+            "days": 28
+          },
+          {
+            "name": "Pharast",
+            "days": 31
+          },
+          {
+            "name": "Gozran",
+            "days": 30
+          },
+          {
+            "name": "Desnus",
+            "days": 31
+          },
+          {
+            "name": "Sarenith",
+            "days": 30
+          },
+          {
+            "name": "Erastus",
+            "days": 31
+          },
+          {
+            "name": "Arodus",
+            "days": 31
+          },
+          {
+            "name": "Rova",
+            "days": 30
+          },
+          {
+            "name": "Lamashan",
+            "days": 31
+          },
+          {
+            "name": "Neth",
+            "days": 30
+          },
+          {
+            "name": "Kuthona",
+            "days": 31
+          }
+        ],
+        "days": [
+          {
+            "name": "Moonday",
+            "shortName": "M"
+          },
+          {
+            "name": "Toilday",
+            "shortName": "T"
+          },
+          {
+            "name": "Wealday",
+            "shortName": "W"
+          },
+          {
+            "name": "Oathday",
+            "shortName": "O"
+          },
+          {
+            "name": "Fireday",
+            "shortName": "F"
+          },
+          {
+            "name": "Starday",
+            "shortName": "St"
+          },
+          {
+            "name": "Sunday",
+            "shortName": "Su"
+          }
+        ],
+        "eraName": "AR",
+        "startYear": 4719,
+        "leapYear": 8,
+        "leapMonth": 2,
+        "leapDayName": "",
+        "repeatDays": false
+      }
+    ],
+    "effects": [
+      {
+        "label": "Circumstance Bonus",
+        "type": "cir_bonus",
+        "fields": [
+          {
+            "label": "Strength-based Checks",
+            "field": "str"
+          },
+          {
+            "label": "Dexterity-based Checks",
+            "field": "dex"
+          },
+          {
+            "label": "AC",
+            "field": "ac"
+          },
+          {
+            "label": "Acrobatics",
+            "field": "acrobatics"
+          }
+        ]
+      },
+      {
+        "label": "Circumstance Penalty",
+        "type": "cir_pen",
+        "fields": [
+          {
+            "label": "Strength-based Checks",
+            "field": "str"
+          },
+          {
+            "label": "Dexterity-based Checks",
+            "field": "dex"
+          },
+          {
+            "label": "AC",
+            "field": "ac"
+          },
+          {
+            "label": "Acrobatics",
+            "field": "acrobatics"
+          },
+          {
+            "label": "All Checks and DCs",
+            "field": "all"
+          }
+        ]
+      },
+      {
+        "label": "Damage",
+        "type": "damage",
+        "fields": []
+      },
+      {
+        "label": "Attribute",
+        "type": "attribute",
+        "fields": [
+          {
+            "label": "Strength",
+            "field": "strength"
+          },
+          {
+            "label": "Dexterity",
+            "field": "dexterity"
+          },
+          {
+            "label": "Constitution",
+            "field": "constitution"
+          }
+        ]
+      }
+    ]
+  },
+  "version": 0,
+  "ownerId": "65e24e77d1d78ddf0805a94b",
+  "createdAt": 1723839103313,
+  "updatedAt": 1723921344020
+},
+{
+  "_id": {
+    "$oid": "66ddde8ddcdf2cdc5cb84ce7"
+  },
+  "name": "Realm VTT Basic",
+  "description": "A Basic Ruleset that can be used to play many RPGs without automation for the rules.",
+  "records": [
+    {
+      "name": "Characters",
+      "type": "characters",
+      "minX": 455,
+      "minY": 500,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function rollInit() {\n    const initRoll = record.data?.initRoll;\n    const modifiers = [];\n    if (initRoll) {\n      const metadata = {\n        \"isCharacter\": true\n      }\n      api.promptRoll('Initiative', initRoll, modifiers, metadata, 'initiative');\n    }\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style='display: flex; flex-direction: column'>\n    <div style=\"width: 150px; min-width:150px; max-width: 150px; min-height: 150px; height: 150px; max-height: 150px\">\n      <portrait width='150px' height='150px'></portrait>\n    </div>\n  </div>\n    \n  <div style=\"margin-left: 8px; display: flex; flex-direction:column; gap: 8px;\">\n     <div style='display: flex; gap: 8px'>\n      <div style=''>\n        <numberfield field='curhp' label='Hit Points'\n          placeholder='0' />\n        </numberfield>\n      </div>\n      \n      <div style=''>\n        <numberfield field='hitpoints' label='Max Hit Points'\n          placeholder='0' />\n        </numberfield>\n      </div>\n    </div>\n    \n    <div style='width: 100%'>\n      <stringfield field='title' placeholder='Class / Title  Level'  />\n      </stringfield>\n    </div>\n    \n    <div style='display: flex; flex-direction: row; gap: 4px'>\n        <stringfield field='senses' placeholder='Senses'></stringfield>\n        <stringfield field='size' placeholder='Size'> </stringfield>\n    </div>\n  </div>\n</div>\n\n<div style=\"display: flex; flex-direction: row;\">\n  <div style=\"width: 150px;\">\n    <numberfield field=\"xp\" label=\"XP\" placeholder='0'></numberfield>\n  </div>\n\n  <div style=\"margin-left: 8px;\">\n    <stringfield onclick='rollInit();' field=\"initRoll\" label=\"Initiative Roll\" placeholder='Enter dice string...'></stringfield>\n  </div>\n\n  <div style=\"margin-left: 8px; margin-top: auto;\">\n    <button field=\"rollInitBtn\" icon=\"IconDice\" label=\"Roll\" onclick='rollInit();'></button>\n  </div>\n</div>\n\n<div style='display: flex; margin-top: 8px; flex-direction: column; flex-grow: 1'>\n  <list listtype=\"attributes_list\" field='attributes_list' variant='standard' label='Attributes'></list>\n</div>"
+        },
+        {
+          "name": "Inventory",
+          "layout": "<script>\n  function setTotalWeight() {\n    // Fetch the character record again to get latest data\n    const items = record.data?.inventory_list || [];\n    let totalWeight = 0;\n    items.forEach(item => {\n      let weight = parseFloat(item.data?.weight || '0');\n      let count = parseFloat(item.data?.count || '0');\n      if (count === undefined || isNaN(count)) {\n        count = 0;\n      }\n      if (weight !== undefined && !isNaN(weight)) {\n        totalWeight += (weight * count);\n      }\n    });\n    api.setValue('data.totalWeight', totalWeight);\n  }\n</script>\n\n<div style=\"display: flex; flex-direction: column; flex-grow:1\">\n  <list listtype='inventory_list' radius='none' variant='striped-outline' \n    field='inventory_list' label='Inventory' onchange='setTotalWeight();' /></list>\n</div>\n\n<div style=\"margin-top: 8px\">\n  <numberfield placeholder='0' field=\"totalWeight\" label=\"Total Weight\"></numberfield>\n</div>\n\n<div style=\"margin-top: 8px\">\n  <numberfield placeholder='0' field=\"currency\" label=\"Currency\"></numberfield>\n</div>\n"
+        },
+        {
+          "name": "Actions",
+          "layout": "<div>\n  <stringfield field=\"atkRoll\" label=\"Attack Roll\" placeholder='Enter dice string...'></stringfield>\n</div>\n\n<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow: 1\">\n  <list listtype='attack_list' radius='none' variant='striped-outline' \n    field='inventory_list' label='Attacks' /></list>\n</div>\n\n<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow: 1\">\n  <list listtype='ability_list' radius='none' variant='striped-outline' \n    field='ability_list' label='Abilities' /></list>\n</div>\n"
+        },
+        {
+          "name": "Notes",
+          "layout": "<div>\n  <richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>"
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      },
+      "disableDrop": false
+    },
+    {
+      "name": "NPCs",
+      "type": "npcs",
+      "minX": 360,
+      "minY": 450,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function rollInit() {\n    const initRoll = record.data?.initRoll;\n    if (initRoll) {\n      api.roll(initRoll, {}, 'initiative');\n    }\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style='display: flex; flex-direction: column'>\n    <div style=\"width: 100px; min-width:100px; max-width: 100px; height: 100px; min-height: 100px; max-height: 100px;\">\n      <portrait width='100px' height='100px'></portrait>\n    </div>\n  </div>\n    \n  <div style=\"margin-left: 8px; display: flex; flex-direction:column; gap: 8px;\">\n     <div style='display: flex; gap: 8px'>\n        <numberfield field='curhp' label='HP'></numberfield>\n        <numberfield field='hitpoints' label='Max HP'></numberfield>\n    </div>\n    \n    <div style=''>\n      <stringfield field='title' placeholder='Type'></stringfield>\n    </div>\n  </div>\n</div>\n    \n<div style='display: flex; flex-direction: row; margin-top: 8px; gap: 8px;'>\n  <div style='width: 50%'>\n    <stringfield field='senses' placeholder='Senses'></stringfield>\n  </div>\n  <div style='width: 50%'>\n    <stringfield field='size' placeholder='Size'></stringfield>\n  </div>\n</div>\n\n<div style=\"display: flex; margin-top: 8px; flex-direction: row; gap: 8px\">\n  <numberfield width='100px' field=\"xp\" label=\"XP\" placeholder='0'></numberfield>\n\n  <div style=\"margin-left: 8px;\">\n    <stringfield onclick='rollInit();' field=\"initRoll\" label=\"Initiative Roll\" placeholder='Dice sting...'></stringfield>\n  </div>\n\n  <div style=\"margin-top: auto\">\n    <button field=\"rollInitBtn\" icon=\"IconDice\" label=\"Roll\" variant='outlined' color=\"primary\" onclick='rollInit();'></button>\n  </div>\n</div>\n\n<div style='display: flex; flex-direction: column; flex-grow: 1'>\n  <div style='height: 100%; width: 100%; margin-top: 8px'>\n    <list listtype=\"attributes_list\" field='attributes_list' variant='standard' label='Attributes'></list>\n  </div>\n</div>\n"
+        },
+        {
+          "name": "Inventory",
+          "layout": "<div style=\"display: flex; flex-direction: column; flex-grow:1\">\n  <list listtype='inventory_list' radius='none' variant='striped-outline' \n    field='inventory_list' label='Inventory' onchange='setTotalWeight();' /></list>\n</div>\n"
+        },
+        {
+          "name": "Attacks",
+          "layout": "<div>\n  <stringfield field=\"atkRoll\" label=\"Attack Roll\" placeholder='Enter dice string...'></stringfield>\n</div>\n\n<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow: 1\">\n  <list listtype='attack_list' radius='none' variant='striped-outline' \n    field='inventory_list' label='Attacks' /></list>\n</div>\n"
+        },
+        {
+          "name": "Notes",
+          "layout": "<div>\n  <richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>"
+        }
+      ],
+      "isList": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      },
+      "disableDrop": false
+    },
+    {
+      "name": "Abilities",
+      "type": "abilities",
+      "minX": 500,
+      "minY": 450,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='display: flex;'>\n<div style='height:100px; width: 100px; max-width: 100px; min-width: 100px; max-height: 100px; min-height: 100px'>\n  <portrait field=\"portrait\"></portrait>\n</div>\n\n  <div style='margin-left: 4px; flex-grow:1; display: flex; flex-direction: column'>\n    <richtextfield field=\"description\" label=\"Description\"></richtextfield>\n  </div>\n</div>\n"
+        },
+        {
+          "name": "Rules",
+          "layout": "<div>\n  <label label=\"Dice Used to Roll\" textalign=\"left\"></label>\n</div>\n\n<div style='margin-top: 4px'>\n  <stringfield field=\"roll\" label=\"Roll\" placeholder='Enter dice string...'></stringfield>\n</div>\n\n<div>\n  <label label=\"Related Attribute\" textalign=\"left\"></label>\n</div>\n\n<div style='margin-top: 4px'>\n  <stringfield field=\"attribute\" label=\"Attribute\" placeholder='Enter Attribute name...'></stringfield>\n</div>\n\n<div style='margin-top: 4px'>\n  <label label=\"When Rolling...\" textalign=\"left\"></label>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubValue\" label=\"Add Value\" color=\"primary\"></radio>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubValue\" label=\"Subtract Value\" color=\"primary\"></radio>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubAttr\" label=\"Add Attribute\" color=\"primary\"></radio>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubAttr\" label=\"Subtract Attribute\" color=\"primary\"></radio>\n</div>\n"
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "IconRun",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {},
+      "disableDrop": false
+    },
+    {
+      "name": "Attributes",
+      "type": "attributes",
+      "isList": false,
+      "minX": 300,
+      "minY": 330,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div>\n  <label label=\"Dice Used to Roll\" textalign=\"left\"></label>\n</div>\n\n<div style='margin-top: 4px'>\n  <stringfield field=\"roll\" label=\"Roll\" placeholder=\"Enter dice string...\"></stringfield>\n</div>\n\n<div style='margin-top: 4px'>\n  <label label=\"When Rolling...\" textalign=\"left\"></label>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubValue\" label=\"Add Value\" color=\"primary\"></radio>\n</div>\n\n<div style='margin-top: 4px'>\n  <radio field=\"addSubValue\" label=\"Subtract Value\" color=\"primary\"></radio>\n</div>\n\n<div style='margin-top: 8px'>\n  <label label=\"Ruleset Description\" textalign=\"left\"></label>\n</div>\n\n<div style=\"margin-top: 4px\">\n  <stringfield field=\"description\" placeholder='Enter description...' multiline=\"true\" maxrows=\"4\"></stringfield>\n</div>\n"
+        }
+      ],
+      "icon": "IconFlare",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {}
+    },
+    {
+      "name": "Items",
+      "type": "items",
+      "minX": 350,
+      "minY": 240,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n    function showHideValues(typeStr) {\n      if (typeStr === \"weapon\") {\n        api.setHidden(\"damage\", false);\n      }\n      else {\n        api.setHidden(\"damage\", true);\n      }\n    }\n</script>\n\n<div style='display: flex; flex-direction: row'>\n  <div style='height:75px; width: 75px; max-width: 75px; min-width: 75px; max-height: 75px; min-height: 75px'>\n    <portrait field='portrait'></portrait>\n  </div>\n  <div style=\"margin-left: 8px; width:100%; margin-right: 4px;\">\n    <stringfield field='description' label='Description' placeholder='Enter description...' multiline='true' maxrows='4'></stringfield>\n  </div>\n</div>\n<div style='display: flex; margin-top: 8px;'>\n  <div style=''>\n    <numberfield width='80px' field=\"weight\" label=\"Weight\" ></numberfield>\n  </div>\n  <div style='margin-left: 4px; margin-right: 4px; width:100%'>\n    <dropdown multiselect='1' placeholder='Select Type' onchange=\"showHideValues(value);\" field=\"type\" label=\"Type\" options='[{\"label\": \"Gear\", \"value\": \"gear\"}, {\"label\": \"Weapon\", \"value\": \"weapon\"}]'></dropdown>\n  </div>\n  <div>\n    <stringfield hidden=\"true\" field=\"damage\" label=\"Damage\"></stringfield>\n  </div>\n</div>"
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "IconBackpack",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "type": "weapon,gear"
+      }
+    },
+    {
+      "name": "Ability List",
+      "type": "ability_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 32,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function onRoll() {\n    const name = data.name;\n    let value = data.data.value;\n    if (value === undefined) {\n      value = 0;\n    }\n    const roll = data.data.roll;\n    const addSubValue = data.data.addSubValue;\n    const addSubAttr = data.data.addSubAttr;\n    const attribute = data.data.attribute;\n    let attributeVal = 0;\n    if (attribute) {\n      // Find the attribute with that name if any\n      let attributeData;\n      const attrs = record.data?.attributes_list || [];\n      attrs.forEach((attr) => {\n        if (attr.name === attribute) {\n          attributeVal = parseInt(attr.data.value, 10);\n        }\n      });\n      if (isNaN(attributeVal) || attributeVal === undefined) {\n        attributeVal = 0;\n      }\n    }\n    let modifiers = [];\n    if (addSubValue === 'Add Value') {\n      modifiers.push({\n        name: name,\n        type: \"value\",\n        value: value,\n        active: true\n      })\n    }\n    else if (addSubValue === 'Subtract Value') {\n      modifiers.push({\n        name: name,\n        type: \"value\",\n        value: value * -1,\n        active: true\n      })\n    }\n   if (addSubAttr === 'Add Attribute') {\n      modifiers.push({\n        name: attribute,\n        type: \"attribute\",\n        value: attributeVal,\n        active: true\n      })\n    }\n    else if (addSubAttr === 'Subtract Attribute') {\n      modifiers.push({\n        name: attribute,\n        type: \"attribute\",\n        value: attributeVal * -1,\n        active: true\n      })\n    }\n    if (roll) {\n      api.promptRoll(\n        `Ability (${name})`,\n        `${roll}`, modifiers, {}, \"ability\",\n      );\n    }\n  }\n</script>\n\n<div style='height: 30px; display: flex'>\n  <portrait name='portrait' width='30px' height='30px'></portrait>\n  <div style='flex-grow: 1; margin-left: 4px'>\n    <namefield field=\"namefield\" size='xs' variant=\"tooltip\"></namefield>\n  </div>\n  <div style='margin-left: 4px;'>\n    <numberfield field=\"value\" size='xs'label=\"Value\" variant=\"tooltip\"></numberfield>\n  </div>\n  <div style='margin-left: 4px; margin-top: auto; margin-bottom: auto'>\n    <iconbutton size='sm' field=\"iconbutton\" variant='default' options='[{\"icon\": \"IconDice\", \"label\": \"Roll\", \"value\": \"roll\"}]' onchange='' onclick='onRoll();'></iconbutton>\n  </div>\n</div>"
+        }
+      ],
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Ability",
+      "allowedListTypes": [
+        "abilities"
+      ],
+      "newItemName": "New Ability",
+      "newItemUnidentifiedName": "New Ability",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        }
+      ],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": false
+    },
+    {
+      "name": "Attack List",
+      "type": "attack_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 32,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\nfunction handleRoll() {\n  const name = data.name;\n  const atkRoll = record.data.atkRoll || '';\n  const modifiers = [];\n  \n  record.effects.forEach((eff) => {\n    eff.rules.forEach(rule => {\n      if (rule.type === \"attack_bonus\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = record.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        let mod = {\n          name: eff.name,\n          value: adjustedValue,\n          active: true\n        };\n        modifiers.push(mod);\n      }\n      else if (rule.type === \"attack_penalty\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = record.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        if (adjustedValue > 0) {\n          adjustedValue *= -1;\n        }\n        let mod = {\n          name: eff.name,\n          value: adjustedValue,\n          active: true\n        };\n        modifiers.push(mod);\n      }\n    });\n  });\n\n  if (atkRoll) {\n    api.promptRoll(`Attack (${name})`, atkRoll, modifiers, {}, \"attack\");\n  }\n}\n\nfunction getDamageType(rollString) {\n    const regex = /(\\d+d\\d+)(?:\\s*\\+\\s*\\d+)?(?:\\s+(\\w+))?/;\n    const match = rollString.match(regex);\n    return match && match[2] ? match[2] : \"untyped\";\n}\n\nfunction rollDamage() {\n  const dmgRoll = data.data.damage;\n  const name = data.name;\n\n  const damage = (data.data?.damage || '');\n  const damageType = getDamageType(damage);\n\n  const modifiers = [];\n  \n  record.effects.forEach((eff) => {\n    eff.rules.forEach(rule => {\n      if (rule.type === \"damage_bonus\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = record.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        let mod = {\n          name: eff.name,\n          type: damageType,\n          value: adjustedValue,\n          active: true\n        };\n        modifiers.push(mod);\n      }\n      else if (rule.type === \"damage_penalty\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = record.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        if (adjustedValue > 0) {\n          adjustedValue *= -1;\n        }\n        let mod = {\n          name: eff.name,\n          type: damageType,\n          value: adjustedValue,\n          active: true\n        };\n        modifiers.push(mod);\n      }\n    });\n  });\n  \n  api.promptRoll(`Damage (${name})`, dmgRoll, modifiers, {}, \"damage\");\n}\n</script>\n\n<div style='height: 30px; display: flex'>\n  <div style='min-width: 30px; min-height: 30px;'>\n  <portrait name='portrait' width='30px' height='30px'></portrait>\n  </div>\n  <div style='margin-left: 4px; width:100%'>\n    <namefield label='Name' size='xs' variant='tooltip' field='namefield' />\n  </div>\n  <div style='margin-left: 4px; margin-top: auto; margin-bottom: auto'>\n    <iconbutton field=\"rollBtn\" color=\"default\" options='[{\"icon\": \"IconDice\", \"label\": \"Roll Attack\", \"value\": \"roll\"}]' onchange='() => { }' onclick='handleRoll();'></iconbutton>\n  </div>\n  <div style='margin-left: 4px'>\n    <button size='xs' field=\"button\" label=\"Damage\" variant='outlined' color=\"primary\" onclick='rollDamage();'></button>\n  </div>\n</div>\n"
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "No Weapons Equipped",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        }
+      ],
+      "maxLength": 0,
+      "singleRow": false,
+      "filterCriteria": [
+        {
+          "field": "type",
+          "operator": "equals",
+          "value": "weapon"
+        },
+        {
+          "field": "carried",
+          "operator": "equals",
+          "value": "equipped"
+        }
+      ]
+    },
+    {
+      "name": "Attributes List",
+      "type": "attributes_list",
+      "isList": true,
+      "minX": 110,
+      "minY": 100,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function onRoll() {\n    const name = data.name;\n    let value = data.data.value;\n    if (value === undefined) {\n      value = 0;\n    }\n    const roll = data.data.roll;\n    const addSubValue = data.data.addSubValue;\n    let modifiers = [];\n    if (addSubValue === 'Add Value') {\n      modifiers.push({\n        name: name,\n        type: \"attribute\",\n        value: value,\n        active: true\n      })\n    }\n    else if (addSubValue === 'Subtract Value') {\n      modifiers.push({\n        name: name,\n        type: \"attribute\",\n        value: value * -1,\n        active: true\n      })\n    }\n    if (roll) {\n      api.promptRoll(\n        `Attribute (${name})`,\n        `${roll}`, modifiers, {}, \"attribute\"\n      );\n    }\n  }\n</script>\n\n<div style='display: flex; flex-direction: row; width: 100px'>\n  <div style='display: flex; flex-direction: column;'>\n    <div style='width: 100px'>\n      <namefield placeholder='Attribute Name' field='namefield' variant='unstyled'></namefield>\n    </div>\n    <div style=''>\n      <numberfield size='lg' field=\"value\" label=\"Value\" variant=\"tooltip\" onclick='onRoll();'></numberfield>\n    </div>\n  </div>\n</div>\n"
+        }
+      ],
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Attribute",
+      "allowedListTypes": [
+        "attributes"
+      ],
+      "newItemName": "New Attribute",
+      "newItemUnidentifiedName": "New Attribute",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": true
+    },
+    {
+      "name": "Inventory List",
+      "type": "inventory_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 32,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function setTotalWeight() {\n    // Fetch the character record again to get latest data\n    const items = record.data?.inventory_list || [];\n    let totalWeight = 0;\n    items.forEach(item => {\n      let weight = parseFloat(item.data?.weight || '0');\n      let count = parseFloat(item.data?.count || '0');\n      if (count === undefined || isNaN(count)) {\n        count = 0;\n      }\n      if (weight !== undefined && !isNaN(weight)) {\n        totalWeight += (weight * count);\n      }\n    });\n    console.log(totalWeight);\n    api.setValue('data.totalWeight', totalWeight);\n  }\n</script>\n\n<div style='height: 30px; display: flex'>\n  <div style='width: 30px; min-width: 30px'>\n    <portrait width='30px' height='30px' name='portrait'></portrait>\n  </div>\n  <div style='margin-left: 4px;width: 60px'>\n    <numberfield size='xs' variant='tooltip' label='Count' field='count' onchange='setTotalWeight();' /></numberfield>\n  </div>\n  <div style='margin-left: 4px; flex-grow: 1'>\n    <namefield size='xs' variant='tooltip' label='Name' field='namefield' />\n  </div>\n  <div style='margin-left: 4px; margin-top: auto; margin-bottom: auto'>\n    <iconbutton size='sm' field=\"carried\" variant=\"default\" options='[{\"icon\": \"IconBackpack\", \"label\": \"Carried\", \"value\": \"carried\"}, {\"icon\": \"IconShield\", \"label\": \"Equipped\", \"value\": \"equipped\"}, {\"icon\": \"IconArrowDown\", \"label\": \"Dropped\", \"value\": \"dropped\"}]' onchange='' onclick=''></iconbutton>\n  </div>\n</div>\n"
+        }
+      ],
+      "allowedListTypes": [
+        "items"
+      ],
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Item",
+      "newItemName": "New Item",
+      "newItemUnidentifiedName": "Unidentified Item",
+      "stackDuplicates": true,
+      "countFieldName": "count",
+      "emptyListText": "Drag Items Here",
+      "icon": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        },
+        {
+          "field": "count",
+          "descending": true
+        }
+      ],
+      "canGrow": false,
+      "maxLength": 0,
+      "singleRow": false,
+      "filterCriteria": []
+    }
+  ],
+  "settings": {
+    "healthIndicator": {
+      "disabled": false,
+      "maxHealthField": "hitpoints",
+      "currentHealthField": "curhp",
+      "color": [
+        {
+          "percentage": 0,
+          "color": "#ff0000",
+          "label": "Dying"
+        },
+        {
+          "percentage": 10,
+          "color": "#ff0000",
+          "label": "Near Death"
+        },
+        {
+          "percentage": 30,
+          "color": "#ff4d00",
+          "label": "Seriously Wounded"
+        },
+        {
+          "percentage": 50,
+          "color": "#ffd600",
+          "label": "Badly Wounded"
+        },
+        {
+          "percentage": 70,
+          "color": "#dbff00",
+          "label": "Moderately Wounded"
+        },
+        {
+          "percentage": 90,
+          "color": "#87c91b",
+          "label": "Lightly Wounded"
+        },
+        {
+          "percentage": 99,
+          "color": "#1bc91b",
+          "label": "Barely Wounded"
+        },
+        {
+          "percentage": 100,
+          "color": "#00FF00",
+          "label": "Healthy"
+        }
+      ]
+    },
+    "damage": {
+      "enableDamage": true,
+      "enableHealing": true,
+      "damageScript": "// Apply damage\nvar curhp = record.data?.curhp || 0;\ncurhp -= value;\nif (curhp < 0) { curhp = 0; }\nif (curhp > record.data?.hitpoints) { curhp = record.data?.hitpoints; }\napi.setValue(\"data.curhp\", curhp);",
+      "healingScript": "// Apply damage\nvar curhp = record.data?.curhp || 0;\ncurhp += value;\nif (curhp < 0) { curhp = 0; }\nif (curhp > record.data?.hitpoints) { curhp = record.data?.hitpoints; }\napi.setValue(\"data.curhp\", curhp);"
+    },
+    "combatTracker": {
+      "initiative": "initiative",
+      "order": "desc",
+      "additionalFields": [
+        {
+          "field": "curhp",
+          "label": "HP",
+          "type": "number",
+          "width": 80,
+          "editable": true,
+          "onChange": ""
+        },
+        {
+          "field": "hitpoints",
+          "label": "Max",
+          "type": "string",
+          "width": 80,
+          "editable": false,
+          "onChange": ""
+        }
+      ],
+      "onTokenAdd": "",
+      "onEncounterStart": "",
+      "onEncounterEnd": "",
+      "onTurnStart": "",
+      "onTurnEnd": "",
+      "onRoundStart": "",
+      "onRoundEnd": "",
+      "onRollInitiative": "// Check if roll defined\nconst roll = data.token.data?.initRoll;\n\nconst token = data?.token;\nconst modifiers = [];\n\nif (roll) { \n  api.promptRollForToken(token, 'Initiative', roll, modifiers, {\n    \"rollName\": \"Initiative\",\n    \"tooltip\": \"Initiative Roll\",\n    \"token\": token,\n    \"dc\": 0\n  }, 'initiative');\n}",
+      "onRollInitiativeGroup": "const token = data?.tokens && data?.tokens.length > 0 ? data?.tokens[0] : undefined;\n\nif (!token) {\n  return;\n}\n\nconst roll = token.data?.initRoll;\n\nconst modifiers = [];\n\nif (roll) {\n  api.promptRollForToken(token, 'Initiative', roll, modifiers, {\n    \"rollName\": \"Initiative\",\n    \"tooltip\": \"Initiative Roll\",\n    \"dc\": 0,\n    \"group\": data?.tokens\n  }, 'initiative');\n}\n"
+    },
+    "rollTypes": [
+      {
+        "name": "initiative",
+        "handleResult": "if (data.roll?.metadata?.group && data.roll?.metadata?.group.length > 0) {\n\tdata.roll?.metadata?.group.forEach(token => {\n\t\tapi.setValueOnToken(token, 'data.initiative', data.roll.total);\n\t})\n\tapi.sendMessage(\"\", data.roll, [], [{\n\t\tname: \"Init\",\n\t\ttooltip: \"Initiative Roll\"\n\t}])\n}\nelse {\n\tapi.setValue('data.initiative', data.roll.total);\n\n\tapi.sendMessage(\"\", data.roll, [], [{\n\t\tname: \"Initiative\",\n\t\ttooltip: \"Initiative Roll\"\n\t}])\n}"
+      },
+      {
+        "name": "attack",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Attack\",\n  tooltip: \"Attack Roll\"\n}];\n\nconst mods = data.roll?.metadata?.modifiers || [];\n\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\n// Here you would check targets and their AC, etc.\napi.sendMessage(\"\", data.roll, [], tags);"
+      },
+      {
+        "name": "damage",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Damage\",\n  tooltip: \"Damage Roll\"\n}];\n\nconst mods = data.roll?.metadata?.modifiers || [];\n\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\nconst message = `\n\\`\\`\\`Apply_Damage\nlet damage = ${data.roll.total};\nlet targets = [record];\nif (!record) {\n  targets = api.getSelectedTokens().map(target => target.token);\n}\ntargets.forEach(target => {\n  // Apply wounds\n  if (target && target.data) {\n      var curhp = target.data?.curhp || 0;\n      curhp -= damage;\n      if (curhp < 0) { curhp = 0; }\n      if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }\n      const oldHp = (target.data?.curhp || 0);\n      api.setValueOnToken(target, \"data.curhp\", curhp);\n      const unIdentified = target.identified === false;\n      const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;\n\n      const message = \\`\\$\\{targetName\\} took \\$\\{damage\\} damage.\\`;\n      const macro = \\`\\\\\\`\\\\\\`\\\\\\`Undo\\\\n api.setValueOnTokenById('\\$\\{target._id\\}', '\\$\\{target.recordType\\}', 'data.curhp', '\\$\\{oldHp\\}'); api.editMessage(null, '~\\$\\{message\\}~'); \\\\n\\\\\\`\\\\\\`\\\\\\`\\`;\n\n      api.sendMessage(\\`\\$\\{message\\}\\\\n\\$\\{macro\\}\\`);\n  }\n});\n\\`\\`\\`\n`;\n\n// Here you would check targets and apply damage, etc.\napi.sendMessage(message, data.roll, [], tags);"
+      },
+      {
+        "name": "attribute",
+        "handleResult": "api.sendMessage(\"\", data.roll, [], [{\n  name: \"Attribute\",\n  tooltip: \"Attribute Roll\"\n}]);"
+      },
+      {
+        "name": "ability",
+        "handleResult": "const name = data?.roll?.metadata?.data?.name;\napi.sendMessage(\"\", data.roll, [], [{\n  name: name || \"Ability\",\n  tooltip: `${name || \"\"} Ability Roll`\n}]);"
+      }
+    ],
+    "partySheet": {
+      "additionalFields": [
+        {
+          "field": "curhp",
+          "label": "Current HP",
+          "type": "number",
+          "width": 90
+        },
+        {
+          "field": "hitpoints",
+          "label": "HP",
+          "type": "number",
+          "width": 90
+        }
+      ],
+      "inventory": {
+        "enabled": true,
+        "recordType": "items",
+        "additionalFields": [
+          {
+            "field": "weight",
+            "label": "Weight",
+            "type": "number",
+            "width": 80
+          }
+        ]
+      },
+      "awards": {
+        "enabled": true,
+        "xpName": "XP",
+        "xpField": "xp",
+        "xpMethod": "award_equally",
+        "currencyFields": [
+          {
+            "field": "currency",
+            "label": "Currency"
+          }
+        ]
+      }
+    },
+    "tokenSize": [
+      {
+        "label": "Tiny",
+        "size": 0.5
+      },
+      {
+        "label": "Small",
+        "size": 0.75
+      },
+      {
+        "label": "Medium",
+        "size": 1
+      },
+      {
+        "label": "Large",
+        "size": 2
+      },
+      {
+        "label": "Huge",
+        "size": 3
+      },
+      {
+        "label": "Gargantuan",
+        "size": 4
+      }
+    ],
+    "calendars": [
+      {
+        "default": false,
+        "name": "Calendar of Harptos (Faerun)",
+        "months": [
+          {
+            "name": "Hammer",
+            "days": 30
+          },
+          {
+            "name": "Midwinter",
+            "days": 1
+          },
+          {
+            "name": "Alturiak",
+            "days": 30
+          },
+          {
+            "name": "Ches",
+            "days": 30
+          },
+          {
+            "name": "Tarsakh",
+            "days": 30
+          },
+          {
+            "name": "Greengrass",
+            "days": 1
+          },
+          {
+            "name": "Mirtul",
+            "days": 30
+          },
+          {
+            "name": "Kythorn",
+            "days": 30
+          },
+          {
+            "name": "Flamerule",
+            "days": 30
+          },
+          {
+            "name": "Midsummer",
+            "days": 1
+          },
+          {
+            "name": "Eleasis",
+            "days": 30
+          },
+          {
+            "name": "Eleint",
+            "days": 30
+          },
+          {
+            "name": "Highharvestide",
+            "days": 1
+          },
+          {
+            "name": "Marpenoth",
+            "days": 30
+          },
+          {
+            "name": "Uktar",
+            "days": 30
+          },
+          {
+            "name": "Feast of the Moon",
+            "days": 1
+          },
+          {
+            "name": "Nightal",
+            "days": 30
+          }
+        ],
+        "days": [
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          }
+        ],
+        "startYear": 1491,
+        "leapYear": 4,
+        "leapMonth": 10,
+        "leapDayName": "Shieldmeet",
+        "repeatDays": true,
+        "eraName": "DR"
+      },
+      {
+        "default": false,
+        "name": "Calendar of Golarion",
+        "months": [
+          {
+            "name": "Abadius",
+            "days": 31
+          },
+          {
+            "name": "Calistril",
+            "days": 28
+          },
+          {
+            "name": "Pharast",
+            "days": 31
+          },
+          {
+            "name": "Gozran",
+            "days": 30
+          },
+          {
+            "name": "Desnus",
+            "days": 31
+          },
+          {
+            "name": "Sarenith",
+            "days": 30
+          },
+          {
+            "name": "Erastus",
+            "days": 31
+          },
+          {
+            "name": "Arodus",
+            "days": 31
+          },
+          {
+            "name": "Rova",
+            "days": 30
+          },
+          {
+            "name": "Lamashan",
+            "days": 31
+          },
+          {
+            "name": "Neth",
+            "days": 30
+          },
+          {
+            "name": "Kuthona",
+            "days": 31
+          }
+        ],
+        "days": [
+          {
+            "name": "Moonday",
+            "shortName": "M"
+          },
+          {
+            "name": "Toilday",
+            "shortName": "T"
+          },
+          {
+            "name": "Wealday",
+            "shortName": "W"
+          },
+          {
+            "name": "Oathday",
+            "shortName": "O"
+          },
+          {
+            "name": "Fireday",
+            "shortName": "F"
+          },
+          {
+            "name": "Starday",
+            "shortName": "St"
+          },
+          {
+            "name": "Sunday",
+            "shortName": "Su"
+          }
+        ],
+        "eraName": "AR",
+        "startYear": 4719,
+        "leapYear": 8,
+        "leapMonth": 2,
+        "leapDayName": "",
+        "repeatDays": false
+      }
+    ],
+    "effects": [
+      {
+        "label": "Attack Bonus",
+        "type": "attack_bonus",
+        "fields": []
+      },
+      {
+        "label": "Attack Penalty",
+        "type": "attack_penalty",
+        "fields": []
+      },
+      {
+        "label": "Damage Penalty",
+        "type": "damage_penalty",
+        "fields": []
+      },
+      {
+        "label": "Damage Bonus",
+        "type": "damage_bonus",
+        "fields": []
+      }
+    ]
+  },
+  "version": 1,
+  "ownerId": "65e24e77d1d78ddf0805a94b",
+  "createdAt": 1725816461884,
+  "updatedAt": 1730577461109,
+  "published": true
+},
+{
+  "_id": {
     "$oid": "66e37156b49c73d33593dbfd"
   },
   "name": "Dungeons and Dragons 5th Edition (2024)",
@@ -44,7 +1945,7 @@
         },
         {
           "name": "Features",
-          "layout": "<script>\n  // On update of Constitution, update HP\n  function getHpForLevel(conMod, newLevel, newHpLevelArray) {\n    // Get the max HP we should have at our current level\n    const hpByLevel = record?.data?.hpByLevel || '[]';\n    const hpByLevelArr = JSON.parse(hpByLevel);\n    let totalHp = 0;\n    // Get all the HP we rolled or set for each level\n    hpByLevelArr.forEach(hpLevel => {\n      let thisLevel = hpLevel.hp + conMod;\n      // Each time you level you roll or take average + CON MOD to a min of 1\n      if (thisLevel < 1) {\n        thisLevel = 1;\n      }\n      totalHp += thisLevel;\n    });\n\n    // Get HP Max modifier\n    const hpMaxMods = getEffectsAndModifiers(['hitpoints']);\n    hpMaxMods.forEach(mod => {\n      // For string type in HP max, we'll use it as a field\n      // with a special case for the `field` value to mean a specific class here\n      if (mod.valueType === 'string') {\n        // First check if it is in values we are setting\n        let bonus = mod.value === 'level' ? newLevel : parseInt(record?.data?.[mod.value] || '0', 10);\n        const relevantClass = mod.field;\n        if (relevantClass && mod.value === 'level') {\n          // Bonus = total level in the given class\n          newHpLevelArray.forEach(hpLevel => {\n            if (hpLevel.className === relevantClass) {\n              bonus += 1;\n            }\n          });\n        }\n        if (!isNaN(bonus)) {\n          totalHp += bonus;\n        }\n      }\n      else if (mod.valueType === 'number') {\n        const bonus = parseInt(mod.value || '0', 10);\n        if (!isNaN(bonus)) {\n          totalHp += bonus;\n        }\n      }\n    });\n\n    return totalHp;\n  }\n\n  function getAbilityScoreIncrease(feature) {\n    const asi = feature?.data?.abilityScores || '';\n    let max = 20;\n    let scores = [];\n    if (!asi) {\n      return { max, scores, promptChoice: false, count: 0 };\n    }\n\n    // Parse the maximum value from the phrase\n    const maxMatch = asi.toLowerCase().match(/to a maximum of (\\d+)/);\n    if (maxMatch) {\n      max = parseInt(maxMatch[1], 10);\n    }\n\n    if (asi.toLowerCase().match(/one ability score of your choice/) && asi.toLowerCase().match(/or increase two ability scores/)) {\n      return { max, scores: ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'], promptChoice: true, count: 2 };\n    }\n\n    const abilityMatch = asi.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);\n    if (abilityMatch) {\n      scores = abilityMatch;\n    }\n\n    return { max, scores, promptChoice: scores.length > 1, count: 1 };\n  }\n\n  function updateAbilitiesFromFeature(feature) {\n    // If the feature has an ability, add it to the character\n    // For each feature, we need to check for ability groups and add them if not there\n    const abilityGroupName = feature?.data?.abilityGroupName || '';\n    if (abilityGroupName !== '') {\n      let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;\n      if ((feature?.data?.fieldsToAddToUses || []).length > 0) {\n        abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);\n      }\n      const abilityValue = feature?.data?.value || '';\n      const abilityRestoresOn = feature?.data?.restoreOn || '';\n      const savingThrowAbility = feature?.data?.savingThrowAbility || '';\n      let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);\n      // When the group is added, or found, we add abilities to it or set data on it\n      const recordDataPath = record?.dataPath || '';\n      const abilityAddedCallback = (record) => {\n        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);\n        const fieldsToSet = {};\n        if (abilityGroupIndex !== -1) {\n          // Get the Ability to add if any\n          const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';\n          if (abilityIdToAdd !== '') {\n            api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {\n              api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);\n            });\n          }\n          // If abilityUsesPerDay > 0, un hide the counter\n          if (abilityUsesPerDay > 0) {\n            // Update the record's number of uses if lower\n            const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;\n            if (curDailyUses < abilityUsesPerDay) {\n              // If ability uses per day went up, update it\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;\n            }\n            const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';\n            if (abilityValue) {\n              // Update the ability value if it was previously set, as this might be a higher value now\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;\n            }\n            // If restoreOn is set, update it\n            if (abilityRestoresOn !== '') {\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.restore`] = abilityRestoresOn;\n            }\n            fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;\n          }\n        }\n        api.setValues(fieldsToSet);\n      };\n      if (!abilityGroup) {\n        api.addValue('data.abilityGroups', {\n          name: abilityGroupName,\n          data: {\n            abilities: [],\n            maxDailyUses: abilityUsesPerDay,\n            value: abilityValue,\n            restore: abilityRestoresOn,\n            savingThrowAbility: savingThrowAbility,\n            fieldsToAddToUses: feature?.data?.fieldsToAddToUses || []\n          }\n        }, abilityAddedCallback);\n      }\n      else {\n        abilityAddedCallback(record);\n      }\n    }\n  }\n\n  function onDropFeat(recordLink) {\n    const feat = recordLink?.value;\n\n    // We add feats to the features list so that\n    // All modifiers and are parsed by the same functions\n    const featToAdd = {\n      ...feat,\n      data: {\n        ...feat?.data,\n        // Set a field called featureType to 'feat' so that\n        // So that we can show and filter the two features_list fields properly\n        featureType: 'feat'\n      }\n    }\n\n    api.addValue(`data.features`, featToAdd, (updatedRecord) => {\n      // After adding the feat, we need to update abilities if one was attached to it\n      updateAbilitiesFromFeature(featToAdd);\n    });\n\n    // Prompt the user to select ASIs or just add them all\n    const abilityScoreSelection = (values) => {\n      const fieldsToSet = {};\n      values.forEach(curV => {\n        // Get the current value\n        let value = curV.split('-')[0];\n        const curValue = record?.data?.[`${value}`] || 0;\n        // If we haven't chosen it yet, increase the current value by 1\n        if (fieldsToSet[`data.${value}`] === undefined) {\n          if (curValue < abilityIncrease.max) {\n            fieldsToSet[`data.${value}`] = curValue + 1;\n          }\n        }\n        else {\n          // Increase the value by 1 again\n          if (fieldsToSet[`data.${value}`] < abilityIncrease.max) {\n            fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;\n          }\n        }\n      });\n\n      // Set the attributes then...\n      api.setValues(fieldsToSet, () => {\n        // Use the setModifier function to set the modifiers, update proficiencies,\n        // and other re-calculations of modifiers as needed\n        Object.keys(fieldsToSet).forEach(key => {\n          const value = fieldsToSet[key];\n          const attribute = key.replace('data.', '');\n          setModifier(value, attribute);\n        });\n      });\n    }\n\n    const abilityIncrease = getAbilityScoreIncrease(featToAdd);\n    if (abilityIncrease.promptChoice) {\n      const options = [];\n      abilityIncrease.scores.forEach(score => {\n        options.push({ label: capitalize(score), value: score });\n      });\n      // IF we allow more than one selection, add them again\n      if (abilityIncrease.count > 1) {\n        abilityIncrease.scores.forEach(score => {\n          options.push({ label: `${capitalize(score)}`, value: `${score}-2` });\n        });\n      }\n\n      api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select ${abilityIncrease.count} Ability Score${abilityIncrease.count > 1 ? 's' : ''} to Raise (to a max of ${abilityIncrease.max})...`, options, null, abilityScoreSelection, 'OK', 'Cancel', abilityIncrease.count);\n    }\n    else if (abilityIncrease.scores.length > 0) {\n      // Add all ASIs\n      abilityScoreSelection(abilityIncrease.scores.map(score => score));\n    }\n  }\n\n  function onDrop(type, recordLink) {\n    if (type === 'feats') {\n      onDropFeat(recordLink);\n    }\n  }\n</script>\n\n<div>\n  <label variant=\"bold\" textalign='center' label='Feats'></label>\n</div>\n\n<div style='width: 100%'>\n  <list listtype=\"feats_list\" field='features'></list>\n</div>\n\n<div style='margin-top: 8px;'>\n  <label variant=\"bold\" textalign='center' label='Features'></label>\n</div>\n\n<table>\n  <tbody>\n    <tr>\n      <td><label label='Classes:'></label></td>\n      <td>\n        <list listtype=\"class_list_no_delete\" field='classes'></list>\n      </td>\n    </tr>\n    <tr>\n      <td><label label='Subclasses:'></label></td>\n      <td>\n        <list listtype=\"class_list_no_delete\" field='subclasses'></list>\n      </td>\n    </tr>\n  </tbody>\n</table>\n\n<div style='width: 100%'>\n  <list listtype=\"character_feature_list\" field='features'></list>\n</div>\n\n<div style='margin-top: 8px;'>\n  <dropdown field=\"weaponMasteries\" label='Weapon Masteries' placeholder='Select Weapon Masteries if Applicable'\n    multiselect='6' textalign='center' searchable='true' options='[{\"label\": \"Club\", \"value\": \"Club\"}, {\"label\": \"Dagger\", \"value\": \"Dagger\"}, \n    {\"label\": \"Greatclub\", \"value\": \"Greatclub\"}, {\"label\": \"Handaxe\", \"value\": \"Handaxe\"}, \n    {\"label\": \"Javelin\", \"value\": \"Javelin\"}, {\"label\": \"Light Hammer\", \"value\": \"Light Hammer\"}, \n    {\"label\": \"Mace\", \"value\": \"Mace\"}, {\"label\": \"Quarterstaff\", \"value\": \"Quarterstaff\"},\n    {\"label\": \"Sickle\", \"value\": \"Sickle\"}, {\"label\": \"Spear\", \"value\": \"Spear\"},\n    {\"label\": \"Dart\", \"value\": \"Dart\"}, {\"label\": \"Light Crossbow\", \"value\": \"Light Crossbow\"}, \n    {\"label\": \"Shortbow\", \"value\": \"Shortbow\"},\n    {\"label\": \"Sling\", \"value\": \"Sling\"}, {\"label\": \"Battleaxe\", \"value\": \"Battleaxe\"}, \n    {\"label\": \"Flail\", \"value\": \"Flail\"}, {\"label\": \"Glaive\", \"value\": \"Glaive\"}, \n    {\"label\": \"Greataxe\", \"value\": \"Greataxe\"}, {\"label\": \"Greatsword\", \"value\": \"Greatsword\"},\n    {\"label\": \"Halberd\", \"value\": \"Halberd\"}, {\"label\": \"Lance\", \"value\": \"Lance\"},\n    {\"label\": \"Longsword\", \"value\": \"Longsword\"}, {\"label\": \"Maul\", \"value\": \"Maul\"},\n    {\"label\": \"Morningstar\", \"value\": \"Morningstar\"}, {\"label\": \"Pike\", \"value\": \"Pike\"},\n    {\"label\": \"Rapier\", \"value\": \"Rapier\"}, {\"label\": \"Scimitar\", \"value\": \"Scimitar\"},\n    {\"label\": \"Shortsword\", \"value\": \"Shortsword\"}, {\"label\": \"Trident\", \"value\": \"Trident\"},\n    {\"label\": \"Warhammer\", \"value\": \"Warhammer\"}, {\"label\": \"War Pick\", \"value\": \"War Pick\"},\n    {\"label\": \"Whip\", \"value\": \"Whip\"}, {\"label\": \"Blowgun\", \"value\": \"Blowgun\"},\n    {\"label\": \"Hand Crossbow\", \"value\": \"Hand Crossbow\"}, {\"label\": \"Heavy Crossbow\", \"value\": \"Heavy Crossbow\"},\n    {\"label\": \"Longbow\", \"value\": \"Longbow\"}, {\"label\": \"Musket\", \"value\": \"Musket\"},\n    {\"label\": \"Pistol\", \"value\": \"Pistol\"}]'>\n  </dropdown>\n</div>\n\n\n<div style='margin-top: 8px;'>\n  <label variant=\"bold\" textalign='center' label='Resistances, Immunities, & Vulnerabilities'></label>\n</div>\n\n<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"vulnerabilities\" label=\"Vulnerabilities\"\n    placeholder='None'>\n  </stringfield>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"resistances\" label=\"Resistances\" placeholder='None'>\n  </stringfield>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"immunities\" label=\"Immunities\" placeholder='None'>\n  </stringfield>\n</div>"
+          "layout": "<script>\n  // On update of Constitution, update HP\n  function getHpForLevel(conMod, newLevel, newHpLevelArray) {\n    // Get the max HP we should have at our current level\n    const hpByLevel = record?.data?.hpByLevel || '[]';\n    const hpByLevelArr = JSON.parse(hpByLevel);\n    let totalHp = 0;\n    // Get all the HP we rolled or set for each level\n    hpByLevelArr.forEach(hpLevel => {\n      let thisLevel = hpLevel.hp + conMod;\n      // Each time you level you roll or take average + CON MOD to a min of 1\n      if (thisLevel < 1) {\n        thisLevel = 1;\n      }\n      totalHp += thisLevel;\n    });\n\n    // Get HP Max modifier\n    const hpMaxMods = getEffectsAndModifiers(['hitpoints']);\n    hpMaxMods.forEach(mod => {\n      // For string type in HP max, we'll use it as a field\n      // with a special case for the `field` value to mean a specific class here\n      if (mod.valueType === 'string') {\n        // First check if it is in values we are setting\n        let bonus = mod.value === 'level' ? newLevel : parseInt(record?.data?.[mod.value] || '0', 10);\n        const relevantClass = mod.field;\n        if (relevantClass && mod.value === 'level') {\n          // Bonus = total level in the given class\n          newHpLevelArray.forEach(hpLevel => {\n            if (hpLevel.className === relevantClass) {\n              bonus += 1;\n            }\n          });\n        }\n        if (!isNaN(bonus)) {\n          totalHp += bonus;\n        }\n      }\n      else if (mod.valueType === 'number') {\n        const bonus = parseInt(mod.value || '0', 10);\n        if (!isNaN(bonus)) {\n          totalHp += bonus;\n        }\n      }\n    });\n\n    return totalHp;\n  }\n\n  function getAbilityScoreIncrease(feature) {\n    const asi = feature?.data?.abilityScores || '';\n    let max = 20;\n    let scores = [];\n    if (!asi) {\n      return { max, scores, promptChoice: false, count: 0 };\n    }\n\n    // Parse the maximum value from the phrase\n    const maxMatch = asi.toLowerCase().match(/to a maximum of (\\d+)/);\n    if (maxMatch) {\n      max = parseInt(maxMatch[1], 10);\n    }\n\n    if (asi.toLowerCase().match(/one ability score of your choice/) && asi.toLowerCase().match(/or increase two ability scores/)) {\n      return { max, scores: ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'], promptChoice: true, count: 2 };\n    }\n\n    const abilityMatch = asi.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);\n    if (abilityMatch) {\n      scores = abilityMatch;\n    }\n\n    return { max, scores, promptChoice: scores.length > 1, count: 1 };\n  }\n\n  function updateAbilitiesFromFeature(feature) {\n    // If the feature has an ability, add it to the character\n    // For each feature, we need to check for ability groups and add them if not there\n    const abilityGroupName = feature?.data?.abilityGroupName || '';\n    if (abilityGroupName !== '') {\n      let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;\n      if ((feature?.data?.fieldsToAddToUses || []).length > 0) {\n        abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);\n      }\n      const abilityValue = feature?.data?.value || '';\n      const abilityRestoresOn = feature?.data?.restoreOn || '';\n      const savingThrowAbility = feature?.data?.savingThrowAbility || '';\n      let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);\n      // When the group is added, or found, we add abilities to it or set data on it\n      const recordDataPath = record?.dataPath || '';\n      const abilityAddedCallback = (record) => {\n        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);\n        const fieldsToSet = {};\n        if (abilityGroupIndex !== -1) {\n          // Get the Ability to add if any\n          const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';\n          if (abilityIdToAdd !== '') {\n            api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {\n              api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);\n            });\n          }\n          // If abilityUsesPerDay > 0, un hide the counter\n          if (abilityUsesPerDay > 0) {\n            // Update the record's number of uses if lower\n            const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;\n            if (curDailyUses < abilityUsesPerDay) {\n              // If ability uses per day went up, update it\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;\n            }\n            const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';\n            if (abilityValue) {\n              // Update the ability value if it was previously set, as this might be a higher value now\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;\n            }\n            // If restoreOn is set, update it\n            if (abilityRestoresOn !== '') {\n              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.restore`] = abilityRestoresOn;\n            }\n            fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;\n          }\n        }\n        api.setValues(fieldsToSet);\n      };\n      if (!abilityGroup) {\n        api.addValue('data.abilityGroups', {\n          name: abilityGroupName,\n          data: {\n            abilities: [],\n            maxDailyUses: abilityUsesPerDay,\n            value: abilityValue,\n            restore: abilityRestoresOn,\n            savingThrowAbility: savingThrowAbility,\n            fieldsToAddToUses: feature?.data?.fieldsToAddToUses || []\n          }\n        }, abilityAddedCallback);\n      }\n      else {\n        abilityAddedCallback(record);\n      }\n    }\n  }\n\n  function onDropFeat(recordLink) {\n    const feat = recordLink?.value;\n\n    // We add feats to the features list so that\n    // All modifiers and are parsed by the same functions\n    const featToAdd = {\n      ...feat,\n      data: {\n        ...feat?.data,\n        // Set a field called featureType to 'feat' so that\n        // So that we can show and filter the two features_list fields properly\n        featureType: 'feat'\n      }\n    }\n\n    api.addValue(`data.features`, featToAdd, (updatedRecord) => {\n      // After adding the feat, we need to update abilities if one was attached to it\n      updateAbilitiesFromFeature(featToAdd);\n    });\n\n    // Prompt the user to select ASIs or just add them all\n    const abilityScoreSelection = (values) => {\n      const fieldsToSet = {};\n      values.forEach(curV => {\n        // Get the current value\n        let value = curV.split('-')[0];\n        const curValue = record?.data?.[`${value}`] || 0;\n        // If we haven't chosen it yet, increase the current value by 1\n        if (fieldsToSet[`data.${value}`] === undefined) {\n          if (curValue < abilityIncrease.max) {\n            fieldsToSet[`data.${value}`] = curValue + 1;\n          }\n        }\n        else {\n          // Increase the value by 1 again\n          if (fieldsToSet[`data.${value}`] < abilityIncrease.max) {\n            fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;\n          }\n        }\n      });\n\n      // Set the attributes then...\n      api.setValues(fieldsToSet, () => {\n        // Use the setModifier function to set the modifiers, update proficiencies,\n        // and other re-calculations of modifiers as needed\n        Object.keys(fieldsToSet).forEach(key => {\n          const value = fieldsToSet[key];\n          const attribute = key.replace('data.', '');\n          setModifier(value, attribute);\n        });\n      });\n    }\n\n    const abilityIncrease = getAbilityScoreIncrease(featToAdd);\n    if (abilityIncrease.promptChoice) {\n      const options = [];\n      abilityIncrease.scores.forEach(score => {\n        options.push({ label: capitalize(score), value: score });\n      });\n      // IF we allow more than one selection, add them again\n      if (abilityIncrease.count > 1) {\n        abilityIncrease.scores.forEach(score => {\n          options.push({ label: `${capitalize(score)}`, value: `${score}-2` });\n        });\n      }\n\n      api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select ${abilityIncrease.count} Ability Score${abilityIncrease.count > 1 ? 's' : ''} to Raise (to a max of ${abilityIncrease.max})...`, options, null, abilityScoreSelection, 'OK', 'Cancel', abilityIncrease.count);\n    }\n    else if (abilityIncrease.scores.length > 0) {\n      // Add all ASIs\n      abilityScoreSelection(abilityIncrease.scores.map(score => score));\n    }\n  }\n\n  function onSelectPolymorphOrWildShape(value, recordLink) {\n    const npc = recordLink?.value;\n    const selectedValue = value[0];\n    const valuesToSet = {};\n\n    // If wildshape, we only set physical stats, polymorph sets all stats\n\n    if (selectedValue === 'polymorph') {\n      // Polymorph\n      valuesToSet['fields.polymorphNpc.hidden'] = false;\n      valuesToSet['fields.polymorphNameNone.hidden'] = true;\n      valuesToSet['fields.Remove Polymorph.hidden'] = false;\n\n      // Polymorph also gets mental stats\n      valuesToSet['data.intelligence'] = npc?.data?.intelligence;\n      valuesToSet['data.wisdom'] = npc?.data?.wisdom;\n      valuesToSet['data.charisma'] = npc?.data?.charisma;\n\n      // You gain Temp HP equal the the HP of the new form\n      valuesToSet['data.tempHp'] = npc?.data?.hitpoints;\n    }\n    else {\n      // Wild Shape\n      valuesToSet['fields.wildShapeNpc.hidden'] = false;\n      valuesToSet['fields.wildShapeNameNone.hidden'] = true;\n      valuesToSet['fields.Remove Wild Shape.hidden'] = false;\n\n      // You gain Temp HP equal to your druid level\n      const matchDruidLevel = (record?.data?.classLevels || '').match(/Druid (\\d+)/)?.[1] || 1;\n      if (matchDruidLevel) {\n        const druidLevel = Math.floor(parseInt(matchDruidLevel || '1', 10));\n        // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now\n        const circleFormsFeature = record?.data?.features?.find(feature => feature?.name === 'Circle Forms');\n        if (circleFormsFeature) {\n          valuesToSet['data.tempHp'] = druidLevel * 3;\n        }\n        else {\n          valuesToSet['data.tempHp'] = druidLevel;\n        }\n      }\n    }\n\n    // These values are updated in both\n    valuesToSet['data.oldHitpoints'] = record?.data?.hitpoints;\n    valuesToSet['data.oldStrength'] = record?.data?.strength;\n    valuesToSet['data.oldDexterity'] = record?.data?.dexterity;\n    valuesToSet['data.oldConstitution'] = record?.data?.constitution;\n    valuesToSet['data.oldIntelligence'] = record?.data?.intelligence;\n    valuesToSet['data.oldWisdom'] = record?.data?.wisdom;\n    valuesToSet['data.oldCharisma'] = record?.data?.charisma;\n    valuesToSet['data.oldAc'] = record?.data?.ac;\n    valuesToSet['data.oldSenses'] = record?.data?.senses;\n    valuesToSet['data.oldSpeed'] = record?.data?.speed;\n    valuesToSet['data.oldResistances'] = record?.data?.resistances;\n    valuesToSet['data.oldImmunities'] = record?.data?.immunities;\n    valuesToSet['data.oldVulnerabilities'] = record?.data?.vulnerabilities;\n\n    // Set the new values\n    valuesToSet['data.strength'] = npc?.data?.strength;\n    valuesToSet['data.dexterity'] = npc?.data?.dexterity;\n    valuesToSet['data.constitution'] = npc?.data?.constitution;\n    valuesToSet['data.ac'] = npc?.data?.ac;\n    valuesToSet['data.senses'] = npc?.data?.senses;\n    valuesToSet['data.speed'] = npc?.data?.speed;\n    valuesToSet['data.resistances'] = npc?.data?.resistances;\n    valuesToSet['data.immunities'] = npc?.data?.immunities;\n    valuesToSet['data.vulnerabilities'] = npc?.data?.vulnerabilities;\n\n    // First set the recordLink\n    const linkField = selectedValue === 'polymorph' ? 'data.polymorphNpc' : 'data.wildShapeNpc';\n    api.setRecordLink(linkField, recordLink, () => {\n      //  Then set the values\n      api.setValues(valuesToSet, (record) => {\n        // Then set modifiers for the new values\n        const moreValuesToSet = {};\n        const statsUpdated = ['strength', 'dexterity', 'constitution'];\n        if (selectedValue === 'polymorph') {\n          statsUpdated.push('intelligence', 'wisdom', 'charisma');\n        }\n        statsUpdated.forEach(attribute => {\n          const value = npc?.data?.[attribute];\n          setModifier(value, attribute, {}, moreValuesToSet);\n        });\n\n        // Target retains their hitpoints\n        moreValuesToSet[`data.hitpoints`] = record?.data?.hitpoints;\n        // Override AC settings with what NPC had\n        moreValuesToSet['data.ac'] = npc?.data?.ac;\n\n        api.setValues(moreValuesToSet);\n\n        // Then we apply a token change effect\n        const tokenForRecord = api.getToken();\n        if (tokenForRecord) {\n          api.addTokenChangeEffect(npc._id, tokenForRecord);\n        }\n        else {\n          api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');\n        }\n      });\n    });\n  }\n\n  function onDropNpc(recordLink) {\n    const npc = recordLink?.value;\n    // Prompt User to select Polymorph or Wild Shape\n    const options = [{ label: 'Polymorph', value: 'polymorph' }, { label: 'Wild Shape', value: 'wildshape' }];\n    api.showPrompt(`Select Polymorph or Wild Shape`, `Select Polymorph or Wild Shape for ${npc?.name}`, `Select Polymorph or Wild Shape...`, options, null, (value) => onSelectPolymorphOrWildShape(value, recordLink), 'OK', 'Cancel', 1);\n  }\n\n  function onDrop(type, recordLink) {\n    if (type === 'feats') {\n      onDropFeat(recordLink);\n    }\n    else if (type === 'npcs') {\n      onDropNpc(recordLink);\n    }\n  }\n\n  function removePolymorphOrWildShapeEffect() {\n    // In both cases, we apply a token change effect\n    const tokenForRecord = api.getToken();\n    if (tokenForRecord) {\n      const effectToRemove = record?.effectIds?.find(effectId => effectId.startsWith('token-'));\n      if (effectToRemove) {\n        api.removeEffectById(effectToRemove, tokenForRecord);\n      }\n    }\n    else {\n      api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');\n    }\n  }\n\n  function removePolymorph(value) {\n    if (value) {\n      return;\n    }\n\n    // We're removing it so proceed\n    api.setValues({\n      'data.polymorphNpc': null,\n      'fields.polymorphNpc.hidden': true,\n      'fields.polymorphNameNone.hidden': false,\n      'fields.Remove Polymorph.hidden': true,\n      'data.strength': record?.data?.oldStrength,\n      'data.dexterity': record?.data?.oldDexterity,\n      'data.constitution': record?.data?.oldConstitution,\n      'data.intelligence': record?.data?.oldIntelligence,\n      'data.wisdom': record?.data?.oldWisdom,\n      'data.charisma': record?.data?.oldCharisma,\n      'data.ac': record?.data?.oldAc,\n      'data.senses': record?.data?.oldSenses,\n      'data.speed': record?.data?.oldSpeed,\n      'data.resistances': record?.data?.oldResistances,\n      'data.immunities': record?.data?.oldImmunities,\n      'data.vulnerabilities': record?.data?.oldVulnerabilities\n    }, () => {\n      // Then update the modifiers\n      const moreValuesToSet = {};\n      ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(attribute => {\n        const value = record?.data?.[`old${capitalize(attribute)}`];\n        setModifier(value, attribute, moreValuesToSet);\n      });\n\n      // Ensure hitpoints and AC are set to the old values after calling setModifier\n      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;\n      moreValuesToSet['data.ac'] = record?.data?.oldAc;\n      api.setValues(moreValuesToSet);\n      // Then remove the effect\n      removePolymorphOrWildShapeEffect();\n    });\n  }\n\n  function removeWildShape() {\n    // Reset the old values\n    api.setValues({\n      'data.wildShapeNpc': null,\n      'fields.wildShapeNpc.hidden': true,\n      'fields.wildShapeNameNone.hidden': false,\n      'fields.Remove Wild Shape.hidden': true,\n      'data.strength': record?.data?.oldStrength,\n      'data.dexterity': record?.data?.oldDexterity,\n      'data.constitution': record?.data?.oldConstitution,\n      'data.intelligence': record?.data?.oldIntelligence,\n      'data.wisdom': record?.data?.oldWisdom,\n      'data.charisma': record?.data?.oldCharisma,\n      'data.ac': record?.data?.oldAc,\n      'data.senses': record?.data?.oldSenses,\n      'data.speed': record?.data?.oldSpeed,\n      'data.resistances': record?.data?.oldResistances,\n      'data.immunities': record?.data?.oldImmunities,\n      'data.vulnerabilities': record?.data?.oldVulnerabilities\n    }, (record) => {\n      // Then update the modifiers\n      const moreValuesToSet = {};\n      ['strength', 'dexterity', 'constitution'].forEach(attribute => {\n        const value = record?.data?.[`old${capitalize(attribute)}`];\n        setModifier(value, attribute, moreValuesToSet);\n      });\n\n      // Ensure hitpoints and AC are set to the old values after calling setModifier\n      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;\n      moreValuesToSet['data.ac'] = record?.data?.oldAc;\n      api.setValues(moreValuesToSet);\n      // Then remove the effect\n      removePolymorphOrWildShapeEffect();\n    });\n  }\n</script>\n\n<div>\n  <label variant=\"bold\" textalign='center' label='Feats'></label>\n</div>\n\n<div style='width: 100%'>\n  <list listtype=\"feats_list\" field='features'></list>\n</div>\n\n<div style='margin-top: 8px;'>\n  <label variant=\"bold\" textalign='center' label='Features'></label>\n</div>\n\n<table>\n  <tbody>\n    <tr>\n      <td><label label='Classes:'></label></td>\n      <td>\n        <list listtype=\"class_list_no_delete\" field='classes'></list>\n      </td>\n    </tr>\n    <tr>\n      <td><label label='Subclasses:'></label></td>\n      <td>\n        <list listtype=\"class_list_no_delete\" field='subclasses'></list>\n      </td>\n    </tr>\n  </tbody>\n</table>\n\n<div style='width: 100%'>\n  <list listtype=\"character_feature_list\" field='features'></list>\n</div>\n\n<div style='margin-top: 8px;'>\n  <dropdown field=\"weaponMasteries\" label='Weapon Masteries' placeholder='Select Weapon Masteries if Applicable'\n    multiselect='6' textalign='center' searchable='true' options='[{\"label\": \"Club\", \"value\": \"Club\"}, {\"label\": \"Dagger\", \"value\": \"Dagger\"}, \n    {\"label\": \"Greatclub\", \"value\": \"Greatclub\"}, {\"label\": \"Handaxe\", \"value\": \"Handaxe\"}, \n    {\"label\": \"Javelin\", \"value\": \"Javelin\"}, {\"label\": \"Light Hammer\", \"value\": \"Light Hammer\"}, \n    {\"label\": \"Mace\", \"value\": \"Mace\"}, {\"label\": \"Quarterstaff\", \"value\": \"Quarterstaff\"},\n    {\"label\": \"Sickle\", \"value\": \"Sickle\"}, {\"label\": \"Spear\", \"value\": \"Spear\"},\n    {\"label\": \"Dart\", \"value\": \"Dart\"}, {\"label\": \"Light Crossbow\", \"value\": \"Light Crossbow\"}, \n    {\"label\": \"Shortbow\", \"value\": \"Shortbow\"},\n    {\"label\": \"Sling\", \"value\": \"Sling\"}, {\"label\": \"Battleaxe\", \"value\": \"Battleaxe\"}, \n    {\"label\": \"Flail\", \"value\": \"Flail\"}, {\"label\": \"Glaive\", \"value\": \"Glaive\"}, \n    {\"label\": \"Greataxe\", \"value\": \"Greataxe\"}, {\"label\": \"Greatsword\", \"value\": \"Greatsword\"},\n    {\"label\": \"Halberd\", \"value\": \"Halberd\"}, {\"label\": \"Lance\", \"value\": \"Lance\"},\n    {\"label\": \"Longsword\", \"value\": \"Longsword\"}, {\"label\": \"Maul\", \"value\": \"Maul\"},\n    {\"label\": \"Morningstar\", \"value\": \"Morningstar\"}, {\"label\": \"Pike\", \"value\": \"Pike\"},\n    {\"label\": \"Rapier\", \"value\": \"Rapier\"}, {\"label\": \"Scimitar\", \"value\": \"Scimitar\"},\n    {\"label\": \"Shortsword\", \"value\": \"Shortsword\"}, {\"label\": \"Trident\", \"value\": \"Trident\"},\n    {\"label\": \"Warhammer\", \"value\": \"Warhammer\"}, {\"label\": \"War Pick\", \"value\": \"War Pick\"},\n    {\"label\": \"Whip\", \"value\": \"Whip\"}, {\"label\": \"Blowgun\", \"value\": \"Blowgun\"},\n    {\"label\": \"Hand Crossbow\", \"value\": \"Hand Crossbow\"}, {\"label\": \"Heavy Crossbow\", \"value\": \"Heavy Crossbow\"},\n    {\"label\": \"Longbow\", \"value\": \"Longbow\"}, {\"label\": \"Musket\", \"value\": \"Musket\"},\n    {\"label\": \"Pistol\", \"value\": \"Pistol\"}]'>\n  </dropdown>\n</div>\n\n\n<div style='margin-top: 8px;'>\n  <label variant=\"bold\" textalign='center' label='Resistances, Immunities, & Vulnerabilities'></label>\n</div>\n\n<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"vulnerabilities\" label=\"Vulnerabilities\"\n    placeholder='None'>\n  </stringfield>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"resistances\" label=\"Resistances\" placeholder='None'>\n  </stringfield>\n  <stringfield width=\"33%\" multiline='true' maxrows='2' field=\"immunities\" label=\"Immunities\" placeholder='None'>\n  </stringfield>\n</div>\n\n<div style='margin-top: 8px;'>\n  <label variant=\"bold\" textalign='center' label='Polymorph and Wild Shape'></label>\n</div>\n\n<div style='margin-top: 4px;'>\n  <label textalign='center' size='sm' label='Drag an NPC to this Tab for Wild Shape or Polymorph'></label>\n</div>\n\n<div style='justify-content: center; margin-top: 4px; display: flex; flex-direction: row; gap: 16px;'>\n  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>\n    <label variant=\"bold\" size='sm' textalign='left' label='Polymorph: '></label>\n    <recordlink field=\"polymorphNpc\" hidden=\"true\" onchange=\"removePolymorph();\"></recordlink>\n    <label size='sm' textalign='left' field='polymorphNameNone' label='None'></label>\n    <iconbutton field=\"Remove Polymorph\" size='sm' variant=\"default\"\n      options='[{\"icon\": \"IconTrash\", \"label\": \"Remove\", \"value\": \"remove\"}]' onclick=\"removePolymorph();\">\n    </iconbutton>\n  </div>\n\n  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>\n    <label variant=\"bold\" size='sm' textalign='left' label='Wild Shape: '></label>\n    <recordlink field=\"wildShapeNpc\" hidden=\"true\" onchange=\"removeWildShape();\"></recordlink>\n    <label size='sm' textalign='left' field='wildShapeNameNone' label='None'></label>\n    <iconbutton field=\"Remove Wild Shape\" size='sm' variant=\"default\"\n      options='[{\"icon\": \"IconTrash\", \"label\": \"Remove\", \"value\": \"remove\"}]' onclick=\"removeWildShape();\">\n    </iconbutton>\n  </div>\n</div>"
         },
         {
           "name": "Notes",
@@ -84,7 +1985,7 @@
         },
         {
           "name": "Description",
-          "layout": "<div>\n\t<label variant=\"bold\" textalign='center' label='Description'></label>\n</div>\n\n<div>\n\t<richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>"
+          "layout": "<script>\n\tfunction onSelectPolymorphOrWildShape(value, recordLink) {\n\t\tconst npc = recordLink?.value;\n\t\tconst selectedValue = value[0];\n\t\tconst valuesToSet = {};\n\n\t\t// If wildshape, we only set physical stats, polymorph sets all stats\n\n\t\tif (selectedValue === 'polymorph') {\n\t\t\t// Polymorph\n\t\t\tvaluesToSet['fields.polymorphNpc.hidden'] = false;\n\t\t\tvaluesToSet['fields.polymorphNameNone.hidden'] = true;\n\t\t\tvaluesToSet['fields.Remove Polymorph.hidden'] = false;\n\n\t\t\t// Polymorph also gets mental stats\n\t\t\tvaluesToSet['data.intelligence'] = npc?.data?.intelligence;\n\t\t\tvaluesToSet['data.wisdom'] = npc?.data?.wisdom;\n\t\t\tvaluesToSet['data.charisma'] = npc?.data?.charisma;\n\t\t\tvaluesToSet['data.intelligenceSave'] = npc?.data?.intelligenceSave;\n\t\t\tvaluesToSet['data.wisdomSave'] = npc?.data?.wisdomSave;\n\t\t\tvaluesToSet['data.charismaSave'] = npc?.data?.charismaSave;\n\t\t\tvaluesToSet['data.intelligenceMod'] = npc?.data?.intelligenceMod;\n\t\t\tvaluesToSet['data.wisdomMod'] = npc?.data?.wisdomMod;\n\t\t\tvaluesToSet['data.charismaMod'] = npc?.data?.charismaMod;\n\n\t\t\t// You gain Temp HP equal the the HP of the new form\n\t\t\tvaluesToSet['data.tempHp'] = npc?.data?.hitpoints;\n\t\t}\n\t\telse {\n\t\t\t// Wild Shape\n\t\t\tvaluesToSet['fields.wildShapeNpc.hidden'] = false;\n\t\t\tvaluesToSet['fields.wildShapeNameNone.hidden'] = true;\n\t\t\tvaluesToSet['fields.Remove Wild Shape.hidden'] = false;\n\n\t\t\t// You gain Temp HP equal to your druid level - for NPCs we'll use CR\n\t\t\tconst druidLevel = parseInt(record?.data?.challengeRating || '1', 10);\n\t\t\tvaluesToSet['data.tempHp'] = druidLevel;\n\t\t}\n\n\t\t// These values are updated in both\n\t\tvaluesToSet['data.oldHitpoints'] = record?.data?.hitpoints;\n\t\tvaluesToSet['data.oldStrength'] = record?.data?.strength;\n\t\tvaluesToSet['data.oldDexterity'] = record?.data?.dexterity;\n\t\tvaluesToSet['data.oldConstitution'] = record?.data?.constitution;\n\t\tvaluesToSet['data.oldIntelligence'] = record?.data?.intelligence;\n\t\tvaluesToSet['data.oldWisdom'] = record?.data?.wisdom;\n\t\tvaluesToSet['data.oldCharisma'] = record?.data?.charisma;\n\t\tvaluesToSet['data.oldStrengthMod'] = record?.data?.strengthMod;\n\t\tvaluesToSet['data.oldDexterityMod'] = record?.data?.dexterityMod;\n\t\tvaluesToSet['data.oldConstitutionMod'] = record?.data?.constitutionMod;\n\t\tvaluesToSet['data.oldIntelligenceMod'] = record?.data?.intelligenceMod;\n\t\tvaluesToSet['data.oldWisdomMod'] = record?.data?.wisdomMod;\n\t\tvaluesToSet['data.oldCharismaMod'] = record?.data?.charismaMod;\n\t\tvaluesToSet['data.oldStrengthSave'] = record?.data?.strengthSave;\n\t\tvaluesToSet['data.oldDexteritySave'] = record?.data?.dexteritySave;\n\t\tvaluesToSet['data.oldConstitutionSave'] = record?.data?.constitutionSave;\n\t\tvaluesToSet['data.oldIntelligenceSave'] = record?.data?.intelligenceSave;\n\t\tvaluesToSet['data.oldWisdomSave'] = record?.data?.wisdomSave;\n\t\tvaluesToSet['data.oldCharismaSave'] = record?.data?.charismaSave;\n\n\t\tvaluesToSet['data.oldAc'] = record?.data?.ac;\n\t\tvaluesToSet['data.oldSenses'] = record?.data?.senses;\n\t\tvaluesToSet['data.oldSpeed'] = record?.data?.speed;\n\t\tvaluesToSet['data.oldResistances'] = record?.data?.resistances;\n\t\tvaluesToSet['data.oldImmunities'] = record?.data?.immunities;\n\t\tvaluesToSet['data.oldVulnerabilities'] = record?.data?.vulnerabilities;\n\n\t\t// Set the new values\n\t\tvaluesToSet['data.strength'] = npc?.data?.strength;\n\t\tvaluesToSet['data.dexterity'] = npc?.data?.dexterity;\n\t\tvaluesToSet['data.constitution'] = npc?.data?.constitution;\n\t\tvaluesToSet['data.strengthMod'] = npc?.data?.strengthMod;\n\t\tvaluesToSet['data.dexterityMod'] = npc?.data?.dexterityMod;\n\t\tvaluesToSet['data.constitutionMod'] = npc?.data?.constitutionMod;\n\t\tvaluesToSet['data.strengthSave'] = npc?.data?.strengthSave;\n\t\tvaluesToSet['data.dexteritySave'] = npc?.data?.dexteritySave;\n\t\tvaluesToSet['data.constitutionSave'] = npc?.data?.constitutionSave;\n\n\t\tvaluesToSet['data.ac'] = npc?.data?.ac;\n\t\tvaluesToSet['data.senses'] = npc?.data?.senses;\n\t\tvaluesToSet['data.speed'] = npc?.data?.speed;\n\t\tvaluesToSet['data.resistances'] = npc?.data?.resistances;\n\t\tvaluesToSet['data.immunities'] = npc?.data?.immunities;\n\t\tvaluesToSet['data.vulnerabilities'] = npc?.data?.vulnerabilities;\n\n\t\t// First set the recordLink\n\t\tconst linkField = selectedValue === 'polymorph' ? 'data.polymorphNpc' : 'data.wildShapeNpc';\n\t\tapi.setRecordLink(linkField, recordLink, () => {\n\t\t\t//  Then set the values\n\t\t\tapi.setValues(valuesToSet, (record) => {\n\t\t\t\t// Then we apply a token change effect\n\t\t\t\tconst tokenForRecord = record.linked !== undefined ? record : null;\n\t\t\t\tif (tokenForRecord) {\n\t\t\t\t\tapi.addTokenChangeEffect(npc._id, tokenForRecord);\n\t\t\t\t}\n\t\t\t\telse {\n\t\t\t\t\tapi.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');\n\t\t\t\t}\n\t\t\t});\n\t\t});\n\t}\n\n\tfunction onDropNpc(recordLink) {\n\t\tconst npc = recordLink?.value;\n\t\t// Prompt User to select Polymorph or Wild Shape\n\t\tconst options = [{ label: 'Polymorph', value: 'polymorph' }, { label: 'Wild Shape', value: 'wildshape' }];\n\t\tapi.showPrompt(`Select Polymorph or Wild Shape`, `Select Polymorph or Wild Shape for ${npc?.name}`, `Select Polymorph or Wild Shape...`, options, null, (value) => onSelectPolymorphOrWildShape(value, recordLink), 'OK', 'Cancel', 1);\n\t}\n\n\tfunction onDrop(type, recordLink) {\n\t\tif (type === 'npcs') {\n\t\t\tonDropNpc(recordLink);\n\t\t}\n\t}\n\n\tfunction removePolymorphOrWildShapeEffect() {\n\t\t// In both cases, we apply a token change effect\n\t\tconst tokenForRecord = api.getToken();\n\t\tif (tokenForRecord) {\n\t\t\tconst effectToRemove = record?.effectIds?.find(effectId => effectId.startsWith('token-'));\n\t\t\tif (effectToRemove) {\n\t\t\t\tapi.removeEffectById(effectToRemove, tokenForRecord);\n\t\t\t}\n\t\t}\n\t\telse {\n\t\t\tapi.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');\n\t\t}\n\t}\n\n\tfunction removePolymorph(value) {\n\t\tif (value) {\n\t\t\treturn;\n\t\t}\n\n\t\t// We're removing it so proceed\n\t\tapi.setValues({\n\t\t\t'data.polymorphNpc': null,\n\t\t\t'fields.polymorphNpc.hidden': true,\n\t\t\t'fields.polymorphNameNone.hidden': false,\n\t\t\t'fields.Remove Polymorph.hidden': true,\n\t\t\t'data.strength': record?.data?.oldStrength,\n\t\t\t'data.dexterity': record?.data?.oldDexterity,\n\t\t\t'data.constitution': record?.data?.oldConstitution,\n\t\t\t'data.intelligence': record?.data?.oldIntelligence,\n\t\t\t'data.wisdom': record?.data?.oldWisdom,\n\t\t\t'data.charisma': record?.data?.oldCharisma,\n\t\t\t'data.strengthSave': record?.data?.oldStrengthSave,\n\t\t\t'data.dexteritySave': record?.data?.oldDexteritySave,\n\t\t\t'data.constitutionSave': record?.data?.oldConstitutionSave,\n\t\t\t'data.intelligenceSave': record?.data?.oldIntelligenceSave,\n\t\t\t'data.wisdomSave': record?.data?.oldWisdomSave,\n\t\t\t'data.charismaSave': record?.data?.oldCharismaSave,\n\t\t\t'data.strengthMod': record?.data?.oldStrengthMod,\n\t\t\t'data.dexterityMod': record?.data?.oldDexterityMod,\n\t\t\t'data.constitutionMod': record?.data?.oldConstitutionMod,\n\t\t\t'data.intelligenceMod': record?.data?.oldIntelligenceMod,\n\t\t\t'data.wisdomMod': record?.data?.oldWisdomMod,\n\t\t\t'data.charismaMod': record?.data?.oldCharismaMod,\n\t\t\t'data.hitpoints': record?.data?.oldHitpoints,\n\t\t\t'data.ac': record?.data?.oldAc,\n\t\t\t'data.senses': record?.data?.oldSenses,\n\t\t\t'data.speed': record?.data?.oldSpeed,\n\t\t\t'data.resistances': record?.data?.oldResistances,\n\t\t\t'data.immunities': record?.data?.oldImmunities,\n\t\t\t'data.vulnerabilities': record?.data?.oldVulnerabilities\n\t\t}, () => {\n\t\t\t// Then remove the effect\n\t\t\tremovePolymorphOrWildShapeEffect();\n\t\t});\n\t}\n\n\tfunction removeWildShape() {\n\t\t// Reset the old values\n\t\tapi.setValues({\n\t\t\t'data.wildShapeNpc': null,\n\t\t\t'fields.wildShapeNpc.hidden': true,\n\t\t\t'fields.wildShapeNameNone.hidden': false,\n\t\t\t'fields.Remove Wild Shape.hidden': true,\n\t\t\t'data.strength': record?.data?.oldStrength,\n\t\t\t'data.dexterity': record?.data?.oldDexterity,\n\t\t\t'data.constitution': record?.data?.oldConstitution,\n\t\t\t'data.intelligence': record?.data?.oldIntelligence,\n\t\t\t'data.wisdom': record?.data?.oldWisdom,\n\t\t\t'data.charisma': record?.data?.oldCharisma,\n\t\t\t'data.strengthSave': record?.data?.oldStrengthSave,\n\t\t\t'data.dexteritySave': record?.data?.oldDexteritySave,\n\t\t\t'data.constitutionSave': record?.data?.oldConstitutionSave,\n\t\t\t'data.intelligenceSave': record?.data?.oldIntelligenceSave,\n\t\t\t'data.wisdomSave': record?.data?.oldWisdomSave,\n\t\t\t'data.charismaSave': record?.data?.oldCharismaSave,\n\t\t\t'data.strengthMod': record?.data?.oldStrengthMod,\n\t\t\t'data.dexterityMod': record?.data?.oldDexterityMod,\n\t\t\t'data.constitutionMod': record?.data?.oldConstitutionMod,\n\t\t\t'data.intelligenceMod': record?.data?.oldIntelligenceMod,\n\t\t\t'data.wisdomMod': record?.data?.oldWisdomMod,\n\t\t\t'data.charismaMod': record?.data?.oldCharismaMod,\n\t\t\t'data.hitpoints': record?.data?.oldHitpoints,\n\t\t\t'data.ac': record?.data?.oldAc,\n\t\t\t'data.senses': record?.data?.oldSenses,\n\t\t\t'data.speed': record?.data?.oldSpeed,\n\t\t\t'data.resistances': record?.data?.oldResistances,\n\t\t\t'data.immunities': record?.data?.oldImmunities,\n\t\t\t'data.vulnerabilities': record?.data?.oldVulnerabilities\n\t\t}, (record) => {\n\t\t\t// Then remove the effect\n\t\t\tremovePolymorphOrWildShapeEffect();\n\t\t});\n\t}\n</script>\n\n<div>\n\t<label variant=\"bold\" textalign='center' label='Description'></label>\n</div>\n\n<div>\n\t<richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>\n\n<div style='margin-top: 8px;'>\n\t<label variant=\"bold\" textalign='center' label='Polymorph and Wild Shape'></label>\n</div>\n\n<div style='margin-top: 4px;'>\n\t<label textalign='center' size='sm' label='Drag an NPC to this Tab for Wild Shape or Polymorph'></label>\n</div>\n\n<div style='justify-content: center; margin-top: 4px; display: flex; flex-direction: row; gap: 16px;'>\n\t<div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>\n\t\t<label variant=\"bold\" size='sm' textalign='left' label='Polymorph: '></label>\n\t\t<recordlink field=\"polymorphNpc\" hidden=\"true\" onchange=\"removePolymorph();\"></recordlink>\n\t\t<label size='sm' textalign='left' field='polymorphNameNone' label='None'></label>\n\t\t<iconbutton field=\"Remove Polymorph\" size='sm' variant=\"default\"\n\t\t\toptions='[{\"icon\": \"IconTrash\", \"label\": \"Remove\", \"value\": \"remove\"}]' onclick=\"removePolymorph();\">\n\t\t</iconbutton>\n\t</div>\n\n\t<div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>\n\t\t<label variant=\"bold\" size='sm' textalign='left' label='Wild Shape: '></label>\n\t\t<recordlink field=\"wildShapeNpc\" hidden=\"true\" onchange=\"removeWildShape();\"></recordlink>\n\t\t<label size='sm' textalign='left' field='wildShapeNameNone' label='None'></label>\n\t\t<iconbutton field=\"Remove Wild Shape\" size='sm' variant=\"default\"\n\t\t\toptions='[{\"icon\": \"IconTrash\", \"label\": \"Remove\", \"value\": \"remove\"}]' onclick=\"removeWildShape();\">\n\t\t</iconbutton>\n\t</div>\n</div>"
         },
         {
           "name": "Rules",
@@ -2121,6 +4022,995 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1731262036185,
+  "updatedAt": 1731331698339,
+  "published": true
+},
+{
+  "_id": {
+    "$oid": "6655315f14030cfb1d3a0baf"
+  },
+  "name": "Realm VTT Test Ruleset",
+  "description": "For testing the ruleset API.",
+  "records": [
+    {
+      "name": "Characters",
+      "type": "characters",
+      "minX": 450,
+      "minY": 500,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function onDrop(type, recordLink) {\n    console.log(type, recordLink);\n    if (type === 'items') {\n      api.setRecordLink('data.classLink', recordLink);\n    }\n  }\n\n  function rollInit() {\n    api.roll(`1d20-${record.data?.wounds || 0}`, {}, 'initiative');\n  }\n  \n  function clickWounds() {\n    console.log(\"CLICKED WOUNDS\");\n  }\n\n  function apiClick() {\n    console.log(api.getTargets());\n  }\n\n  function showHideDropdown(show) {\n    api.setHidden(\"initSkill\", show);\n  }\n\n  function setCurHpNewMax() {\n    var newHp = value - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > value) { newHp = value; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n\n  function setCurHpNewWounds() {\n    var newHp = (record.data?.hitpoints || 0) - value;\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n  function setCurHp(newMax, newWounds) {\n    var newHp = (record.data?.hitpoints || 0) - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    if (newHp !== record.data?.curhp) {\n      api.setValue(\"data.curhp\", newHp);\n    }\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style='display: flex; flex-direction: column'>\n    <div style=\"width: 100px; min-width:100px; min-height: 100px; height: 100px\">\n      <portrait />\n    </div>\n    <div style=\"width: 100px; margin-top: 8px;\">\n      <numberfield field=\"xp\" label=\"XP\" placeholder=\"0\"></numberfield>\n    </div>\n  </div>\n    \n  <div style=\"margin-left: 8px; margin-right: 8px; display: flex; flex-direction:column; gap: 8px;\">\n    <stringfield onclick='apiClick();' size='sm' color='blue' placeholder='None' description=\"Darkvision, etc.\" field='senses' label='Senses' variant='tooltip'/>\n    </stringfield>\n\n    <stringfield placeholder='Medium' field='size' radius='xl' label='Size' />\n    </stringfield>\n\n    <div style='display: flex; gap: 8px'>\n        <numberfield field='hitpoints' label='HP' onchange='setCurHpNewMax();'\n          color='green' textalign='center' size='xl' />\n        </numberfield>\n      \n        <numberfield field='wounds' label='Wounds'\n          color='red'\n          textalign='center'\n          onclick=\"clickWounds();\"\n          size='xl'\n          minvalue=0\n          placeholder='0'\n          onchange=\"setCurHpNewWounds();\" />\n        </numberfield>\n    </div>\n  </div>\n\n  <divider orientation='vertical'></divider>\n\n  <div style=\"margin-left: 8px; display: flex; flex-direction:column; gap: 4px;\">\n    <div>\n      <checkbox size='xs' color='red' hideonlocked='true' field='showDropdown' description='Toggle the select' label='Show Dropdown' onchange='showHideDropdown(!value);' color='primary' />\n    </div>\n\n\n    <div>\n      <radio size='xs' description='Shield Protects' field='defense' label='Shield Up' color='green' />\n    </div>\n\n    <div>\n      <radio size='xs' field='defense' label='Shield Down' />\n    </div>\n  </div>\n</div>\n\n\n<div style=\"margin-top: 8px; margin-bottom: 8px\">\n  <divider orientation='horizontal' size='md' label='Testing' color='purple' />\n</div>\n\n<label field='label' color='yellow' size='xl' label='Test Tools' textalign='center'></label>\n\n<div style='margin-top: 4px; display: flex; gap: 4px'>\n  <button field='buttonapi' label='Test API' color='pink'\n    onclick=\"apiClick();\"></button>\n  <button icon='d20' width=200px field='buttonapi' size=sm label='Roll Initiative' variant='outline'\n    onclick=\"rollInit();\"></button>\n</div>\n\n<div>\n  <numberfield field='curhp' hidden='true' onload='setCurHp();' />\n  </numberfield>\n</div>\n\n<div style='margin-top: 4px;'>\n  <recordlink color='green'field=\"classLink\"></recordlink>\n</div>\n\n<div style=\"flex-direction: row; display: flex; margin-top: 4px\">\n  <tag color=red-9 size='xxs' variant='filled' field=\"size\" tooltip=\"hitpoints\" onclick='console.log(\"CLICKED TAG\")'></tag>\n  <div style='margin-left: 4px; margin-right: 4px'>\n    <iconbutton size=md disablediflocked field=\"testCycler\" variant='light' color='yellow' width=\"100%\" options='[{\"icon\": \"one-action\", \"label\": \"One Action\", \"value\": \"one-action\"}, {\"icon\": \"two-actions\", \"label\": \"Two Actions\", \"value\": \"two-actions\"}, {\"icon\": \"three-actions\", \"label\": \"Three Actions\", \"value\": \"three-actions\"}, {\"icon\": \"free-action\", \"label\": \"Free Action\", \"value\": \"free-action\"}, {\"icon\": \"reaction\", \"label\": \"Reaction\", \"value\": \"reaction\"}]' onchange='() => { }' onclick='() => { }'></iconbutton>\n  </div>\n  <tag field=\"size\" color='blue-3' tooltip=\"hitpoints\" onclick='console.log(\"CLICKED TAG\")'></tag>\n</div>\n\n<dropdown field='initSkill' size='md' icon='IconTreadmill' label='Skill' color='blue' description='Initiative Skill' placeholder='Select Skill' options='[\n    {\"label\": \"Persuasion\", \"value\": \"persuasion\"},\n    {\"label\": \"Perception\", \"value\": \"perception\"},\n    {\"label\": \"Diplomacy\", \"value\": \"diplomacy\"}\n    ]'></dropdown>\n\n<div style='margin-top: 8px; margin-bottom:4px'>\n  <progressbar color=\"health\" variant='striped' currentvaluefield=\"curhp\" maxvaluefield=\"hitpoints\" size='xxl' radius='xl' label='Hit Points'></progressbar>\n</div>\n\n<div style='margin-top: 8px; margin-bottom:4px'>\n  <progressbar color=\"blue\" radius='none' currentvaluefield=\"xp\" maxvalue='1000'></progressbar>\n</div>\n",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            },
+            {
+              "name": "size",
+              "type": "string",
+              "key": "string_58b7ddc4-b7d2-4c1f-89ff-0e29e2d91a39",
+              "label": "Size",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "senses",
+              "type": "string",
+              "key": "string_edc933e0-b899-463d-b32b-e707ec6860f2",
+              "label": "Senses",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "testApi",
+              "type": "button",
+              "key": "button_39347214-153e-4a8b-901a-544e29b95c0b",
+              "label": "Test Api",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "onClick": "console.log(api.getTargets());",
+              "icon": "Computer",
+              "variant": "contained",
+              "color": "success",
+              "hidden": false
+            },
+            {
+              "name": "stat1",
+              "type": "number",
+              "key": "number_8fc050c5-def4-4151-9ea7-f24ab4c91d36",
+              "label": "Stat 1",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "color": "primary",
+              "hidden": false,
+              "minValue": 0,
+              "variant": "outlined"
+            },
+            {
+              "name": "stat2",
+              "type": "number",
+              "key": "number_679bf374-3927-493b-9e7d-c70f7a487dfb",
+              "label": "Stat 2",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "inventory_list",
+              "type": "inventory_list",
+              "key": "inventory_list_6f66a1ac-0d5f-4f35-bbec-a09808a0a003",
+              "isList": true,
+              "label": "Inventory",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false,
+              "variant": "outlined"
+            },
+            {
+              "name": "testDrop",
+              "type": "dropdown",
+              "key": "dropdown_2b80ced9-5eed-455b-a8b4-46dcfe21ee2e",
+              "isList": false,
+              "label": "Drop Test",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "options": [
+                {
+                  "label": "Op1",
+                  "value": "opt1"
+                },
+                {
+                  "label": "Opt2",
+                  "value": "opt2"
+                }
+              ],
+              "hidden": false
+            },
+            {
+              "name": "wounds",
+              "type": "number",
+              "key": "number_dcba291b-9721-4eb2-b5bb-ab4cfbec2947",
+              "isList": false,
+              "label": "Wounds",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "variant": "outlined",
+              "color": "primary",
+              "hidden": false,
+              "minValue": 0
+            },
+            {
+              "name": "hpMax",
+              "type": "number",
+              "key": "number_9e213a0b-902c-42b4-afb2-2298924eee87",
+              "isList": false,
+              "label": "HP Max",
+              "defaultValue": "",
+              "horizontalAlign": "center",
+              "verticalAlign": "center",
+              "showSign": false,
+              "variant": "outlined",
+              "color": "primary",
+              "hidden": false
+            },
+            {
+              "name": "testHide",
+              "type": "checkbox",
+              "key": "checkbox_cfc7e862-0c61-48b6-aece-ac89faab3410",
+              "isList": false,
+              "label": "Hide Dropdown",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false,
+              "onLoad": "api.setHidden(\"testDrop\", value);",
+              "onChange": "api.setHidden(\"testDrop\", value);"
+            }
+          ]
+        },
+        {
+          "name": "Inventory",
+          "layout": "<div style=\"width: 100%\">\n  <label label=\"Treasure\" horizontalalign=\"center\"></label>\n</div>\n\n<div style=\"display: flex; column-gap: 4px;\">\n  <numberfield field=\"cp\" label=\"cp\" placeholder=0></numberfield>\n  <numberfield field=\"sp\" label=\"sp\" placeholder=0></numberfield>\n  <numberfield field=\"gp\" label=\"gp\" placeholder=0></numberfield>\n</div>\n\n<div style='margin-top: 8px; display:flex'>\n  <div style='margin-left: 38px;'>\n  <label variant='bold' size='sm' label='Count'></label>\n  </div>\n  <div style='margin-left: 24px;'>\n  <label variant='bold'size='sm' label='Name'></label>\n  </div>\n</div>\n\n<list color='blue' \n    width=\"100%\"\n    height=\"100%\"\n    radius='none'\n    listtype='inventory_list' variant='outline-striped' \n    field='inventory_list' /></list>\n\n<div style='margin-top:4px'>\n",
+          "fields": [
+            {
+              "name": "notes",
+              "type": "string",
+              "key": "string_5c3144ac-890f-46b1-b282-08d9bd008374",
+              "isList": false,
+              "label": "Notes",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false,
+              "variant": "outlined"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "layout": "<div>\n  <richtextfield field=\"notes\" label=\"Notes\"></richtextfield>\n</div>\n\n<stringfield placeholder='Enter notes...' description='Additional background' maxrows=6 field=\"moreNotes\" label=\"More Notes\" multiline='true'></stringfield>\n"
+        },
+        {
+          "name": "Actions",
+          "layout": "<div style=\"display: flex; flex-direction: column; margin-top: 8px; flex-grow: 1\">\n  <list listtype='attack_list' size='xl'\n    variant='striped'\n    textalign='left'\n    field='inventory_list' label='Attacks' /></list>\n</div>\n"
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      }
+    },
+    {
+      "name": "NPCs",
+      "type": "npcs",
+      "minX": 350,
+      "minY": 450,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n  function setCurHpNewMax() {\n    var newHp = value - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > value) { newHp = value; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n\n  function setCurHpNewWounds() {\n    var newHp = (record.data?.hitpoints || 0) - value;\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    api.setValue(\"data.curhp\", newHp);\n  }\n  function setCurHp(newMax, newWounds) {\n    var newHp = (record.data?.hitpoints || 0) - (record.data?.wounds || 0);\n    if (newHp < 0) { newHp = 0; }\n    if (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\n    if (newHp !== record.data?.curhp) {\n      api.setValue(\"data.curhp\", newHp);\n    }\n  }\n</script>\n\n<div style=\"display: flex; margin-top: 4px; flex-direction: \"row\">\n  <div style=\"width: 150px; min-width: 100px; height: 150px\">\n    <portrait />\n  </div>\n  \n  <div style=\"margin-left: 4px; display: flex; flex-direction:column; gap: 8px;\">\n    <div>\n      <stringfield field='senses' label='Senses'/>\n      </stringfield>\n    </div>\n\n    <div>\n      <stringfield field='size' label='Size' />\n      </stringfield>\n    </div>\n\n      <div style='display: flex; gap: 8px'>\n        <div style='height: 60px; width: 84px;'>\n          <numberfield field='hitpoints' label='HP' onchange='setCurHpNewMax();'\n            color='success' horizontalalign='center' />\n          </numberfield>\n        </div>\n        \n        <div style='height: 60px; width: 84px;'>\n          <numberfield field='wounds' label='Wounds'\n            color='success'\n            horizontalalign='center'\n            onchange=\"setCurHpNewWounds();\" />\n          </numberfield>\n        </div>\n\n    </div>\n\n    <div>\n      <numberfield field='curhp' hidden='true' onload='setCurHp();' />\n      </numberfield>\n    </div>\n  </div>\n</div>\n\n<div style='display: flex; margin-top: 4px; min-height: 120px; width: 100%; flex-grow: 1;'>\n  <list listtype=\"skills\" label='Skills' field='skills' variant='outlined'></list>\n</div>",
+          "fields": [
+            {
+              "name": "portrait",
+              "type": "portrait",
+              "key": "portrait"
+            },
+            {
+              "name": "senses",
+              "type": "string",
+              "key": "string_41a9c1d5-bac0-40d7-951b-ed3a795cf274",
+              "label": "Senses",
+              "defaultValue": ""
+            },
+            {
+              "name": "size",
+              "type": "string",
+              "key": "string_458a99b6-d2a2-4571-a059-caadaae68757",
+              "label": "Size",
+              "defaultValue": ""
+            },
+            {
+              "name": "creatureType",
+              "type": "string",
+              "key": "string_bec7dd35-e7a2-4889-b29e-ba81cf34313a",
+              "label": "Creature Type",
+              "defaultValue": ""
+            },
+            {
+              "name": "notes",
+              "type": "string",
+              "key": "string_fbd52d67-a546-4b1f-b4cf-33a866fd69ad",
+              "label": "Notes",
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "size": "Small,Medium,Large,Huge,Gargantuan"
+      }
+    },
+    {
+      "name": "Abilities",
+      "type": "abilities",
+      "minX": 300,
+      "minY": 300,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<stringfield field=\"description\" label=\"Description\"></stringfield>\n\n<div style='margin-top:4px'>\n  <checkbox field=\"isSpell\" label=\"Is Spell\"></checkbox>\n</div>\n<div style='margin-top:4px'>\n  <checkbox field=\"isSkill\" label=\"Is Skill\"></checkbox>\n</div>",
+          "fields": [
+            {
+              "name": "description",
+              "type": "string",
+              "key": "string_cd718bad-5efb-4542-b26d-1c17274c90a8",
+              "label": "Description",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top"
+            },
+            {
+              "name": "isSpell",
+              "type": "checkbox",
+              "key": "checkbox_1854b53e-974f-4d91-b295-778b1c2c9c65",
+              "label": "Is Spell?",
+              "defaultValue": "false",
+              "horizontalAlign": "left",
+              "verticalAlign": "top"
+            },
+            {
+              "name": "isSkill",
+              "type": "checkbox",
+              "key": "checkbox_48bf7f24-9340-41a8-9958-78083cb6e8e5",
+              "label": "Is Skill?",
+              "defaultValue": "true",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "color": "primary",
+              "hidden": false
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {}
+    },
+    {
+      "name": "Items",
+      "type": "items",
+      "minX": 500,
+      "minY": 265,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\n    function showHideValues(typeStr) {\n      if (typeStr === \"weapon\") {\n        api.setHidden(\"damage\", false);\n      }\n      else {\n        api.setHidden(\"damage\", true);\n      }\n    }\n</script>\n\n<div style='display: flex; flex-direction: row'>\n  <portrait height='100px' width='100px' field='portrait'></portrait>\n  <div style=\"margin-left: 4px; flex-grow: 1; margin-right: 4px;\">\n    <stringfield hidewhenidentified='false' field='description' multiline maxRows=4 label='Description'></stringfield>\n    <stringfield hidewhenidentified='true' field='descriptionUnId' multiline maxRows=4 label='Unidentified Description'></stringfield>\n  </div>\n</div>\n<div style='display: flex; margin-top: 8px;'>\n  <div style='width: 100px;'>\n    <numberfield field=\"weight\" label=\"Weight\"></numberfield>\n  </div>\n  <div style='margin-left: 4px; margin-right: 4px; width: 200px'>\n    <dropdown onchange=\"showHideValues(value);\" field=\"type\" label=\"Type\" options='[{\"label\": \"Gear\", \"value\": \"gear\"}, {\"label\": \"Weapon\", \"value\": \"weapon\"}]'></dropdown>\n  </div>\n  <div>\n    <stringfield hidden=\"true\" field=\"damage\" label=\"Damage\"></stringfield>\n  </div>\n</div>",
+          "fields": [
+            {
+              "name": "description",
+              "type": "string",
+              "key": "string_ad7f9d6b-e2d0-4740-a2bf-8a6861b233f1",
+              "label": "Description",
+              "defaultValue": ""
+            },
+            {
+              "name": "portraitfield",
+              "type": "portrait",
+              "key": "portrait_2001d18e-70c0-469b-aa04-d9fa211c671a",
+              "label": "",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false
+            }
+          ]
+        }
+      ],
+      "isList": false,
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "icon": "IconBackpack",
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "singleRow": false,
+      "filters": {
+        "type": "weapon,gear"
+      },
+      "disableDrop": false
+    },
+    {
+      "name": "Attack List",
+      "type": "attack_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 32,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<script>\nfunction handleRoll() {\n  console.log(\"Rolling attack\", data);\n  const name = data.name;\n  \n  const modifiers = [\n    {\n      name: \"strength\",\n      type: \"attribute\",\n      value: 1,\n      active: true\n    }\n  ];\n\n  var highestCirPenModifier = null;\n  \n  record.effects.forEach((eff) => {\n    eff.rules.forEach(rule => {\n      if ((rule.field === \"strength\" || rule.field === \"all\") && rule.type === \"cir_pen\") {\n        let baseValue = parseInt(rule.value, 10);\n        let adjustedValue = baseValue;\n        if (rule.valueType === \"stack\") {\n          adjustedValue = record.effectIds.reduce((count, current) => {\n            return count + (current === eff._id ? 1 : 0);\n          }, 0);\n        }\n        if (adjustedValue > 0) {\n          adjustedValue *= -1;\n        }\n        if (!highestCirPenModifier || adjustedValue < highestCirPenModifier.value) {\n          highestCirPenModifier = {\n            name: eff.name,\n            type: \"Circumstance Penalty\",\n            value: adjustedValue,\n            active: true\n          };\n        }\n      }\n    });\n  });\n\n  if (highestCirPenModifier) {\n    modifiers.push(highestCirPenModifier);\n  }\n\n  api.promptRoll(`Attack (${name})`, \"1d20\", modifiers, {}, \"attack\");\n}\n\nfunction getDamageType(rollString) {\n    const regex = /(\\d+d\\d+)(?:\\s*\\+\\s*\\d+)?(?:\\s+(\\w+))?/;\n    const match = rollString.match(regex);\n    return match && match[2] ? match[2] : \"untyped\";\n}\n\nfunction rollDamage() {\n  const dmgRoll = data.data.damage;\n  const name = data.name;\n\n  const damage = (data.data?.damage || '');\n  const damageType = getDamageType(damage);\n\n  // Normally you'd get these from the character sheet\n  // and maybe check if it's dex based, etc.\n  const modifiers = [\n    {\n      name: \"strength\",\n      type: damageType,\n      value: 1,\n      active: true\n    }\n  ];\n  \n  api.promptRoll(`Damage (${name})`, dmgRoll, modifiers, {}, \"damage\");\n}\n</script>\n\n<div style='height: 30px; display: flex'>\n  <portrait name='portrait' width='30px' height='30px'></portrait>\n  <div style='margin-left: 4px; flex-grow: 1'>    \n    <namefield variant='tooltip' size='xs' field='namefield' />\n  </div>\n  <div style='margin-top: 2px; margin-left: 4px;'>\n    <iconbutton size='md' color='default' field=\"rollBtn\" variant='transparent' options='[{\"icon\": \"d20\", \"label\": \"Roll\", \"value\": \"roll\"}]' onchange='() => { }' onclick='handleRoll();'></iconbutton>\n  </div>\n  <div style='margin-left: 4px'>\n    <button field=\"button\" label=\"Damage\" variant='outline' color=\"pink\" size='xs' onclick='rollDamage();'></button>\n  </div>\n</div>\n",
+          "fields": []
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        }
+      ],
+      "maxLength": 0,
+      "singleRow": false,
+      "filterCriteria": [
+        {
+          "field": "type",
+          "operator": "equals",
+          "value": "weapon"
+        }
+      ]
+    },
+    {
+      "name": "Inventory List",
+      "type": "inventory_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 45,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style='height: 30px; display: flex'>\n  <portrait name='portrait' width='30px' height='30px'></portrait>\n  <div style='margin-left: 4px;width: 60px'>\n    <numberfield field='count' label='Count' variant='tooltip' size='xs' /></numberfield>\n  </div>\n  <div style='margin-left: 4px; flex-grow: 1'>\n    <namefield field='namefield' label='Name' variant='tooltip' size='xs' />\n  </div>\n</div>",
+          "fields": [
+            {
+              "name": "portraitfield",
+              "type": "portrait",
+              "key": "portrait_29559cec-2ee3-4288-b23e-953322e3af2b",
+              "label": "",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false
+            },
+            {
+              "name": "count",
+              "type": "number",
+              "key": "number_e48a9a2b-e35c-48ae-ba19-61c89ad26491",
+              "isList": false,
+              "label": "Count",
+              "defaultValue": "0",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "minValue": 0,
+              "showSign": false,
+              "color": "primary",
+              "hidden": false,
+              "variant": "outlined"
+            },
+            {
+              "name": "namefield",
+              "type": "name",
+              "key": "name_84b41f7a-262a-4973-ae18-1159c1503186",
+              "isList": false,
+              "label": "Name",
+              "defaultValue": "",
+              "horizontalAlign": "left",
+              "verticalAlign": "top",
+              "hidden": false,
+              "variant": "standard"
+            }
+          ]
+        }
+      ],
+      "allowedListTypes": [
+        "items"
+      ],
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Item",
+      "newItemName": "New Item",
+      "newItemUnidentifiedName": "Unidentified Item",
+      "stackDuplicates": true,
+      "countFieldName": "count",
+      "emptyListText": "Drag Items Here",
+      "icon": "",
+      "orderCriteria": [
+        {
+          "field": "namefield",
+          "descending": false
+        },
+        {
+          "field": "count",
+          "descending": true
+        }
+      ],
+      "canGrow": false,
+      "maxLength": 0,
+      "singleRow": false,
+      "filterCriteria": []
+    },
+    {
+      "name": "Skills",
+      "type": "skills",
+      "isList": true,
+      "minX": 100,
+      "minY": 45,
+      "tabs": [
+        {
+          "name": "Main",
+          "layout": "<div style=\"min-width: 50px; max-width: 120px;\">\n  <namefield field='name' label='Name' variant='tooltip'></namefield>\n</div>",
+          "fields": []
+        }
+      ],
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": true,
+      "addButtonText": "",
+      "allowedListTypes": [
+        "abilities"
+      ],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "countFieldName": "",
+      "emptyListText": "Add a Skill",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "singleRow": true,
+      "filterCriteria": []
+    }
+  ],
+  "version": 2,
+  "createdAt": {
+    "$numberLong": "1716859231391"
+  },
+  "updatedAt": 1729718952873,
+  "settings": {
+    "healthIndicator": {
+      "disabled": false,
+      "maxHealthField": "hitpoints",
+      "currentHealthField": "curhp",
+      "color": [
+        {
+          "percentage": 0,
+          "color": "#ff0000",
+          "label": "Dying"
+        },
+        {
+          "percentage": 10,
+          "color": "#ff0000",
+          "label": "Near Death"
+        },
+        {
+          "percentage": 30,
+          "color": "#ff4d00",
+          "label": "Seriously Wounded"
+        },
+        {
+          "percentage": 50,
+          "color": "#ffd600",
+          "label": "Badly Wounded"
+        },
+        {
+          "percentage": 70,
+          "color": "#dbff00",
+          "label": "Moderately Wounded"
+        },
+        {
+          "percentage": 90,
+          "color": "#87c91b",
+          "label": "Lightly Wounded"
+        },
+        {
+          "percentage": 99,
+          "color": "#1bc91b",
+          "label": "Barely Wounded"
+        },
+        {
+          "percentage": 100,
+          "color": "#00FF00",
+          "label": "Healthy"
+        }
+      ]
+    },
+    "damage": {
+      "enableDamage": true,
+      "enableHealing": true,
+      "damageScript": "// Apply wounds\nvar wounds = record.data?.wounds || 0;\nwounds += value;\nif (wounds < 0) { wounds = 0; }\nif (wounds > record.data?.hitpoints) { wounds = record.data?.hitpoints; }\napi.setValue(\"data.wounds\", wounds);\n\n// Update current hp\nvar newHp = (record.data?.hitpoints || 0) - wounds;\nif (newHp < 0) { newHp = 0; }\nif (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\napi.setValue(\"data.curhp\", newHp);",
+      "healingScript": "// Apply healing\nvar wounds = record.data?.wounds || 0;\nwounds -= value;\nif (wounds < 0) { wounds = 0; }\nif (wounds > record.data?.hitpoints) { wounds = record.data?.hitpoints; }\napi.setValue(\"data.wounds\", wounds);\n\n// Update current hp\nvar newHp = (record.data?.hitpoints || 0) - wounds;\nif (newHp < 0) { newHp = 0; }\nif (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\napi.setValue(\"data.curhp\", newHp);"
+    },
+    "combatTracker": {
+      "initiative": "initiative",
+      "order": "desc",
+      "additionalFields": [
+        {
+          "field": "wounds",
+          "label": "Wounds",
+          "type": "number",
+          "width": 80,
+          "editable": true,
+          "onChange": "// Update current hp\nvar wounds = record.data?.wounds;\nvar newHp = (record.data?.hitpoints || 0) - wounds;\nif (newHp < 0) { newHp = 0; }\nif (newHp > (record.data?.hitpoints || 0)) { newHp = record.data.hitpoints; }\napi.setValue(\"data.curhp\", newHp);"
+        }
+      ],
+      "onTokenAdd": "console.log(\"TOKEN ADDED\", data);",
+      "onEncounterStart": "console.log(\"ENCOUNTER STARTED\", data);",
+      "onEncounterEnd": "console.log(\"ENCOUNTER ENDED\", data);",
+      "onTurnStart": "console.log(\"TURN START\", data);",
+      "onTurnEnd": "console.log(\"TURN END\", data);",
+      "onRoundStart": "console.log(\"ROUND START\", data);",
+      "onRoundEnd": "console.log(\"ROUND END\", data);",
+      "onRollInitiative": "api.roll(`1d20-${data.token?.data?.wounds || 0}`, {}, 'initiative');",
+      "onRollInitiativeGroup": "if (data.tokens && data.tokens.length > 0) {\n  const token = data.tokens[0];\n  api.roll(`1d20-${data.token?.data?.wounds || 0}`, {group: data.tokens}, 'initiative');\n} \n"
+    },
+    "rollTypes": [
+      {
+        "name": "initiative",
+        "handleResult": "// Example initiative roll result logic\nif (data.roll?.metadata?.group && data.roll?.metadata?.group.length > 0) {\n  data.roll?.metadata?.group.forEach(token => {\n    api.setValueOnToken(token, 'data.initiative', data.roll.total);\n  })\n  api.sendMessage(\"\", data.roll, [], [{\n    name: \"Init\",\n    tooltip: \"Initiative Roll\"\n  }])\n}\nelse {\n  api.setValue('data.initiative', data.roll.total);\n\n  api.sendMessage(\"\", data.roll, [], [{\n    name: \"Init\",\n    tooltip: \"Initiative Roll\"\n  }])\n}"
+      },
+      {
+        "name": "attack",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Attack\",\n  tooltip: \"Attack Roll\"\n}];\nconst mods = data.roll?.metadata?.modifiers || [];\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\n// Here you would check targets and their AC, etc.\nconsole.log(data);\napi.sendMessage(\"\", data.roll, [], tags);"
+      },
+      {
+        "name": "damage",
+        "handleResult": "// Here we need to determine if it was a hit or miss and display in the chat.\nconst tags = [{\n  name: \"Damage\",\n  tooltip: \"Damage Roll\"\n}];\n\nconst mods = data.roll?.metadata?.modifiers || [];\nmods.forEach(mod => {\n  tags.push({\n    name: `${mod.name} ${mod.value > 0 ? '+' : ''}${mod.value}`,\n    tooltip: `Modifier for ${mod.name.charAt(0).toUpperCase() + mod.name.slice(1)}`\n  });\n});\n\n// Here you would check targets and apply damage, etc.\nconsole.log(data);\napi.sendMessage(\"\", data.roll, [], tags);"
+      }
+    ],
+    "partySheet": {
+      "additionalFields": [
+        {
+          "field": "curhp",
+          "label": "Current HP",
+          "type": "number",
+          "width": 90
+        },
+        {
+          "field": "hitpoints",
+          "label": "HP",
+          "type": "number",
+          "width": 90
+        }
+      ],
+      "inventory": {
+        "enabled": true,
+        "recordType": "items",
+        "additionalFields": [
+          {
+            "field": "weight",
+            "label": "Weight",
+            "type": "number",
+            "width": 80
+          }
+        ]
+      },
+      "awards": {
+        "enabled": true,
+        "xpName": "XP",
+        "xpField": "xp",
+        "xpMethod": "divide_evenly",
+        "currencyFields": [
+          {
+            "field": "cp",
+            "label": "cp"
+          },
+          {
+            "field": "sp",
+            "label": "sp"
+          },
+          {
+            "field": "ep",
+            "label": "ep"
+          },
+          {
+            "field": "gp",
+            "label": "gp"
+          },
+          {
+            "field": "pp",
+            "label": "pp"
+          }
+        ]
+      }
+    },
+    "tokenSize": [
+      {
+        "label": "Tiny",
+        "size": 0.5
+      },
+      {
+        "label": "Small",
+        "size": 0.75
+      },
+      {
+        "label": "Medium",
+        "size": 1
+      },
+      {
+        "label": "Large",
+        "size": 2
+      },
+      {
+        "label": "Huge",
+        "size": 3
+      },
+      {
+        "label": "Gargantuan",
+        "size": 4
+      }
+    ],
+    "calendars": [
+      {
+        "default": false,
+        "name": "Calendar of Harptos (Faerun)",
+        "months": [
+          {
+            "name": "Hammer",
+            "days": 30
+          },
+          {
+            "name": "Midwinter",
+            "days": 1
+          },
+          {
+            "name": "Alturiak",
+            "days": 30
+          },
+          {
+            "name": "Ches",
+            "days": 30
+          },
+          {
+            "name": "Tarsakh",
+            "days": 30
+          },
+          {
+            "name": "Greengrass",
+            "days": 1
+          },
+          {
+            "name": "Mirtul",
+            "days": 30
+          },
+          {
+            "name": "Kythorn",
+            "days": 30
+          },
+          {
+            "name": "Flamerule",
+            "days": 30
+          },
+          {
+            "name": "Midsummer",
+            "days": 1
+          },
+          {
+            "name": "Eleasis",
+            "days": 30
+          },
+          {
+            "name": "Eleint",
+            "days": 30
+          },
+          {
+            "name": "Highharvestide",
+            "days": 1
+          },
+          {
+            "name": "Marpenoth",
+            "days": 30
+          },
+          {
+            "name": "Uktar",
+            "days": 30
+          },
+          {
+            "name": "Feast of the Moon",
+            "days": 1
+          },
+          {
+            "name": "Nightal",
+            "days": 30
+          }
+        ],
+        "days": [
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          },
+          {
+            "name": "",
+            "shortName": ""
+          }
+        ],
+        "startYear": 1491,
+        "leapYear": 4,
+        "leapMonth": 10,
+        "leapDayName": "Shieldmeet",
+        "repeatDays": true,
+        "eraName": "DR"
+      },
+      {
+        "default": false,
+        "name": "Calendar of Golarion",
+        "months": [
+          {
+            "name": "Abadius",
+            "days": 31
+          },
+          {
+            "name": "Calistril",
+            "days": 28
+          },
+          {
+            "name": "Pharast",
+            "days": 31
+          },
+          {
+            "name": "Gozran",
+            "days": 30
+          },
+          {
+            "name": "Desnus",
+            "days": 31
+          },
+          {
+            "name": "Sarenith",
+            "days": 30
+          },
+          {
+            "name": "Erastus",
+            "days": 31
+          },
+          {
+            "name": "Arodus",
+            "days": 31
+          },
+          {
+            "name": "Rova",
+            "days": 30
+          },
+          {
+            "name": "Lamashan",
+            "days": 31
+          },
+          {
+            "name": "Neth",
+            "days": 30
+          },
+          {
+            "name": "Kuthona",
+            "days": 31
+          }
+        ],
+        "days": [
+          {
+            "name": "Moonday",
+            "shortName": "M"
+          },
+          {
+            "name": "Toilday",
+            "shortName": "T"
+          },
+          {
+            "name": "Wealday",
+            "shortName": "W"
+          },
+          {
+            "name": "Oathday",
+            "shortName": "O"
+          },
+          {
+            "name": "Fireday",
+            "shortName": "F"
+          },
+          {
+            "name": "Starday",
+            "shortName": "St"
+          },
+          {
+            "name": "Sunday",
+            "shortName": "Su"
+          }
+        ],
+        "eraName": "AR",
+        "startYear": 4719,
+        "leapYear": 8,
+        "leapMonth": 2,
+        "leapDayName": "",
+        "repeatDays": false
+      }
+    ],
+    "effects": [
+      {
+        "label": "Circumstance Bonus",
+        "type": "cir_bonus",
+        "fields": [
+          {
+            "label": "Strength-based Checks",
+            "field": "str"
+          },
+          {
+            "label": "Dexterity-based Checks",
+            "field": "dex"
+          },
+          {
+            "label": "AC",
+            "field": "ac"
+          },
+          {
+            "label": "Acrobatics",
+            "field": "acrobatics"
+          }
+        ]
+      },
+      {
+        "label": "Circumstance Penalty",
+        "type": "cir_pen",
+        "fields": [
+          {
+            "label": "Strength-based Checks",
+            "field": "str"
+          },
+          {
+            "label": "Dexterity-based Checks",
+            "field": "dex"
+          },
+          {
+            "label": "AC",
+            "field": "ac"
+          },
+          {
+            "label": "Acrobatics",
+            "field": "acrobatics"
+          },
+          {
+            "label": "All Checks and DCs",
+            "field": "all"
+          }
+        ]
+      },
+      {
+        "label": "Damage",
+        "type": "damage",
+        "fields": []
+      },
+      {
+        "label": "Attribute",
+        "type": "attribute",
+        "fields": [
+          {
+            "label": "Strength",
+            "field": "strength"
+          },
+          {
+            "label": "Dexterity",
+            "field": "dexterity"
+          },
+          {
+            "label": "Constitution",
+            "field": "constitution"
+          }
+        ]
+      }
+    ]
+  },
+  "ownerId": "65e24e77d1d78ddf0805a94b",
   "published": true
 }]

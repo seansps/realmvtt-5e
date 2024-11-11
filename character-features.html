@@ -214,10 +214,213 @@
     }
   }
 
+  function onSelectPolymorphOrWildShape(value, recordLink) {
+    const npc = recordLink?.value;
+    const selectedValue = value[0];
+    const valuesToSet = {};
+
+    // If wildshape, we only set physical stats, polymorph sets all stats
+
+    if (selectedValue === 'polymorph') {
+      // Polymorph
+      valuesToSet['fields.polymorphNpc.hidden'] = false;
+      valuesToSet['fields.polymorphNameNone.hidden'] = true;
+      valuesToSet['fields.Remove Polymorph.hidden'] = false;
+
+      // Polymorph also gets mental stats
+      valuesToSet['data.intelligence'] = npc?.data?.intelligence;
+      valuesToSet['data.wisdom'] = npc?.data?.wisdom;
+      valuesToSet['data.charisma'] = npc?.data?.charisma;
+
+      // You gain Temp HP equal the the HP of the new form
+      valuesToSet['data.tempHp'] = npc?.data?.hitpoints;
+    }
+    else {
+      // Wild Shape
+      valuesToSet['fields.wildShapeNpc.hidden'] = false;
+      valuesToSet['fields.wildShapeNameNone.hidden'] = true;
+      valuesToSet['fields.Remove Wild Shape.hidden'] = false;
+
+      // You gain Temp HP equal to your druid level
+      const matchDruidLevel = (record?.data?.classLevels || '').match(/Druid (\d+)/)?.[1] || 1;
+      if (matchDruidLevel) {
+        const druidLevel = Math.floor(parseInt(matchDruidLevel || '1', 10));
+        // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now
+        const circleFormsFeature = record?.data?.features?.find(feature => feature?.name === 'Circle Forms');
+        if (circleFormsFeature) {
+          valuesToSet['data.tempHp'] = druidLevel * 3;
+        }
+        else {
+          valuesToSet['data.tempHp'] = druidLevel;
+        }
+      }
+    }
+
+    // These values are updated in both
+    valuesToSet['data.oldHitpoints'] = record?.data?.hitpoints;
+    valuesToSet['data.oldStrength'] = record?.data?.strength;
+    valuesToSet['data.oldDexterity'] = record?.data?.dexterity;
+    valuesToSet['data.oldConstitution'] = record?.data?.constitution;
+    valuesToSet['data.oldIntelligence'] = record?.data?.intelligence;
+    valuesToSet['data.oldWisdom'] = record?.data?.wisdom;
+    valuesToSet['data.oldCharisma'] = record?.data?.charisma;
+    valuesToSet['data.oldAc'] = record?.data?.ac;
+    valuesToSet['data.oldSenses'] = record?.data?.senses;
+    valuesToSet['data.oldSpeed'] = record?.data?.speed;
+    valuesToSet['data.oldResistances'] = record?.data?.resistances;
+    valuesToSet['data.oldImmunities'] = record?.data?.immunities;
+    valuesToSet['data.oldVulnerabilities'] = record?.data?.vulnerabilities;
+
+    // Set the new values
+    valuesToSet['data.strength'] = npc?.data?.strength;
+    valuesToSet['data.dexterity'] = npc?.data?.dexterity;
+    valuesToSet['data.constitution'] = npc?.data?.constitution;
+    valuesToSet['data.ac'] = npc?.data?.ac;
+    valuesToSet['data.senses'] = npc?.data?.senses;
+    valuesToSet['data.speed'] = npc?.data?.speed;
+    valuesToSet['data.resistances'] = npc?.data?.resistances;
+    valuesToSet['data.immunities'] = npc?.data?.immunities;
+    valuesToSet['data.vulnerabilities'] = npc?.data?.vulnerabilities;
+
+    // First set the recordLink
+    const linkField = selectedValue === 'polymorph' ? 'data.polymorphNpc' : 'data.wildShapeNpc';
+    api.setRecordLink(linkField, recordLink, () => {
+      //  Then set the values
+      api.setValues(valuesToSet, (record) => {
+        // Then set modifiers for the new values
+        const moreValuesToSet = {};
+        const statsUpdated = ['strength', 'dexterity', 'constitution'];
+        if (selectedValue === 'polymorph') {
+          statsUpdated.push('intelligence', 'wisdom', 'charisma');
+        }
+        statsUpdated.forEach(attribute => {
+          const value = npc?.data?.[attribute];
+          setModifier(value, attribute, {}, moreValuesToSet);
+        });
+
+        // Target retains their hitpoints
+        moreValuesToSet[`data.hitpoints`] = record?.data?.hitpoints;
+        // Override AC settings with what NPC had
+        moreValuesToSet['data.ac'] = npc?.data?.ac;
+
+        api.setValues(moreValuesToSet);
+
+        // Then we apply a token change effect
+        const tokenForRecord = api.getToken();
+        if (tokenForRecord) {
+          api.addTokenChangeEffect(npc._id, tokenForRecord);
+        }
+        else {
+          api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');
+        }
+      });
+    });
+  }
+
+  function onDropNpc(recordLink) {
+    const npc = recordLink?.value;
+    // Prompt User to select Polymorph or Wild Shape
+    const options = [{ label: 'Polymorph', value: 'polymorph' }, { label: 'Wild Shape', value: 'wildshape' }];
+    api.showPrompt(`Select Polymorph or Wild Shape`, `Select Polymorph or Wild Shape for ${npc?.name}`, `Select Polymorph or Wild Shape...`, options, null, (value) => onSelectPolymorphOrWildShape(value, recordLink), 'OK', 'Cancel', 1);
+  }
+
   function onDrop(type, recordLink) {
     if (type === 'feats') {
       onDropFeat(recordLink);
     }
+    else if (type === 'npcs') {
+      onDropNpc(recordLink);
+    }
+  }
+
+  function removePolymorphOrWildShapeEffect() {
+    // In both cases, we apply a token change effect
+    const tokenForRecord = api.getToken();
+    if (tokenForRecord) {
+      const effectToRemove = record?.effectIds?.find(effectId => effectId.startsWith('token-'));
+      if (effectToRemove) {
+        api.removeEffectById(effectToRemove, tokenForRecord);
+      }
+    }
+    else {
+      api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');
+    }
+  }
+
+  function removePolymorph(value) {
+    if (value) {
+      return;
+    }
+
+    // We're removing it so proceed
+    api.setValues({
+      'data.polymorphNpc': null,
+      'fields.polymorphNpc.hidden': true,
+      'fields.polymorphNameNone.hidden': false,
+      'fields.Remove Polymorph.hidden': true,
+      'data.strength': record?.data?.oldStrength,
+      'data.dexterity': record?.data?.oldDexterity,
+      'data.constitution': record?.data?.oldConstitution,
+      'data.intelligence': record?.data?.oldIntelligence,
+      'data.wisdom': record?.data?.oldWisdom,
+      'data.charisma': record?.data?.oldCharisma,
+      'data.ac': record?.data?.oldAc,
+      'data.senses': record?.data?.oldSenses,
+      'data.speed': record?.data?.oldSpeed,
+      'data.resistances': record?.data?.oldResistances,
+      'data.immunities': record?.data?.oldImmunities,
+      'data.vulnerabilities': record?.data?.oldVulnerabilities
+    }, () => {
+      // Then update the modifiers
+      const moreValuesToSet = {};
+      ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(attribute => {
+        const value = record?.data?.[`old${capitalize(attribute)}`];
+        setModifier(value, attribute, moreValuesToSet);
+      });
+
+      // Ensure hitpoints and AC are set to the old values after calling setModifier
+      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;
+      moreValuesToSet['data.ac'] = record?.data?.oldAc;
+      api.setValues(moreValuesToSet);
+      // Then remove the effect
+      removePolymorphOrWildShapeEffect();
+    });
+  }
+
+  function removeWildShape() {
+    // Reset the old values
+    api.setValues({
+      'data.wildShapeNpc': null,
+      'fields.wildShapeNpc.hidden': true,
+      'fields.wildShapeNameNone.hidden': false,
+      'fields.Remove Wild Shape.hidden': true,
+      'data.strength': record?.data?.oldStrength,
+      'data.dexterity': record?.data?.oldDexterity,
+      'data.constitution': record?.data?.oldConstitution,
+      'data.intelligence': record?.data?.oldIntelligence,
+      'data.wisdom': record?.data?.oldWisdom,
+      'data.charisma': record?.data?.oldCharisma,
+      'data.ac': record?.data?.oldAc,
+      'data.senses': record?.data?.oldSenses,
+      'data.speed': record?.data?.oldSpeed,
+      'data.resistances': record?.data?.oldResistances,
+      'data.immunities': record?.data?.oldImmunities,
+      'data.vulnerabilities': record?.data?.oldVulnerabilities
+    }, (record) => {
+      // Then update the modifiers
+      const moreValuesToSet = {};
+      ['strength', 'dexterity', 'constitution'].forEach(attribute => {
+        const value = record?.data?.[`old${capitalize(attribute)}`];
+        setModifier(value, attribute, moreValuesToSet);
+      });
+
+      // Ensure hitpoints and AC are set to the old values after calling setModifier
+      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;
+      moreValuesToSet['data.ac'] = record?.data?.oldAc;
+      api.setValues(moreValuesToSet);
+      // Then remove the effect
+      removePolymorphOrWildShapeEffect();
+    });
   }
 </script>
 
@@ -292,4 +495,32 @@
   </stringfield>
   <stringfield width="33%" multiline='true' maxrows='2' field="immunities" label="Immunities" placeholder='None'>
   </stringfield>
+</div>
+
+<div style='margin-top: 8px;'>
+  <label variant="bold" textalign='center' label='Polymorph and Wild Shape'></label>
+</div>
+
+<div style='margin-top: 4px;'>
+  <label textalign='center' size='sm' label='Drag an NPC to this Tab for Wild Shape or Polymorph'></label>
+</div>
+
+<div style='justify-content: center; margin-top: 4px; display: flex; flex-direction: row; gap: 16px;'>
+  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>
+    <label variant="bold" size='sm' textalign='left' label='Polymorph: '></label>
+    <recordlink field="polymorphNpc" hidden="true" onchange="removePolymorph();"></recordlink>
+    <label size='sm' textalign='left' field='polymorphNameNone' label='None'></label>
+    <iconbutton field="Remove Polymorph" size='sm' variant="default"
+      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]' onclick="removePolymorph();">
+    </iconbutton>
+  </div>
+
+  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>
+    <label variant="bold" size='sm' textalign='left' label='Wild Shape: '></label>
+    <recordlink field="wildShapeNpc" hidden="true" onchange="removeWildShape();"></recordlink>
+    <label size='sm' textalign='left' field='wildShapeNameNone' label='None'></label>
+    <iconbutton field="Remove Wild Shape" size='sm' variant="default"
+      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]' onclick="removeWildShape();">
+    </iconbutton>
+  </div>
 </div>
