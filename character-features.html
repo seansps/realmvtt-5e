@@ -257,6 +257,15 @@
       }
     }
 
+    // The actions we show in the polymorph attack list are any actions the
+    // NPC had that were not spellcasting
+    const polymorphActions = [...(npc?.data?.actions || []).filter(action => action?.data?.isSpellcasting !== true)];
+    // Set the portrait on each action to be the NPC's portrait, and icon to be IconSwords (in case not set)
+    polymorphActions.forEach(action => {
+      action.portrait = npc?.portrait;
+      action.icon = 'IconSwords';
+    });
+
     // These values are updated in both
     valuesToSet['data.oldHitpoints'] = record?.data?.hitpoints;
     valuesToSet['data.oldStrength'] = record?.data?.strength;
@@ -271,6 +280,9 @@
     valuesToSet['data.oldResistances'] = record?.data?.resistances;
     valuesToSet['data.oldImmunities'] = record?.data?.immunities;
     valuesToSet['data.oldVulnerabilities'] = record?.data?.vulnerabilities;
+    // We always unhide the polymorph attack list when we're polymorphing
+    valuesToSet['fields.polymorphActions.hidden'] = false;
+    valuesToSet['data.polymorphActions'] = polymorphActions;
 
     // Set the new values
     valuesToSet['data.strength'] = npc?.data?.strength;
@@ -372,6 +384,7 @@
       'fields.polymorphNpc.hidden': true,
       'fields.polymorphNameNone.hidden': false,
       'fields.Remove Polymorph.hidden': true,
+      'fields.polymorphActions.hidden': true,
       'data.strength': record?.data?.oldStrength,
       'data.dexterity': record?.data?.oldDexterity,
       'data.constitution': record?.data?.oldConstitution,
@@ -383,7 +396,7 @@
       'data.speed': record?.data?.oldSpeed,
       'data.resistances': record?.data?.oldResistances,
       'data.immunities': record?.data?.oldImmunities,
-      'data.vulnerabilities': record?.data?.oldVulnerabilities
+      'data.vulnerabilities': record?.data?.oldVulnerabilities,
     }, () => {
       // Then update the modifiers
       const moreValuesToSet = {};
@@ -408,6 +421,7 @@
       'fields.wildShapeNpc.hidden': true,
       'fields.wildShapeNameNone.hidden': false,
       'fields.Remove Wild Shape.hidden': true,
+      'fields.polymorphActions.hidden': true,
       'data.strength': record?.data?.oldStrength,
       'data.dexterity': record?.data?.oldDexterity,
       'data.constitution': record?.data?.oldConstitution,
