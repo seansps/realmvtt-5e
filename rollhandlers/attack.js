@@ -115,31 +115,29 @@ function getToppleMacro(abilityMod, proficiencyBonus) {
   const savingThrow = 'constitution';
   return `
 \`\`\`Roll_Constitution_Save
-if (isGM) { 
-  const selectedTokens = api.getSelectedOrDroppedToken();
-  selectedTokens.forEach(token => {
-    const saveModifiers = [];
-    const modifier = token?.data?.['${savingThrow}Save'] || 0;
-    saveModifiers.push({
-      name: '${capitalize(savingThrow)} Save',
-      value: modifier,
-      active: true,
-    });
-
-    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
-    saveMods.forEach(mod => {
-      saveModifiers.push(mod);
-    });
-
-    const metadata = {
-      "rollName": '${capitalize(savingThrow)} Save',
-      "tooltip": '${capitalize(savingThrow)} Saving Throw',
-      "dc": ${dc}
-    }
-
-    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+const selectedTokens = api.getSelectedOrDroppedToken();
+selectedTokens.forEach(token => {
+  const saveModifiers = [];
+  const modifier = token?.data?.['${savingThrow}Save'] || 0;
+  saveModifiers.push({
+    name: '${capitalize(savingThrow)} Save',
+    value: modifier,
+    active: true,
   });
-}
+
+  const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+  saveMods.forEach(mod => {
+    saveModifiers.push(mod);
+  });
+
+  const metadata = {
+    "rollName": '${capitalize(savingThrow)} Save',
+    "tooltip": '${capitalize(savingThrow)} Saving Throw',
+    "dc": ${dc}
+  }
+
+  api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+});
   \`\`\`
 `;
 }

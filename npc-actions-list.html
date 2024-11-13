@@ -393,33 +393,31 @@
 			const savingThrows = action?.data?.savingThrows || [];
 			const saveDc = action?.data?.saveDC || 0;
 			savingThrows.forEach(savingThrow => {
-				// Save Button for GM only - look up saves of selected tokens and prompt roll for each
+				// Look up saves of selected tokens and prompt roll for each
 				const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
-if (isGM) { 
-  const selectedTokens = api.getSelectedOrDroppedToken();
-  selectedTokens.forEach(token => {
-    const saveModifiers = [];
-    const modifier = token?.data?.['${savingThrow}Save'] || 0;
-    saveModifiers.push({
-      name: '${capitalize(savingThrow)} Save',
-      value: modifier,
-      active: true,
-    });
+const selectedTokens = api.getSelectedOrDroppedToken();
+selectedTokens.forEach(token => {
+	const saveModifiers = [];
+	const modifier = token?.data?.['${savingThrow}Save'] || 0;
+	saveModifiers.push({
+		name: '${capitalize(savingThrow)} Save',
+		value: modifier,
+		active: true,
+	});
 
-    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
-    saveMods.forEach(mod => {
-      saveModifiers.push(mod);
-    });
+	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+	saveMods.forEach(mod => {
+		saveModifiers.push(mod);
+	});
 
-    const metadata = {
-      "rollName": '${capitalize(savingThrow)} Save',
-      "tooltip": '${capitalize(savingThrow)} Saving Throw',
-      "dc": ${saveDc}
-    }
+	const metadata = {
+		"rollName": '${capitalize(savingThrow)} Save',
+		"tooltip": '${capitalize(savingThrow)} Saving Throw',
+		"dc": ${saveDc}
+	}
 
-    api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
-  });
-}
+	api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+});
 \`\`\``;
 				// Add the rollSaveButton to the savingThrowButtons
 				savingThrowButtons += rollSaveButton + '\n';
