@@ -172,12 +172,24 @@
     const masteryProperties = [];
     const characterWeaponMasteries = record?.data?.weaponMasteries || [];
     const weaponType = attack?.data?.weaponType || '';
+    let canUseAdditionalMasteries = false;
     if (characterWeaponMasteries.includes(weaponType)) {
       // Add the mastery property to the attack
       const masteryProperty = attack?.data?.weaponMastery || '';
       if (masteryProperty) {
+        canUseAdditionalMasteries = true;
         masteryProperties.push(masteryProperty);
       }
+    }
+    // This modifier is used to grant additional weapon  masteries to the attack, if we're attacking 
+    // with a weapon that gives us one we don't already have
+    if (canUseAdditionalMasteries) {
+      const additionalMasteries = getEffectsAndModifiers(['weaponMastery'], undefined, attack._id);
+      additionalMasteries.forEach(am => {
+        if (am?.value) {
+          masteryProperties.push(am.value);
+        }
+      });
     }
 
     if (disDueToProximity) {
