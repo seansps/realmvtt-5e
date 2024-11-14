@@ -1801,6 +1801,10 @@
           {
             "label": "Charisma Saving Throws",
             "field": "charisma"
+          },
+          {
+            "label": "Concentration Check",
+            "field": "concentration"
           }
         ]
       },
@@ -1835,6 +1839,10 @@
           {
             "label": "Charisma Saving Throws",
             "field": "charisma"
+          },
+          {
+            "label": "Concentration Check",
+            "field": "concentration"
           }
         ]
       },
@@ -2150,6 +2158,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1731554821225,
+  "updatedAt": 1731556372762,
   "published": true
 }]
