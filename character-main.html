@@ -1861,7 +1861,7 @@
 	function rollCheck(ability) {
 		const mod = `${ability}Mod`;
 
-		const modifiers = [];
+		let modifiers = [];
 		let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
 		if (abilityMod === undefined || isNaN(abilityMod)) {
 			abilityMod = 0;
@@ -1882,12 +1882,17 @@
 			modifiers.push(modifier);
 		});
 
+		const minRoll = getMinRollModifier(modifiers);
+		// Filter these out of the modifiers array, we don't need them to be toggleable
+		modifiers = modifiers.filter(m => !m.value.toString().startsWith('minroll'));
+		metadata.minRoll = minRoll;
+
 		api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
 	}
 
 	function rollSave(save) {
 		const mod = `${save}Save`;
-		const modifiers = [];
+		let modifiers = [];
 		let saveMod = record?.data?.[mod] || '0';
 		if (saveMod === undefined) {
 			saveMod = 0;
@@ -1907,10 +1912,15 @@
 			modifiers.push(modifier);
 		});
 
+		const minRoll = getMinRollModifier(modifiers);
+		// Filter these out of the modifiers array, we don't need them to be toggleable
+		modifiers = modifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
 		const metadata = {
 			"rollName": `${capitalize(save)} Save`,
 			"tooltip": `${capitalize(save)} Saving Throw`,
-			"dc": 0
+			"dc": 0,
+			"minRoll": minRoll
 		}
 
 		api.promptRoll(`${capitalize(save)} Save`, '1d20', modifiers, metadata, 'save');

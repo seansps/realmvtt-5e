@@ -953,6 +953,23 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   return results;
 }
 
+function getMinRollModifier(modifiers) {
+  // Look for highest `minroll(number)` modifier and use that as the minRoll
+  const minRollMatch = /minroll(\d+)/;
+  const minRollMods = modifiers
+    .map(m => {
+      const match = m.value.toString().match(minRollMatch);
+      return match ? parseInt(match[1], 10) : null;
+    })
+    .filter(value => value !== null);
+
+  let minRoll = null;
+  if (minRollMods.length) {
+    minRoll = Math.max(...minRollMods);
+  }
+  return minRoll;
+}
+
 function getArmorClassForToken(token) {
   const record = token?.record;
   const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);

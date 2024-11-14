@@ -59,7 +59,7 @@
     const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
     const mod = `${ability}Mod`;
 
-    const modifiers = [];
+    let modifiers = [];
     let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
     if (abilityMod === undefined || isNaN(abilityMod)) {
       abilityMod = 0;
@@ -110,10 +110,15 @@
       modifiers.push(modifier);
     });
 
+    const minRoll = getMinRollModifier(modifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
     const metadata = {
       "rollName": `${camelToNormal(skill)}`,
       "tooltip": `${camelToNormal(ability)} (${camelToNormal(skill)}) Check`,
       "dc": 0,
+      "minRoll": minRoll,
     }
     api.promptRoll(`${camelToNormal(ability)} (${camelToNormal(skill)}) Check`, "1d20", modifiers, metadata, 'ability');
   }

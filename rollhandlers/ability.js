@@ -4,6 +4,31 @@ const description = data?.roll?.metadata?.description || '';
 const damageTypes = data?.roll?.metadata?.damageTypes || [];
 const showHalf = data?.roll?.metadata?.showHalf || false;
 const showHealing = data?.roll?.metadata?.showHealing || false;
+const minRoll = data?.roll?.metadata?.minRoll;
+
+// Find the undropped d20, and if minroll is set
+// alter the actual roll to be the minroll if it's lower
+const roll = {
+  ...data.roll,
+  dice: [...(data?.roll?.dice || [])],
+  total: data?.roll?.total || 0
+}
+
+if (roll.dice) {
+  roll.dice = roll.dice.map(d => {
+    let value = parseInt(d.value, 10);
+    if (d.type === 20 && d.reason !== 'dropped') {
+      if (minRoll && value < minRoll) {
+        roll.total += (minRoll - value);
+        value = minRoll;
+      }
+    }
+    return {
+      ...d,
+      value: value
+    };
+  });
+}
 
 let message = '';
 
@@ -13,7 +38,7 @@ if (isNaN(dc)) {
   dc = 0;
 }
 if (dc > 0) {
-  const total = data?.roll?.total || 0;
+  const total = roll.total;
   if (total >= dc) {
     message = `**[center][color=green]SUCCESS[/color] [gm]vs DC ${dc}[/gm][/center]**`
   }
@@ -56,7 +81,7 @@ targets.forEach(target => {
 
     const RIV = getRIV(target);
 
-    let thisDamage = ${data.roll.total};
+    let thisDamage = ${roll.total};
     const damageType = '${damageType}';
     if (RIV.resistances.includes(damageType.toLowerCase() || '')) {
       thisDamage = Math.floor(thisDamage * 0.5);
@@ -181,7 +206,7 @@ targets.forEach(target => {
 
     const RIV = getRIV(target);
 
-    let thisDamage = ${Math.floor(data.roll.total / 2)};
+    let thisDamage = ${Math.floor(roll.total / 2)};
     const damageType = '${damageType}';
     if (RIV.resistances.includes(damageType.toLowerCase() || '')) {
       thisDamage = Math.floor(thisDamage * 0.5);
@@ -376,7 +401,7 @@ targets.forEach(target => {
   `;
 }
 
-api.sendMessage(message, data.roll, [], [{
+api.sendMessage(message, roll, [], [{
   name: name || "Ability",
   tooltip: tooltip || `${name || ""} Ability Roll`
 }]);
