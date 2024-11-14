@@ -54,7 +54,7 @@
 
 
     const atkRoll = '1d20';
-    const modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
+    let modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
 
     let ranged = false;
     // Always ranged attack for ranged weapons
@@ -204,6 +204,8 @@
     if (critOnMods.length) {
       critOn = Math.min(...critOnMods);
     }
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(m => !m.value.toString().startsWith('critical'));
 
     targets.forEach(target => {
       // Get calculated AC from modifiers - use if any

@@ -191,7 +191,7 @@
 		const attackMod = parseInt(attack?.data?.attackMod || '0', 10);
 
 		const atkRoll = '1d20';
-		const modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
+		let modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
 
 		let ranged = attack?.data?.isRanged || false;
 
@@ -272,6 +272,8 @@
 		if (critOnMods.length) {
 			critOn = Math.min(...critOnMods);
 		}
+		// Filter these out of the modifiers array, we don't need them to be toggleable
+		modifiers = modifiers.filter(m => !m.value.toString().startsWith('critical'));
 
 		const targets = api.getTargets();
 		targets.forEach(target => {

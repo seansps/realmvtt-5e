@@ -296,7 +296,7 @@ if (${rangedSpell} && ourToken) {
   });
 }
 
-const attackModifiers = ${JSON.stringify(attackModifiers)};
+let attackModifiers = ${JSON.stringify(attackModifiers)};
 
 const autoCritical = attackModifiers.some(m => m.value === 'critical');
 // Check for crit on 19 or some other number
@@ -312,6 +312,9 @@ let critOn = null;
 if (critOnMods.length) {
   critOn = Math.min(...critOnMods);
 }
+
+// Filter these out of the modifiers array, we don't need them to be toggleable
+attackModifiers = attackModifiers.filter(m => !m.value.toString().startsWith('critical'));
 
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
