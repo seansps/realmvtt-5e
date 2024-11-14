@@ -227,10 +227,11 @@ const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
 // This means it's automatically a critical hit, if it was a hit
 let autoCritical = data?.roll?.metadata?.autoCritical;
+let critOn = data?.roll?.metadata?.critOn || 20;
 
 // If the d20 was a 20, it's a critical hit
 const d20 = (data?.roll?.dice || []).find(d => d.type === 20 && d.reason !== 'dropped');
-let isCritical = d20 && d20.value === 20;
+let isCritical = d20 && d20.value >= critOn;
 // If the d20 was a 1, it's a miss
 const isMiss = d20 && d20.value === 1;
 

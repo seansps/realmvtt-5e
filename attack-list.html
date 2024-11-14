@@ -189,6 +189,22 @@
     }
 
     const targets = api.getTargets();
+
+    const autoCritical = modifiers.some(m => m.value === 'critical');
+    // Check for crit on 19 or some other number
+    const critOnMatch = /critical(\d+)/;
+    const critOnMods = modifiers
+      .map(m => {
+        const match = m.value.toString().match(critOnMatch);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter(value => value !== null);
+
+    let critOn = null;
+    if (critOnMods.length) {
+      critOn = Math.min(...critOnMods);
+    }
+
     targets.forEach(target => {
       // Get calculated AC from modifiers - use if any
       const targetAc = getArmorClassForToken(target?.token);
@@ -218,8 +234,6 @@
         modifiers.push(r);
       });
 
-      const autoCritical = modifiers.some(m => m.value === 'critical');
-
       const diceRoll = '1d20';
       const metadata = {
         "rollName": 'Attack',
@@ -228,6 +242,7 @@
         "targetName": targetName,
         "tooltip": `Attack Roll for ${name}`,
         "autoCritical": autoCritical,
+        "critOn": critOn,
         "dc": targetAc,
         "damage": damage,
         "damageModifiers": damageModifiers,
@@ -248,7 +263,8 @@
         "damage": damage,
         "damageModifiers": damageModifiers,
         "masteryProperties": masteryProperties,
-        "attackerProficiencyBonus": proficiencyBonus
+        "attackerProficiencyBonus": proficiencyBonus,
+        "critOn": critOn
       }
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
     }

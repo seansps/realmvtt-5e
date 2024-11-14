@@ -298,6 +298,21 @@ if (${rangedSpell} && ourToken) {
 
 const attackModifiers = ${JSON.stringify(attackModifiers)};
 
+const autoCritical = attackModifiers.some(m => m.value === 'critical');
+// Check for crit on 19 or some other number
+const critOnMatch = /critical(\d+)/;
+const critOnMods = attackModifiers
+  .map(m => {
+    const match = m.value.toString().match(critOnMatch);
+    return match ? parseInt(match[1], 10) : null;
+  })
+  .filter(value => value !== null);
+
+let critOn = null;
+if (critOnMods.length) {
+  critOn = Math.min(...critOnMods);
+}
+
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
@@ -320,8 +335,6 @@ targets.forEach(target => {
     attackModifiers.push(r);
   });
 
-  const autoCritical = attackModifiers.some(m => m.value === 'critical');
-
   const metadata = {  
     "rollName": 'Attack',
     "attack": '${spellName}',
@@ -332,6 +345,7 @@ targets.forEach(target => {
     "damage": "${spellDamage}",
     "damageModifiers": ${JSON.stringify(modifiers)},
     "autoCritical": autoCritical,
+    "critOn": critOn,
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
@@ -344,6 +358,7 @@ if (!targets.length) {
     "tooltip": 'Attack Roll for ${spellName}',
     "dc": 0,
     "damage": "${spellDamage}",
+    "critOn": critOn,
     "damageModifiers": ${JSON.stringify(modifiers)}
   }
 
