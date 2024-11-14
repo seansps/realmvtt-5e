@@ -7,7 +7,7 @@ const minRoll = data?.roll?.metadata?.minRoll;
 const roll = {
   ...data.roll,
   dice: [...(data?.roll?.dice || [])],
-  total: data?.roll?.total || 0
+  total: data?.roll?.total !== undefined ? data?.roll?.total : 0
 }
 
 if (roll.dice) {

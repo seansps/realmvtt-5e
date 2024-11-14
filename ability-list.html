@@ -59,7 +59,7 @@ targets.forEach(target => {
         const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
 const selectedTokens = api.getSelectedOrDroppedToken();
 selectedTokens.forEach(token => {
-  const saveModifiers = [];
+  let saveModifiers = [];
   const modifier = token?.data?.['${savingThrow}Save'] || 0;
   saveModifiers.push({
     name: '${capitalize(savingThrow)} Save',
@@ -72,10 +72,15 @@ selectedTokens.forEach(token => {
     saveModifiers.push(mod);
   });
 
+  const minRoll = getMinRollModifier(saveModifiers);
+  // Filter these out of the modifiers array, we don't need them to be toggleable
+  saveModifiers = saveModifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
   const metadata = {
     "rollName": '${capitalize(savingThrow)} Save',
     "tooltip": '${capitalize(savingThrow)} Saving Throw',
-    "dc": ${saveDc}
+    "dc": ${saveDc},
+    "minRoll": minRoll
   }
 
   api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');

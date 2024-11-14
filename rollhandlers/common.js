@@ -953,6 +953,48 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   return results;
 }
 
+function getConcentrationMacro(damage) {
+  // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30
+  const saveDc = Math.min(Math.max(Math.floor(damage / 2), 10), 30)
+  return `
+\`\`\`Concentration_Check
+const selectedTokens = api.getSelectedOrDroppedToken();
+selectedTokens.forEach(token => {
+	let saveModifiers = [];
+	const modifier = token?.data?.['constitutionSave'] || 0;
+	saveModifiers.push({
+		name: 'Constitution Save',
+		value: modifier,
+		active: true,
+	});
+
+	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'constitution');
+	saveMods.forEach(mod => {
+		saveModifiers.push(mod);
+	});
+
+  const concentrationMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'concentration');
+	concentrationMods.forEach(mod => {
+		saveModifiers.push(mod);
+	});
+
+	const minRoll = getMinRollModifier(saveModifiers);
+  // Filter these out of the modifiers array, we don't need them to be toggleable
+  saveModifiers = saveModifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
+	const metadata = {
+		"rollName": 'Constitution Save',
+		"tooltip": 'Constitution Saving Throw',
+		"dc": ${saveDc},
+		"minRoll": minRoll
+	}
+
+  api.promptRollForToken(token, 'Constitution Save', '1d20', saveModifiers, metadata, 'concentration'); 
+});
+\`\`\`
+`;
+}
+
 function getMinRollModifier(modifiers) {
   // Look for highest `minroll(number)` modifier and use that as the minRoll
   const minRollMatch = /minroll(\d+)/;
