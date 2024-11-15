@@ -1187,10 +1187,13 @@
 		} : null;
 
 		// Add class features for added class at the new level, using the chosen subclass for it (if one)
-		const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
-		const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+		// and if we're not prompting for one
+		if (!promptSubclass) {
+			const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
+			const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
 
-		api.setValues(additionalFieldsToSet);
+			api.setValues(additionalFieldsToSet);
+		}
 
 		// Update HP and Hit Dice
 		// Get class hit die
