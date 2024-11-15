@@ -1012,6 +1012,7 @@ function getMinRollModifier(modifiers) {
   return minRoll;
 }
 
+// Used for getting the target's best AC (by calculation or what is set if that is higher)
 function getArmorClassForToken(token) {
   const record = token?.record;
   const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
@@ -1064,9 +1065,14 @@ function getArmorClassForToken(token) {
     armorClass += bestEquippedArmor.shieldAc;
   }
   armorClass += calcBonus;
-  return armorClass;
+
+  // Finally, return the max of this value against what they set in their AC field (in case they are apply bonuses there)
+  const acField = parseInt(token?.data?.ac || '0', 10);
+
+  return Math.max(armorClass, acField);
 }
 
+// Used when calculating new AC for equipment changes
 function getArmorClass(bestEquippedArmor) {
   // If we are shapeshifted, we use whatever our AC is currently set to
   if (record?.data?.wildShapeNpc || record?.data?.polymorphNpc) {
@@ -1119,7 +1125,7 @@ function getArmorClass(bestEquippedArmor) {
   // Add the bonuses
   armorClass += calcBonus;
 
-  return armorClass;
+  return armorClass
 }
 
 // Gets the best equipped armor for the context of the current PC
