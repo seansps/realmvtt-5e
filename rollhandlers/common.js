@@ -501,7 +501,7 @@ function applyMath(value, math) {
 }
 
 function getDamageType(rollString) {
-  const regex = /(?:\d*d\d+|\+\d+)?(?:\s*\+?-?\s*\d+)?(?:\s+(\w+))?/;
+  const regex = /(?:\d*d\d+|\+\d+)?(?:\s*\+?-?\s*\d+)?(?:\s+([\w-_]+))?/;
   const match = rollString.match(regex);
   return match && match[1] ? match[1] : "untyped";
 }
