@@ -518,7 +518,7 @@ function doubleDamageDice(damage) {
 }
 
 // Checks for replacements in a string modifier
-function checkForReplacements(value) {
+function checkForReplacements(value, replacements = {}) {
   // Case for 'Half <class> Level'
   const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
   const matchClassLevel = value.match(/(\w+) [Ll]evel/);
@@ -547,6 +547,12 @@ function checkForReplacements(value) {
   if (matchModifier) {
     const attributeMod = parseInt(record?.data?.[`${matchModifier[0].toLowerCase().replace(' ', '').replace('modifier', '')}Mod`] || '0', 10);
     value = value.replace(matchModifier[0], attributeMod);
+  }
+  // Check for replacements in the replacements object
+  if (replacements && Object.keys(replacements).length > 0) {
+    Object.keys(replacements).forEach(key => {
+      value = value.replace(key, replacements[key]);
+    });
   }
   return value;
 }

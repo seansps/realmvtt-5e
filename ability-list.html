@@ -120,7 +120,7 @@ ${savingThrowButtons}
     if (ability?.data?.rollOverride) {
       rollValue = ability?.data?.rollOverride;
     }
-    rollValue = checkForReplacements(rollValue);
+    rollValue = checkForReplacements(rollValue, { 'Roll': abilityGroupValue });
 
     if (promptRoll) {
       api.promptRoll(abilityName, rollValue, undefined, metadata, 'ability');
