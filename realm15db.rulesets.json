@@ -561,6 +561,10 @@
       "emptyListText": "No Features",
       "orderCriteria": [
         {
+          "field": "level",
+          "descending": false
+        },
+        {
           "field": "namefield",
           "descending": false
         }
@@ -2158,6 +2162,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1731713133636,
+  "updatedAt": 1731715429815,
   "published": true
 }]
