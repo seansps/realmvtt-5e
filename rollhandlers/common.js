@@ -526,7 +526,7 @@ function checkForReplacements(value, replacements = {}) {
     const className = matchLevel[1];
     const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
     if (characterClassLevel) {
-      value = value.replace(matchLevel[0], Math.floor(parseInt(characterClassLevel || '1', 10) / 2));
+      value = value.replaceAll(matchLevel[0], Math.floor(parseInt(characterClassLevel || '1', 10) / 2));
     }
   }
   // Case for '<class> Level'
@@ -534,24 +534,24 @@ function checkForReplacements(value, replacements = {}) {
     const className = matchClassLevel[1];
     const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
     if (characterClassLevel) {
-      value = value.replace(matchClassLevel[0], parseInt(characterClassLevel || '1', 10));
+      value = value.replaceAll(matchClassLevel[0], parseInt(characterClassLevel || '1', 10));
     }
   }
   // Case for 'Proficiency Bonus'
   const matchProficiencyBonus = value.match(/[Pp]roficiency [Bb]onus/);
   if (matchProficiencyBonus) {
-    value = value.replace(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
+    value = value.replaceAll(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
   }
   // Case for Strength|Dexterity|Constitution|Wisdom|Intelligence|Charisma Modifier
   const matchModifier = value.match(/[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/);
   if (matchModifier) {
     const attributeMod = parseInt(record?.data?.[`${matchModifier[0].toLowerCase().replace(' ', '').replace('modifier', '')}Mod`] || '0', 10);
-    value = value.replace(matchModifier[0], attributeMod);
+    value = value.replaceAll(matchModifier[0], attributeMod);
   }
   // Check for replacements in the replacements object
   if (replacements && Object.keys(replacements).length > 0) {
     Object.keys(replacements).forEach(key => {
-      value = value.replace(key, replacements[key]);
+      value = value.replaceAll(key, replacements[key]);
     });
   }
   return value;
