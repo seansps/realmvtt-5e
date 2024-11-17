@@ -557,10 +557,30 @@ function checkForReplacements(value, replacements = {}) {
   return value;
 }
 
+function isClassLevel(field) {
+  return ['barbarianLevel', 'bardLevel', 'clericLevel', 'druidLevel', 'fighterLevel', 'monkLevel', 'paladinLevel', 'rangerLevel', 'rogueLevel', 'sorcererLevel', 'warlockLevel', 'wizardLevel'].includes(field);
+}
+
+function getClassLevel(recordContext, field, fieldValueOverrides) {
+  const className = field.replace('Level', '');
+  let classLevels = recordContext?.data?.classLevels || '';
+  if (fieldValueOverrides && fieldValueOverrides[`data.classLevels`]) {
+    classLevels = fieldValueOverrides[`data.classLevels`];
+  }
+  const classLevel = classLevels.toLowerCase().match(`${className} (\\d+)`)?.[1] || 0;
+  return parseInt(classLevel || '0', 10);
+}
+
 function getTotalValueFromFields(recordContext, fieldsToAddToUses, fieldValueOverrides) {
   let total = 0;
   fieldsToAddToUses.forEach((field) => {
-    let value = parseInt(recordContext?.data?.[field] || '0', 10);
+    let value = 0;
+    if (isClassLevel(field)) {
+      value = getClassLevel(recordContext, field, fieldValueOverrides);
+    }
+    else {
+      value = parseInt(recordContext?.data?.[field] || '0', 10);
+    }
     if (isNaN(value)) {
       value = 0;
     }

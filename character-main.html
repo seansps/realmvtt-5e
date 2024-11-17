@@ -130,7 +130,7 @@
 		api.setValue(`data.${saveField}`, savVal);
 	}
 
-	// On update of PB, update Saves and Skills
+	// On update of PB or level, update Saves and Skills
 	function updateProficiencies(value, recordOverride) {
 		const thisRecord = recordOverride || record;
 		const val = parseInt(value, 10);
@@ -204,10 +204,10 @@
 
 
 		// Go through abilityGroups and update maxDailyUses if needed
-		const abilityGroups = record?.data?.abilityGroups || [];
+		const abilityGroups = thisRecord?.data?.abilityGroups || [];
 		abilityGroups.forEach((abilityGroup, index) => {
 			if (abilityGroup?.data?.fieldsToAddToUses && abilityGroup?.data?.fieldsToAddToUses.length > 0) {
-				const totalUses = getTotalValueFromFields(record, abilityGroup?.data?.fieldsToAddToUses || []);
+				const totalUses = getTotalValueFromFields(thisRecord, abilityGroup?.data?.fieldsToAddToUses || []);
 				if (totalUses > 0) {
 					valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] = totalUses;
 				}
@@ -821,7 +821,7 @@
 	}
 
 	// Add class and subclass features
-	function addMissingClassFeatures(className, classObj, subclass, newLevel) {
+	function addMissingClassFeatures(className, classObj, subclass, newLevel, classLevels) {
 		const additionalFieldsToSet = {};
 		const curFeatures = (record?.data?.features || []).map(feature => `${className}-${feature.name}`);
 		const features = classObj?.data?.feature_list || [];
@@ -920,7 +920,9 @@
 
 					let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
 					if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
-						abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);
+						abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || [], {
+							'data.classLevels': classLevels
+						});
 					}
 					const abilityValue = feature?.data?.value || '';
 					const abilityRestoresOn = feature?.data?.restoreOn || '';
@@ -1168,7 +1170,7 @@
 						icon: 'IconBadges'
 					});
 					// Add subclass features for level 3
-					const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
+					const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel, classLevels);
 					// Get Spellcasting info for new subclass
 					const subclasses = [...(record?.data?.subclasses || []), subclass];
 					const spellSlotFieldsToSet = getSpellSlotFields(classes, subclasses, classLevels, classObj, level, newLevel);
@@ -1190,8 +1192,7 @@
 		// and if we're not prompting for one
 		if (!promptSubclass) {
 			const subclass = (record?.data?.subclasses || []).find(subclass => subclass.data.class === className);
-			const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel);
-
+			const additionalFieldsToSet = addMissingClassFeatures(className, recordLink.value, subclass, newLevel, classLevels);
 			api.setValues(additionalFieldsToSet);
 		}
 
