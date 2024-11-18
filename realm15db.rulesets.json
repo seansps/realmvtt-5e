@@ -220,7 +220,7 @@
       "tabs": [
         {
           "name": "Main",
-          "layout": "<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>\n  <div style='display: flex; gap: 4px'>\n    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>\n      <portrait width='125px' height='125px' field=\"portrait\"></portrait>\n    </div>\n    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>\n      <dropdown field=\"type\" placeholder='Select Feat Type' label=\"Feat Type\"\n        options='[{\"label\": \"Origin Feat\", \"value\": \"origin\"}, {\"label\": \"General Feat\", \"value\": \"general\"}, {\"label\": \"Fighting Style Feat\", \"value\": \"fightingStyle\"}, {\"label\": \"Epic Boon Feat\", \"value\": \"epicBoon\"}]'>\n      </dropdown>\n      <stringfield field=\"prerequisites\" label=\"Prerequisites\" placeholder='None'></stringfield>\n    </div>\n  </div>\n  <stringfield field=\"abilityScores\" label=\"Ability Score Increase\" placeholder='None'></stringfield>\n</div>\n\n<div style='margin-top: 8px; margin-bottom: 8px'>\n  <divider label='Description'></divider>\n</div>\n\n<richtextfield placeholder='Enter Feat description...' field=\"description\" label=\"Description\"></richtextfield>",
+          "layout": "<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>\n  <div style='display: flex; gap: 4px'>\n    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>\n      <portrait width='125px' height='125px' field=\"portrait\"></portrait>\n    </div>\n    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>\n      <dropdown field=\"type\" placeholder='Select Feat Type' label=\"Feat Type\"\n        options='[{\"label\": \"Origin Feat\", \"value\": \"origin\"}, {\"label\": \"General Feat\", \"value\": \"general\"}, {\"label\": \"Fighting Style Feat\", \"value\": \"fightingStyle\"}, {\"label\": \"Epic Boon Feat\", \"value\": \"epicBoon\"}, {\"label\": \"Eldritch Invocation (Warlock Only)\", \"value\": \"eldritchInvocation\"}]'>\n      </dropdown>\n      <stringfield field=\"prerequisites\" label=\"Prerequisites\" placeholder='None'></stringfield>\n    </div>\n  </div>\n  <stringfield field=\"abilityScores\" label=\"Ability Score Increase\" placeholder='None'></stringfield>\n</div>\n\n<div style='margin-top: 8px; margin-bottom: 8px'>\n  <divider label='Description'></divider>\n</div>\n\n<richtextfield placeholder='Enter Feat description...' field=\"description\" label=\"Description\"></richtextfield>",
           "fields": []
         },
         {
@@ -241,7 +241,7 @@
       "emptyListText": "",
       "singleRow": false,
       "filters": {
-        "type": "origin,general,fightingStyle,epicBoon"
+        "type": "origin,general,fightingStyle,epicBoon,eldritchInvocation"
       }
     },
     {
@@ -2162,6 +2162,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1731888161057,
+  "updatedAt": 1731937680292,
   "published": true
 }]
