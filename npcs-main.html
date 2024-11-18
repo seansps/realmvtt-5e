@@ -19,6 +19,28 @@
 			fieldsToShow.push('cargo');
 			fieldsToShow.push('damageThreshold');
 			fieldsToShow.push('cost');
+			// Hide trap fields
+			fieldsToHide.push('trapType');
+		}
+		else if (npcType === 'trap') {
+			// Hide creature fields
+			fieldsToHide.push('tempHp');
+			fieldsToHide.push('creatureType');
+			fieldsToHide.push('alignment');
+			fieldsToHide.push('hitDice');
+			fieldsToHide.push('senses');
+			fieldsToHide.push('skills');
+			fieldsToHide.push('skillsLabel');
+			fieldsToHide.push('languages');
+			// Hide vehicle fields
+			fieldsToHide.push('weight');
+			fieldsToHide.push('crew');
+			fieldsToHide.push('passengers');
+			fieldsToHide.push('cargo');
+			fieldsToHide.push('damageThreshold');
+			// Show trap fields
+			fieldsToShow.push('trapType');
+			fieldsToShow.push('cost');
 		}
 		else {
 			// Show creature fields
@@ -37,6 +59,8 @@
 			fieldsToHide.push('cargo');
 			fieldsToHide.push('damageThreshold');
 			fieldsToHide.push('cost');
+			// Hide trap fields
+			fieldsToHide.push('trapType');
 		}
 		api.setHidden(fieldsToHide, true, () => {
 			// Do this in callback to avoid race condition
@@ -221,7 +245,7 @@
 				</div>
 				<dropdown size="xs" width="100%" field="type" label="Type" placeholder="NPC Type..."
 					onchange='onTypeChange(value)'
-					options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}]'>
+					options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}, {"value": "trap", "label": "Trap"}]'>
 				</dropdown>
 			</div>
 			<div style='display: flex; flex-direction: column; gap: 0px; width: 100%;'>
@@ -230,6 +254,9 @@
 						options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
 					</dropdown>
 					<stringfield size="xs" width="100%" field="creatureType" label="Creature Type" placeholder="Creature Type...">
+					</stringfield>
+					<stringfield hidden="true" size="xs" width="100%" field="trapType" label="Trap Type"
+						placeholder="Trap Type...">
 					</stringfield>
 					<dropdown size="xs" width="100%" field="alignment" label="Alignment" placeholder="Alignment..." options='[
 			{"value": "unaligned", "label": "Unaligned"},
