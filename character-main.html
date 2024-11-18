@@ -830,17 +830,23 @@
 		const abilityGroupsToAdd = new Set();
 
 		const allFeatures = [...features, ...subClassFeatures];
+
+		// Keep track of features added this level in a set so we do not add duplicates
+		const featuresAddedThisLevel = new Set();
+
 		allFeatures.forEach(feature => {
 			const level = feature?.data?.level || 0;
 			let featureAddedOrUpdated = false;
 			// If this feature is at the level we're adding, add or update it
 			if (level === newLevel) {
-				if (!curFeatures.includes(`${className}-${feature.name}`)) {
+				if (!curFeatures.includes(`${className}-${feature.name}`) &&
+					!featuresAddedThisLevel.has(`${className}-${feature.name}`)) {
 					// Add this feature
 					api.addValue('data.features', {
 						...feature
 					});
 					featureAddedOrUpdated = true;
+					featuresAddedThisLevel.add(`${className}-${feature.name}`);
 				}
 				else {
 					// Update the existing feature if this one is a higher level
