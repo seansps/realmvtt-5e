@@ -1,417 +1,497 @@
 <script>
-	// Convert 5e formatted damage strings to string Realm VTT needs such as 1d4 piercing + 3 piercing + 2d6 poison (converted from (1d4 + 3) piercing damage plus (2d6) poison damage)
-	function getDamage(description) {
-		const damagePattern = /(\d+) \((\d+d\d+)(?:\s*([-+])\s*(\d+))?\) (\w+) damage/gi;
-		let match;
-		let damageString = '';
+  // Convert 5e formatted damage strings to string Realm VTT needs such as 1d4 piercing + 3 piercing + 2d6 poison (converted from (1d4 + 3) piercing damage plus (2d6) poison damage)
+  function getDamage(description) {
+    // Handle both formats: "7 (1d8 + 3)" and "1d8 + 3"
+    const patterns = [
+      /(\d+) \((\d+d\d+)(?:\s*([-+])\s*(\d+))?\) (\w+) damage/gi, // Format: "7 (1d8 + 3) piercing"
+      /(\d+d\d+)(?:\s*([-+])\s*(\d+))? (\w+) damage/gi, // Format: "1d8 + 3 piercing"
+    ];
 
-		while ((match = damagePattern.exec(description)) !== null) {
-			const [, , dice, math, bonus, type] = match;
-			const typeLower = type.toLowerCase();
-			if (math) {
-				damageString += `${dice} ${typeLower} ${math} ${bonus} ${typeLower} + `;
-			} else {
-				damageString += `${dice} ${typeLower} + `;
-			}
-		}
+    let damageString = "";
 
-		// Remove trailing ' + ' if present
-		damageString = damageString.replace(/ \+ $/, '');
-		return damageString;
-	}
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(description)) !== null) {
+        if (match[0].includes("(")) {
+          // Format: "7 (1d8 + 3) piercing"
+          const [, , dice, math, bonus, type] = match;
+          const typeLower = type.toLowerCase();
+          if (math) {
+            damageString += `${dice} ${typeLower} ${math} ${bonus} ${typeLower} + `;
+          } else {
+            damageString += `${dice} ${typeLower} + `;
+          }
+        } else {
+          // Format: "1d8 + 3 piercing"
+          const [, dice, math, bonus, type] = match;
+          const typeLower = type.toLowerCase();
+          if (math) {
+            damageString += `${dice} ${typeLower} ${math} ${bonus} ${typeLower} + `;
+          } else {
+            damageString += `${dice} ${typeLower} + `;
+          }
+        }
+      }
+    }
 
-	function updateName(name) {
-		const actionDataPath = dataPath.replace('.name', '');
+    // Remove trailing ' + ' if present
+    damageString = damageString.replace(/ \+ $/, "");
+    return damageString;
+  }
 
-		const valuesToSet = {};
-		// Parse name for (x/Day)
-		const usesPerDay = parseInt(name.match(/\(\s*(\d+)\s*\/Day\s*\)/)?.[1] || '0', 10);
-		if (usesPerDay > 0) {
-			valuesToSet[`${actionDataPath}.data.usesPerDay`] = usesPerDay;
-			valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
-			valuesToSet[`${actionDataPath}.fields.uses.hidden`] = false;
-		}
+  function updateName(name) {
+    const actionDataPath = dataPath.replace(".name", "");
 
-		// Parse for Recharge (i.e. '(Recharge 5-6)' or '(Recharge 6)')
-		const rechargeMatch = name.match(/\(Recharge\s+(\d+-\d+|\d+)\)/);
-		if (rechargeMatch) {
-			const recharge = rechargeMatch[1]; // This will be either 'x-y' or 'y'
-			valuesToSet[`${actionDataPath}.data.isRecharge`] = true;
-			valuesToSet[`${actionDataPath}.data.recharge`] = recharge;
-			if (!valuesToSet[`${actionDataPath}.data.usesPerDay`]) {
-				valuesToSet[`${actionDataPath}.data.usesPerDay`] = 1;
-			}
-			valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
-			valuesToSet[`${actionDataPath}.fields.uses.hidden`] = false;
-		}
+    const valuesToSet = {};
+    // Parse name for (x/Day)
+    const usesPerDay = parseInt(
+      name.match(/\(\s*(\d+)\s*\/Day\s*\)/)?.[1] || "0",
+      10
+    );
+    if (usesPerDay > 0) {
+      valuesToSet[`${actionDataPath}.data.usesPerDay`] = usesPerDay;
+      valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
+      valuesToSet[`${actionDataPath}.fields.uses.hidden`] = false;
+    }
 
-		if (Object.keys(valuesToSet).length > 0) {
-			api.setValues(valuesToSet);
-		}
-	}
+    // Parse for Recharge (i.e. '(Recharge 5-6)' or '(Recharge 6)')
+    const rechargeMatch = name.match(/\(Recharge\s+(\d+-\d+|\d+)\)/);
+    if (rechargeMatch) {
+      const recharge = rechargeMatch[1]; // This will be either 'x-y' or 'y'
+      valuesToSet[`${actionDataPath}.data.isRecharge`] = true;
+      valuesToSet[`${actionDataPath}.data.recharge`] = recharge;
+      if (!valuesToSet[`${actionDataPath}.data.usesPerDay`]) {
+        valuesToSet[`${actionDataPath}.data.usesPerDay`] = 1;
+      }
+      valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
+      valuesToSet[`${actionDataPath}.fields.uses.hidden`] = false;
+    }
 
-	function updateSettings(description) {
-		// Here we parse the description to extract the settings for an NPC action to try to set them automatically
-		// e.g. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.
-		const actionDataPath = dataPath.replace('.data.description', '');
-		const valuesToSet = {};
-		const isAttack = description.toLowerCase().includes('attack roll');
-		const isRanged = description.toLowerCase().includes('ranged attack roll');
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
 
-		if (isAttack || isRanged) {
-			valuesToSet[`${actionDataPath}.data.isAttack`] = isAttack;
-			valuesToSet[`${actionDataPath}.data.isRanged`] = isRanged;
+  function updateSettings(description) {
+    // Here we parse the description to extract the settings for an NPC action to try to set them automatically
+    // e.g. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.
+    const actionDataPath = dataPath.replace(".data.description", "");
+    const valuesToSet = {};
+    const isAttack = description.toLowerCase().includes("attack roll");
+    const isRanged = description.toLowerCase().includes("ranged attack roll");
 
-			// Extract attack to hit
-			const attackMod = parseInt(description.match(/Attack Roll: ([+-]?\d+)/)?.[1] || '0', 10);
-			valuesToSet[`${actionDataPath}.data.attackMod`] = attackMod;
+    if (isAttack || isRanged) {
+      valuesToSet[`${actionDataPath}.data.isAttack`] = isAttack;
+      valuesToSet[`${actionDataPath}.data.isRanged`] = isRanged;
 
-			// Extract damage components
-			const damageString = getDamage(description);
-			valuesToSet[`${actionDataPath}.data.damage`] = damageString;
+      // Extract attack to hit
+      const attackMod = parseInt(
+        description.match(/Attack Roll: ([+-]?\d+)/)?.[1] || "0",
+        10
+      );
+      valuesToSet[`${actionDataPath}.data.attackMod`] = attackMod;
 
-			if (isRanged) {
-				// Extract normal and max range (e.g. Ranged Attack Roll: +5, range 80/320 ft.)
-				const rangeMatch = description.match(/range\s+(\d+)\s*\/\s*(\d+)/);
-				if (rangeMatch) {
-					valuesToSet[`${actionDataPath}.data.normalRange`] = parseInt(rangeMatch[1], 10);
-					valuesToSet[`${actionDataPath}.data.maxRange`] = parseInt(rangeMatch[2], 10);
-				}
-			}
+      // Extract damage components
+      const damageString = getDamage(description);
+      valuesToSet[`${actionDataPath}.data.damage`] = damageString;
 
-			// If these are set, we also need to show the damage/attack buttons
-			valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = false;
-			valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = false;
-			valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = false;
-		}
-		else {
-			valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = true;
-			valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = true;
-			valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
-		}
+      if (isRanged) {
+        // Extract normal and max range (e.g. Ranged Attack Roll: +5, range 80/320 ft.)
+        const rangeMatch = description.match(/range\s+(\d+)\s*\/\s*(\d+)/);
+        if (rangeMatch) {
+          valuesToSet[`${actionDataPath}.data.normalRange`] = parseInt(
+            rangeMatch[1],
+            10
+          );
+          valuesToSet[`${actionDataPath}.data.maxRange`] = parseInt(
+            rangeMatch[2],
+            10
+          );
+        }
+      }
 
-		// Parse for a saving throw such as `Strength Saving Throw: DC 12`
-		const saveMatch = description.match(/([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/);
-		if (saveMatch) {
-			valuesToSet[`${actionDataPath}.data.saveDC`] = parseInt(saveMatch[2], 10);
-			valuesToSet[`${actionDataPath}.fields.isSave.value`] = true;
-			valuesToSet[`${actionDataPath}.data.savingThrows`] = [saveMatch[1].toLowerCase()];
-			valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
-		}
+      // If these are set, we also need to show the damage/attack buttons
+      valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = false;
+      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = false;
+      valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = false;
+    } else {
+      valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = true;
+      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = true;
+      valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
+    }
 
-		// Parse for spellcasting from the description, such as 'casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12):'
-		const spellcastingMatch = description.match(/using (\w+) as the spellcasting ability \(spell save DC (\d+)\)/i);
-		if (spellcastingMatch) {
-			const spellcastingAbility = spellcastingMatch[1].toLowerCase();
-			const spellSaveDC = parseInt(spellcastingMatch[2] || '0', 10);
-			// Determine spell casting modifier
-			const spellcastingAbilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
-			const proficiencyBonus = api.getValue('data.proficiencyBonus') || 2;
-			valuesToSet[`${actionDataPath}.data.isSpellcasting`] = true;
-			valuesToSet[`${actionDataPath}.data.spellcastingAbility`] = spellcastingAbility;
-			valuesToSet[`${actionDataPath}.data.spellMod`] = spellcastingAbilityMod + proficiencyBonus;
-			valuesToSet[`${actionDataPath}.data.spellDC`] = spellSaveDC;
-			valuesToSet[`${actionDataPath}.fields.spells.hidden`] = false;
-		}
+    // Parse for a saving throw such as `Strength Saving Throw: DC 12`
+    const saveMatch = description.match(
+      /([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/
+    );
+    if (saveMatch) {
+      valuesToSet[`${actionDataPath}.data.saveDC`] = parseInt(saveMatch[2], 10);
+      valuesToSet[`${actionDataPath}.fields.isSave.value`] = true;
+      valuesToSet[`${actionDataPath}.data.savingThrows`] = [
+        saveMatch[1].toLowerCase(),
+      ];
+      valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
+    }
 
+    // Parse for spellcasting from the description, such as 'casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12):'
+    const spellcastingMatch = description.match(
+      /using (\w+) as the spellcasting ability \(spell save DC (\d+)\)/i
+    );
+    if (spellcastingMatch) {
+      const spellcastingAbility = spellcastingMatch[1].toLowerCase();
+      const spellSaveDC = parseInt(spellcastingMatch[2] || "0", 10);
+      // Determine spell casting modifier
+      const spellcastingAbilityMod =
+        api.getValue(`data.${spellcastingAbility}Mod`) || 0;
+      const proficiencyBonus = api.getValue("data.proficiencyBonus") || 2;
+      valuesToSet[`${actionDataPath}.data.isSpellcasting`] = true;
+      valuesToSet[`${actionDataPath}.data.spellcastingAbility`] =
+        spellcastingAbility;
+      valuesToSet[`${actionDataPath}.data.spellMod`] =
+        spellcastingAbilityMod + proficiencyBonus;
+      valuesToSet[`${actionDataPath}.data.spellDC`] = spellSaveDC;
+      valuesToSet[`${actionDataPath}.fields.spells.hidden`] = false;
+    }
 
-		if (Object.keys(valuesToSet).length > 0) {
-			api.setValues(valuesToSet);
-		}
-	}
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
 
-	function onAttackChange(isAttack) {
-		const valuesToSet = {};
-		const actionDataPath = dataPath.replace('.data.isAttack', '');
+  function onAttackChange(isAttack) {
+    const valuesToSet = {};
+    const actionDataPath = dataPath.replace(".data.isAttack", "");
 
-		valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = !isAttack;
-		valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = !isAttack;
-		valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = !isAttack;
-		api.setValues(valuesToSet);
-	}
+    valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = !isAttack;
+    valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = !isAttack;
+    valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = !isAttack;
+    api.setValues(valuesToSet);
+  }
 
-	function showHideSpellcasting(isSpellcasting) {
-		const spellListDataPath = dataPath.replace('.data.isSpellcasting', '.fields.spells.hidden');
-		api.setValue(spellListDataPath, !isSpellcasting);
-	}
+  function showHideSpellcasting(isSpellcasting) {
+    const spellListDataPath = dataPath.replace(
+      ".data.isSpellcasting",
+      ".fields.spells.hidden"
+    );
+    api.setValue(spellListDataPath, !isSpellcasting);
+  }
 
-	function updateUsesPerDay(usesPerDay) {
-		const actionDataPath = dataPath.replace('.data.usesPerDay', '');
-		const valuesToSet = {};
-		valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = !usesPerDay;
-		valuesToSet[`${actionDataPath}.fields.uses.hidden`] = !usesPerDay;
-		api.setValues(valuesToSet);
-	}
+  function updateUsesPerDay(usesPerDay) {
+    const actionDataPath = dataPath.replace(".data.usesPerDay", "");
+    const valuesToSet = {};
+    valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = !usesPerDay;
+    valuesToSet[`${actionDataPath}.fields.uses.hidden`] = !usesPerDay;
+    api.setValues(valuesToSet);
+  }
 
-	function updateReactions() {
-		// If this is a reaction, we update the amount used by 1 up to the max
-		if (dataPath.includes('data.reactions')) {
-			const maxReactions = record?.data?.maxReactions || 1;
-			const usedReactions = record?.data?.usedReactions || 0;
-			if (usedReactions < maxReactions) {
-				api.setValue('data.usedReactions', usedReactions + 1);
-			}
-		}
-	}
+  function updateReactions() {
+    // If this is a reaction, we update the amount used by 1 up to the max
+    if (dataPath.includes("data.reactions")) {
+      const maxReactions = record?.data?.maxReactions || 1;
+      const usedReactions = record?.data?.usedReactions || 0;
+      if (usedReactions < maxReactions) {
+        api.setValue("data.usedReactions", usedReactions + 1);
+      }
+    }
+  }
 
-	function updateRecharge(recharge) {
-		const actionDataPath = dataPath.replace('.data.isRecharge', '');
-		const action = api.getValue(actionDataPath);
-		const valuesToSet = {};
-		if (!action?.data?.usesPerDay) {
-			valuesToSet[`${actionDataPath}.data.usesPerDay`] = 1;
-		}
-		valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = !recharge;
-		valuesToSet[`${actionDataPath}.fields.uses.hidden`] = !recharge;
-		api.setValues(valuesToSet);
-	}
+  function updateRecharge(recharge) {
+    const actionDataPath = dataPath.replace(".data.isRecharge", "");
+    const action = api.getValue(actionDataPath);
+    const valuesToSet = {};
+    if (!action?.data?.usesPerDay) {
+      valuesToSet[`${actionDataPath}.data.usesPerDay`] = 1;
+    }
+    valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = !recharge;
+    valuesToSet[`${actionDataPath}.fields.uses.hidden`] = !recharge;
+    api.setValues(valuesToSet);
+  }
 
-	function updateHealing(healing) {
-		const actionDataPath = dataPath.replace('.data.healing', '');
-		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !healing);
-	}
+  function updateHealing(healing) {
+    const actionDataPath = dataPath.replace(".data.healing", "");
+    api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !healing);
+  }
 
-	function updateIsSave(isSave) {
-		const actionDataPath = dataPath.replace('.data.isSave', '');
-		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !isSave);
-	}
+  function updateIsSave(isSave) {
+    const actionDataPath = dataPath.replace(".data.isSave", "");
+    api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !isSave);
+  }
 
-	function updateEffects(effects) {
-		const actionDataPath = dataPath.replace('.data.effects', '');
-		api.setValue(`${actionDataPath}.fields.useBtn.hidden`, (effects || []).length === 0);
-	}
+  function updateEffects(effects) {
+    const actionDataPath = dataPath.replace(".data.effects", "");
+    api.setValue(
+      `${actionDataPath}.fields.useBtn.hidden`,
+      (effects || []).length === 0
+    );
+  }
 
-	// Roll Attack
-	function handleAttack() {
-		const attackDataPath = dataPath.replace('.data.rollAttackBtn', '');
-		const attack = api.getValue(attackDataPath);
+  // Roll Attack
+  function handleAttack() {
+    const attackDataPath = dataPath.replace(".data.rollAttackBtn", "");
+    const attack = api.getValue(attackDataPath);
 
-		let name = attack?.name || 'New Attack';
+    let name = attack?.name || "New Attack";
 
-		const attackMod = parseInt(attack?.data?.attackMod || '0', 10);
+    const attackMod = parseInt(attack?.data?.attackMod || "0", 10);
 
-		const atkRoll = '1d20';
-		let modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
+    const atkRoll = "1d20";
+    let modifiers = getEffectsAndModifiers(
+      ["attackBonus", "attackPenalty"],
+      undefined,
+      attack._id
+    );
 
-		let ranged = attack?.data?.isRanged || false;
+    let ranged = attack?.data?.isRanged || false;
 
-		// Add the modifier to the modifiers array
-		if (attackMod !== 0) {
-			modifiers.push({
-				name: 'Attack Modifier',
-				value: attackMod,
-				active: true
-			});
-		}
+    // Add the modifier to the modifiers array
+    if (attackMod !== 0) {
+      modifiers.push({
+        name: "Attack Modifier",
+        value: attackMod,
+        active: true,
+      });
+    }
 
-		let icon = 'IconSword';
-		if (ranged) {
-			icon = 'IconBow';
-		}
+    let icon = "IconSword";
+    if (ranged) {
+      icon = "IconBow";
+    }
 
-		const normalRange = parseInt(attack?.data?.normalRange || '0', 10);
-		const maxRange = parseInt(attack?.data?.maxRange || '0', 10);
+    const normalRange = parseInt(attack?.data?.normalRange || "0", 10);
+    const maxRange = parseInt(attack?.data?.maxRange || "0", 10);
 
-		// If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
-		// Get range to all other tokens
-		let disDueToProximity = false;
-		const ourToken = api.getToken();
-		if (ranged && ourToken) {
-			api.getOtherTokens().forEach(token => {
-				if (disDueToProximity) {
-					// Short circuit if we already have disadvantage due to proximity
-					return;
-				}
-				if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
-					// Check if they have incapacitated condition
-					const hasIncapacitated = (token?.effects || []).some(eff => eff.name === 'Incapacitated');
-					if (!hasIncapacitated) {
-						// Check distance
-						const distance = api.getDistance(ourToken, token);
-						if (distance !== undefined && distance !== null && distance <= 5) {
-							disDueToProximity = true;
-						}
-					}
-				}
-			});
-		}
+    // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
+    // Get range to all other tokens
+    let disDueToProximity = false;
+    const ourToken = api.getToken();
+    if (ranged && ourToken) {
+      api.getOtherTokens().forEach((token) => {
+        if (disDueToProximity) {
+          // Short circuit if we already have disadvantage due to proximity
+          return;
+        }
+        if (
+          token?.faction !== "neutral" &&
+          token?.faction !== ourToken?.faction
+        ) {
+          // Check if they have incapacitated condition
+          const hasIncapacitated = (token?.effects || []).some(
+            (eff) => eff.name === "Incapacitated"
+          );
+          if (!hasIncapacitated) {
+            // Check distance
+            const distance = api.getDistance(ourToken, token);
+            if (distance !== undefined && distance !== null && distance <= 5) {
+              disDueToProximity = true;
+            }
+          }
+        }
+      });
+    }
 
-		let damage = attack?.data?.damage || '1';
+    let damage = attack?.data?.damage || "1";
 
-		let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
-		// Get the default damage type of the attack and apply that to damage modifiers that have no type
-		const damageType = getDamageType(damage);
-		damageModifiers = damageModifiers.map(mod => {
-			const modType = getDamageType(mod?.value?.toString() || '');
-			const type = modType === 'untyped' ? mod?.type || damageType : '';
-			return {
-				...mod,
-				type: type
-			}
-		});
+    let damageModifiers = getEffectsAndModifiers(
+      ["damageBonus", "damagePenalty"],
+      undefined,
+      attack._id
+    );
+    // Get the default damage type of the attack and apply that to damage modifiers that have no type
+    const damageType = getDamageType(damage);
+    damageModifiers = damageModifiers.map((mod) => {
+      const modType = getDamageType(mod?.value?.toString() || "");
+      const type = modType === "untyped" ? mod?.type || damageType : "";
+      return {
+        ...mod,
+        type: type,
+      };
+    });
 
-		if (disDueToProximity) {
-			modifiers.push({
-				name: 'Enemy is Within 5 Feet',
-				value: 'disadvantage',
-				active: true
-			});
-		}
+    if (disDueToProximity) {
+      modifiers.push({
+        name: "Enemy is Within 5 Feet",
+        value: "disadvantage",
+        active: true,
+      });
+    }
 
-		const autoCritical = modifiers.some(m => m.value === 'critical');
-		// Check for crit on 19 or some other number
-		const critOnMatch = /critical(\d+)/;
-		const critOnMods = modifiers
-			.map(m => {
-				const match = m.value.toString().match(critOnMatch);
-				return match ? parseInt(match[1], 10) : null;
-			})
-			.filter(value => value !== null);
+    const autoCritical = modifiers.some((m) => m.value === "critical");
+    // Check for crit on 19 or some other number
+    const critOnMatch = /critical(\d+)/;
+    const critOnMods = modifiers
+      .map((m) => {
+        const match = m.value.toString().match(critOnMatch);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((value) => value !== null);
 
-		let critOn = null;
-		if (critOnMods.length) {
-			critOn = Math.min(...critOnMods);
-		}
-		// Filter these out of the modifiers array, we don't need them to be toggleable
-		modifiers = modifiers.filter(m => !m.value.toString().startsWith('critical'));
+    let critOn = null;
+    if (critOnMods.length) {
+      critOn = Math.min(...critOnMods);
+    }
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("critical")
+    );
 
-		const targets = api.getTargets();
-		targets.forEach(target => {
-			// Get calculated AC from modifiers - use if any
-			const targetAc = getArmorClassForToken(target?.token);
-			const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
-			const targetDistance = target?.distance || 0;
+    const targets = api.getTargets();
+    targets.forEach((target) => {
+      // Get calculated AC from modifiers - use if any
+      const targetAc = getArmorClassForToken(target?.token);
+      const targetName =
+        target?.token?.identified === false
+          ? target?.token?.record?.unidentifiedName
+          : target?.token?.record?.name;
+      const targetDistance = target?.distance || 0;
 
-			// If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
-			// and if it was greater than the max, make it apparent in the roll prompt
-			if (ranged && targetDistance > maxRange && maxRange > 0) {
-				modifiers.push({
-					name: 'Target is Beyond Max Range',
-					value: 'disadvantage',
-					active: true
-				});
-			}
-			else if (ranged && targetDistance > normalRange && normalRange > 0) {
-				modifiers.push({
-					name: 'Target is Beyond Normal Range',
-					value: 'disadvantage',
-					active: true
-				});
-			}
+      // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
+      // and if it was greater than the max, make it apparent in the roll prompt
+      if (ranged && targetDistance > maxRange && maxRange > 0) {
+        modifiers.push({
+          name: "Target is Beyond Max Range",
+          value: "disadvantage",
+          active: true,
+        });
+      } else if (ranged && targetDistance > normalRange && normalRange > 0) {
+        modifiers.push({
+          name: "Target is Beyond Normal Range",
+          value: "disadvantage",
+          active: true,
+        });
+      }
 
-			// Get effects and modifiers for the target
-			const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
-			targetEffects.forEach(r => {
-				modifiers.push(r);
-			});
+      // Get effects and modifiers for the target
+      const targetEffects = getAttackModifiersForTarget(
+        target?.token,
+        targetDistance
+      );
+      targetEffects.forEach((r) => {
+        modifiers.push(r);
+      });
 
-			const diceRoll = '1d20';
-			const metadata = {
-				"rollName": 'Attack',
-				"attack": `${name}`,
-				"icon": icon,
-				"targetName": targetName,
-				"tooltip": `Attack Roll for ${name}`,
-				"dc": targetAc,
-				"damage": damage,
-				"damageModifiers": damageModifiers,
-				"autoCritical": autoCritical,
-				"critOn": critOn,
-			}
-			api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
-		});
+      const diceRoll = "1d20";
+      const metadata = {
+        rollName: "Attack",
+        attack: `${name}`,
+        icon: icon,
+        targetName: targetName,
+        tooltip: `Attack Roll for ${name}`,
+        dc: targetAc,
+        damage: damage,
+        damageModifiers: damageModifiers,
+        autoCritical: autoCritical,
+        critOn: critOn,
+      };
+      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
+    });
 
-		if (!targets.length) {
-			const diceRoll = '1d20';
-			const metadata = {
-				"rollName": 'Attack',
-				"attack": `${name}`,
-				"icon": icon,
-				"tooltip": `Attack Roll for ${name}`,
-				"dc": 0,
-				"damage": damage,
-				"damageModifiers": damageModifiers,
-				"critOn": critOn,
-			}
-			api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
-		}
+    if (!targets.length) {
+      const diceRoll = "1d20";
+      const metadata = {
+        rollName: "Attack",
+        attack: `${name}`,
+        icon: icon,
+        tooltip: `Attack Roll for ${name}`,
+        dc: 0,
+        damage: damage,
+        damageModifiers: damageModifiers,
+        critOn: critOn,
+      };
+      api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
+    }
 
-		updateReactions();
-	}
+    updateReactions();
+  }
 
-	function rollDamage(isCritical) {
-		const attackDataPath = isCritical ? dataPath.replace('.data.rollCriticalBtn', '') : dataPath.replace('.data.rollDamageBtn', '');
-		const attack = api.getValue(attackDataPath);
+  function rollDamage(isCritical) {
+    const attackDataPath = isCritical
+      ? dataPath.replace(".data.rollCriticalBtn", "")
+      : dataPath.replace(".data.rollDamageBtn", "");
+    const attack = api.getValue(attackDataPath);
 
-		let name = attack?.name || 'New Attack';
-		let ranged = attack?.data?.isRanged || false;
+    let name = attack?.name || "New Attack";
+    let ranged = attack?.data?.isRanged || false;
 
+    let damage = attack?.data?.damage || "1";
 
-		let damage = attack?.data?.damage || '1';
+    if (isCritical) {
+      damage = doubleDamageDice(damage);
+    }
 
-		if (isCritical) {
-			damage = doubleDamageDice(damage);
-		}
+    let damageModifiers = getEffectsAndModifiers(
+      ["damageBonus", "damagePenalty"],
+      undefined,
+      attack._id
+    );
+    // Get the default damage type of the attack and apply that to damage modifiers that have no type
+    const damageType = getDamageType(damage);
+    damageModifiers = damageModifiers.map((mod) => {
+      const modType = getDamageType(mod?.value?.toString() || "");
+      const type = modType === "untyped" ? mod?.type || damageType : "";
+      return {
+        ...mod,
+        value: isCritical ? doubleDamageDice(mod.value) : mod.value,
+        type: type,
+      };
+    });
 
-		let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
-		// Get the default damage type of the attack and apply that to damage modifiers that have no type
-		const damageType = getDamageType(damage);
-		damageModifiers = damageModifiers.map(mod => {
-			const modType = getDamageType(mod?.value?.toString() || '');
-			const type = modType === 'untyped' ? mod?.type || damageType : '';
-			return {
-				...mod,
-				value: isCritical ? doubleDamageDice(mod.value) : mod.value,
-				type: type
-			}
-		});
+    const damageMetadata = {
+      // This is so that our damage handler script can tell if it was from a critical hit
+      // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
+      critical: isCritical,
+    };
 
-		const damageMetadata = {
-			// This is so that our damage handler script can tell if it was from a critical hit
-			// And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
-			"critical": isCritical,
-		}
+    api.promptRoll(
+      `${name} Damage`,
+      damage,
+      damageModifiers,
+      damageMetadata,
+      "damage"
+    );
+  }
 
-		api.promptRoll(`${name} Damage`, damage, damageModifiers, damageMetadata, 'damage')
-	}
+  function useAction() {
+    const actionDataPath = dataPath.replace(".data.useBtn", "");
+    const action = api.getValue(actionDataPath);
+    const name = action?.name || "";
+    const description = action?.data?.description || "";
 
-	function useAction() {
-		const actionDataPath = dataPath.replace('.data.useBtn', '');
-		const action = api.getValue(actionDataPath);
-		const name = action?.name || '';
-		const description = action?.data?.description || '';
+    const uses = parseInt(action?.data?.uses || "0", 10);
+    const maxUses = parseInt(action?.data?.usesPerDay || "0", 10);
+    const valuesToSet = {};
 
-		const uses = parseInt(action?.data?.uses || '0', 10);
-		const maxUses = parseInt(action?.data?.usesPerDay || '0', 10);
-		const valuesToSet = {};
+    if (maxUses > 0) {
+      if (uses < maxUses) {
+        // Deduct one use
+        valuesToSet[`${actionDataPath}.data.uses`] = uses + 1;
+      }
+    }
 
-		if (maxUses > 0) {
-			if (uses < maxUses) {
-				// Deduct one use
-				valuesToSet[`${actionDataPath}.data.uses`] = uses + 1;
-			}
-		}
+    // If this is a recharge action, add the effect
+    if (action?.data?.isRecharge) {
+      const tokenForRecord = api.getToken();
+      // Add the Recharge Effect
+      const actionName = (action?.name || "").split("(")[0].trim();
+      api.addEffect(
+        "Recharge",
+        tokenForRecord,
+        undefined,
+        `${actionName} [${action?.data?.recharge}]`
+      );
+    }
 
-		// If this is a recharge action, add the effect
-		if (action?.data?.isRecharge) {
-			const tokenForRecord = api.getToken();
-			// Add the Recharge Effect
-			const actionName = (action?.name || '').split('(')[0].trim();
-			api.addEffect('Recharge', tokenForRecord, undefined, `${actionName} [${action?.data?.recharge}]`);
-		}
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
 
-		if (Object.keys(valuesToSet).length > 0) {
-			api.setValues(valuesToSet);
-		}
-
-		// We'll send a message with the description of the action as well as macros as relevant
-		let savingThrowButtons = '';
-		if (action?.data?.isSave) {
-			const savingThrows = action?.data?.savingThrows || [];
-			const saveDc = action?.data?.saveDC || 0;
-			savingThrows.forEach(savingThrow => {
-				// Look up saves of selected tokens and prompt roll for each
-				const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
+    // We'll send a message with the description of the action as well as macros as relevant
+    let savingThrowButtons = "";
+    if (action?.data?.isSave) {
+      const savingThrows = action?.data?.savingThrows || [];
+      const saveDc = action?.data?.saveDC || 0;
+      savingThrows.forEach((savingThrow) => {
+        // Look up saves of selected tokens and prompt roll for each
+        const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
 const selectedTokens = api.getSelectedOrDroppedToken();
 selectedTokens.forEach(token => {
 	let saveModifiers = [];
@@ -438,39 +518,42 @@ selectedTokens.forEach(token => {
 		"minRoll": minRoll
 	}
 
-	api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+	api.promptRollForToken(token, '${capitalize(
+    savingThrow
+  )} Save', '1d20', saveModifiers, metadata, 'save');
 });
 \`\`\``;
-				// Add the rollSaveButton to the savingThrowButtons
-				savingThrowButtons += rollSaveButton + '\n';
-			});
-		}
+        // Add the rollSaveButton to the savingThrowButtons
+        savingThrowButtons += rollSaveButton + "\n";
+      });
+    }
 
-		const healingButton = action?.data?.healing ? `\`\`\`Roll_Healing
+    const healingButton = action?.data?.healing
+      ? `\`\`\`Roll_Healing
 api.promptRoll('${name} Healing', '${action?.data?.healing}', [], {}, 'healing')
-\`\`\`` : '';
+\`\`\``
+      : "";
 
-
-		// Create macros for all effects that this action can apply
-		let effectButtons = '';
-		const effects = action?.data?.effects || [];
-		effects.forEach(effectJson => {
-			const effect = JSON.parse(effectJson);
-			const effectName = effect?.name || '';
-			const effectID = effect?._id || '';
-			const effectTitle = `Apply_${effectName.replace(/ /g, '_')}`;
-			if (effectButtons !== '') {
-				effectButtons += '\n';
-			}
-			effectButtons += `\`\`\`${effectTitle}
+    // Create macros for all effects that this action can apply
+    let effectButtons = "";
+    const effects = action?.data?.effects || [];
+    effects.forEach((effectJson) => {
+      const effect = JSON.parse(effectJson);
+      const effectName = effect?.name || "";
+      const effectID = effect?._id || "";
+      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
+      if (effectButtons !== "") {
+        effectButtons += "\n";
+      }
+      effectButtons += `\`\`\`${effectTitle}
 let targets = api.getSelectedOrDroppedToken();
 targets.forEach(target => {
   api.addEffectById('${effectID}', target);
 });
 \`\`\``;
-		});
+    });
 
-		const message = `
+    const message = `
 #### ${name}
 
 ---
@@ -485,114 +568,312 @@ ${healingButton}
 ${effectButtons}
 `;
 
-		api.sendMessage(message, undefined, [], []);
-		updateReactions();
-	}
+    api.sendMessage(message, undefined, [], []);
+    updateReactions();
+  }
 </script>
 
-<div style='width: 100%'>
+<div style="width: 100%">
+  <!-- Name and Buttons -->
+  <div style="display: flex; flex-direction: row; gap: 4px">
+    <namefield
+      size="xs"
+      width="100%"
+      field="namefield"
+      placeholder="Enter Name..."
+      variant="unstyled"
+      onchange="updateName(value);"
+    ></namefield>
+    <!-- Uses / Day  Counter -->
+    <div style="min-width: 50px">
+      <counter
+        hidden="true"
+        field="uses"
+        maxvaluefield="usesPerDay"
+        label="Uses"
+        size="xs"
+      >
+      </counter>
+    </div>
+    <!-- Use Button -->
+    <div>
+      <button
+        hidden="true"
+        size="xs"
+        radius="xs"
+        field="useBtn"
+        label="Use"
+        variant="light"
+        onclick="useAction();"
+      ></button>
+    </div>
+    <!-- Roll Attack -->
+    <iconbutton
+      hidden="true"
+      size="md"
+      field="rollAttackBtn"
+      variant="outline"
+      options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]'
+      onchange="() => { }"
+      onclick="handleAttack();"
+    >
+    </iconbutton>
+    <div>
+      <!-- Roll Damage -->
+      <button
+        hidden="true"
+        size="xs"
+        radius="xs"
+        field="rollDamageBtn"
+        label="Damage"
+        variant="light"
+        onclick="rollDamage(false);"
+      ></button>
+    </div>
+    <!-- Roll Crit -->
+    <div>
+      <button
+        hidden="true"
+        size="xs"
+        radius="xs"
+        field="rollCriticalBtn"
+        label="Critical"
+        variant="light"
+        color="red"
+        onclick="rollDamage(true);"
+      ></button>
+    </div>
+  </div>
 
-	<!-- Name and Buttons -->
-	<div style='display: flex; flex-direction: row; gap: 4px;'>
-		<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"
-			onchange="updateName(value);"></namefield>
-		<!-- Uses / Day  Counter -->
-		<div style="min-width: 50px;">
-			<counter hidden="true" field='uses' maxvaluefield='usesPerDay' label='Uses' size='xs'>
-			</counter>
-		</div>
-		<!-- Use Button -->
-		<div>
-			<button hidden="true" size="xs" radius="xs" field="useBtn" label="Use" variant='light'
-				onclick='useAction();'></button>
-		</div>
-		<!-- Roll Attack -->
-		<iconbutton hidden="true" size="md" field="rollAttackBtn" variant="outline"
-			options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]' onchange='() => { }'
-			onclick='handleAttack();'>
-		</iconbutton>
-		<div>
-			<!-- Roll Damage -->
-			<button hidden="true" size="xs" radius="xs" field="rollDamageBtn" label="Damage" variant='light'
-				onclick='rollDamage(false);'></button>
-		</div>
-		<!-- Roll Crit -->
-		<div>
-			<button hidden="true" size="xs" radius="xs" field="rollCriticalBtn" label="Critical" variant='light' color="red"
-				onclick='rollDamage(true);'></button>
-		</div>
-	</div>
+  <!-- Description -->
+  <div style="margin-top: 2px">
+    <stringfield
+      size="xs"
+      width="100%"
+      field="description"
+      placeholder="Enter Description..."
+      onchange="updateSettings(value);"
+      multiline="true"
+      maxrows="6"
+    ></stringfield>
+  </div>
 
-	<!-- Description -->
-	<div style='margin-top: 2px;'>
-		<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...'
-			onchange="updateSettings(value);" multiline='true' maxrows='6'></stringfield>
-	</div>
+  <!-- Settings -->
+  <accordion
+    hideonlocked="true"
+    field="settingsAccordion"
+    label="Settings"
+    size="xs"
+  >
+    <div style="display: flex; flex-direction: row; gap: 8px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <checkbox
+          field="isAttack"
+          label="Is Attack"
+          size="sm"
+          textalign="left"
+          onchange="onAttackChange(value);"
+        >
+        </checkbox>
+        <checkbox
+          field="isRanged"
+          label="Is Ranged"
+          size="sm"
+          textalign="left"
+          onchange=""
+        ></checkbox>
+      </div>
+      <numberfield
+        field="normalRange"
+        label="Normal Range"
+        width="80px"
+        size="xs"
+        placeholder="0"
+      >
+      </numberfield>
+      <numberfield
+        field="maxRange"
+        label="Max Range"
+        width="80px"
+        size="xs"
+        placeholder="0"
+      >
+      </numberfield>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: flex-end;
+      "
+    >
+      <numberfield
+        showsign="true"
+        field="attackMod"
+        label="Attack Modifier"
+        size="xs"
+        width="50%"
+        placeholder="+0"
+      >
+      </numberfield>
+      <stringfield
+        field="damage"
+        label="Damage"
+        size="xs"
+        width="50%"
+        placeholder="Enter Damage..."
+      ></stringfield>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: flex-end;
+      "
+    >
+      <numberfield
+        field="usesPerDay"
+        label="Uses per Day"
+        description="Number of Action Uses / Day"
+        size="xs"
+        width="50%"
+        placeholder="0"
+        onchange="updateUsesPerDay(value);"
+      >
+      </numberfield>
+      <stringfield
+        field="healing"
+        label="Is Healing"
+        description="Healing roll, if applicable"
+        size="xs"
+        width="50%"
+        placeholder="Enter Healing..."
+        onchange="updateHealing(value);"
+      >
+      </stringfield>
+    </div>
+    <dropdown
+      size="xs"
+      width="100%"
+      field="effects"
+      label="Effects"
+      searchable="true"
+      multiselect="10"
+      description="Effects that this Action can apply"
+      optionsquery='{"type": "effects", "query": {}}'
+      placeholder="Select Effects..."
+      onchange="updateEffects(value);"
+    >
+    </dropdown>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      "
+    >
+      <checkbox
+        field="isSave"
+        label="Is Save"
+        size="sm"
+        textalign="left"
+        onchange="updateIsSave(value);"
+      ></checkbox>
+      <numberfield
+        field="saveDC"
+        size="xs"
+        width="100px"
+        placeholder="Enter DC..."
+      >
+      </numberfield>
+      <dropdown
+        size="xs"
+        width="250px"
+        field="savingThrows"
+        placeholder="Select up to 2 Saving Throws..."
+        multiselect="2"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      >
+      </dropdown>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      "
+    >
+      <checkbox
+        field="isRecharge"
+        label="Is Recharge"
+        size="sm"
+        textalign="left"
+        onchange="updateRecharge(value);"
+      >
+      </checkbox>
+      <stringfield
+        field="recharge"
+        size="xs"
+        width="150px"
+        placeholder="Enter Recharge Range..."
+      ></stringfield>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      "
+    >
+      <checkbox
+        field="isSpellcasting"
+        label="Is Spellcasting"
+        size="sm"
+        textalign="left"
+        onchange="showHideSpellcasting(value);"
+      ></checkbox>
+      <dropdown
+        field="spellcastingAbility"
+        size="xs"
+        label="Spellcasting Ability"
+        placeholder="Select Spellcasting Ability..."
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      >
+      </dropdown>
+    </div>
+    <div style="display: flex; flex-direction: row; gap: 8px; margin-top: 8px">
+      <numberfield
+        width="150px"
+        field="spellDC"
+        label="Spellcasting DC"
+        placeholder="N/A"
+        size="xs"
+        description="The DC used for Saves against this NPC's Spells"
+      >
+      </numberfield>
+      <numberfield
+        width="150px"
+        field="spellMod"
+        label="Spell Casting Modifier"
+        placeholder="N/A"
+        showsign="true"
+        size="xs"
+        description="The modifier used for this NPC's Spell Attack Rolls"
+      >
+      </numberfield>
+    </div>
+  </accordion>
 
-	<!-- Settings -->
-	<accordion hideonlocked='true' field='settingsAccordion' label='Settings' size="xs">
-		<div style='display: flex; flex-direction: row; gap: 8px;'>
-			<div style='display: flex; flex-direction: column; gap: 4px;'>
-				<checkbox field='isAttack' label='Is Attack' size='sm' textalign="left" onchange='onAttackChange(value);'>
-				</checkbox>
-				<checkbox field='isRanged' label='Is Ranged' size='sm' textalign="left" onchange=''></checkbox>
-			</div>
-			<numberfield field='normalRange' label='Normal Range' width="80px" size='xs' placeholder='0'>
-			</numberfield>
-			<numberfield field='maxRange' label='Max Range' width="80px" size='xs' placeholder='0'>
-			</numberfield>
-		</div>
-		<div style='display: flex; flex-direction: row; gap: 8px; align-items: flex-end'>
-			<numberfield showsign="true" field='attackMod' label='Attack Modifier' size='xs' width='50%' placeholder='+0'>
-			</numberfield>
-			<stringfield field='damage' label='Damage' size='xs' width='50%' placeholder='Enter Damage...'></stringfield>
-		</div>
-		<div style='display: flex; flex-direction: row; gap: 8px; align-items: flex-end'>
-			<numberfield field='usesPerDay' label='Uses per Day' description='Number of Action Uses / Day' size='xs'
-				width='50%' placeholder='0' onchange='updateUsesPerDay(value);'>
-			</numberfield>
-			<stringfield field='healing' label='Is Healing' description='Healing roll, if applicable' size='xs' width='50%'
-				placeholder='Enter Healing...' onchange='updateHealing(value);'>
-			</stringfield>
-		</div>
-		<dropdown size='xs' width='100%' field="effects" label="Effects" searchable='true' multiselect='10'
-			description='Effects that this Action can apply' optionsquery='{"type": "effects", "query": {}}'
-			placeholder='Select Effects...' onchange='updateEffects(value);'>
-		</dropdown>
-		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px; align-items: flex-end'>
-			<checkbox field='isSave' label='Is Save' size='sm' textalign="left" onchange='updateIsSave(value);'></checkbox>
-			<numberfield field='saveDC' size='xs' width='100px' placeholder='Enter DC...'>
-			</numberfield>
-			<dropdown size='xs' width="250px" field='savingThrows' placeholder='Select up to 2 Saving Throws...'
-				multiselect='2'
-				options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-			</dropdown>
-		</div>
-		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px; align-items: flex-end'>
-			<checkbox field='isRecharge' label='Is Recharge' size='sm' textalign="left" onchange='updateRecharge(value);'>
-			</checkbox>
-			<stringfield field='recharge' size='xs' width='150px' placeholder='Enter Recharge Range...'></stringfield>
-		</div>
-		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px; align-items: flex-end'>
-			<checkbox field='isSpellcasting' label='Is Spellcasting' size='sm' textalign="left"
-				onchange='showHideSpellcasting(value);'></checkbox>
-			<dropdown field='spellcastingAbility' size='xs' label='Spellcasting Ability'
-				placeholder='Select Spellcasting Ability...'
-				options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-			</dropdown>
-		</div>
-		<div style='display: flex; flex-direction: row; gap: 8px; margin-top: 8px;'>
-			<numberfield width="150px" field="spellDC" label="Spellcasting DC" placeholder='N/A' size='xs'
-				description="The DC used for Saves against this NPC's Spells">
-			</numberfield>
-			<numberfield width="150px" field="spellMod" label="Spell Casting Modifier" placeholder='N/A' showsign="true"
-				size='xs' description="The modifier used for this NPC's Spell Attack Rolls">
-			</numberfield>
-		</div>
-	</accordion>
-
-	<!-- Spellcasting -->
-	<div style='width: 100%'>
-		<list hidden="true" listtype="npc_spell_list" field='spells'></list>
-	</div>
+  <!-- Spellcasting -->
+  <div style="width: 100%">
+    <list hidden="true" listtype="npc_spell_list" field="spells"></list>
+  </div>
 </div>
