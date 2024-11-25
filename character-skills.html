@@ -1,12 +1,15 @@
 <script>
   function setProficiencyFor(skill, proficiencyValue, ability) {
     // Skills can be also be half, proficient, or expertise
-    const proficiency = proficiencyValue || 'false';
-    const isHalfProficient = proficiency === 'half';
-    const isExpertise = proficiency === 'expertise';
-    const isProficient = proficiency === 'true';
-    const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || '0', 10);
-    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
+    const proficiency = proficiencyValue || "false";
+    const isHalfProficient = proficiency === "half";
+    const isExpertise = proficiency === "expertise";
+    const isProficient = proficiency === "true";
+    const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || "0", 10);
+    const proficiencyBonus = parseInt(
+      record?.data?.proficiencyBonus || "0",
+      10
+    );
     let proficiencyMod = 0;
 
     const valuesToSet = {};
@@ -14,23 +17,20 @@
     if (isHalfProficient) {
       proficiencyMod = abilityMod + Math.floor(proficiencyBonus / 2);
       valuesToSet[`data.${skill}Mod`] = proficiencyMod;
-    }
-    else if (isExpertise) {
-      proficiencyMod = abilityMod + (proficiencyBonus * 2);
+    } else if (isExpertise) {
+      proficiencyMod = abilityMod + proficiencyBonus * 2;
       valuesToSet[`data.${skill}Mod`] = proficiencyMod;
-    }
-    else if (isProficient) {
+    } else if (isProficient) {
       proficiencyMod = abilityMod + proficiencyBonus;
       valuesToSet[`data.${skill}Mod`] = proficiencyMod;
-    }
-    else {
+    } else {
       proficiencyMod = abilityMod;
       valuesToSet[`data.${skill}Mod`] = proficiencyMod;
     }
 
     // Set a hidden field for passivePerception if this is for perception
-    if (skill === 'perception') {
-      valuesToSet['data.passivePerception'] = 10 + proficiencyMod;
+    if (skill === "perception") {
+      valuesToSet["data.passivePerception"] = 10 + proficiencyMod;
     }
 
     api.setValues(valuesToSet);
@@ -42,34 +42,39 @@
     if (perceptionValue === undefined || isNaN(perceptionValue)) {
       perceptionValue = 0;
     }
-    api.setValue('data.passivePerception', perceptionValue + 10);
+    api.setValue("data.passivePerception", perceptionValue + 10);
   }
 
   function setProficiency(value, skill) {
-    const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+    const ability =
+      record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
     setProficiencyFor(skill, value, ability);
   }
 
   function onAbilityChange(ability, skill) {
-    const proficiency = record?.data?.[`${skill}Prof`] || 'false';
+    const proficiency = record?.data?.[`${skill}Prof`] || "false";
     setProficiencyFor(skill, proficiency, ability);
   }
 
   function rollCheck(skill) {
-    const ability = record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+    const ability =
+      record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
     const mod = `${ability}Mod`;
 
     let modifiers = [];
-    let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
+    let abilityMod = parseInt(record?.data?.[mod] || "0", 10);
     if (abilityMod === undefined || isNaN(abilityMod)) {
       abilityMod = 0;
     }
 
-    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '0', 10);
-    const proficiency = record?.data?.[`${skill}Prof`] || 'false';
-    const isHalfProficient = proficiency === 'half';
-    const isExpertise = proficiency === 'expertise';
-    const isProficient = proficiency === 'true';
+    const proficiencyBonus = parseInt(
+      record?.data?.proficiencyBonus || "0",
+      10
+    );
+    const proficiency = record?.data?.[`${skill}Prof`] || "false";
+    const isHalfProficient = proficiency === "half";
+    const isExpertise = proficiency === "expertise";
+    const isProficient = proficiency === "true";
 
     modifiers.push({
       name: ability,
@@ -79,449 +84,947 @@
 
     if (isHalfProficient) {
       modifiers.push({
-        name: 'Half Proficiency',
+        name: "Half Proficiency",
         value: Math.floor(proficiencyBonus / 2),
         active: true,
       });
-    }
-    else if (isExpertise) {
+    } else if (isExpertise) {
       modifiers.push({
-        name: 'Expertise',
+        name: "Expertise",
         value: proficiencyBonus * 2,
         active: true,
       });
-    }
-    else if (isProficient) {
+    } else if (isProficient) {
       modifiers.push({
-        name: 'Proficient',
+        name: "Proficient",
         value: proficiencyBonus,
         active: true,
       });
     }
 
     // Get any bonus or penalties for abilities and skills
-    const checkModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], ability);
-    checkModifiers.forEach(modifier => {
+    const checkModifiers = getEffectsAndModifiers(
+      ["abilityBonus", "abilityPenalty"],
+      ability
+    );
+    checkModifiers.forEach((modifier) => {
       modifiers.push(modifier);
     });
 
-    const skillModifiers = getEffectsAndModifiers(['skillBonus', 'skillPenalty'], skill);
-    skillModifiers.forEach(modifier => {
+    const skillModifiers = getEffectsAndModifiers(
+      ["skillBonus", "skillPenalty"],
+      skill
+    );
+    skillModifiers.forEach((modifier) => {
       modifiers.push(modifier);
     });
+
+    // If we're proficient, get bonues that apply only to proficient checks
+    if (isProficient) {
+      const skillModifiers = getEffectsAndModifiers(
+        ["skillBonus"],
+        "proficient"
+      );
+      skillModifiers.forEach((modifier) => {
+        modifiers.push(modifier);
+      });
+    }
 
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
-    modifiers = modifiers.filter(m => !m.value.toString().startsWith('minroll'));
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll")
+    );
 
     const metadata = {
-      "rollName": `${camelToNormal(skill)}`,
-      "tooltip": `${camelToNormal(ability)} (${camelToNormal(skill)}) Check`,
-      "dc": 0,
-      "minRoll": minRoll,
-    }
-    api.promptRoll(`${camelToNormal(ability)} (${camelToNormal(skill)}) Check`, "1d20", modifiers, metadata, 'ability');
+      rollName: `${camelToNormal(skill)}`,
+      tooltip: `${camelToNormal(ability)} (${camelToNormal(skill)}) Check`,
+      dc: 0,
+      minRoll: minRoll,
+    };
+    api.promptRoll(
+      `${camelToNormal(ability)} (${camelToNormal(skill)}) Check`,
+      "1d20",
+      modifiers,
+      metadata,
+      "ability"
+    );
   }
 </script>
 
-<label label="Skills" size='md' textalign="center" variant="bold"></label>
-<table style="width: 100%;">
+<label label="Skills" size="md" textalign="center" variant="bold"></label>
+<table style="width: 100%">
   <tbody>
     <tr>
       <td>
-        <dropdown label="Acrobatics" field="acrobaticsAbility" placeholder='Select ability...' defaultvalue='dexterity'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'acrobatics');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+        <dropdown
+          label="Acrobatics"
+          field="acrobaticsAbility"
+          placeholder="Select ability..."
+          defaultvalue="dexterity"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'acrobatics');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="acrobaticsMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="acrobaticsMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="acrobaticsProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="acrobaticsProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'acrobatics');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'acrobatics');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Acrobatics Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('acrobatics');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Acrobatics Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('acrobatics');"
+        >
         </iconbutton>
       </td>
 
-      <td style="align-content: flex-end;">
-        <dropdown label="Medicine" field="medicineAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'medicine');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Medicine"
+          field="medicineAbility"
+          placeholder="Select ability..."
+          defaultvalue="wisdom"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'medicine');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="medicineMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="medicineMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="medicineProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="medicineProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'medicine');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'medicine');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Medicine Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('medicine');">
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown label="Animal Handling" field="animalHandlingAbility" placeholder='Select ability...'
-          defaultvalue='wisdom' size="xs" width="100%" onchange="onAbilityChange(value, 'animalHandling');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="animalHandlingMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="animalHandlingProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'animalHandling');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Animal Handling Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('animalHandling');">
-        </iconbutton>
-      </td>
-
-      <td style="align-content: flex-end;">
-        <dropdown label="Nature" field="natureAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'nature');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="natureMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="natureProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'nature');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Nature Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('nature');">
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown label="Arcana" field="arcanaAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'arcana');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="arcanaMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="arcanaProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'arcana');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Arcana Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('arcana');">
-        </iconbutton>
-      </td>
-
-      <td style="align-content: flex-end;">
-        <dropdown label="Perception" field="perceptionAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'perception');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield onchange="onPerceptionChange(value);" width="100%" size="xs" placeholder='+0' field="perceptionMod"
-          showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="perceptionProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'perception');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Perception Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('perception');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Medicine Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('medicine');"
+        >
         </iconbutton>
       </td>
     </tr>
 
     <tr>
       <td>
-        <dropdown label="Athletics" field="athleticsAbility" placeholder='Select ability...' defaultvalue='strength'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'athletics');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+        <dropdown
+          label="Animal Handling"
+          field="animalHandlingAbility"
+          placeholder="Select ability..."
+          defaultvalue="wisdom"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'animalHandling');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="athleticsMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="animalHandlingMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="athleticsProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="animalHandlingProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'athletics');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'animalHandling');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Athletics Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('athletics');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Animal Handling Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('animalHandling');"
+        >
         </iconbutton>
       </td>
 
-      <td style="align-content: flex-end;">
-        <dropdown label="Performance" field="performanceAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'performance');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Nature"
+          field="natureAbility"
+          placeholder="Select ability..."
+          defaultvalue="intelligence"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'nature');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="performanceMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="natureMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="performanceProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="natureProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'performance');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'nature');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Performance Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('performance');">
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown label="Deception" field="deceptionAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'deception');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="deceptionMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="deceptionProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'deception');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Deception Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('deception');">
-        </iconbutton>
-      </td>
-
-      <td style="align-content: flex-end;">
-        <dropdown label="Persuasion" field="persuasionAbility" placeholder='Select ability...' defaultvalue='charisma'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'persuasion');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="persuasionMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="persuasionProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'persuasion');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Persuasion Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('persuasion');">
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown label="History" field="historyAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'history');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="historyMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="historyProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'history');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="History Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('history');">
-        </iconbutton>
-      </td>
-
-      <td style="align-content: flex-end;">
-        <dropdown label="Religion" field="religionAbility" placeholder='Select ability...' defaultvalue='intelligence'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'religion');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
-        </dropdown>
-      </td>
-      <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="religionMod" showsign="true"></numberfield>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="religionProf" size='md' color="blue" variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'religion');" onclick=''></iconbutton>
-      </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Religion Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('religion');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Nature Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('nature');"
+        >
         </iconbutton>
       </td>
     </tr>
 
     <tr>
       <td>
-        <dropdown label="Insight" field="insightAbility" placeholder='Select ability...' defaultvalue='wisdom' size="xs"
-          width="100%" onchange="onAbilityChange(value, 'insight');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+        <dropdown
+          label="Arcana"
+          field="arcanaAbility"
+          placeholder="Select ability..."
+          defaultvalue="intelligence"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'arcana');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="insightMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="arcanaMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="insightProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="arcanaProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'insight');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'arcana');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Insight Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('insight');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Arcana Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('arcana');"
+        >
         </iconbutton>
       </td>
 
-      <td style="align-content: flex-end;">
-        <dropdown label="Sleight of Hand" field="sleightOfHandAbility" placeholder='Select ability...'
-          defaultvalue='dexterity' size="xs" width="100%" onchange="onAbilityChange(value, 'sleightOfHand');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Perception"
+          field="perceptionAbility"
+          placeholder="Select ability..."
+          defaultvalue="wisdom"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'perception');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="sleightOfHandMod" showsign="true"></numberfield>
+        <numberfield
+          onchange="onPerceptionChange(value);"
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="perceptionMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="sleightOfHandProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="perceptionProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'sleightOfHand');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'perception');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Sleight of Hand Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('sleightOfHand');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Perception Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('perception');"
+        >
         </iconbutton>
       </td>
     </tr>
 
     <tr>
       <td>
-        <dropdown label="Intimidation" field="intimidationAbility" placeholder='Select ability...'
-          defaultvalue='charisma' size="xs" width="100%" onchange="onAbilityChange(value, 'intimidation');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+        <dropdown
+          label="Athletics"
+          field="athleticsAbility"
+          placeholder="Select ability..."
+          defaultvalue="strength"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'athletics');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="intimidationMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="athleticsMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="intimidationProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="athleticsProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'intimidation');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'athletics');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Intimidation Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('intimidation');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Athletics Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('athletics');"
+        >
         </iconbutton>
       </td>
 
-      <td style="align-content: flex-end;">
-        <dropdown label="Stealth" field="stealthAbility" placeholder='Select ability...' defaultvalue='dexterity'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'stealth');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Performance"
+          field="performanceAbility"
+          placeholder="Select ability..."
+          defaultvalue="charisma"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'performance');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="stealthMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="performanceMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="stealthProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="performanceProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'stealth');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'performance');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Stealth Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('stealth');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Performance Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('performance');"
+        >
         </iconbutton>
       </td>
     </tr>
 
     <tr>
       <td>
-        <dropdown label="Investigation" field="investigationAbility" placeholder='Select ability...'
-          defaultvalue='intelligence' size="xs" width="100%" onchange="onAbilityChange(value, 'investigation');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+        <dropdown
+          label="Deception"
+          field="deceptionAbility"
+          placeholder="Select ability..."
+          defaultvalue="charisma"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'deception');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="investigationMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="deceptionMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="investigationProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="deceptionProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'investigation');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'deception');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Investigation Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('investigation');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Deception Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('deception');"
+        >
         </iconbutton>
       </td>
 
-      <td style="align-content: flex-end;">
-        <dropdown label="Survival" field="stealthAbility" placeholder='Select ability...' defaultvalue='wisdom'
-          size="xs" width="100%" onchange="onAbilityChange(value, 'survival');"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Persuasion"
+          field="persuasionAbility"
+          placeholder="Select ability..."
+          defaultvalue="charisma"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'persuasion');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
         </dropdown>
       </td>
       <td style="align-content: flex-end; width: 70px">
-        <numberfield width="100%" size="xs" placeholder='+0' field="survivalMod" showsign="true"></numberfield>
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="persuasionMod"
+          showsign="true"
+        ></numberfield>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="survivalProf" size='md' color="blue" variant="outline"
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="persuasionProf"
+          size="md"
+          color="blue"
+          variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'survival');" onclick=''></iconbutton>
+          onchange="setProficiency(value, 'persuasion');"
+          onclick=""
+        ></iconbutton>
       </td>
-      <td style="align-content: flex-end;">
-        <iconbutton field="Survival Check" size='md' color="blue" variant="filled"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]' onclick="rollCheck('survival');">
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Persuasion Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('persuasion');"
+        >
+        </iconbutton>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <dropdown
+          label="History"
+          field="historyAbility"
+          placeholder="Select ability..."
+          defaultvalue="intelligence"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'history');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="historyMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="historyProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'history');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="History Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('history');"
+        >
+        </iconbutton>
+      </td>
+
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Religion"
+          field="religionAbility"
+          placeholder="Select ability..."
+          defaultvalue="intelligence"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'religion');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="religionMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="religionProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'religion');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Religion Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('religion');"
+        >
+        </iconbutton>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <dropdown
+          label="Insight"
+          field="insightAbility"
+          placeholder="Select ability..."
+          defaultvalue="wisdom"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'insight');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="insightMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="insightProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'insight');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Insight Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('insight');"
+        >
+        </iconbutton>
+      </td>
+
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Sleight of Hand"
+          field="sleightOfHandAbility"
+          placeholder="Select ability..."
+          defaultvalue="dexterity"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'sleightOfHand');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="sleightOfHandMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="sleightOfHandProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'sleightOfHand');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Sleight of Hand Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('sleightOfHand');"
+        >
+        </iconbutton>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <dropdown
+          label="Intimidation"
+          field="intimidationAbility"
+          placeholder="Select ability..."
+          defaultvalue="charisma"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'intimidation');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="intimidationMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="intimidationProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'intimidation');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Intimidation Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('intimidation');"
+        >
+        </iconbutton>
+      </td>
+
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Stealth"
+          field="stealthAbility"
+          placeholder="Select ability..."
+          defaultvalue="dexterity"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'stealth');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="stealthMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="stealthProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'stealth');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Stealth Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('stealth');"
+        >
+        </iconbutton>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <dropdown
+          label="Investigation"
+          field="investigationAbility"
+          placeholder="Select ability..."
+          defaultvalue="intelligence"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'investigation');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="investigationMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="investigationProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'investigation');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Investigation Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('investigation');"
+        >
+        </iconbutton>
+      </td>
+
+      <td style="align-content: flex-end">
+        <dropdown
+          label="Survival"
+          field="stealthAbility"
+          placeholder="Select ability..."
+          defaultvalue="wisdom"
+          size="xs"
+          width="100%"
+          onchange="onAbilityChange(value, 'survival');"
+          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+        >
+        </dropdown>
+      </td>
+      <td style="align-content: flex-end; width: 70px">
+        <numberfield
+          width="100%"
+          size="xs"
+          placeholder="+0"
+          field="survivalMod"
+          showsign="true"
+        ></numberfield>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="survivalProf"
+          size="md"
+          color="blue"
+          variant="outline"
+          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+          onchange="setProficiency(value, 'survival');"
+          onclick=""
+        ></iconbutton>
+      </td>
+      <td style="align-content: flex-end">
+        <iconbutton
+          field="Survival Check"
+          size="md"
+          color="blue"
+          variant="filled"
+          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
+          onclick="rollCheck('survival');"
+        >
         </iconbutton>
       </td>
     </tr>
   </tbody>
 </table>
 
-<div style='margin-top: 8px;'>
-  <label label="Tool Proficiencies and Other Skills" size='md' textalign="center" variant="bold"></label>
+<div style="margin-top: 8px">
+  <label
+    label="Tool Proficiencies and Other Skills"
+    size="md"
+    textalign="center"
+    variant="bold"
+  ></label>
 </div>
 
-<div style='width: 100%'>
-  <list listtype="other_skills_list" field='otherSkills' allowadd=''></list>
+<div style="width: 100%">
+  <list listtype="other_skills_list" field="otherSkills" allowadd=""></list>
 </div>
 
-<div style='margin-top: 8px;'>
-  <label variant="bold" textalign='center' label='Proficiencies'></label>
+<div style="margin-top: 8px">
+  <label variant="bold" textalign="center" label="Proficiencies"></label>
 </div>
 
-<div style='margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 4px;'>
-  <stringfield multiline maxRows='2' field="weaponProficiencies" label="Weapon Proficiencies" placeholder='None'>
+<div
+  style="
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  "
+>
+  <stringfield
+    multiline
+    maxRows="2"
+    field="weaponProficiencies"
+    label="Weapon Proficiencies"
+    placeholder="None"
+  >
   </stringfield>
-  <stringfield multiline maxRows='2' field="armorTraining" label="Armor Training" placeholder='None'></stringfield>
+  <stringfield
+    multiline
+    maxRows="2"
+    field="armorTraining"
+    label="Armor Training"
+    placeholder="None"
+  ></stringfield>
 </div>
