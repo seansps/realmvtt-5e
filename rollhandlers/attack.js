@@ -112,7 +112,7 @@ targets.forEach(target => {
 
 function getToppleMacro(abilityMod, proficiencyBonus) {
   const dc = 8 + abilityMod.value + proficiencyBonus;
-  const savingThrow = 'constitution';
+  const savingThrow = "constitution";
   return `
 \`\`\`Roll_Constitution_Save
 const selectedTokens = api.getSelectedOrDroppedToken();
@@ -141,7 +141,9 @@ selectedTokens.forEach(token => {
     "minRoll": minRoll
   }
 
-  api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  api.promptRollForToken(token, '${capitalize(
+    savingThrow
+  )} Save', '1d20', saveModifiers, metadata, 'save');
 });
   \`\`\`
 `;
@@ -149,68 +151,98 @@ selectedTokens.forEach(token => {
 
 // Get metadata for a given mastery property
 // Some have effects to apply, some are just tags
-const getMasteryProperties = (masterProperty, damageModifiers, proficiencyBonus) => {
+const getMasteryProperties = (
+  masterProperty,
+  damageModifiers,
+  proficiencyBonus
+) => {
   // For Graze, determine the ability mod of the attack roll
-  const abilityMod = damageModifiers.find(dm => ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].includes(dm.name.toLowerCase().trim()));
+  const abilityMod = damageModifiers.find((dm) =>
+    [
+      "strength",
+      "dexterity",
+      "constitution",
+      "intelligence",
+      "wisdom",
+      "charisma",
+    ].includes(dm.name.toLowerCase().trim())
+  );
 
   switch (masterProperty) {
-    case 'Cleave': return {
-      name: 'Cleave',
-      description: "If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
-      effect: null,
-      macro: null,
-    };
-    case 'Graze': return {
-      name: 'Graze',
-      description: "If your attack roll with this weapon misses a creature, you can deal damage to that creature equal to the ability modifier you used to make the attack roll. This damage is the same type dealt by the weapon, and the damage can be increased only by increasing the ability modifier.",
-      // Here we make a macro to apply damage equal the the ability mod 
-      effect: null,
-      macro: getGrazeMacro(abilityMod)
-    };
-    case 'Nick': return {
-      name: 'Nick',
-      description: 'When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.',
-      effect: null,
-      macro: null,
-    };
-    case 'Push': return {
-      name: 'Push',
-      description: 'If you hit a creature with this weapon, you can push the creature up to 10 feet straight away from yourself if it is Large or smaller.',
-      effect: null,
-      macro: null,
-    };
-    case 'Sap': return {
-      name: 'Sap',
-      description: 'If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.',
-      effect: 'Sap',
-      macro: null,
-    };
-    case 'Slow': return {
-      name: 'Slow',
-      description: "If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn't exceed 10 feet.",
-      effect: "Slow",
-      macro: null,
-    };
-    case 'Topple': return {
-      name: 'Topple',
-      description: 'If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.',
-      effect: "Prone",
-      macro: getToppleMacro(abilityMod, proficiencyBonus),
-    };
-    case 'Vex': return {
-      name: 'Vex',
-      description: 'If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.',
-      effect: null,
-      macro: null,
-    };
-    default: return null;
+    case "Cleave":
+      return {
+        name: "Cleave",
+        description:
+          "If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
+        effect: null,
+        macro: null,
+      };
+    case "Graze":
+      return {
+        name: "Graze",
+        description:
+          "If your attack roll with this weapon misses a creature, you can deal damage to that creature equal to the ability modifier you used to make the attack roll. This damage is the same type dealt by the weapon, and the damage can be increased only by increasing the ability modifier.",
+        // Here we make a macro to apply damage equal the the ability mod
+        effect: null,
+        macro: getGrazeMacro(abilityMod),
+      };
+    case "Nick":
+      return {
+        name: "Nick",
+        description:
+          "When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.",
+        effect: null,
+        macro: null,
+      };
+    case "Push":
+      return {
+        name: "Push",
+        description:
+          "If you hit a creature with this weapon, you can push the creature up to 10 feet straight away from yourself if it is Large or smaller.",
+        effect: null,
+        macro: null,
+      };
+    case "Sap":
+      return {
+        name: "Sap",
+        description:
+          "If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.",
+        effect: "Sap",
+        macro: null,
+      };
+    case "Slow":
+      return {
+        name: "Slow",
+        description:
+          "If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn't exceed 10 feet.",
+        effect: "Slow",
+        macro: null,
+      };
+    case "Topple":
+      return {
+        name: "Topple",
+        description:
+          "If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.",
+        effect: "Prone",
+        macro: getToppleMacro(abilityMod, proficiencyBonus),
+      };
+    case "Vex":
+      return {
+        name: "Vex",
+        description:
+          "If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.",
+        effect: null,
+        macro: null,
+      };
+    default:
+      return null;
   }
-}
+};
 
 function getWeaponMasteryMetadata(weaponMasteries, damageModifiers) {
   let results = [];
 
-  weaponMasteries.forEach(wm => {
+  weaponMasteries.forEach((wm) => {
     const mastery = getWeaponMastery(wm, damageModifiers);
     if (mastery) {
       results.push(mastery);
@@ -233,17 +265,44 @@ let damage = data?.roll?.metadata?.damage;
 // This means it's automatically a critical hit, if it was a hit
 let autoCritical = data?.roll?.metadata?.autoCritical;
 let critOn = data?.roll?.metadata?.critOn || 20;
+const minRoll = data?.roll?.metadata?.minRoll;
+
+// Find the undropped d20, and if minroll is set
+// alter the actual roll to be the minroll if it's lower
+const roll = {
+  ...data.roll,
+  dice: [...(data?.roll?.dice || [])],
+  total: data?.roll?.total !== undefined ? data?.roll?.total : 0,
+};
+
+if (roll.dice) {
+  roll.dice = roll.dice.map((d) => {
+    let value = parseInt(d.value, 10);
+    if (d.type === 20 && d.reason !== "dropped") {
+      if (minRoll && value < minRoll) {
+        roll.total += minRoll - value;
+        value = minRoll;
+      }
+    }
+    return {
+      ...d,
+      value: value,
+    };
+  });
+}
 
 // If the d20 was a 20, it's a critical hit
-const d20 = (data?.roll?.dice || []).find(d => d.type === 20 && d.reason !== 'dropped');
+const d20 = (roll?.dice || []).find(
+  (d) => d.type === 20 && d.reason !== "dropped"
+);
 let isCritical = d20 && d20.value >= critOn;
 // If the d20 was a 1, it's a miss
 const isMiss = d20 && d20.value === 1;
 
-let message = '';
+let message = "";
 
 let dc = 0;
-dc = parseInt(data?.roll?.metadata?.dc || '0', 10);
+dc = parseInt(data?.roll?.metadata?.dc || "0", 10);
 if (isNaN(dc)) {
   dc = 0;
 }
@@ -254,74 +313,93 @@ const isHit = total >= dc && dc > 0;
 // If it's an auto critical, we need to set isCritical to true
 if (isHit && autoCritical && !isCritical) {
   isCritical = true;
-}
-else {
+} else {
   // Mark auto critical false if it was already a critical hit (or a miss)
   autoCritical = false;
 }
 
 if (isCritical) {
-  const automatic = autoCritical ? 'AUTOMATIC ' : '';
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]${automatic}CRITICAL HIT[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**
-`
+  const automatic = autoCritical ? "AUTOMATIC " : "";
+  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+    targetName ? ` :IconTargetArrow: ${targetName}` : ""
+  }[/center]\n\n**[center][color=green]${automatic}CRITICAL HIT[/color] [gm]${
+    dc > 0 ? `(vs AC ${dc})` : ""
+  }[/gm][/center]**
+`;
   // If damage was defined, we need to double the dice in the damage string and modifiers
   if (damage) {
     damage = doubleDamageDice(damage);
   }
 
   // Double any damage modifiers
-  damageModifiers = damageModifiers.map(mod => {
+  damageModifiers = damageModifiers.map((mod) => {
     return {
       ...mod,
       value: doubleDamageDice(mod.value),
-    }
+    };
   });
-}
-else if (isMiss) {
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm]${dc > 0 ? `(vs AC ${dc})` : ''}[/gm][/center]**`
-}
-else if (isHit) {
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=green]HIT[/color] [gm](vs AC ${dc})[/gm][/center]**`
-}
-else if (dc > 0) {
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]\n\n**[center][color=red]MISS[/color] [gm](vs AC ${dc})[/gm][/center]**`
-}
-else {
-  message = `[center]${icon ? `:${icon}:` : ''} ${attack} ${targetName ? ` :IconTargetArrow: ${targetName}` : ''}[/center]`
+} else if (isMiss) {
+  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+    targetName ? ` :IconTargetArrow: ${targetName}` : ""
+  }[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm]${
+    dc > 0 ? `(vs AC ${dc})` : ""
+  }[/gm][/center]**`;
+} else if (isHit) {
+  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+    targetName ? ` :IconTargetArrow: ${targetName}` : ""
+  }[/center]\n\n**[center][color=green]HIT[/color] [gm](vs AC ${dc})[/gm][/center]**`;
+} else if (dc > 0) {
+  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+    targetName ? ` :IconTargetArrow: ${targetName}` : ""
+  }[/center]\n\n**[center][color=red]MISS[/color] [gm](vs AC ${dc})[/gm][/center]**`;
+} else {
+  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+    targetName ? ` :IconTargetArrow: ${targetName}` : ""
+  }[/center]`;
 }
 
-const tags = [{
-  name: rollName || "Attack",
-  tooltip: tooltip || "Attack Roll"
-}];
+const tags = [
+  {
+    name: rollName || "Attack",
+    tooltip: tooltip || "Attack Roll",
+  },
+];
 
 const damageMetadata = {
   // This is so that our damage handler script can tell if it was from a critical hit
-  "critical": isCritical,
-}
+  critical: isCritical,
+};
 
 // Add damage button to message
-const dmgRollName = isCritical ? 'Roll_Critical_Damage' : 'Roll_Damage';
-const damageButton = damage ? `\`\`\`${dmgRollName}
-api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(damageModifiers)}, ${JSON.stringify(damageMetadata)}, 'damage')
-\`\`\`` : '';
+const dmgRollName = isCritical ? "Roll_Critical_Damage" : "Roll_Damage";
+const damageButton = damage
+  ? `\`\`\`${dmgRollName}
+api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(
+      damageModifiers
+    )}, ${JSON.stringify(damageMetadata)}, 'damage')
+\`\`\``
+  : "";
 
-let effectMacros = '';
+let effectMacros = "";
 
 // Get weapon masteries
-masteryProperties.forEach(mp => {
-  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers, proficiencyBonus);
+masteryProperties.forEach((mp) => {
+  const masteryPropertyMetadata = getMasteryProperties(
+    mp,
+    damageModifiers,
+    proficiencyBonus
+  );
   tags.push({
     name: masteryPropertyMetadata.name,
-    tooltip: masteryPropertyMetadata.description
+    tooltip: masteryPropertyMetadata.description,
   });
 
   // Create macros for all effects that this property can apply
-  const effect = masteryPropertyMetadata?.effect || '';
+  const effect = masteryPropertyMetadata?.effect || "";
   if (effect) {
-    const effectTitle = `Apply_${effect.replace(/ /g, '_')}`;
-    if (effectMacros !== '') {
-      effectMacros += '\n';
+    const effectTitle = `Apply_${effect.replace(/ /g, "_")}`;
+    if (effectMacros !== "") {
+      effectMacros += "\n";
     }
     effectMacros += `\`\`\`${effectTitle}
 let targets = api.getSelectedOrDroppedToken();
@@ -333,10 +411,17 @@ api.addEffect('${effect}', target);
 });
 
 // Get weapon mastery macros
-const macros = masteryProperties.map(mp => {
-  const masteryPropertyMetadata = getMasteryProperties(mp, damageModifiers, proficiencyBonus);
-  return masteryPropertyMetadata?.macro;
-}).filter(macro => macro).join('\n');
+const macros = masteryProperties
+  .map((mp) => {
+    const masteryPropertyMetadata = getMasteryProperties(
+      mp,
+      damageModifiers,
+      proficiencyBonus
+    );
+    return masteryPropertyMetadata?.macro;
+  })
+  .filter((macro) => macro)
+  .join("\n");
 
 message = `
 ${message}
@@ -346,4 +431,4 @@ ${macros}
 ${effectMacros}
 `;
 
-api.sendMessage(message, data.roll, [], tags);
+api.sendMessage(message, roll, [], tags);

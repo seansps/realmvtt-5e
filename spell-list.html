@@ -438,6 +438,12 @@ if (critOnMods.length) {
 // Filter these out of the modifiers array, we don't need them to be toggleable
 attackModifiers = attackModifiers.filter(m => !m.value.toString().startsWith('critical'));
 
+const minRoll = getMinRollModifier(attackModifiers);
+// Filter these out of the modifiers array, we don't need them to be toggleable
+attackModifiers = attackModifiers.filter(
+  (m) => !m.value.toString().startsWith("minroll")
+);
+
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
@@ -471,6 +477,7 @@ targets.forEach(target => {
     "damageModifiers": ${JSON.stringify(modifiers)},
     "autoCritical": autoCritical,
     "critOn": critOn,
+    "minRoll": minRoll
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
@@ -484,6 +491,7 @@ if (!targets.length) {
     "dc": 0,
     "damage": "${spellDamage}",
     "critOn": critOn,
+    "minRoll": minRoll,
     "damageModifiers": ${JSON.stringify(modifiers)}
   }
 

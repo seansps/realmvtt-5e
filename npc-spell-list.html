@@ -7,14 +7,17 @@
 
     if (spell?.data?.isAttack) {
       attackModifiers.push({
-        name: 'Spellcasting Modifier',
+        name: "Spellcasting Modifier",
         value: spellModifier,
         active: true,
       });
 
       // Get effects
-      const effectModifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty', 'spellAttackBonus', 'spellAttackPenalty']);
-      effectModifiers.forEach(modifier => {
+      const effectModifiers = getEffectsAndModifiers([
+        "spellAttackBonus",
+        "spellAttackPenalty",
+      ]);
+      effectModifiers.forEach((modifier) => {
         attackModifiers.push(modifier);
       });
     }
@@ -24,17 +27,24 @@
 
   function castSpell() {
     // Get the spell by path to ensure most up-to-date value
-    const spellDataPath = dataPath.replace('.data.castBtn', '');
+    const spellDataPath = dataPath.replace(".data.castBtn", "");
     const spell = api.getValue(spellDataPath);
 
-    // NPC spells are a list in a list, so we need to up one more level 
+    // NPC spells are a list in a list, so we need to up one more level
     // to get to the settings for this spell list (e.g. 'actions.1.data.spells.0.data.castBtn')
-    const spellActionDataPath = dataPath.replace(/[.]data[.]spells[.]\d+[.]data[.]castBtn/, '');
+    const spellActionDataPath = dataPath.replace(
+      /[.]data[.]spells[.]\d+[.]data[.]castBtn/,
+      ""
+    );
     const spellAction = api.getValue(spellActionDataPath);
 
-    const spellName = spell?.name || 'Unknown Spell';
-    const spellDescription = api.richTextToMarkdown(spell?.data?.description || '');
-    const spellIcon = spell?.portrait ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) ` : '';
+    const spellName = spell?.name || "Unknown Spell";
+    const spellDescription = api.richTextToMarkdown(
+      spell?.data?.description || ""
+    );
+    const spellIcon = spell?.portrait
+      ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) `
+      : "";
 
     // Get the spell caster's attack modifier for this action group
     const spellModifier = spellAction?.data?.spellMod || 0;
@@ -42,17 +52,21 @@
 
     // Modifiers for Damage and Healing
     const modifiers = [];
-    if ((spell?.data?.damage || spell?.data?.healing) && spell?.data?.addAbility) {
+    if (
+      (spell?.data?.damage || spell?.data?.healing) &&
+      spell?.data?.addAbility
+    ) {
       // Use the modifier for the configured spellcastingAbility
-      const spellcastingAbility = spellAction?.data?.spellcastingAbility || 'intelligence';
+      const spellcastingAbility =
+        spellAction?.data?.spellcastingAbility || "intelligence";
       const abilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
       // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
-      const damageString = spell?.data?.damage || '';
+      const damageString = spell?.data?.damage || "";
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
-      const damageType = damageParts.length > 1 ? damageParts[1] : 'untyped';
+      const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
       modifiers.push({
         name: capitalize(spellcastingAbility),
-        type: spell?.data?.damage ? damageType : 'healing',
+        type: spell?.data?.damage ? damageType : "healing",
         value: abilityMod,
         active: true,
       });
@@ -60,24 +74,30 @@
 
     if (spell?.data?.damage) {
       // Get damage modifiers
-      const damageModifiers = spell?.data?.level?.toLowerCase() === 'cantrip' ?
-        getEffectsAndModifiers(['cantripDamageBonus', 'cantripDamagePenalty']) :
-        getEffectsAndModifiers(['spellDamageBonus', 'spellDamagePenalty']);
+      const damageModifiers =
+        spell?.data?.level?.toLowerCase() === "cantrip"
+          ? getEffectsAndModifiers([
+              "cantripDamageBonus",
+              "cantripDamagePenalty",
+            ])
+          : getEffectsAndModifiers(["spellDamageBonus", "spellDamagePenalty"]);
       // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
-      const damageString = spell?.data?.damage || '';
+      const damageString = spell?.data?.damage || "";
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
-      const damageType = damageParts.length > 1 ? damageParts[1] : 'untyped';
-      damageModifiers.forEach(modifier => {
+      const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
+      damageModifiers.forEach((modifier) => {
         modifiers.push({
           ...modifier,
           type: damageType,
         });
       });
-    }
-    else if (spell?.data?.healing) {
+    } else if (spell?.data?.healing) {
       // Get healing modifiers
-      const healingModifiers = getEffectsAndModifiers(['healingBonus', 'healingPenalty']);
-      healingModifiers.forEach(modifier => {
+      const healingModifiers = getEffectsAndModifiers([
+        "healingBonus",
+        "healingPenalty",
+      ]);
+      healingModifiers.forEach((modifier) => {
         modifiers.push(modifier);
       });
     }
@@ -93,122 +113,184 @@
     let spellLevel = 0;
 
     // Deduct spell slot or daily uses and update spell level
-    const spellPrepared = spell?.data?.prepared || 'prepared';
-    let actualSpellLevel = spell?.data?.level || 'Cantrip';
-    if (actualSpellLevel === 'Cantrip') {
-      actualSpellLevel = '0';
+    const spellPrepared = spell?.data?.prepared || "prepared";
+    let actualSpellLevel = spell?.data?.level || "Cantrip";
+    if (actualSpellLevel === "Cantrip") {
+      actualSpellLevel = "0";
     }
     actualSpellLevel = parseInt(actualSpellLevel, 10);
-    if (spellPrepared === 'prepared' && actualSpellLevel > 0) {
-      let spellSlot = parseInt(spell?.data?.upcastLevel || `${actualSpellLevel}`, 10) || 1;
+    if (spellPrepared === "prepared" && actualSpellLevel > 0) {
+      let spellSlot =
+        parseInt(spell?.data?.upcastLevel || `${actualSpellLevel}`, 10) || 1;
 
       // Determine spell slot to use
-      let fieldToUse = '';
-      let maxField = '';
+      let fieldToUse = "";
+      let maxField = "";
 
-      // Spell Slots available  
-      const numSpellSlots1Avail = parseInt(record?.data?.numSpellSlots1 || '0', 10) - parseInt(record?.data?.spellSlots1 || '0', 10);
-      const numSpellSlots2Avail = parseInt(record?.data?.numSpellSlots2 || '0', 10) - parseInt(record?.data?.spellSlots2 || '0', 10);
-      const numSpellSlots3Avail = parseInt(record?.data?.numSpellSlots3 || '0', 10) - parseInt(record?.data?.spellSlots3 || '0', 10);
-      const numSpellSlots4Avail = parseInt(record?.data?.numSpellSlots4 || '0', 10) - parseInt(record?.data?.spellSlots4 || '0', 10);
-      const numSpellSlots5Avail = parseInt(record?.data?.numSpellSlots5 || '0', 10) - parseInt(record?.data?.spellSlots5 || '0', 10);
-      const numSpellSlots6Avail = parseInt(record?.data?.numSpellSlots6 || '0', 10) - parseInt(record?.data?.spellSlots6 || '0', 10);
-      const numSpellSlots7Avail = parseInt(record?.data?.numSpellSlots7 || '0', 10) - parseInt(record?.data?.spellSlots7 || '0', 10);
-      const numSpellSlots8Avail = parseInt(record?.data?.numSpellSlots8 || '0', 10) - parseInt(record?.data?.spellSlots8 || '0', 10);
-      const numSpellSlots9Avail = parseInt(record?.data?.numSpellSlots9 || '0', 10) - parseInt(record?.data?.spellSlots9 || '0', 10);
+      // Spell Slots available
+      const numSpellSlots1Avail =
+        parseInt(record?.data?.numSpellSlots1 || "0", 10) -
+        parseInt(record?.data?.spellSlots1 || "0", 10);
+      const numSpellSlots2Avail =
+        parseInt(record?.data?.numSpellSlots2 || "0", 10) -
+        parseInt(record?.data?.spellSlots2 || "0", 10);
+      const numSpellSlots3Avail =
+        parseInt(record?.data?.numSpellSlots3 || "0", 10) -
+        parseInt(record?.data?.spellSlots3 || "0", 10);
+      const numSpellSlots4Avail =
+        parseInt(record?.data?.numSpellSlots4 || "0", 10) -
+        parseInt(record?.data?.spellSlots4 || "0", 10);
+      const numSpellSlots5Avail =
+        parseInt(record?.data?.numSpellSlots5 || "0", 10) -
+        parseInt(record?.data?.spellSlots5 || "0", 10);
+      const numSpellSlots6Avail =
+        parseInt(record?.data?.numSpellSlots6 || "0", 10) -
+        parseInt(record?.data?.spellSlots6 || "0", 10);
+      const numSpellSlots7Avail =
+        parseInt(record?.data?.numSpellSlots7 || "0", 10) -
+        parseInt(record?.data?.spellSlots7 || "0", 10);
+      const numSpellSlots8Avail =
+        parseInt(record?.data?.numSpellSlots8 || "0", 10) -
+        parseInt(record?.data?.spellSlots8 || "0", 10);
+      const numSpellSlots9Avail =
+        parseInt(record?.data?.numSpellSlots9 || "0", 10) -
+        parseInt(record?.data?.spellSlots9 || "0", 10);
 
-      const hasSpellSlotsAvailable = (numSpellSlots1Avail > 0 || numSpellSlots2Avail > 0 || numSpellSlots3Avail > 0 || numSpellSlots4Avail > 0 ||
-        numSpellSlots5Avail > 0 || numSpellSlots6Avail > 0 ||
-        numSpellSlots7Avail > 0 || numSpellSlots8Avail > 0 ||
-        numSpellSlots9Avail > 0);
+      const hasSpellSlotsAvailable =
+        numSpellSlots1Avail > 0 ||
+        numSpellSlots2Avail > 0 ||
+        numSpellSlots3Avail > 0 ||
+        numSpellSlots4Avail > 0 ||
+        numSpellSlots5Avail > 0 ||
+        numSpellSlots6Avail > 0 ||
+        numSpellSlots7Avail > 0 ||
+        numSpellSlots8Avail > 0 ||
+        numSpellSlots9Avail > 0;
 
       fieldToUse = `spellSlots${spellSlot}`;
       maxField = `numSpellSlots${spellSlot}`;
       spellLevel = spellSlot;
 
-      let numSpellSlots = parseInt(api.getValue(`data.${fieldToUse}`) || '0', 10);
-      let numMaxSpellSlots = parseInt(api.getValue(`data.${maxField}`) || '0', 10);
+      let numSpellSlots = parseInt(
+        api.getValue(`data.${fieldToUse}`) || "0",
+        10
+      );
+      let numMaxSpellSlots = parseInt(
+        api.getValue(`data.${maxField}`) || "0",
+        10
+      );
 
       if (numSpellSlots < numMaxSpellSlots) {
         api.setValue(`data.${fieldToUse}`, numSpellSlots + 1);
       }
-    } else if (spell?.data?.prepared === 'daily' && spell?.data?.level !== 'Cantrip') {
+    } else if (
+      spell?.data?.prepared === "daily" &&
+      spell?.data?.level !== "Cantrip"
+    ) {
       let dailyUses = parseInt(spell?.data?.dailyUses, 10) || 0;
       let maxDailyUses = parseInt(spell?.data?.maxDailyUses, 10) || 1;
       if (dailyUses < maxDailyUses) {
-        const dataPathToDaily = dataPath.replace('.data.castBtn', '.data.dailyUses');
+        const dataPathToDaily = dataPath.replace(
+          ".data.castBtn",
+          ".data.dailyUses"
+        );
         api.setValue(dataPathToDaily, dailyUses + 1);
       }
     }
 
-    if (spell?.data?.level === 'Cantrip') {
+    if (spell?.data?.level === "Cantrip") {
       // Cantrip handling
       // Get the NPC's level
-      const npcLevel = parseInt(api.getValue('data.level') || '1', 10);
+      const npcLevel = parseInt(api.getValue("data.level") || "1", 10);
       if (npcLevel >= 5) {
         spellDamage = spell?.data?.damageCharacterLevel5 || spell?.data?.damage;
       }
       if (npcLevel >= 11) {
-        spellDamage = spell?.data?.damageCharacterLevel11 || spell?.data?.damage;
+        spellDamage =
+          spell?.data?.damageCharacterLevel11 || spell?.data?.damage;
       }
       if (npcLevel >= 17) {
-        spellDamage = spell?.data?.damageCharacterLevel17 || spell?.data?.damage;
+        spellDamage =
+          spell?.data?.damageCharacterLevel17 || spell?.data?.damage;
       }
-    }
-    else {
+    } else {
       // Spell handling
       // Check if we're upcasting
       if (spellLevel === 0) {
-        spellLevel = parseInt(spell?.data?.upcastLevel || spell?.data?.level, 10) || 0;
+        spellLevel =
+          parseInt(spell?.data?.upcastLevel || spell?.data?.level, 10) || 0;
       }
       // Check if damage is defined at that level
       if (spellLevel >= 2) {
-        spellDamage = spell?.data?.[`damageLevel${spellLevel}`] || spell?.data?.damage;
-        spellHealing = spell?.data?.[`healingLevel${spellLevel}`] || spell?.data?.healing;
+        spellDamage =
+          spell?.data?.[`damageLevel${spellLevel}`] || spell?.data?.damage;
+        spellHealing =
+          spell?.data?.[`healingLevel${spellLevel}`] || spell?.data?.healing;
       }
     }
 
     // Now that we know the spell level, go through all string modifiers and
     // replaced "Spell Level" with the actual spell level
     let levelToReplace = spellLevel;
-    if (spell?.data?.level.toLowerCase() === 'cantrip') {
+    if (spell?.data?.level.toLowerCase() === "cantrip") {
       levelToReplace = 0;
     }
-    modifiers.forEach(modifier => {
-      if (modifier?.valueType?.toLowerCase() === 'string') {
-        modifier.value = modifier.value.replace(/[Ss]pell [Ll]evel/g, levelToReplace);
+    modifiers.forEach((modifier) => {
+      if (modifier?.valueType?.toLowerCase() === "string") {
+        modifier.value = modifier.value.replace(
+          /[Ss]pell [Ll]evel/g,
+          levelToReplace
+        );
       }
     });
-    attackModifiers.forEach(modifier => {
-      if (modifier?.valueType?.toLowerCase() === 'string') {
-        modifier.value = modifier.value.replace(/[Ss]pell [Ll]evel/g, levelToReplace);
+    attackModifiers.forEach((modifier) => {
+      if (modifier?.valueType?.toLowerCase() === "string") {
+        modifier.value = modifier.value.replace(
+          /[Ss]pell [Ll]evel/g,
+          levelToReplace
+        );
       }
     });
 
     // Spell range if set
-    const spellRange = parseInt(spell?.data?.range || '0', 10);
+    const spellRange = parseInt(spell?.data?.range || "0", 10);
     const rangedSpell = spellRange > 0;
 
     // Get save info, if Save
-    const savingThrow = spell?.data?.savingThrow || 'dexterity'; // Default to dexterity if not set 
+    const savingThrow = spell?.data?.savingThrow || "dexterity"; // Default to dexterity if not set
     let saveDc = spellDC;
     // Get spell dc modifiers
-    const spellDcModifiers = getEffectsAndModifiers(['spellDCBonus']);
-    saveDc += spellDcModifiers.reduce((acc, mod) => acc + parseInt(mod?.value || '0', 10), 0);
+    const spellDcModifiers = getEffectsAndModifiers(["spellDCBonus"]);
+    saveDc += spellDcModifiers.reduce(
+      (acc, mod) => acc + parseInt(mod?.value || "0", 10),
+      0
+    );
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
-    const saveDamageMetadata = spell?.data?.isSave ? { save: savingThrow, saveDc: saveDc } : {};
-    const damageButton = spell?.data?.damage && spell?.data?.isSave ? `\`\`\`Roll_Damage
-api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(modifiers)}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
-\`\`\`` : '';
+    const saveDamageMetadata = spell?.data?.isSave
+      ? { save: savingThrow, saveDc: saveDc }
+      : {};
+    const damageButton =
+      spell?.data?.damage && spell?.data?.isSave
+        ? `\`\`\`Roll_Damage
+api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
+            modifiers
+          )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+\`\`\``
+        : "";
 
-    const healingButton = spell?.data?.healing ? `\`\`\`Roll_Healing
-api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(modifiers)}, {}, 'healing')
-\`\`\`` : '';
+    const healingButton = spell?.data?.healing
+      ? `\`\`\`Roll_Healing
+api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(
+          modifiers
+        )}, {}, 'healing')
+\`\`\``
+      : "";
 
     // Roll Attack Button, if Spell is an Attack, in the handler we get the targets and
     // roll for each target - DC for Attacks is the enemy's AC
-    const rollAttackButton = spell?.data?.isAttack ? `\`\`\`Roll_Attack
+    const rollAttackButton = spell?.data?.isAttack
+      ? `\`\`\`Roll_Attack
 const targets = api.getTargets();
 const ourToken = api.getToken();
 let disDueToProximity = false;
@@ -253,6 +335,12 @@ if (critOnMods.length) {
 // Filter these out of the modifiers array, we don't need them to be toggleable
 attackModifiers = attackModifiers.filter(m => !m.value.toString().startsWith('critical'));
 
+const minRoll = getMinRollModifier(attackModifiers);
+// Filter these out of the modifiers array, we don't need them to be toggleable
+attackModifiers = attackModifiers.filter(
+  (m) => !m.value.toString().startsWith("minroll")
+);
+
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token);
@@ -286,6 +374,7 @@ targets.forEach(target => {
     "damageModifiers": ${JSON.stringify(modifiers)},
     "autoCritical": autoCritical,
     "critOn": critOn,
+    "minRoll": minRoll
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
@@ -299,7 +388,8 @@ if (!targets.length) {
     "dc": 0,
     "damage": "${spellDamage}",
     "critOn": critOn,
-    "damageModifiers": ${JSON.stringify(modifiers)}
+    "damageModifiers": ${JSON.stringify(modifiers)},
+    "minRoll": minRoll
   }
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
@@ -313,10 +403,12 @@ if (!targets.length) {
 
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 }
-\`\`\`` : '';
+\`\`\``
+      : "";
 
     // look up saves of selected tokens and prompt roll for each
-    const rollSaveButton = spell?.data?.isSave ? `\`\`\`Roll_Save
+    const rollSaveButton = spell?.data?.isSave
+      ? `\`\`\`Roll_Save
 const selectedTokens = api.getSelectedOrDroppedToken();
 selectedTokens.forEach(token => {
   let saveModifiers = [];
@@ -343,20 +435,23 @@ selectedTokens.forEach(token => {
     "minRoll": minRoll
   }
 
-  api.promptRollForToken(token, '${capitalize(savingThrow)} Save', '1d20', saveModifiers, metadata, 'save');
+  api.promptRollForToken(token, '${capitalize(
+    savingThrow
+  )} Save', '1d20', saveModifiers, metadata, 'save');
 });
-\`\`\`` : '';
+\`\`\``
+      : "";
 
     // Create macros for all effects that this spell can apply
-    let effectButtons = '';
+    let effectButtons = "";
     const effects = spell?.data?.effects || [];
-    effects.forEach(effectJson => {
+    effects.forEach((effectJson) => {
       const effect = JSON.parse(effectJson);
-      const effectName = effect?.name || '';
-      const effectID = effect?._id || '';
-      const effectTitle = `Apply_${effectName.replace(/ /g, '_')}`;
-      if (effectButtons !== '') {
-        effectButtons += '\n';
+      const effectName = effect?.name || "";
+      const effectID = effect?._id || "";
+      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
+      if (effectButtons !== "") {
+        effectButtons += "\n";
       }
       effectButtons += `\`\`\`${effectTitle}
 let targets = api.getSelectedOrDroppedToken();
@@ -386,104 +481,115 @@ ${effectButtons}
 
     const castingTime = spell?.data?.castingTime;
     const range = spell?.data?.range;
-    let duration = spell?.data?.duration || '';
-    const hasConcentration = duration?.toLowerCase().startsWith('concentration');
-    duration = duration.replace('Concentration, ', '').trim();
+    let duration = spell?.data?.duration || "";
+    const hasConcentration = duration
+      ?.toLowerCase()
+      .startsWith("concentration");
+    duration = duration.replace("Concentration, ", "").trim();
 
     let components = spell?.data?.components;
     if (components) {
-      components = components.split(',');
-      components = components.map(component => {
+      components = components.split(",");
+      components = components.map((component) => {
         const trimmedComponent = component.trim().toLowerCase(); // Trim and convert to lower case
-        if (trimmedComponent === 'v') {
-          return 'Verbal';
-        } else if (trimmedComponent === 's') {
-          return 'Somatic';
-        } else if (trimmedComponent === 'm') {
-          return 'Material';
-        } else if (trimmedComponent === 'f') {
-          return 'Focus';
-        } else if (trimmedComponent.startsWith('m (')) {
-          return 'Material';
+        if (trimmedComponent === "v") {
+          return "Verbal";
+        } else if (trimmedComponent === "s") {
+          return "Somatic";
+        } else if (trimmedComponent === "m") {
+          return "Material";
+        } else if (trimmedComponent === "f") {
+          return "Focus";
+        } else if (trimmedComponent.startsWith("m (")) {
+          return "Material";
         }
         return component.trim(); // Return the trimmed component if no match
       });
     }
 
-    const tags = [{
-      'tooltip': "Cast a Spell",
-      'name': 'Spell'
-    }];
+    const tags = [
+      {
+        tooltip: "Cast a Spell",
+        name: "Spell",
+      },
+    ];
 
     if (castingTime) {
       tags.push({
-        'tooltip': "Casting Time",
-        'name': castingTime
+        tooltip: "Casting Time",
+        name: castingTime,
       });
     }
 
     if (range) {
       tags.push({
-        'tooltip': "Range",
-        'name': range
+        tooltip: "Range",
+        name: range,
       });
     }
 
     if (hasConcentration) {
       tags.push({
-        'tooltip': "This Spell Requires Concentration",
-        'name': "Concentration"
+        tooltip: "This Spell Requires Concentration",
+        name: "Concentration",
       });
     }
 
     if (duration) {
       tags.push({
-        'tooltip': "Duration",
-        'name': duration
+        tooltip: "Duration",
+        name: duration,
       });
     }
 
     if (components && Array.isArray(components) && components.length > 0) {
-      components.forEach(component => {
+      components.forEach((component) => {
         tags.push({
-          'tooltip': 'Spell Components',
-          'name': component
+          tooltip: "Spell Components",
+          name: component,
         });
       });
     }
 
-    let lostConcentrationOn = '';
+    let lostConcentrationOn = "";
     if (hasConcentration) {
       // Check for existing Concentration effect
       const tokenForRecord = api.getToken();
       const effects = tokenForRecord?.effects || [];
-      const hasEffect = effects.find(effect => effect?.name?.toLowerCase() === 'concentration');
+      const hasEffect = effects.find(
+        (effect) => effect?.name?.toLowerCase() === "concentration"
+      );
       if (tokenForRecord) {
         const effectValue = spellName;
         // Old spell name
-        let oldSpellName = '';
+        let oldSpellName = "";
         const oldValues = tokenForRecord?.effectValues || {};
         if (oldValues[hasEffect?._id]) {
           oldSpellName = oldValues[hasEffect?._id];
         }
         lostConcentrationOn = oldSpellName;
         // Add concentration effect, which will replace any existing concentration effect
-        api.addEffect('Concentration', tokenForRecord, undefined, effectValue);
+        api.addEffect("Concentration", tokenForRecord, undefined, effectValue);
       }
     }
 
     api.sendMessage(message, undefined, [], tags);
 
     if (lostConcentrationOn) {
-      api.sendMessage(`Lost concentration on ${lostConcentrationOn}.`, undefined, [], []);
+      api.sendMessage(
+        `Lost concentration on ${lostConcentrationOn}.`,
+        undefined,
+        [],
+        []
+      );
     }
 
     // If this is a reaction spell, we update the amount used by 1 up to the max
-    if (dataPath.includes('data.reactions')) {
+    if (dataPath.includes("data.reactions")) {
       const maxReactions = record?.data?.maxReactions || 1;
       const usedReactions = record?.data?.usedReactions || 0;
       if (usedReactions < maxReactions) {
-        api.setValue('data.usedReactions', usedReactions + 1);
+        api.setValue("data.usedReactions", usedReactions + 1);
       }
     }
   }
@@ -491,29 +597,38 @@ ${effectButtons}
   // Returns the options for upcasting a spell
   function getLevelOptions() {
     const iconButtonOptions = [
-      { "icon": "IconCircleNumber1", "label": "Level 1", "value": 1 },
-      { "icon": "IconCircleNumber2", "label": "Level 2", "value": 2 },
-      { "icon": "IconCircleNumber3", "label": "Level 3", "value": 3 },
-      { "icon": "IconCircleNumber4", "label": "Level 4", "value": 4 },
-      { "icon": "IconCircleNumber5", "label": "Level 5", "value": 5 },
-      { "icon": "IconCircleNumber6", "label": "Level 6", "value": 6 },
-      { "icon": "IconCircleNumber7", "label": "Level 7", "value": 7 },
-      { "icon": "IconCircleNumber8", "label": "Level 8", "value": 8 },
-      { "icon": "IconCircleNumber9", "label": "Level 9", "value": 9 },
-    ]
+      { icon: "IconCircleNumber1", label: "Level 1", value: 1 },
+      { icon: "IconCircleNumber2", label: "Level 2", value: 2 },
+      { icon: "IconCircleNumber3", label: "Level 3", value: 3 },
+      { icon: "IconCircleNumber4", label: "Level 4", value: 4 },
+      { icon: "IconCircleNumber5", label: "Level 5", value: 5 },
+      { icon: "IconCircleNumber6", label: "Level 6", value: 6 },
+      { icon: "IconCircleNumber7", label: "Level 7", value: 7 },
+      { icon: "IconCircleNumber8", label: "Level 8", value: 8 },
+      { icon: "IconCircleNumber9", label: "Level 9", value: 9 },
+    ];
 
     const spellLevel = parseInt(value?.data?.level, 10) || 0; // Default to 0 if no level is set
-    return iconButtonOptions.filter(option => option.value >= spellLevel);
+    return iconButtonOptions.filter((option) => option.value >= spellLevel);
   }
 
   function toggleDaily() {
     const prepared = value;
     // We're in a list, so we need to use the data path to the fields metadata
-    const dataPathToHideDaily = dataPath.replace('.data.prepared', '.fields.maxDailyUses.hidden');
-    const dataPathToHideCounter = dataPath.replace('.data.prepared', '.fields.dailyUses.hidden');
-    const dataPathToHideUpcast = dataPath.replace('.data.prepared', '.fields.upcastLevel.hidden');
+    const dataPathToHideDaily = dataPath.replace(
+      ".data.prepared",
+      ".fields.maxDailyUses.hidden"
+    );
+    const dataPathToHideCounter = dataPath.replace(
+      ".data.prepared",
+      ".fields.dailyUses.hidden"
+    );
+    const dataPathToHideUpcast = dataPath.replace(
+      ".data.prepared",
+      ".fields.upcastLevel.hidden"
+    );
     const valuesToSet = {};
-    if (prepared === 'daily') {
+    if (prepared === "daily") {
       valuesToSet[dataPathToHideDaily] = false;
       valuesToSet[dataPathToHideCounter] = false;
       // Hide the upcast level button
@@ -528,44 +643,108 @@ ${effectButtons}
   }
 </script>
 
-<div style='display: column; gap: 2px; width: 100%'>
-  <div style='display: flex; gap: 2px; width: 100%'>
-    <div style='width: 30px; height: 30px; min-width: 30px; min-height: 30px;'>
-      <portrait width='30px' height='30px' field="portrait"></portrait>
+<div style="display: column; gap: 2px; width: 100%">
+  <div style="display: flex; gap: 2px; width: 100%">
+    <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
+      <portrait width="30px" height="30px" field="portrait"></portrait>
     </div>
-    <div style='margin-top: auto; margin-bottom: auto'>
-      <iconbutton size='sm' field="prepared" variant='default' onchange='toggleDaily();'
-        options='[{"icon": "IconCircleLetterW", "label": "At Will", "value": "will"}, {"icon": "IconCircleLetterD", "label": "Daily (Has Uses Per Day)", "value": "daily"}, {"icon": "IconWand", "label": "Prepared (Uses Spell Slots)", "value": "prepared"}]'>
+    <div style="margin-top: auto; margin-bottom: auto">
+      <iconbutton
+        size="sm"
+        field="prepared"
+        variant="default"
+        onchange="toggleDaily();"
+        options='[{"icon": "IconCircleLetterW", "label": "At Will", "value": "will"}, {"icon": "IconCircleLetterD", "label": "Daily (Has Uses Per Day)", "value": "daily"}, {"icon": "IconWand", "label": "Prepared (Uses Spell Slots)", "value": "prepared"}]'
+      >
       </iconbutton>
     </div>
-    <namefield size='xs' width='100%' variant='unstyled' field="namefield"></namefield>
-    <stringfield size='xs' field="castingTime" label='Casting Time' variant='tooltip'></stringfield>
-    <stringfield size='xs' field="range" label='Range' variant='tooltip'></stringfield>
-    <div style='margin-top: auto; margin-bottom: auto'>
+    <namefield
+      size="xs"
+      width="100%"
+      variant="unstyled"
+      field="namefield"
+    ></namefield>
+    <stringfield
+      size="xs"
+      field="castingTime"
+      label="Casting Time"
+      variant="tooltip"
+    ></stringfield>
+    <stringfield
+      size="xs"
+      field="range"
+      label="Range"
+      variant="tooltip"
+    ></stringfield>
+    <div style="margin-top: auto; margin-bottom: auto">
       <!-- For NPCs we don't want to show the upcast level button unless they use spell slots -->
-      <iconbutton hidden='true' size='sm' field="upcastLevel" color='pink' variant='light'
-        getoptions='return getLevelOptions();'>
+      <iconbutton
+        hidden="true"
+        size="sm"
+        field="upcastLevel"
+        color="pink"
+        variant="light"
+        getoptions="return getLevelOptions();"
+      >
       </iconbutton>
     </div>
-    <div style='margin-left: auto'>
-      <button size='xs' radius='xs' field="castBtn" label="Cast" variant='light' onclick='castSpell();'></button>
+    <div style="margin-left: auto">
+      <button
+        size="xs"
+        radius="xs"
+        field="castBtn"
+        label="Cast"
+        variant="light"
+        onclick="castSpell();"
+      ></button>
     </div>
   </div>
-  <div style='display: flex; flex-direction: row; gap: 8px; width: 100%; align-items: center'>
-    <numberfield width='100px' hidden='true' field="maxDailyUses" placeholder='1' label='Uses Per Day' size="xs">
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      width: 100%;
+      align-items: center;
+    "
+  >
+    <numberfield
+      width="100px"
+      hidden="true"
+      field="maxDailyUses"
+      placeholder="1"
+      label="Uses Per Day"
+      size="xs"
+    >
     </numberfield>
-    <counter width="80%" hidden='true' field="dailyUses" maxvalue='1' maxvaluefield="maxDailyUses">
+    <counter
+      width="80%"
+      hidden="true"
+      field="dailyUses"
+      maxvalue="1"
+      maxvaluefield="maxDailyUses"
+    >
     </counter>
   </div>
-  <accordion size='xs' field="descriptionOpen" label="Description">
-    <div style='display: flex; gap: 4px;'>
-      <stringfield size='xs' width=50% field="components" label='Components'></stringfield>
-      <stringfield size='xs' width=50% field="duration" label='Duration'></stringfield>
+  <accordion size="xs" field="descriptionOpen" label="Description">
+    <div style="display: flex; gap: 4px">
+      <stringfield
+        size="xs"
+        width="50%"
+        field="components"
+        label="Components"
+      ></stringfield>
+      <stringfield
+        size="xs"
+        width="50%"
+        field="duration"
+        label="Duration"
+      ></stringfield>
     </div>
-    <div style='margin-top: 4px'>
-      <richtextfield disablecontrols='true' field="description"></richtextfield>
+    <div style="margin-top: 4px">
+      <richtextfield disablecontrols="true" field="description"></richtextfield>
     </div>
   </accordion>
 </div>
 
-<numberfield hidden='true' field="level"></numberfield>
+<numberfield hidden="true" field="level"></numberfield>

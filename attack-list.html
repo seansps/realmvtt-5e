@@ -1,34 +1,37 @@
 <script>
   // Parse profciencies and determine from weapon subtype if proficient with it
   function getIsProficient(attack) {
-    const weaponSubtype = attack?.data?.subtype || 'simple';
-    const weaponName = (attack?.name || '').trim().toLowerCase();
-    const weaponProperties = (attack?.data?.weaponProperties || []).map(p => p.trim().toLowerCase()).filter(p => p !== '');
+    const weaponSubtype = attack?.data?.subtype || "simple";
+    const weaponName = (attack?.name || "").trim().toLowerCase();
+    const weaponProperties = (attack?.data?.weaponProperties || [])
+      .map((p) => p.trim().toLowerCase())
+      .filter((p) => p !== "");
 
-    const weaponProficiencies = record?.data?.weaponProficiencies || '';
+    const weaponProficiencies = record?.data?.weaponProficiencies || "";
     // Convert the string to an array of proficiencies
-    const proficienciesArray = weaponProficiencies.split(/,| and /).map(p => p.trim().toLowerCase()).filter(p => p !== '');
+    const proficienciesArray = weaponProficiencies
+      .split(/,| and /)
+      .map((p) => p.trim().toLowerCase())
+      .filter((p) => p !== "");
 
     let isProficient = false;
 
-    let martialOrSimple = 'simple';
-    if (weaponSubtype.toLowerCase().includes('martial')) {
-      martialOrSimple = 'martial';
+    let martialOrSimple = "simple";
+    if (weaponSubtype.toLowerCase().includes("martial")) {
+      martialOrSimple = "martial";
     }
 
-    proficienciesArray.forEach(prof => {
+    proficienciesArray.forEach((prof) => {
       // If it requires a trait, check trait, check for string `that have the X or Y property`
-      if (prof.includes('that have the') && prof.includes(martialOrSimple)) {
-        weaponProperties.forEach(wp => {
+      if (prof.includes("that have the") && prof.includes(martialOrSimple)) {
+        weaponProperties.forEach((wp) => {
           if (prof.includes(wp)) {
             isProficient = true;
           }
         });
-      }
-      else if (prof.includes(martialOrSimple)) {
+      } else if (prof.includes(martialOrSimple)) {
         isProficient = true;
-      }
-      else if (prof.includes(weaponName)) {
+      } else if (prof.includes(weaponName)) {
         isProficient = true;
       }
     });
@@ -37,42 +40,50 @@
   }
 
   function handleRoll() {
-    const attackDataPath = dataPath.replace('.data.rollBtn', '');
+    const attackDataPath = dataPath.replace(".data.rollBtn", "");
     const attack = api.getValue(attackDataPath);
 
-    let name = attack?.name || 'New Item';
+    let name = attack?.name || "New Item";
     if (attack?.identified === false) {
-      name = attack?.unidentifiedName || 'Unidentified Item';
+      name = attack?.unidentifiedName || "Unidentified Item";
     }
 
-    const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
-    const strMod = parseInt(record?.data?.strengthMod || '0', 10);
-    const proficiencyBonus = parseInt(record?.data?.proficiencyBonus || '2', 10);
+    const dexMod = parseInt(record?.data?.dexterityMod || "0", 10);
+    const strMod = parseInt(record?.data?.strengthMod || "0", 10);
+    const proficiencyBonus = parseInt(
+      record?.data?.proficiencyBonus || "2",
+      10
+    );
 
-    let dexOrStr = 'Strength';
+    let dexOrStr = "Strength";
     let modToUse = strMod;
 
-
-    const atkRoll = '1d20';
-    let modifiers = getEffectsAndModifiers(['attackBonus', 'attackPenalty'], undefined, attack._id);
+    const atkRoll = "1d20";
+    let modifiers = getEffectsAndModifiers(
+      ["attackBonus", "attackPenalty"],
+      undefined,
+      attack._id
+    );
 
     let ranged = false;
     // Always ranged attack for ranged weapons
-    if (attack?.data?.type?.includes('ranged')) {
+    if (attack?.data?.type?.includes("ranged")) {
       ranged = true;
     }
     // If this is a thrown weapon, check the rangeToggleBtn
-    if (attack?.data?.weaponProperties?.includes('Thrown')) {
-      ranged = attack?.data?.rangeToggleBtn === 'ranged';
+    if (attack?.data?.weaponProperties?.includes("Thrown")) {
+      ranged = attack?.data?.rangeToggleBtn === "ranged";
     }
 
     // Ranged is always dexterity
-    dexOrStrMod = attack?.data?.type?.includes('ranged') ? 'Dexterity' : 'Strength';
+    dexOrStrMod = attack?.data?.type?.includes("ranged")
+      ? "Dexterity"
+      : "Strength";
     // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
-    if (attack?.data?.weaponProperties?.includes('Finesse')) {
-      dexOrStrMod = strMod > dexMod ? 'Strength' : 'Dexterity';
+    if (attack?.data?.weaponProperties?.includes("Finesse")) {
+      dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
     }
-    if (dexOrStrMod === 'Dexterity') {
+    if (dexOrStrMod === "Dexterity") {
       modToUse = dexMod;
     }
 
@@ -81,48 +92,53 @@
       modifiers.push({
         name: dexOrStrMod,
         value: modToUse,
-        active: true
+        active: true,
       });
     }
 
     const isProficient = getIsProficient(attack);
     if (isProficient) {
       modifiers.push({
-        name: 'Proficient',
+        name: "Proficient",
         value: proficiencyBonus,
-        active: true
+        active: true,
       });
     }
 
-    let icon = 'IconSword';
+    let icon = "IconSword";
     if (ranged) {
-      icon = 'IconBow';
+      icon = "IconBow";
     }
 
     // If ranged, deduct 1 ammo if set
     if (ranged && attack?.data?.ammo) {
-      const newAmmo = parseInt(attack?.data?.ammo || '0', 10) - 1;
+      const newAmmo = parseInt(attack?.data?.ammo || "0", 10) - 1;
       if (newAmmo >= 0) {
         api.setValue(`${attackDataPath}.data.ammo`, newAmmo);
       }
     }
 
-    const normalRange = parseInt(attack?.data?.normalRange || '0', 10);
-    const maxRange = parseInt(attack?.data?.maxRange || '0', 10);
+    const normalRange = parseInt(attack?.data?.normalRange || "0", 10);
+    const maxRange = parseInt(attack?.data?.maxRange || "0", 10);
 
     // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
     // Get range to all other tokens
     let disDueToProximity = false;
     const ourToken = api.getToken();
     if (ranged && ourToken) {
-      api.getOtherTokens().forEach(token => {
+      api.getOtherTokens().forEach((token) => {
         if (disDueToProximity) {
           // Short circuit if we already have disadvantage due to proximity
           return;
         }
-        if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
+        if (
+          token?.faction !== "neutral" &&
+          token?.faction !== ourToken?.faction
+        ) {
           // Check if they have incapacitated condition
-          const hasIncapacitated = (token?.effects || []).some(eff => eff.name === 'Incapacitated');
+          const hasIncapacitated = (token?.effects || []).some(
+            (eff) => eff.name === "Incapacitated"
+          );
           if (!hasIncapacitated) {
             // Check distance
             const distance = api.getDistance(ourToken, token);
@@ -134,58 +150,69 @@
       });
     }
 
-    let damage = attack?.data?.damage || '1d4';
+    let damage = attack?.data?.damage || "1d4";
 
     // Check for versatile property and use 2-handed damage if 2handed is set
-    if (attack?.data?.weaponProperties?.includes('Versatile') && attack?.data?.handBtn === 'two') {
+    if (
+      attack?.data?.weaponProperties?.includes("Versatile") &&
+      attack?.data?.handBtn === "two"
+    ) {
       damage = attack?.data?.versatileDamage || damage;
     }
 
-    let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
+    let damageModifiers = getEffectsAndModifiers(
+      ["damageBonus", "damagePenalty"],
+      undefined,
+      attack._id
+    );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
-    damageModifiers = damageModifiers.map(mod => {
-      const modType = getDamageType(mod?.value?.toString() || '');
-      const type = modType === 'untyped' ? mod?.type || damageType : '';
+    damageModifiers = damageModifiers.map((mod) => {
+      const modType = getDamageType(mod?.value?.toString() || "");
+      const type = modType === "untyped" ? mod?.type || damageType : "";
       return {
         ...mod,
-        type: type
-      }
+        type: type,
+      };
     });
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
-    if (damage.includes('d') || name.toLowerCase().includes('unarmed')) {
+    if (damage.includes("d") || name.toLowerCase().includes("unarmed")) {
       // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
       let active = true;
-      if (attack?.data?.handBtn === 'off' && modToUse > 0) {
+      if (attack?.data?.handBtn === "off" && modToUse > 0) {
         active = false;
       }
       damageModifiers.push({
         name: dexOrStrMod,
         type: damageType,
         value: modToUse,
-        active: active
+        active: active,
       });
     }
 
     // Get weapon masteries that the character has and check if this weapon is in the list
     const masteryProperties = [];
     const characterWeaponMasteries = record?.data?.weaponMasteries || [];
-    const weaponType = attack?.data?.weaponType || '';
+    const weaponType = attack?.data?.weaponType || "";
     let canUseAdditionalMasteries = false;
     if (characterWeaponMasteries.includes(weaponType)) {
       // Add the mastery property to the attack
-      const masteryProperty = attack?.data?.weaponMastery || '';
+      const masteryProperty = attack?.data?.weaponMastery || "";
       if (masteryProperty) {
         canUseAdditionalMasteries = true;
         masteryProperties.push(masteryProperty);
       }
     }
-    // This modifier is used to grant additional weapon  masteries to the attack, if we're attacking 
+    // This modifier is used to grant additional weapon  masteries to the attack, if we're attacking
     // with a weapon that gives us one we don't already have
     if (canUseAdditionalMasteries) {
-      const additionalMasteries = getEffectsAndModifiers(['weaponMastery'], undefined, attack._id);
-      additionalMasteries.forEach(am => {
+      const additionalMasteries = getEffectsAndModifiers(
+        ["weaponMastery"],
+        undefined,
+        attack._id
+      );
+      additionalMasteries.forEach((am) => {
         if (am?.value) {
           masteryProperties.push(am.value);
         }
@@ -194,136 +221,158 @@
 
     if (disDueToProximity) {
       modifiers.push({
-        name: 'Enemy is Within 5 Feet',
-        value: 'disadvantage',
-        active: true
+        name: "Enemy is Within 5 Feet",
+        value: "disadvantage",
+        active: true,
       });
     }
 
     const targets = api.getTargets();
 
-    const autoCritical = modifiers.some(m => m.value === 'critical');
+    const autoCritical = modifiers.some((m) => m.value === "critical");
     // Check for crit on 19 or some other number
     const critOnMatch = /critical(\d+)/;
     const critOnMods = modifiers
-      .map(m => {
+      .map((m) => {
         const match = m.value.toString().match(critOnMatch);
         return match ? parseInt(match[1], 10) : null;
       })
-      .filter(value => value !== null);
+      .filter((value) => value !== null);
 
     let critOn = null;
     if (critOnMods.length) {
       critOn = Math.min(...critOnMods);
     }
     // Filter these out of the modifiers array, we don't need them to be toggleable
-    modifiers = modifiers.filter(m => !m.value.toString().startsWith('critical'));
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("critical")
+    );
 
-    targets.forEach(target => {
+    const minRoll = getMinRollModifier(modifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll")
+    );
+
+    targets.forEach((target) => {
       // Get calculated AC from modifiers - use if any
       const targetAc = getArmorClassForToken(target?.token);
-      const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
+      const targetName =
+        target?.token?.identified === false
+          ? target?.token?.record?.unidentifiedName
+          : target?.token?.record?.name;
       const targetDistance = target?.distance || 0;
 
       // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
       // and if it was greater than the max, make it apparent in the roll prompt
       if (ranged && targetDistance > maxRange && maxRange > 0) {
         modifiers.push({
-          name: 'Target is Beyond Max Range',
-          value: 'disadvantage',
-          active: true
+          name: "Target is Beyond Max Range",
+          value: "disadvantage",
+          active: true,
         });
-      }
-      else if (ranged && targetDistance > normalRange && normalRange > 0) {
+      } else if (ranged && targetDistance > normalRange && normalRange > 0) {
         modifiers.push({
-          name: 'Target is Beyond Normal Range',
-          value: 'disadvantage',
-          active: true
+          name: "Target is Beyond Normal Range",
+          value: "disadvantage",
+          active: true,
         });
       }
 
       // Get effects and modifiers for the target
-      const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
-      targetEffects.forEach(r => {
+      const targetEffects = getAttackModifiersForTarget(
+        target?.token,
+        targetDistance
+      );
+      targetEffects.forEach((r) => {
         modifiers.push(r);
       });
 
-      const diceRoll = '1d20';
+      const diceRoll = "1d20";
       const metadata = {
-        "rollName": 'Attack',
-        "attack": `${name}`,
-        "icon": icon,
-        "targetName": targetName,
-        "tooltip": `Attack Roll for ${name}`,
-        "autoCritical": autoCritical,
-        "critOn": critOn,
-        "dc": targetAc,
-        "damage": damage,
-        "damageModifiers": damageModifiers,
-        "masteryProperties": masteryProperties,
-        "attackerProficiencyBonus": proficiencyBonus
-      }
-      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, 'attack');
+        rollName: "Attack",
+        attack: `${name}`,
+        icon: icon,
+        targetName: targetName,
+        tooltip: `Attack Roll for ${name}`,
+        autoCritical: autoCritical,
+        critOn: critOn,
+        dc: targetAc,
+        damage: damage,
+        damageModifiers: damageModifiers,
+        masteryProperties: masteryProperties,
+        attackerProficiencyBonus: proficiencyBonus,
+        minRoll: minRoll,
+      };
+      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
 
     if (!targets.length) {
-      const diceRoll = '1d20';
+      const diceRoll = "1d20";
       const metadata = {
-        "rollName": 'Attack',
-        "attack": `${name}`,
-        "icon": icon,
-        "tooltip": `Attack Roll for ${name}`,
-        "dc": 0,
-        "damage": damage,
-        "damageModifiers": damageModifiers,
-        "masteryProperties": masteryProperties,
-        "attackerProficiencyBonus": proficiencyBonus,
-        "critOn": critOn
-      }
-      api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, 'attack');
+        rollName: "Attack",
+        attack: `${name}`,
+        icon: icon,
+        tooltip: `Attack Roll for ${name}`,
+        dc: 0,
+        damage: damage,
+        damageModifiers: damageModifiers,
+        masteryProperties: masteryProperties,
+        attackerProficiencyBonus: proficiencyBonus,
+        critOn: critOn,
+        minRoll: minRoll,
+      };
+      api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }
   }
 
   function rollDamage(isCritical) {
-    const attackDataPath = isCritical ? dataPath.replace('.data.critBtn', '') : dataPath.replace('.data.damageBtn', '');
+    const attackDataPath = isCritical
+      ? dataPath.replace(".data.critBtn", "")
+      : dataPath.replace(".data.damageBtn", "");
     const attack = api.getValue(attackDataPath);
 
-    let name = attack?.name || 'New Item';
+    let name = attack?.name || "New Item";
     if (attack?.identified === false) {
-      name = attack?.unidentifiedName || 'Unidentified Item';
+      name = attack?.unidentifiedName || "Unidentified Item";
     }
 
-    const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
-    const strMod = parseInt(record?.data?.strengthMod || '0', 10);
+    const dexMod = parseInt(record?.data?.dexterityMod || "0", 10);
+    const strMod = parseInt(record?.data?.strengthMod || "0", 10);
 
-    let dexOrStr = 'Strength';
+    let dexOrStr = "Strength";
     let modToUse = strMod;
 
     let ranged = false;
 
     // Always ranged attack for ranged weapons
-    if (attack?.data?.type?.includes('ranged')) {
+    if (attack?.data?.type?.includes("ranged")) {
       ranged = true;
     }
     // If this is a thrown weapon, check the rangeToggleBtn
-    if (attack?.data?.weaponProperties?.includes('Thrown')) {
-      ranged = attack?.data?.rangeToggleBtn === 'ranged';
+    if (attack?.data?.weaponProperties?.includes("Thrown")) {
+      ranged = attack?.data?.rangeToggleBtn === "ranged";
     }
 
     // Ranged is always dexterity
-    dexOrStrMod = attack?.data?.type?.includes('ranged') ? 'Dexterity' : 'Strength';
+    dexOrStrMod = attack?.data?.type?.includes("ranged")
+      ? "Dexterity"
+      : "Strength";
     // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
-    if (attack?.data?.weaponProperties?.includes('Finesse')) {
-      dexOrStrMod = strMod > dexMod ? 'Strength' : 'Dexterity';
+    if (attack?.data?.weaponProperties?.includes("Finesse")) {
+      dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
     }
-    if (dexOrStrMod === 'Dexterity') {
+    if (dexOrStrMod === "Dexterity") {
       modToUse = dexMod;
     }
 
-    let damage = attack?.data?.damage || '1d4';
+    let damage = attack?.data?.damage || "1d4";
 
     // Check for versatile property and use 2-handed damage if 2handed is set
-    if (attack?.data?.weaponProperties?.includes('Versatile') && attack?.data?.handBtn === 'two') {
+    if (
+      attack?.data?.weaponProperties?.includes("Versatile") &&
+      attack?.data?.handBtn === "two"
+    ) {
       damage = attack?.data?.versatileDamage || damage;
     }
 
@@ -331,84 +380,142 @@
       damage = doubleDamageDice(damage);
     }
 
-    let damageModifiers = getEffectsAndModifiers(['damageBonus', 'damagePenalty'], undefined, attack._id);
+    let damageModifiers = getEffectsAndModifiers(
+      ["damageBonus", "damagePenalty"],
+      undefined,
+      attack._id
+    );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
-    damageModifiers = damageModifiers.map(mod => {
-      const modType = getDamageType(mod?.value?.toString() || '');
-      const type = modType === 'untyped' ? mod?.type || damageType : '';
+    damageModifiers = damageModifiers.map((mod) => {
+      const modType = getDamageType(mod?.value?.toString() || "");
+      const type = modType === "untyped" ? mod?.type || damageType : "";
       return {
         ...mod,
         value: isCritical ? doubleDamageDice(mod.value) : mod.value,
-        type: type
-      }
+        type: type,
+      };
     });
 
     const damageMetadata = {
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
-      "critical": isCritical,
-    }
+      critical: isCritical,
+    };
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
-    if (damage.includes('d') || name.toLowerCase().includes('unarmed')) {
+    if (damage.includes("d") || name.toLowerCase().includes("unarmed")) {
       // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
       let active = true;
-      if (attack?.data?.handBtn === 'off' && modToUse > 0) {
+      if (attack?.data?.handBtn === "off" && modToUse > 0) {
         active = false;
       }
       damageModifiers.push({
         name: dexOrStrMod,
         type: damageType,
         value: modToUse,
-        active: active
+        active: active,
       });
     }
 
-    api.promptRoll(`${name} Damage`, damage, damageModifiers, damageMetadata, 'damage')
+    api.promptRoll(
+      `${name} Damage`,
+      damage,
+      damageModifiers,
+      damageMetadata,
+      "damage"
+    );
   }
 </script>
 
-<div style='display: flex; flex-direction: column'>
+<div style="display: flex; flex-direction: column">
   <!-- Main row for icon, name, buttons -->
-  <div style='display: flex; flex-direction: row; gap: 4px; align-items: center'>
-    <div style='width: 30px; height: 30px; min-width: 30px; min-height: 30px;'>
-      <portrait width='30px' height='30px' field="portrait"></portrait>
+  <div
+    style="display: flex; flex-direction: row; gap: 4px; align-items: center"
+  >
+    <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
+      <portrait width="30px" height="30px" field="portrait"></portrait>
     </div>
-    <div style='width: 100%'>
-      <namefield field='namefield' variant="standard"></namefield>
+    <div style="width: 100%">
+      <namefield field="namefield" variant="standard"></namefield>
     </div>
     <!-- Ammo Field for Ranged Weapons -->
-    <numberfield hidden='true' field="ammo" placeholder='0' maxvalue='100' minvalue='0' variant="tooltip"
-      label='Ammo Remaining' size="xs">
+    <numberfield
+      hidden="true"
+      field="ammo"
+      placeholder="0"
+      maxvalue="100"
+      minvalue="0"
+      variant="tooltip"
+      label="Ammo Remaining"
+      size="xs"
+    >
     </numberfield>
     <!--  A way to change to thrown if Throw type is there -->
-    <iconbutton size="md" hidden="true" field="meleeToggleBtnDisabled" variant="default"
-      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}]'>
+    <iconbutton
+      size="md"
+      hidden="true"
+      field="meleeToggleBtnDisabled"
+      variant="default"
+      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}]'
+    >
     </iconbutton>
-    <iconbutton size="md" hidden="true" field="rangeToggleBtnDisabled" variant="default"
-      options='[{"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'>
+    <iconbutton
+      size="md"
+      hidden="true"
+      field="rangeToggleBtnDisabled"
+      variant="default"
+      options='[{"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'
+    >
     </iconbutton>
-    <iconbutton size="md" hidden="true" field="rangeToggleBtn" variant="default"
-      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}, {"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'>
+    <iconbutton
+      size="md"
+      hidden="true"
+      field="rangeToggleBtn"
+      variant="default"
+      options='[{"icon": "IconSword", "label": "Melee", "value": "melee"}, {"icon": "IconBow", "label": "Ranged", "value": "ranged"}]'
+    >
     </iconbutton>
     <!-- Select Hand, hidden for two-handed weapons -->
-    <iconbutton size="md" field="handBtn" variant="default"
-      options='[{"icon": "IconCircleNumber1Filled", "label": "Main Hand", "value": "one"}, {"icon": "IconCircleNumber2Filled", "label": "Two-Handed", "value": "two"}, {"icon": "IconCircleLetterOFilled", "label": "Off Hand", "value": "off"}]'>
+    <iconbutton
+      size="md"
+      field="handBtn"
+      variant="default"
+      options='[{"icon": "IconCircleNumber1Filled", "label": "Main Hand", "value": "one"}, {"icon": "IconCircleNumber2Filled", "label": "Two-Handed", "value": "two"}, {"icon": "IconCircleLetterOFilled", "label": "Off Hand", "value": "off"}]'
+    >
     </iconbutton>
     <!-- Roll Attack -->
-    <iconbutton size="md" field="rollBtn" variant="outline"
-      options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]' onchange='() => { }' onclick='handleRoll();'>
+    <iconbutton
+      size="md"
+      field="rollBtn"
+      variant="outline"
+      options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]'
+      onchange="() => { }"
+      onclick="handleRoll();"
+    >
     </iconbutton>
     <div>
       <!-- Roll Damage -->
-      <button size="xs" radius="xs" field="damageBtn" label="Damage" variant='light'
-        onclick='rollDamage(false);'></button>
+      <button
+        size="xs"
+        radius="xs"
+        field="damageBtn"
+        label="Damage"
+        variant="light"
+        onclick="rollDamage(false);"
+      ></button>
     </div>
     <!-- Roll Crit -->
     <div>
-      <button size="xs" radius="xs" field="critBtn" label="Critical" variant='light' color="red"
-        onclick='rollDamage(true);'></button>
+      <button
+        size="xs"
+        radius="xs"
+        field="critBtn"
+        label="Critical"
+        variant="light"
+        color="red"
+        onclick="rollDamage(true);"
+      ></button>
     </div>
   </div>
 </div>

@@ -334,6 +334,12 @@
       (m) => !m.value.toString().startsWith("critical")
     );
 
+    const minRoll = getMinRollModifier(modifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll")
+    );
+
     const targets = api.getTargets();
     targets.forEach((target) => {
       // Get calculated AC from modifiers - use if any
@@ -381,6 +387,7 @@
         damageModifiers: damageModifiers,
         autoCritical: autoCritical,
         critOn: critOn,
+        minRoll: minRoll,
       };
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
@@ -396,6 +403,7 @@
         damage: damage,
         damageModifiers: damageModifiers,
         critOn: critOn,
+        minRoll: minRoll,
       };
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }
