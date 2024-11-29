@@ -6,36 +6,46 @@ const newHitDie = data?.roll?.metadata?.newHitDie;
 const newHp = data?.roll?.total;
 
 const recordId = record?._id;
-const hpByLevel = JSON.parse(record?.data?.hpByLevel || '[]');
+const hpByLevel = JSON.parse(record?.data?.hpByLevel || "[]");
 
 if (className && newLevel && newHitDie && newHp && recordId) {
-	const conMod = parseInt(record?.data?.constitutionMod || '0', 10);
-	// Add newHp + conMod
-	let hpToAdd = newHp + conMod;
-	if (hpToAdd < 0) { hpToAdd = 1; }
-	const curHpMax = parseInt(record?.data?.hitpoints || '0', 10);
-	const curHp = parseInt(record?.data?.curhp || '0', 10);
+  const valuesToSet = {};
 
-	// Set curhp and hitpoints
-	api.setValue('data.hitpoints', curHpMax + hpToAdd);
-	api.setValue('data.curhp', curHp + hpToAdd);
+  // Set hpByLevel map
+  hpByLevel.push({
+    className: className,
+    level: newLevel,
+    hitDie: newHitDie,
+    hp: newHp,
+  });
 
-	// Set hpByLevel map
-	hpByLevel.push({
-		className: className,
-		level: newLevel,
-		hitDie: newHitDie,
-		hp: newHp
-	});
-	api.setValue('data.hpByLevel', JSON.stringify(hpByLevel));
+  valuesToSet[`data.hpByLevel`] = JSON.stringify(hpByLevel);
 
-	// Add a hitdie
-	const hitDieField = `${newHitDie}HitDie`;
-	const numHitDie = parseInt(record.data[hitDieField] || '0', 10);
-	api.setValue(`data.${hitDieField}`, numHitDie + 1);
+  // Add a hitdie
+  const hitDieField = `data.${newHitDie}HitDie`;
+  const numHitDie = parseInt(record?.data?.[hitDieField] || "0", 10);
+  valuesToSet[hitDieField] = numHitDie + 1;
 
-	// Send a Message
-	const newHpMax = curHpMax + hpToAdd;
-	const characterName = record?.name || 'New Character';
-	api.sendMessage(`Added 1 Level of ${className} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHpMax}`, data.roll, [], []);
+  // Set hpByLevel and hitDie, then recalc total HP
+  api.setValues(valuesToSet, (recordUpdated) => {
+    // Send a Message
+    const conMod = parseInt(recordUpdated?.data?.constitutionMod || "0", 10);
+    const newHpMax = getHpForLevel(conMod, recordUpdated);
+
+    const newHpDiff = newHpMax - (recordUpdated?.data?.hitpoints || 0);
+
+    const newValuesToSet = {
+      [`data.hitpoints`]: newHpMax,
+      [`data.curhp`]: (recordUpdated?.data?.curhp || 0) + newHpDiff,
+    };
+    api.setValues(newValuesToSet);
+
+    const characterName = record?.name || "New Character";
+    api.sendMessage(
+      `Added 1 Level of ${className} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHpMax}`,
+      data.roll,
+      [],
+      []
+    );
+  });
 }

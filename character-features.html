@@ -1,54 +1,6 @@
 <script>
-  // On update of Constitution, update HP
-  function getHpForLevel(conMod, newLevel, newHpLevelArray) {
-    // Get the max HP we should have at our current level
-    const hpByLevel = record?.data?.hpByLevel || '[]';
-    const hpByLevelArr = JSON.parse(hpByLevel);
-    let totalHp = 0;
-    // Get all the HP we rolled or set for each level
-    hpByLevelArr.forEach(hpLevel => {
-      let thisLevel = hpLevel.hp + conMod;
-      // Each time you level you roll or take average + CON MOD to a min of 1
-      if (thisLevel < 1) {
-        thisLevel = 1;
-      }
-      totalHp += thisLevel;
-    });
-
-    // Get HP Max modifier
-    const hpMaxMods = getEffectsAndModifiers(['hitpoints']);
-    hpMaxMods.forEach(mod => {
-      // For string type in HP max, we'll use it as a field
-      // with a special case for the `field` value to mean a specific class here
-      if (mod.valueType === 'string') {
-        // First check if it is in values we are setting
-        let bonus = mod.value === 'level' ? newLevel : parseInt(record?.data?.[mod.value] || '0', 10);
-        const relevantClass = mod.field;
-        if (relevantClass && mod.value === 'level') {
-          // Bonus = total level in the given class
-          newHpLevelArray.forEach(hpLevel => {
-            if (hpLevel.className === relevantClass) {
-              bonus += 1;
-            }
-          });
-        }
-        if (!isNaN(bonus)) {
-          totalHp += bonus;
-        }
-      }
-      else if (mod.valueType === 'number') {
-        const bonus = parseInt(mod.value || '0', 10);
-        if (!isNaN(bonus)) {
-          totalHp += bonus;
-        }
-      }
-    });
-
-    return totalHp;
-  }
-
   function getAbilityScoreIncrease(feature) {
-    const asi = feature?.data?.abilityScores || '';
+    const asi = feature?.data?.abilityScores || "";
     let max = 20;
     let scores = [];
     if (!asi) {
@@ -61,11 +13,28 @@
       max = parseInt(maxMatch[1], 10);
     }
 
-    if (asi.toLowerCase().match(/one ability score of your choice/) && asi.toLowerCase().match(/or increase two ability scores/)) {
-      return { max, scores: ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'], promptChoice: true, count: 2 };
+    if (
+      asi.toLowerCase().match(/one ability score of your choice/) &&
+      asi.toLowerCase().match(/or increase two ability scores/)
+    ) {
+      return {
+        max,
+        scores: [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma",
+        ],
+        promptChoice: true,
+        count: 2,
+      };
     }
 
-    const abilityMatch = asi.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);
+    const abilityMatch = asi
+      .toLowerCase()
+      .match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);
     if (abilityMatch) {
       scores = abilityMatch;
     }
@@ -76,65 +45,90 @@
   function updateAbilitiesFromFeature(feature) {
     // If the feature has an ability, add it to the character
     // For each feature, we need to check for ability groups and add them if not there
-    const abilityGroupName = feature?.data?.abilityGroupName || '';
-    if (abilityGroupName !== '') {
+    const abilityGroupName = feature?.data?.abilityGroupName || "";
+    if (abilityGroupName !== "") {
       let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
       if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
-        abilityUsesPerDay = getTotalValueFromFields(record, feature?.data?.fieldsToAddToUses || []);
+        abilityUsesPerDay = getTotalValueFromFields(
+          record,
+          feature?.data?.fieldsToAddToUses || []
+        );
       }
-      const abilityValue = feature?.data?.value || '';
-      const abilityRestoresOn = feature?.data?.restoreOn || '';
-      const savingThrowAbility = feature?.data?.savingThrowAbility || '';
-      let abilityGroup = record?.data?.abilityGroups?.find(ag => ag?.name === abilityGroupName);
+      const abilityValue = feature?.data?.value || "";
+      const abilityRestoresOn = feature?.data?.restoreOn || "";
+      const savingThrowAbility = feature?.data?.savingThrowAbility || "";
+      let abilityGroup = record?.data?.abilityGroups?.find(
+        (ag) => ag?.name === abilityGroupName
+      );
       // When the group is added, or found, we add abilities to it or set data on it
-      const recordDataPath = record?.dataPath || '';
+      const recordDataPath = record?.dataPath || "";
       const abilityAddedCallback = (record) => {
-        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(ag => ag?.name === abilityGroupName);
+        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(
+          (ag) => ag?.name === abilityGroupName
+        );
         const fieldsToSet = {};
         if (abilityGroupIndex !== -1) {
           // Get the Ability to add if any
-          const abilityIdToAdd = JSON.parse(feature?.data?.ability || '{}')?._id || '';
-          if (abilityIdToAdd !== '') {
-            api.getRecord('abilities', abilityIdToAdd, (abilityRecord) => {
-              api.addValue(`data.abilityGroups.${abilityGroupIndex}.data.abilities`, abilityRecord);
+          const abilityIdToAdd =
+            JSON.parse(feature?.data?.ability || "{}")?._id || "";
+          if (abilityIdToAdd !== "") {
+            api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
+              api.addValue(
+                `data.abilityGroups.${abilityGroupIndex}.data.abilities`,
+                abilityRecord
+              );
             });
           }
           // If abilityUsesPerDay > 0, un hide the counter
           if (abilityUsesPerDay > 0) {
             // Update the record's number of uses if lower
-            const curDailyUses = record.data?.abilityGroups?.[abilityGroupIndex]?.data.maxDailyUses || 0;
+            const curDailyUses =
+              record.data?.abilityGroups?.[abilityGroupIndex]?.data
+                .maxDailyUses || 0;
             if (curDailyUses < abilityUsesPerDay) {
               // If ability uses per day went up, update it
-              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`] = abilityUsesPerDay;
+              fieldsToSet[
+                `data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`
+              ] = abilityUsesPerDay;
             }
-            const curValue = record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || '';
+            const curValue =
+              record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || "";
             if (abilityValue) {
               // Update the ability value if it was previously set, as this might be a higher value now
-              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.value`] = abilityValue;
+              fieldsToSet[
+                `data.abilityGroups.${abilityGroupIndex}.data.value`
+              ] = abilityValue;
             }
             // If restoreOn is set, update it
-            if (abilityRestoresOn !== '') {
-              fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.data.restore`] = abilityRestoresOn;
+            if (abilityRestoresOn !== "") {
+              fieldsToSet[
+                `data.abilityGroups.${abilityGroupIndex}.data.restore`
+              ] = abilityRestoresOn;
             }
-            fieldsToSet[`data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`] = false;
+            fieldsToSet[
+              `data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`
+            ] = false;
           }
         }
         api.setValues(fieldsToSet);
       };
       if (!abilityGroup) {
-        api.addValue('data.abilityGroups', {
-          name: abilityGroupName,
-          data: {
-            abilities: [],
-            maxDailyUses: abilityUsesPerDay,
-            value: abilityValue,
-            restore: abilityRestoresOn,
-            savingThrowAbility: savingThrowAbility,
-            fieldsToAddToUses: feature?.data?.fieldsToAddToUses || []
-          }
-        }, abilityAddedCallback);
-      }
-      else {
+        api.addValue(
+          "data.abilityGroups",
+          {
+            name: abilityGroupName,
+            data: {
+              abilities: [],
+              maxDailyUses: abilityUsesPerDay,
+              value: abilityValue,
+              restore: abilityRestoresOn,
+              savingThrowAbility: savingThrowAbility,
+              fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
+            },
+          },
+          abilityAddedCallback
+        );
+      } else {
         abilityAddedCallback(record);
       }
     }
@@ -151,29 +145,30 @@
         ...feat?.data,
         // Set a field called featureType to 'feat' so that
         // So that we can show and filter the two features_list fields properly
-        featureType: 'feat'
-      }
-    }
+        featureType: "feat",
+      },
+    };
 
     api.addValue(`data.features`, featToAdd, (updatedRecord) => {
       // After adding the feat, we need to update abilities if one was attached to it
       updateAbilitiesFromFeature(featToAdd);
+      // Also update HP and AC just in case feature had a modifier on them
+      updateACAndHP(featToAdd, updatedRecord);
     });
 
     // Prompt the user to select ASIs or just add them all
     const abilityScoreSelection = (values) => {
       const fieldsToSet = {};
-      values.forEach(curV => {
+      values.forEach((curV) => {
         // Get the current value
-        let value = curV.split('-')[0];
+        let value = curV.split("-")[0];
         const curValue = record?.data?.[`${value}`] || 0;
         // If we haven't chosen it yet, increase the current value by 1
         if (fieldsToSet[`data.${value}`] === undefined) {
           if (curValue < abilityIncrease.max) {
             fieldsToSet[`data.${value}`] = curValue + 1;
           }
-        }
-        else {
+        } else {
           // Increase the value by 1 again
           if (fieldsToSet[`data.${value}`] < abilityIncrease.max) {
             fieldsToSet[`data.${value}`] = fieldsToSet[`data.${value}`] + 1;
@@ -185,32 +180,118 @@
       api.setValues(fieldsToSet, () => {
         // Use the setModifier function to set the modifiers, update proficiencies,
         // and other re-calculations of modifiers as needed
-        Object.keys(fieldsToSet).forEach(key => {
+        Object.keys(fieldsToSet).forEach((key) => {
           const value = fieldsToSet[key];
-          const attribute = key.replace('data.', '');
+          const attribute = key.replace("data.", "");
           setModifier(value, attribute);
         });
       });
-    }
+    };
 
     const abilityIncrease = getAbilityScoreIncrease(featToAdd);
     if (abilityIncrease.promptChoice) {
       const options = [];
-      abilityIncrease.scores.forEach(score => {
+      abilityIncrease.scores.forEach((score) => {
         options.push({ label: capitalize(score), value: score });
       });
       // IF we allow more than one selection, add them again
       if (abilityIncrease.count > 1) {
-        abilityIncrease.scores.forEach(score => {
+        abilityIncrease.scores.forEach((score) => {
           options.push({ label: `${capitalize(score)}`, value: `${score}-2` });
         });
       }
 
-      api.showPrompt(`Choose Ability Scores to Raise`, 'Select Ability Scores', `Select ${abilityIncrease.count} Ability Score${abilityIncrease.count > 1 ? 's' : ''} to Raise (to a max of ${abilityIncrease.max})...`, options, null, abilityScoreSelection, 'OK', 'Cancel', abilityIncrease.count);
-    }
-    else if (abilityIncrease.scores.length > 0) {
+      api.showPrompt(
+        `Choose Ability Scores to Raise`,
+        "Select Ability Scores",
+        `Select ${abilityIncrease.count} Ability Score${
+          abilityIncrease.count > 1 ? "s" : ""
+        } to Raise (to a max of ${abilityIncrease.max})...`,
+        options,
+        null,
+        abilityScoreSelection,
+        "OK",
+        "Cancel",
+        abilityIncrease.count
+      );
+    } else if (abilityIncrease.scores.length > 0) {
       // Add all ASIs
-      abilityScoreSelection(abilityIncrease.scores.map(score => score));
+      abilityScoreSelection(abilityIncrease.scores.map((score) => score));
+    }
+  }
+
+  function updateACAndHP(feature, updatedRecord) {
+    const additionalFieldsToSet = {};
+    // Check for AC Calc mods
+    const acCalculationMods = (feature?.data?.modifiers || []).filter(
+      (mod) => mod.data.type === "armorClassCalculation"
+    );
+    if (acCalculationMods.length > 0) {
+      // Get other mods
+      const allAcCalculationMods = getEffectsAndModifiers([
+        "armorClassCalculation",
+      ]);
+      acCalculationMods.forEach((mod) => {
+        allAcCalculationMods.push({
+          name: feature.name || "Feature",
+          value: mod.data?.value || 0,
+          field: mod.data?.field || "",
+        });
+      });
+      const dexMod = parseInt(updatedRecord?.data?.dexterityMod || "0", 10);
+      let armorClass = 10 + dexMod;
+      const bestEquippedArmor = updatedRecord?.data?.armor || undefined;
+      let calcBonus = 0;
+      // Only add acCalculationMods if we are unarmored
+      if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
+        allAcCalculationMods.forEach((mod) => {
+          // We only benefit from the highest AC calculation modifier
+          if (mod.field && mod.field !== "dexterity") {
+            const acBonus = parseInt(
+              updatedRecord?.data?.[`${mod.field}Mod`] || "0",
+              10
+            );
+            if (acBonus > calcBonus) {
+              calcBonus = acBonus;
+            }
+          }
+        });
+      }
+      // Get general AC bonuses
+      const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
+      acBonuses.forEach((mod) => {
+        if (mod.value) {
+          const acBonus = parseInt(mod.value || "0", 10);
+          if (!isNaN(acBonus)) {
+            calcBonus += acBonus;
+          }
+        }
+      });
+      // Check for best equipped armor and use this instead if set
+      if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+        armorClass =
+          bestEquippedArmor.ac +
+          (bestEquippedArmor.maxDex
+            ? Math.min(dexMod, bestEquippedArmor.maxDex)
+            : 0);
+      }
+      // Add shield if it is equipped
+      if (bestEquippedArmor?.shieldAc) {
+        armorClass += bestEquippedArmor.shieldAc;
+      }
+      armorClass += calcBonus;
+      additionalFieldsToSet["data.ac"] = armorClass;
+    }
+
+    const conMod = parseInt(updatedRecord?.data?.constitutionMod || "0", 10);
+    const newHp = getHpForLevel(conMod, updatedRecord);
+    // Set our HP to be totalHp per level + conMod * level
+    if (newHp > updatedRecord?.data?.hitpoints) {
+      additionalFieldsToSet["data.hitpoints"] = newHp;
+    }
+
+    if (Object.keys(additionalFieldsToSet).length > 0) {
+      api.setValues(additionalFieldsToSet);
     }
   }
 
@@ -221,92 +302,98 @@
 
     // If wildshape, we only set physical stats, polymorph sets all stats
     let hasCircleForms = false; // True if we're wild shaping and have Circle Forms
-    if (selectedValue === 'polymorph') {
+    if (selectedValue === "polymorph") {
       // Polymorph
-      valuesToSet['fields.polymorphNpc.hidden'] = false;
-      valuesToSet['fields.polymorphNameNone.hidden'] = true;
-      valuesToSet['fields.Remove Polymorph.hidden'] = false;
+      valuesToSet["fields.polymorphNpc.hidden"] = false;
+      valuesToSet["fields.polymorphNameNone.hidden"] = true;
+      valuesToSet["fields.Remove Polymorph.hidden"] = false;
 
       // Polymorph also gets mental stats
-      valuesToSet['data.intelligence'] = npc?.data?.intelligence;
-      valuesToSet['data.wisdom'] = npc?.data?.wisdom;
-      valuesToSet['data.charisma'] = npc?.data?.charisma;
+      valuesToSet["data.intelligence"] = npc?.data?.intelligence;
+      valuesToSet["data.wisdom"] = npc?.data?.wisdom;
+      valuesToSet["data.charisma"] = npc?.data?.charisma;
 
       // You gain Temp HP equal the the HP of the new form
-      valuesToSet['data.tempHp'] = npc?.data?.hitpoints;
-    }
-    else {
+      valuesToSet["data.tempHp"] = npc?.data?.hitpoints;
+    } else {
       // Wild Shape
-      valuesToSet['fields.wildShapeNpc.hidden'] = false;
-      valuesToSet['fields.wildShapeNameNone.hidden'] = true;
-      valuesToSet['fields.Remove Wild Shape.hidden'] = false;
+      valuesToSet["fields.wildShapeNpc.hidden"] = false;
+      valuesToSet["fields.wildShapeNameNone.hidden"] = true;
+      valuesToSet["fields.Remove Wild Shape.hidden"] = false;
 
       // You gain Temp HP equal to your druid level
-      const matchDruidLevel = (record?.data?.classLevels || '').match(/Druid (\d+)/)?.[1] || 1;
+      const matchDruidLevel =
+        (record?.data?.classLevels || "").match(/Druid (\d+)/)?.[1] || 1;
       if (matchDruidLevel) {
-        const druidLevel = Math.floor(parseInt(matchDruidLevel || '1', 10));
+        const druidLevel = Math.floor(parseInt(matchDruidLevel || "1", 10));
         // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now
-        const circleFormsFeature = record?.data?.features?.find(feature => feature?.name === 'Circle Forms');
+        const circleFormsFeature = record?.data?.features?.find(
+          (feature) => feature?.name === "Circle Forms"
+        );
         if (circleFormsFeature) {
-          valuesToSet['data.tempHp'] = druidLevel * 3;
+          valuesToSet["data.tempHp"] = druidLevel * 3;
           hasCircleForms = true;
-        }
-        else {
-          valuesToSet['data.tempHp'] = druidLevel;
+        } else {
+          valuesToSet["data.tempHp"] = druidLevel;
         }
       }
     }
 
     // The actions we show in the polymorph attack list are any actions the
     // NPC had that were not spellcasting
-    const polymorphActions = [...(npc?.data?.actions || []).filter(action => action?.data?.isSpellcasting !== true)];
+    const polymorphActions = [
+      ...(npc?.data?.actions || []).filter(
+        (action) => action?.data?.isSpellcasting !== true
+      ),
+    ];
     // Set the portrait on each action to be the NPC's portrait, and icon to be IconSwords (in case not set)
-    polymorphActions.forEach(action => {
+    polymorphActions.forEach((action) => {
       action.portrait = npc?.portrait;
-      action.icon = 'IconSwords';
+      action.icon = "IconSwords";
     });
 
     // These values are updated in both
-    valuesToSet['data.oldHitpoints'] = record?.data?.hitpoints;
-    valuesToSet['data.oldStrength'] = record?.data?.strength;
-    valuesToSet['data.oldDexterity'] = record?.data?.dexterity;
-    valuesToSet['data.oldConstitution'] = record?.data?.constitution;
-    valuesToSet['data.oldIntelligence'] = record?.data?.intelligence;
-    valuesToSet['data.oldWisdom'] = record?.data?.wisdom;
-    valuesToSet['data.oldCharisma'] = record?.data?.charisma;
-    valuesToSet['data.oldAc'] = record?.data?.ac;
-    valuesToSet['data.oldSenses'] = record?.data?.senses;
-    valuesToSet['data.oldSpeed'] = record?.data?.speed;
-    valuesToSet['data.oldResistances'] = record?.data?.resistances;
-    valuesToSet['data.oldImmunities'] = record?.data?.immunities;
-    valuesToSet['data.oldVulnerabilities'] = record?.data?.vulnerabilities;
+    valuesToSet["data.oldHitpoints"] = record?.data?.hitpoints;
+    valuesToSet["data.oldStrength"] = record?.data?.strength;
+    valuesToSet["data.oldDexterity"] = record?.data?.dexterity;
+    valuesToSet["data.oldConstitution"] = record?.data?.constitution;
+    valuesToSet["data.oldIntelligence"] = record?.data?.intelligence;
+    valuesToSet["data.oldWisdom"] = record?.data?.wisdom;
+    valuesToSet["data.oldCharisma"] = record?.data?.charisma;
+    valuesToSet["data.oldAc"] = record?.data?.ac;
+    valuesToSet["data.oldSenses"] = record?.data?.senses;
+    valuesToSet["data.oldSpeed"] = record?.data?.speed;
+    valuesToSet["data.oldResistances"] = record?.data?.resistances;
+    valuesToSet["data.oldImmunities"] = record?.data?.immunities;
+    valuesToSet["data.oldVulnerabilities"] = record?.data?.vulnerabilities;
     // We always unhide the polymorph attack list when we're polymorphing
-    valuesToSet['fields.polymorphActions.hidden'] = false;
-    valuesToSet['data.polymorphActions'] = polymorphActions;
+    valuesToSet["fields.polymorphActions.hidden"] = false;
+    valuesToSet["data.polymorphActions"] = polymorphActions;
 
     // Set the new values
-    valuesToSet['data.strength'] = npc?.data?.strength;
-    valuesToSet['data.dexterity'] = npc?.data?.dexterity;
-    valuesToSet['data.constitution'] = npc?.data?.constitution;
-    valuesToSet['data.ac'] = npc?.data?.ac;
-    valuesToSet['data.senses'] = npc?.data?.senses;
-    valuesToSet['data.speed'] = npc?.data?.speed;
-    valuesToSet['data.resistances'] = npc?.data?.resistances;
-    valuesToSet['data.immunities'] = npc?.data?.immunities;
-    valuesToSet['data.vulnerabilities'] = npc?.data?.vulnerabilities;
+    valuesToSet["data.strength"] = npc?.data?.strength;
+    valuesToSet["data.dexterity"] = npc?.data?.dexterity;
+    valuesToSet["data.constitution"] = npc?.data?.constitution;
+    valuesToSet["data.ac"] = npc?.data?.ac;
+    valuesToSet["data.senses"] = npc?.data?.senses;
+    valuesToSet["data.speed"] = npc?.data?.speed;
+    valuesToSet["data.resistances"] = npc?.data?.resistances;
+    valuesToSet["data.immunities"] = npc?.data?.immunities;
+    valuesToSet["data.vulnerabilities"] = npc?.data?.vulnerabilities;
 
     // First set the recordLink
-    const linkField = selectedValue === 'polymorph' ? 'data.polymorphNpc' : 'data.wildShapeNpc';
+    const linkField =
+      selectedValue === "polymorph" ? "data.polymorphNpc" : "data.wildShapeNpc";
     api.setRecordLink(linkField, recordLink, () => {
       //  Then set the values
       api.setValues(valuesToSet, (record) => {
         // Then set modifiers for the new values
         const moreValuesToSet = {};
-        const statsUpdated = ['strength', 'dexterity', 'constitution'];
-        if (selectedValue === 'polymorph') {
-          statsUpdated.push('intelligence', 'wisdom', 'charisma');
+        const statsUpdated = ["strength", "dexterity", "constitution"];
+        if (selectedValue === "polymorph") {
+          statsUpdated.push("intelligence", "wisdom", "charisma");
         }
-        statsUpdated.forEach(attribute => {
+        statsUpdated.forEach((attribute) => {
           const value = npc?.data?.[attribute];
           setModifier(value, attribute, {}, moreValuesToSet);
         });
@@ -315,17 +402,15 @@
         moreValuesToSet[`data.hitpoints`] = record?.data?.hitpoints;
         // Override AC settings with what NPC had
         if (!hasCircleForms) {
-          moreValuesToSet['data.ac'] = npc?.data?.ac;
-        }
-        else {
+          moreValuesToSet["data.ac"] = npc?.data?.ac;
+        } else {
           // AC equals 13 plus your Wisdom modifier if that total is higher than the Beast’s AC.
-          const wisdomMod = parseInt(record?.data?.wisdomMod || '0', 10);
+          const wisdomMod = parseInt(record?.data?.wisdomMod || "0", 10);
           const newFormAc = 13 + wisdomMod;
           if (newFormAc > npc?.data?.ac) {
-            moreValuesToSet['data.ac'] = newFormAc;
-          }
-          else {
-            moreValuesToSet['data.ac'] = npc?.data?.ac;
+            moreValuesToSet["data.ac"] = newFormAc;
+          } else {
+            moreValuesToSet["data.ac"] = npc?.data?.ac;
           }
         }
 
@@ -335,9 +420,12 @@
         const tokenForRecord = api.getToken();
         if (tokenForRecord) {
           api.addTokenChangeEffect(npc._id, tokenForRecord);
-        }
-        else {
-          api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');
+        } else {
+          api.showNotification(
+            `No token found for Token Change Effect.`,
+            "yellow",
+            "No Token"
+          );
         }
       });
     });
@@ -346,15 +434,27 @@
   function onDropNpc(recordLink) {
     const npc = recordLink?.value;
     // Prompt User to select Polymorph or Wild Shape
-    const options = [{ label: 'Polymorph', value: 'polymorph' }, { label: 'Wild Shape', value: 'wildshape' }];
-    api.showPrompt(`Select Polymorph or Wild Shape`, `Select Polymorph or Wild Shape for ${npc?.name}`, `Select Polymorph or Wild Shape...`, options, null, (value) => onSelectPolymorphOrWildShape(value, recordLink), 'OK', 'Cancel', 1);
+    const options = [
+      { label: "Polymorph", value: "polymorph" },
+      { label: "Wild Shape", value: "wildshape" },
+    ];
+    api.showPrompt(
+      `Select Polymorph or Wild Shape`,
+      `Select Polymorph or Wild Shape for ${npc?.name}`,
+      `Select Polymorph or Wild Shape...`,
+      options,
+      null,
+      (value) => onSelectPolymorphOrWildShape(value, recordLink),
+      "OK",
+      "Cancel",
+      1
+    );
   }
 
   function onDrop(type, recordLink) {
-    if (type === 'feats') {
+    if (type === "feats") {
       onDropFeat(recordLink);
-    }
-    else if (type === 'npcs') {
+    } else if (type === "npcs") {
       onDropNpc(recordLink);
     }
   }
@@ -363,13 +463,18 @@
     // In both cases, we apply a token change effect
     const tokenForRecord = api.getToken();
     if (tokenForRecord) {
-      const effectToRemove = record?.effectIds?.find(effectId => effectId.startsWith('token-'));
+      const effectToRemove = record?.effectIds?.find((effectId) =>
+        effectId.startsWith("token-")
+      );
       if (effectToRemove) {
         api.removeEffectById(effectToRemove, tokenForRecord);
       }
-    }
-    else {
-      api.showNotification(`No token found for Token Change Effect.`, 'yellow', 'No Token');
+    } else {
+      api.showNotification(
+        `No token found for Token Change Effect.`,
+        "yellow",
+        "No Token"
+      );
     }
   }
 
@@ -379,115 +484,134 @@
     }
 
     // We're removing it so proceed
-    api.setValues({
-      'data.polymorphNpc': null,
-      'fields.polymorphNpc.hidden': true,
-      'fields.polymorphNameNone.hidden': false,
-      'fields.Remove Polymorph.hidden': true,
-      'fields.polymorphActions.hidden': true,
-      'data.strength': record?.data?.oldStrength,
-      'data.dexterity': record?.data?.oldDexterity,
-      'data.constitution': record?.data?.oldConstitution,
-      'data.intelligence': record?.data?.oldIntelligence,
-      'data.wisdom': record?.data?.oldWisdom,
-      'data.charisma': record?.data?.oldCharisma,
-      'data.ac': record?.data?.oldAc,
-      'data.senses': record?.data?.oldSenses,
-      'data.speed': record?.data?.oldSpeed,
-      'data.resistances': record?.data?.oldResistances,
-      'data.immunities': record?.data?.oldImmunities,
-      'data.vulnerabilities': record?.data?.oldVulnerabilities,
-    }, () => {
-      // Then update the modifiers
-      const moreValuesToSet = {};
-      ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].forEach(attribute => {
-        const value = record?.data?.[`old${capitalize(attribute)}`];
-        setModifier(value, attribute, moreValuesToSet);
-      });
+    api.setValues(
+      {
+        "data.polymorphNpc": null,
+        "fields.polymorphNpc.hidden": true,
+        "fields.polymorphNameNone.hidden": false,
+        "fields.Remove Polymorph.hidden": true,
+        "fields.polymorphActions.hidden": true,
+        "data.strength": record?.data?.oldStrength,
+        "data.dexterity": record?.data?.oldDexterity,
+        "data.constitution": record?.data?.oldConstitution,
+        "data.intelligence": record?.data?.oldIntelligence,
+        "data.wisdom": record?.data?.oldWisdom,
+        "data.charisma": record?.data?.oldCharisma,
+        "data.ac": record?.data?.oldAc,
+        "data.senses": record?.data?.oldSenses,
+        "data.speed": record?.data?.oldSpeed,
+        "data.resistances": record?.data?.oldResistances,
+        "data.immunities": record?.data?.oldImmunities,
+        "data.vulnerabilities": record?.data?.oldVulnerabilities,
+      },
+      () => {
+        // Then update the modifiers
+        const moreValuesToSet = {};
+        [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma",
+        ].forEach((attribute) => {
+          const value = record?.data?.[`old${capitalize(attribute)}`];
+          setModifier(value, attribute, moreValuesToSet);
+        });
 
-      // Ensure hitpoints and AC are set to the old values after calling setModifier
-      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;
-      moreValuesToSet['data.ac'] = record?.data?.oldAc;
-      api.setValues(moreValuesToSet);
-      // Then remove the effect
-      removePolymorphOrWildShapeEffect();
-    });
+        // Ensure hitpoints and AC are set to the old values after calling setModifier
+        moreValuesToSet["data.hitpoints"] = record?.data?.oldHitpoints;
+        moreValuesToSet["data.ac"] = record?.data?.oldAc;
+        api.setValues(moreValuesToSet);
+        // Then remove the effect
+        removePolymorphOrWildShapeEffect();
+      }
+    );
   }
 
   function removeWildShape() {
     // Reset the old values
-    api.setValues({
-      'data.wildShapeNpc': null,
-      'fields.wildShapeNpc.hidden': true,
-      'fields.wildShapeNameNone.hidden': false,
-      'fields.Remove Wild Shape.hidden': true,
-      'fields.polymorphActions.hidden': true,
-      'data.strength': record?.data?.oldStrength,
-      'data.dexterity': record?.data?.oldDexterity,
-      'data.constitution': record?.data?.oldConstitution,
-      'data.intelligence': record?.data?.oldIntelligence,
-      'data.wisdom': record?.data?.oldWisdom,
-      'data.charisma': record?.data?.oldCharisma,
-      'data.ac': record?.data?.oldAc,
-      'data.senses': record?.data?.oldSenses,
-      'data.speed': record?.data?.oldSpeed,
-      'data.resistances': record?.data?.oldResistances,
-      'data.immunities': record?.data?.oldImmunities,
-      'data.vulnerabilities': record?.data?.oldVulnerabilities
-    }, (record) => {
-      // Then update the modifiers
-      const moreValuesToSet = {};
-      ['strength', 'dexterity', 'constitution'].forEach(attribute => {
-        const value = record?.data?.[`old${capitalize(attribute)}`];
-        setModifier(value, attribute, moreValuesToSet);
-      });
+    api.setValues(
+      {
+        "data.wildShapeNpc": null,
+        "fields.wildShapeNpc.hidden": true,
+        "fields.wildShapeNameNone.hidden": false,
+        "fields.Remove Wild Shape.hidden": true,
+        "fields.polymorphActions.hidden": true,
+        "data.strength": record?.data?.oldStrength,
+        "data.dexterity": record?.data?.oldDexterity,
+        "data.constitution": record?.data?.oldConstitution,
+        "data.intelligence": record?.data?.oldIntelligence,
+        "data.wisdom": record?.data?.oldWisdom,
+        "data.charisma": record?.data?.oldCharisma,
+        "data.ac": record?.data?.oldAc,
+        "data.senses": record?.data?.oldSenses,
+        "data.speed": record?.data?.oldSpeed,
+        "data.resistances": record?.data?.oldResistances,
+        "data.immunities": record?.data?.oldImmunities,
+        "data.vulnerabilities": record?.data?.oldVulnerabilities,
+      },
+      (record) => {
+        // Then update the modifiers
+        const moreValuesToSet = {};
+        ["strength", "dexterity", "constitution"].forEach((attribute) => {
+          const value = record?.data?.[`old${capitalize(attribute)}`];
+          setModifier(value, attribute, moreValuesToSet);
+        });
 
-      // Ensure hitpoints and AC are set to the old values after calling setModifier
-      moreValuesToSet['data.hitpoints'] = record?.data?.oldHitpoints;
-      moreValuesToSet['data.ac'] = record?.data?.oldAc;
-      api.setValues(moreValuesToSet);
-      // Then remove the effect
-      removePolymorphOrWildShapeEffect();
-    });
+        // Ensure hitpoints and AC are set to the old values after calling setModifier
+        moreValuesToSet["data.hitpoints"] = record?.data?.oldHitpoints;
+        moreValuesToSet["data.ac"] = record?.data?.oldAc;
+        api.setValues(moreValuesToSet);
+        // Then remove the effect
+        removePolymorphOrWildShapeEffect();
+      }
+    );
   }
 </script>
 
 <div>
-  <label variant="bold" textalign='center' label='Feats'></label>
+  <label variant="bold" textalign="center" label="Feats"></label>
 </div>
 
-<div style='width: 100%'>
-  <list listtype="feats_list" field='features'></list>
+<div style="width: 100%">
+  <list listtype="feats_list" field="features"></list>
 </div>
 
-<div style='margin-top: 8px;'>
-  <label variant="bold" textalign='center' label='Features'></label>
+<div style="margin-top: 8px">
+  <label variant="bold" textalign="center" label="Features"></label>
 </div>
 
 <table>
   <tbody>
     <tr>
-      <td><label label='Classes:'></label></td>
+      <td><label label="Classes:"></label></td>
       <td>
-        <list listtype="class_list_no_delete" field='classes'></list>
+        <list listtype="class_list_no_delete" field="classes"></list>
       </td>
     </tr>
     <tr>
-      <td><label label='Subclasses:'></label></td>
+      <td><label label="Subclasses:"></label></td>
       <td>
-        <list listtype="class_list_no_delete" field='subclasses'></list>
+        <list listtype="class_list_no_delete" field="subclasses"></list>
       </td>
     </tr>
   </tbody>
 </table>
 
-<div style='width: 100%'>
-  <list listtype="character_feature_list" field='features'></list>
+<div style="width: 100%">
+  <list listtype="character_feature_list" field="features"></list>
 </div>
 
-<div style='margin-top: 8px;'>
-  <dropdown field="weaponMasteries" label='Weapon Masteries' placeholder='Select Weapon Masteries if Applicable'
-    multiselect='6' textalign='center' searchable='true' options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
+<div style="margin-top: 8px">
+  <dropdown
+    field="weaponMasteries"
+    label="Weapon Masteries"
+    placeholder="Select Weapon Masteries if Applicable"
+    multiselect="6"
+    textalign="center"
+    searchable="true"
+    options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
     {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"}, 
     {"label": "Javelin", "value": "Javelin"}, {"label": "Light Hammer", "value": "Light Hammer"}, 
     {"label": "Mace", "value": "Mace"}, {"label": "Quarterstaff", "value": "Quarterstaff"},
@@ -506,49 +630,136 @@
     {"label": "Whip", "value": "Whip"}, {"label": "Blowgun", "value": "Blowgun"},
     {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
     {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
-    {"label": "Pistol", "value": "Pistol"}]'>
+    {"label": "Pistol", "value": "Pistol"}]'
+  >
   </dropdown>
 </div>
 
-
-<div style='margin-top: 8px;'>
-  <label variant="bold" textalign='center' label='Resistances, Immunities, & Vulnerabilities'></label>
+<div style="margin-top: 8px">
+  <label
+    variant="bold"
+    textalign="center"
+    label="Resistances, Immunities, & Vulnerabilities"
+  ></label>
 </div>
 
-<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
-  <stringfield width="33%" multiline='true' maxrows='2' field="vulnerabilities" label="Vulnerabilities"
-    placeholder='None'>
+<div
+  style="
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+  "
+>
+  <stringfield
+    width="33%"
+    multiline="true"
+    maxrows="2"
+    field="vulnerabilities"
+    label="Vulnerabilities"
+    placeholder="None"
+  >
   </stringfield>
-  <stringfield width="33%" multiline='true' maxrows='2' field="resistances" label="Resistances" placeholder='None'>
+  <stringfield
+    width="33%"
+    multiline="true"
+    maxrows="2"
+    field="resistances"
+    label="Resistances"
+    placeholder="None"
+  >
   </stringfield>
-  <stringfield width="33%" multiline='true' maxrows='2' field="immunities" label="Immunities" placeholder='None'>
+  <stringfield
+    width="33%"
+    multiline="true"
+    maxrows="2"
+    field="immunities"
+    label="Immunities"
+    placeholder="None"
+  >
   </stringfield>
 </div>
 
-<div style='margin-top: 8px;'>
-  <label variant="bold" textalign='center' label='Polymorph and Wild Shape'></label>
+<div style="margin-top: 8px">
+  <label
+    variant="bold"
+    textalign="center"
+    label="Polymorph and Wild Shape"
+  ></label>
 </div>
 
-<div style='margin-top: 4px;'>
-  <label textalign='center' size='sm' label='Drag an NPC to this Tab for Wild Shape or Polymorph'></label>
+<div style="margin-top: 4px">
+  <label
+    textalign="center"
+    size="sm"
+    label="Drag an NPC to this Tab for Wild Shape or Polymorph"
+  ></label>
 </div>
 
-<div style='justify-content: center; margin-top: 4px; display: flex; flex-direction: row; gap: 16px;'>
-  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>
-    <label variant="bold" size='sm' textalign='left' label='Polymorph: '></label>
-    <recordlink field="polymorphNpc" hidden="true" onchange="removePolymorph();"></recordlink>
-    <label size='sm' textalign='left' field='polymorphNameNone' label='None'></label>
-    <iconbutton field="Remove Polymorph" size='sm' variant="default"
-      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]' onclick="removePolymorph();">
+<div
+  style="
+    justify-content: center;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+  "
+>
+  <div style="display: flex; flex-direction: row; gap: 4px; margin-top: 4px">
+    <label
+      variant="bold"
+      size="sm"
+      textalign="left"
+      label="Polymorph: "
+    ></label>
+    <recordlink
+      field="polymorphNpc"
+      hidden="true"
+      onchange="removePolymorph();"
+    ></recordlink>
+    <label
+      size="sm"
+      textalign="left"
+      field="polymorphNameNone"
+      label="None"
+    ></label>
+    <iconbutton
+      field="Remove Polymorph"
+      size="sm"
+      variant="default"
+      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
+      onclick="removePolymorph();"
+    >
     </iconbutton>
   </div>
 
-  <div style='display: flex; flex-direction: row; gap: 4px; margin-top: 4px;'>
-    <label variant="bold" size='sm' textalign='left' label='Wild Shape: '></label>
-    <recordlink field="wildShapeNpc" hidden="true" onchange="removeWildShape();"></recordlink>
-    <label size='sm' textalign='left' field='wildShapeNameNone' label='None'></label>
-    <iconbutton field="Remove Wild Shape" size='sm' variant="default"
-      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]' onclick="removeWildShape();">
+  <div style="display: flex; flex-direction: row; gap: 4px; margin-top: 4px">
+    <label
+      variant="bold"
+      size="sm"
+      textalign="left"
+      label="Wild Shape: "
+    ></label>
+    <recordlink
+      field="wildShapeNpc"
+      hidden="true"
+      onchange="removeWildShape();"
+    ></recordlink>
+    <label
+      size="sm"
+      textalign="left"
+      field="wildShapeNameNone"
+      label="None"
+    ></label>
+    <iconbutton
+      field="Remove Wild Shape"
+      size="sm"
+      variant="default"
+      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
+      onclick="removeWildShape();"
+    >
     </iconbutton>
   </div>
 </div>

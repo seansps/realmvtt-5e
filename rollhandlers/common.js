@@ -1,57 +1,61 @@
 function getAbilityFromSkill(skill) {
   switch (skill) {
-    case 'acrobatics':
-      return 'dexterity';
-    case 'animalHandling':
-      return 'wisdom';
-    case 'arcana':
-      return 'intelligence';
-    case 'athletics':
-      return 'strength';
-    case 'deception':
-      return 'charisma';
-    case 'history':
-      return 'intelligence';
-    case 'insight':
-      return 'wisdom';
-    case 'intimidation':
-      return 'charisma';
-    case 'investigation':
-      return 'intelligence';
-    case 'medicine':
-      return 'wisdom';
-    case 'nature':
-      return 'intelligence';
-    case 'perception':
-      return 'wisdom';
-    case 'performance':
-      return 'charisma';
-    case 'persuasion':
-      return 'charisma';
-    case 'religion':
-      return 'intelligence';
-    case 'sleightOfHand':
-      return 'dexterity';
-    case 'stealth':
-      return 'dexterity';
-    case 'survival':
-      return 'wisdom';
+    case "acrobatics":
+      return "dexterity";
+    case "animalHandling":
+      return "wisdom";
+    case "arcana":
+      return "intelligence";
+    case "athletics":
+      return "strength";
+    case "deception":
+      return "charisma";
+    case "history":
+      return "intelligence";
+    case "insight":
+      return "wisdom";
+    case "intimidation":
+      return "charisma";
+    case "investigation":
+      return "intelligence";
+    case "medicine":
+      return "wisdom";
+    case "nature":
+      return "intelligence";
+    case "perception":
+      return "wisdom";
+    case "performance":
+      return "charisma";
+    case "persuasion":
+      return "charisma";
+    case "religion":
+      return "intelligence";
+    case "sleightOfHand":
+      return "dexterity";
+    case "stealth":
+      return "dexterity";
+    case "survival":
+      return "wisdom";
     default:
-      return 'strength'; // Default to strength if no match
+      return "strength"; // Default to strength if no match
   }
 }
 
 function capitalize(string) {
-  if (!string || typeof string !== 'string') return '';
+  if (!string || typeof string !== "string") return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 function normalToCamelCase(str) {
-  return str.toLowerCase().replace(/\s+(.)/g, (match, char) => char.toUpperCase());
+  return str
+    .toLowerCase()
+    .replace(/\s+(.)/g, (match, char) => char.toUpperCase());
 }
 
 function camelToNormal(skill) {
-  return skill.replace(/([A-Z])/g, ' $1').replace(/^./, function (str) { return str.toUpperCase(); });
+  return skill.replace(/([A-Z])/g, " $1").replace(/^./, function (str) {
+    return str.toUpperCase();
+  });
 }
 
 function getProficiencyBonus(level) {
@@ -81,79 +85,79 @@ function getProficiencyBonus(level) {
 
 function getXPForCR(cr) {
   switch (cr) {
-    case '0':
-      return '10';
-    case '1/8':
-      return '25';
-    case '1/4':
-      return '50';
-    case '1/2':
-      return '100';
-    case '1':
-      return '200';
-    case '2':
-      return '450';
-    case '3':
-      return '700';
-    case '4':
-      return '1,100';
-    case '5':
-      return '1,800';
-    case '6':
-      return '2,300';
-    case '7':
-      return '2,900';
-    case '8':
-      return '3,900';
-    case '9':
-      return '5,000';
-    case '10':
-      return '5,900';
-    case '11':
-      return '7,200';
-    case '12':
-      return '8,400';
-    case '13':
-      return '10,000';
-    case '14':
-      return '11,500';
-    case '15':
-      return '13,000';
-    case '16':
-      return '15,000';
-    case '17':
-      return '18,000';
-    case '18':
-      return '20,000';
-    case '19':
-      return '22,000';
-    case '20':
-      return '25,000';
-    case '21':
-      return '33,000';
-    case '22':
-      return '41,000';
-    case '23':
-      return '50,000';
-    case '24':
-      return '62,000';
-    case '25':
-      return '75,000';
-    case '26':
-      return '90,000';
-    case '27':
-      return '105,000';
-    case '28':
-      return '120,000';
-    case '29':
-      return '135,000';
-    case '30':
-      return '155,000';
+    case "0":
+      return "10";
+    case "1/8":
+      return "25";
+    case "1/4":
+      return "50";
+    case "1/2":
+      return "100";
+    case "1":
+      return "200";
+    case "2":
+      return "450";
+    case "3":
+      return "700";
+    case "4":
+      return "1,100";
+    case "5":
+      return "1,800";
+    case "6":
+      return "2,300";
+    case "7":
+      return "2,900";
+    case "8":
+      return "3,900";
+    case "9":
+      return "5,000";
+    case "10":
+      return "5,900";
+    case "11":
+      return "7,200";
+    case "12":
+      return "8,400";
+    case "13":
+      return "10,000";
+    case "14":
+      return "11,500";
+    case "15":
+      return "13,000";
+    case "16":
+      return "15,000";
+    case "17":
+      return "18,000";
+    case "18":
+      return "20,000";
+    case "19":
+      return "22,000";
+    case "20":
+      return "25,000";
+    case "21":
+      return "33,000";
+    case "22":
+      return "41,000";
+    case "23":
+      return "50,000";
+    case "24":
+      return "62,000";
+    case "25":
+      return "75,000";
+    case "26":
+      return "90,000";
+    case "27":
+      return "105,000";
+    case "28":
+      return "120,000";
+    case "29":
+      return "135,000";
+    case "30":
+      return "155,000";
     default:
       if (parseInt(cr, 10) > 30) {
-        return '155,000';
+        return "155,000";
       }
-      return '0';
+      return "0";
   }
 }
 
@@ -161,96 +165,96 @@ function getXPForCR(cr) {
 function getSkills() {
   return [
     {
-      name: 'Acrobatics',
-      field: 'acrobatics',
-      ability: 'dexterity',
+      name: "Acrobatics",
+      field: "acrobatics",
+      ability: "dexterity",
     },
     {
-      name: 'Animal Handling',
-      field: 'animalHandling',
-      ability: 'wisdom',
+      name: "Animal Handling",
+      field: "animalHandling",
+      ability: "wisdom",
     },
     {
-      name: 'Arcana',
-      field: 'arcana',
-      ability: 'intelligence',
+      name: "Arcana",
+      field: "arcana",
+      ability: "intelligence",
     },
     {
-      name: 'Athletics',
-      field: 'athletics',
-      ability: 'strength',
+      name: "Athletics",
+      field: "athletics",
+      ability: "strength",
     },
     {
-      name: 'Deception',
-      field: 'deception',
-      ability: 'charisma',
+      name: "Deception",
+      field: "deception",
+      ability: "charisma",
     },
     {
-      name: 'History',
-      field: 'history',
-      ability: 'intelligence',
+      name: "History",
+      field: "history",
+      ability: "intelligence",
     },
     {
-      name: 'Insight',
-      field: 'insight',
-      ability: 'wisdom',
+      name: "Insight",
+      field: "insight",
+      ability: "wisdom",
     },
     {
-      name: 'Intimidation',
-      field: 'intimidation',
-      ability: 'charisma',
+      name: "Intimidation",
+      field: "intimidation",
+      ability: "charisma",
     },
     {
-      name: 'Investigation',
-      field: 'investigation',
-      ability: 'intelligence',
+      name: "Investigation",
+      field: "investigation",
+      ability: "intelligence",
     },
     {
-      name: 'Medicine',
-      field: 'medicine',
-      ability: 'wisdom',
+      name: "Medicine",
+      field: "medicine",
+      ability: "wisdom",
     },
     {
-      name: 'Nature',
-      field: 'nature',
-      ability: 'intelligence',
+      name: "Nature",
+      field: "nature",
+      ability: "intelligence",
     },
     {
-      name: 'Perception',
-      field: 'perception',
-      ability: 'wisdom',
+      name: "Perception",
+      field: "perception",
+      ability: "wisdom",
     },
     {
-      name: 'Performance',
-      field: 'performance',
-      ability: 'charisma',
+      name: "Performance",
+      field: "performance",
+      ability: "charisma",
     },
     {
-      name: 'Persuasion',
-      field: 'persuasion',
-      ability: 'charisma',
+      name: "Persuasion",
+      field: "persuasion",
+      ability: "charisma",
     },
     {
-      name: 'Religion',
-      field: 'religion',
-      ability: 'intelligence',
+      name: "Religion",
+      field: "religion",
+      ability: "intelligence",
     },
     {
-      name: 'Sleight of Hand',
-      field: 'sleightOfHand',
-      ability: 'dexterity',
+      name: "Sleight of Hand",
+      field: "sleightOfHand",
+      ability: "dexterity",
     },
     {
-      name: 'Stealth',
-      field: 'stealth',
-      ability: 'dexterity',
+      name: "Stealth",
+      field: "stealth",
+      ability: "dexterity",
     },
     {
-      name: 'Survival',
-      field: 'survival',
-      ability: 'wisdom',
-    }
-  ]
+      name: "Survival",
+      field: "survival",
+      ability: "wisdom",
+    },
+  ];
 }
 
 // Get the carry and drag/lift/push weights for a creature
@@ -258,31 +262,25 @@ function getCarryWeight(strength, size) {
   let carry = 0;
   let dragLiftPush = 0;
 
-  if (size.toLowerCase() === 'tiny') {
+  if (size.toLowerCase() === "tiny") {
     carry = strength * 7.5;
     dragLiftPush = strength * 15;
-  }
-  else if (size.toLowerCase() === 'small') {
+  } else if (size.toLowerCase() === "small") {
     carry = strength * 15;
     dragLiftPush = strength * 30;
-  }
-  else if (size.toLowerCase() === 'medium') {
+  } else if (size.toLowerCase() === "medium") {
     carry = strength * 15;
     dragLiftPush = strength * 30;
-  }
-  else if (size.toLowerCase() === 'large') {
+  } else if (size.toLowerCase() === "large") {
     carry = strength * 30;
     dragLiftPush = strength * 60;
-  }
-  else if (size.toLowerCase() === 'huge') {
+  } else if (size.toLowerCase() === "huge") {
     carry = strength * 60;
     dragLiftPush = strength * 120;
-  }
-  else if (size.toLowerCase() === 'gargantuan') {
+  } else if (size.toLowerCase() === "gargantuan") {
     carry = strength * 120;
     dragLiftPush = strength * 240;
-  }
-  else {
+  } else {
     // Default to Medium
     carry = strength * 15;
     dragLiftPush = strength * 30;
@@ -290,12 +288,60 @@ function getCarryWeight(strength, size) {
 
   return {
     carry: carry,
-    dragLiftPush: dragLiftPush
+    dragLiftPush: dragLiftPush,
   };
 }
 
+function getHpBonusFromModifiers(hpMaxMods) {
+  let totalBonus = 0;
+  hpMaxMods.forEach((mod) => {
+    // For string type in HP max, we'll use it as a field
+    if (mod.valueType === "string") {
+      // After getting the replacements from getEffectsAndModifiers, we need to evaluate any math
+      let bonus = evaluateMath(mod.value);
+      if (!isNaN(bonus)) {
+        totalBonus += bonus;
+      }
+    } else {
+      const bonus = parseInt(mod.value || "0", 10);
+      if (!isNaN(bonus)) {
+        totalBonus += bonus;
+      }
+    }
+  });
+  return totalBonus;
+}
+
+function getHpForLevel(conMod, recordOverride = null) {
+  let thisRecord = recordOverride || record;
+  // Get the max HP we should have at our current level
+  const hpByLevel = thisRecord?.data?.hpByLevel || "[]";
+  const hpByLevelArr = JSON.parse(hpByLevel);
+  let totalHp = 0;
+  // Get all the HP we rolled or set for each level
+  hpByLevelArr.forEach((hpLevel) => {
+    let thisLevel = hpLevel.hp + conMod;
+    // Each time you level you roll or take average + CON MOD to a min of 1
+    if (thisLevel < 1) {
+      thisLevel = 1;
+    }
+    totalHp += thisLevel;
+  });
+
+  // Get HP Max modifier
+  const hpMaxMods = getEffectsAndModifiersForToken(thisRecord, "hitpoints");
+  totalHp += getHpBonusFromModifiers(hpMaxMods);
+
+  return totalHp;
+}
+
 // On Change of Attributes, Set the Relavant Mods
-function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet = null) {
+function setModifier(
+  value,
+  attribute,
+  skillProfOverrides = {},
+  moreValuesToSet = null
+) {
   const modField = `${attribute}Mod`;
   const saveField = `${attribute}Save`;
   const saveProf = `${attribute}Prof`;
@@ -313,44 +359,50 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
   }
   valuesToSet[`data.${modField}`] = modValStr;
 
-  let proficiencyBonus = parseInt(record?.data?.['proficiencyBonus'] || '2', 10);
+  let proficiencyBonus = parseInt(
+    record?.data?.["proficiencyBonus"] || "2",
+    10
+  );
   if (isNaN(proficiencyBonus)) {
     proficiencyBonus = 0;
   }
 
-  const isProficient = record?.data?.[saveProf] === 'true';
+  const isProficient = record?.data?.[saveProf] === "true";
   const savVal = isProficient ? modVal + proficiencyBonus : modVal;
   valuesToSet[`data.${saveField}`] = savVal;
 
   // Update hit points if this is constitution
-  if (attribute === 'constitution') {
-    const level = parseInt(record?.data?.level || '0', 10);
-    const hpByLevel = record?.data?.hpByLevel || '[]';
-    const hpByLevelArr = JSON.parse(hpByLevel);
-    const newHp = getHpForLevel(modVal, level, hpByLevelArr);
+  if (attribute === "constitution") {
+    const level = parseInt(record?.data?.level || "0", 10);
+    const newHp = getHpForLevel(modVal);
     if (level > 0 && newHp < 1) {
       // To a minimum of 1
       newHp = 1;
     }
     // Set our HP to be totalHp per level + conMod * level
-    valuesToSet['data.hitpoints'] = newHp;
+    valuesToSet["data.hitpoints"] = newHp;
   }
 
   // Update carry weight if strength
-  if (attribute === 'strength') {
-    const size = record?.data?.size || 'Medium';
+  if (attribute === "strength") {
+    const size = record?.data?.size || "Medium";
     const { carry, dragLiftPush } = getCarryWeight(val, size);
-    valuesToSet['data.maxCarryWeight'] = carry;
-    valuesToSet['data.dragLiftPush'] = dragLiftPush;
+    valuesToSet["data.maxCarryWeight"] = carry;
+    valuesToSet["data.dragLiftPush"] = dragLiftPush;
   }
 
   // Update AC as needed
-  const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
-  let dexMod = attribute !== 'dexterity' ? parseInt(record?.data?.dexterityMod || '0', 10) : modVal;
-  if (moreValuesToSet && moreValuesToSet[`data.dexterityMod`]
-    && parseInt(moreValuesToSet[`data.dexterityMod`] || '0', 10) > dexMod
+  const acCalculationMods = getEffectsAndModifiers(["armorClassCalculation"]);
+  let dexMod =
+    attribute !== "dexterity"
+      ? parseInt(record?.data?.dexterityMod || "0", 10)
+      : modVal;
+  if (
+    moreValuesToSet &&
+    moreValuesToSet[`data.dexterityMod`] &&
+    parseInt(moreValuesToSet[`data.dexterityMod`] || "0", 10) > dexMod
   ) {
-    dexMod = parseInt(moreValuesToSet[`data.dexterityMod`] || '0', 10);
+    dexMod = parseInt(moreValuesToSet[`data.dexterityMod`] || "0", 10);
   }
   const bestEquippedArmor = record?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
@@ -358,19 +410,31 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
     // PC's base class is the best equipped armor if provided
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
-    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    armorClass =
+      bestEquippedArmor.ac +
+      (bestEquippedArmor.maxDex
+        ? Math.min(dexMod, bestEquippedArmor.maxDex)
+        : 0);
   }
   let calcBonus = 0;
   // Only add acCalculationMods if we are unarmored
   if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
-    acCalculationMods.forEach(mod => {
+    acCalculationMods.forEach((mod) => {
       // We only benefit from the highest AC calculation modifier
-      if (mod.field && mod.field !== 'dexterity') {
-        let acBonus = attribute !== mod.field ? parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10) : modVal;
-        if (moreValuesToSet && moreValuesToSet[`data.${mod.field}Mod`]
-          && parseInt(moreValuesToSet[`data.${mod.field}Mod`] || '0', 10) > acBonus
+      if (mod.field && mod.field !== "dexterity") {
+        let acBonus =
+          attribute !== mod.field
+            ? parseInt(record?.data?.[`${mod.field}Mod`] || "0", 10)
+            : modVal;
+        if (
+          moreValuesToSet &&
+          moreValuesToSet[`data.${mod.field}Mod`] &&
+          parseInt(moreValuesToSet[`data.${mod.field}Mod`] || "0", 10) > acBonus
         ) {
-          acBonus = parseInt(moreValuesToSet[`data.${mod.field}Mod`] || '0', 10);
+          acBonus = parseInt(
+            moreValuesToSet[`data.${mod.field}Mod`] || "0",
+            10
+          );
         }
         if (acBonus > calcBonus) {
           calcBonus = acBonus;
@@ -379,10 +443,10 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
     });
   }
   // Get general AC bonuses
-  const acBonuses = getEffectsAndModifiers(['armorClassBonus']);
-  acBonuses.forEach(mod => {
+  const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
+  acBonuses.forEach((mod) => {
     if (mod.value) {
-      const acBonus = parseInt(mod.value || '0', 10);
+      const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
       }
@@ -393,38 +457,38 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
     armorClass += bestEquippedArmor.shieldAc;
   }
   armorClass += calcBonus;
-  valuesToSet['data.ac'] = armorClass;
+  valuesToSet["data.ac"] = armorClass;
 
-  getSkills().forEach(skill => {
+  getSkills().forEach((skill) => {
     // Get the ability being used for this skill, fallback to the skill's default
     const ability = record?.data?.[`${skill.field}Ability`] || skill.ability;
 
     if (ability === attribute) {
       // Skills can be also be half, proficient, or expertise
-      const proficiency = skillProfOverrides[`data.${skill.field}Prof`] || record?.data?.[`${skill.field}Prof`] || 'false';
-      const isHalfProficient = proficiency === 'half';
-      const isExpertise = proficiency === 'expertise';
-      const isProficient = proficiency === 'true';
+      const proficiency =
+        skillProfOverrides[`data.${skill.field}Prof`] ||
+        record?.data?.[`${skill.field}Prof`] ||
+        "false";
+      const isHalfProficient = proficiency === "half";
+      const isExpertise = proficiency === "expertise";
+      const isProficient = proficiency === "true";
       let totalVal = modVal;
       if (isHalfProficient) {
-        totalVal = modVal + (Math.floor(proficiencyBonus / 2));
+        totalVal = modVal + Math.floor(proficiencyBonus / 2);
         valuesToSet[`data.${skill.field}Mod`] = totalVal;
-      }
-      else if (isExpertise) {
-        totalVal = modVal + (proficiencyBonus * 2);
+      } else if (isExpertise) {
+        totalVal = modVal + proficiencyBonus * 2;
         valuesToSet[`data.${skill.field}Mod`] = totalVal;
-      }
-      else if (isProficient) {
+      } else if (isProficient) {
         totalVal = modVal + proficiencyBonus;
         valuesToSet[`data.${skill.field}Mod`] = totalVal;
-      }
-      else {
+      } else {
         totalVal = modVal;
         valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
 
-      if (skill.field === 'perception') {
-        valuesToSet['data.passivePerception'] = 10 + totalVal;
+      if (skill.field === "perception") {
+        valuesToSet["data.passivePerception"] = 10 + totalVal;
       }
     }
   });
@@ -434,20 +498,20 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
   otherSkills.forEach((skill, index) => {
     if (skill?.data?.ability === attribute) {
       // Skills can be also be half, proficient, or expertise
-      const proficiency = skill?.data?.skillProf || 'false';
-      const isHalfProficient = proficiency === 'half';
-      const isExpertise = proficiency === 'expertise';
-      const isProficient = proficiency === 'true';
+      const proficiency = skill?.data?.skillProf || "false";
+      const isHalfProficient = proficiency === "half";
+      const isExpertise = proficiency === "expertise";
+      const isProficient = proficiency === "true";
       if (isHalfProficient) {
-        valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + (Math.floor(proficiencyBonus / 2));
-      }
-      else if (isExpertise) {
-        valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + (proficiencyBonus * 2);
-      }
-      else if (isProficient) {
-        valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal + proficiencyBonus;
-      }
-      else {
+        valuesToSet[`data.otherSkills.${index}.data.skillMod`] =
+          modVal + Math.floor(proficiencyBonus / 2);
+      } else if (isExpertise) {
+        valuesToSet[`data.otherSkills.${index}.data.skillMod`] =
+          modVal + proficiencyBonus * 2;
+      } else if (isProficient) {
+        valuesToSet[`data.otherSkills.${index}.data.skillMod`] =
+          modVal + proficiencyBonus;
+      } else {
         valuesToSet[`data.otherSkills.${index}.data.skillMod`] = modVal;
       }
     }
@@ -456,23 +520,50 @@ function setModifier(value, attribute, skillProfOverrides = {}, moreValuesToSet 
   // Go through abilityGroups and update maxDailyUses if needed
   const abilityGroups = record?.data?.abilityGroups || [];
   abilityGroups.forEach((abilityGroup, index) => {
-    if (abilityGroup?.data?.fieldsToAddToUses && abilityGroup?.data?.fieldsToAddToUses.length > 0) {
-      const totalUses = getTotalValueFromFields(record, abilityGroup?.data?.fieldsToAddToUses || [], valuesToSet);
+    if (
+      abilityGroup?.data?.fieldsToAddToUses &&
+      abilityGroup?.data?.fieldsToAddToUses.length > 0
+    ) {
+      const totalUses = getTotalValueFromFields(
+        record,
+        abilityGroup?.data?.fieldsToAddToUses || [],
+        valuesToSet
+      );
       if (totalUses > 0) {
-        valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] = totalUses;
+        valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] =
+          totalUses;
       }
     }
   });
 
   if (Object.keys(valuesToSet).length > 0) {
     if (moreValuesToSet) {
-      Object.keys(valuesToSet).forEach(key => {
+      Object.keys(valuesToSet).forEach((key) => {
         moreValuesToSet[key] = valuesToSet[key];
       });
-    }
-    else {
+    } else {
       api.setValues(valuesToSet);
     }
+  }
+}
+
+function evaluateMath(stringValue) {
+  // Return 0 if no value provided
+  if (!stringValue) return 0;
+
+  try {
+    // Remove all whitespace and validate string only contains valid math characters
+    const sanitizedString = stringValue.replace(/\s+/g, "");
+    if (!/^[0-9+\-*/().]+$/.test(sanitizedString)) {
+      return 0;
+    }
+
+    // Use Function constructor to safely evaluate the math expression
+    // Math.floor to match D&D's rounding down convention
+    return Math.floor(Function(`'use strict'; return (${sanitizedString})`)());
+  } catch (e) {
+    // Return 0 if evaluation fails
+    return 0;
   }
 }
 
@@ -487,13 +578,13 @@ function applyMath(value, math) {
   }
 
   switch (operator) {
-    case '+':
+    case "+":
       return value + number;
-    case '-':
+    case "-":
       return value - number;
-    case '*':
+    case "*":
       return value * number;
-    case '/':
+    case "/":
       return Math.floor(value / number); // Always round down
     default:
       return value;
@@ -508,7 +599,7 @@ function getDamageType(rollString) {
 
 // Doubles the dice in the damage string
 function doubleDamageDice(damage) {
-  if (damage && typeof damage === 'string' && damage.includes('d')) {
+  if (damage && typeof damage === "string" && damage.includes("d")) {
     return damage.replace(/(\d+)?d(\d+)/g, (match, n, d) => {
       n = n ? parseInt(n) * 2 : 2; // If n is undefined, it means 1d, so we use 2
       return `${n}d${d}`;
@@ -518,39 +609,63 @@ function doubleDamageDice(damage) {
 }
 
 // Checks for replacements in a string modifier
-function checkForReplacements(value, replacements = {}) {
+function checkForReplacements(value, replacements = {}, recordOverride = null) {
+  let thisRecord = recordOverride || record;
   // Case for 'Half <class> Level'
   const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
   const matchClassLevel = value.match(/(\w+) [Ll]evel/);
   if (matchLevel) {
     const className = matchLevel[1];
-    const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
+    const characterClassLevel =
+      (thisRecord?.data?.classLevels || "").match(`${className} (\\d+)`)?.[1] ||
+      0;
     if (characterClassLevel) {
-      value = value.replaceAll(matchLevel[0], Math.floor(parseInt(characterClassLevel || '1', 10) / 2));
+      value = value.replaceAll(
+        matchLevel[0],
+        Math.floor(parseInt(characterClassLevel || "1", 10) / 2)
+      );
     }
   }
   // Case for '<class> Level'
   else if (matchClassLevel) {
     const className = matchClassLevel[1];
-    const characterClassLevel = (record?.data?.classLevels || '').match(`${className} (\\d+)`)?.[1] || 0;
+    const characterClassLevel =
+      (thisRecord?.data?.classLevels || "").match(`${className} (\\d+)`)?.[1] ||
+      0;
     if (characterClassLevel) {
-      value = value.replaceAll(matchClassLevel[0], parseInt(characterClassLevel || '1', 10));
+      value = value.replaceAll(
+        matchClassLevel[0],
+        parseInt(characterClassLevel || "1", 10)
+      );
     }
   }
   // Case for 'Proficiency Bonus'
   const matchProficiencyBonus = value.match(/[Pp]roficiency [Bb]onus/);
   if (matchProficiencyBonus) {
-    value = value.replaceAll(matchProficiencyBonus[0], record?.data?.proficiencyBonus || 0);
+    value = value.replaceAll(
+      matchProficiencyBonus[0],
+      thisRecord?.data?.proficiencyBonus || 0
+    );
   }
   // Case for Strength|Dexterity|Constitution|Wisdom|Intelligence|Charisma Modifier
-  const matchModifier = value.match(/[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/);
+  const matchModifier = value.match(
+    /[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/
+  );
   if (matchModifier) {
-    const attributeMod = parseInt(record?.data?.[`${matchModifier[0].toLowerCase().replace(' ', '').replace('modifier', '')}Mod`] || '0', 10);
+    const attributeMod = parseInt(
+      thisRecord?.data?.[
+        `${matchModifier[0]
+          .toLowerCase()
+          .replace(" ", "")
+          .replace("modifier", "")}Mod`
+      ] || "0",
+      10
+    );
     value = value.replaceAll(matchModifier[0], attributeMod);
   }
   // Check for replacements in the replacements object
   if (replacements && Object.keys(replacements).length > 0) {
-    Object.keys(replacements).forEach(key => {
+    Object.keys(replacements).forEach((key) => {
       value = value.replaceAll(key, replacements[key]);
     });
   }
@@ -558,32 +673,48 @@ function checkForReplacements(value, replacements = {}) {
 }
 
 function isClassLevel(field) {
-  return ['barbarianLevel', 'bardLevel', 'clericLevel', 'druidLevel', 'fighterLevel', 'monkLevel', 'paladinLevel', 'rangerLevel', 'rogueLevel', 'sorcererLevel', 'warlockLevel', 'wizardLevel'].includes(field);
+  return [
+    "barbarianLevel",
+    "bardLevel",
+    "clericLevel",
+    "druidLevel",
+    "fighterLevel",
+    "monkLevel",
+    "paladinLevel",
+    "rangerLevel",
+    "rogueLevel",
+    "sorcererLevel",
+    "warlockLevel",
+    "wizardLevel",
+  ].includes(field);
 }
 
 function getClassLevel(recordContext, field, fieldValueOverrides) {
-  const className = field.replace('Level', '');
-  let classLevels = recordContext?.data?.classLevels || '';
+  const className = field.replace("Level", "");
+  let classLevels = recordContext?.data?.classLevels || "";
   if (fieldValueOverrides && fieldValueOverrides[`data.classLevels`]) {
     classLevels = fieldValueOverrides[`data.classLevels`];
   }
-  const classLevel = classLevels.toLowerCase().match(`${className} (\\d+)`)?.[1] || 0;
-  return parseInt(classLevel || '0', 10);
+  const classLevel =
+    classLevels.toLowerCase().match(`${className} (\\d+)`)?.[1] || 0;
+  return parseInt(classLevel || "0", 10);
 }
 
-function getTotalValueFromFields(recordContext, fieldsToAddToUses, fieldValueOverrides) {
+function getTotalValueFromFields(
+  recordContext,
+  fieldsToAddToUses,
+  fieldValueOverrides
+) {
   let total = 0;
   let times5 = false;
   fieldsToAddToUses.forEach((field) => {
     let value = 0;
-    if (field === 'times5') {
+    if (field === "times5") {
       times5 = true;
-    }
-    else if (isClassLevel(field)) {
+    } else if (isClassLevel(field)) {
       value = getClassLevel(recordContext, field, fieldValueOverrides);
-    }
-    else {
-      value = parseInt(recordContext?.data?.[field] || '0', 10);
+    } else {
+      value = parseInt(recordContext?.data?.[field] || "0", 10);
     }
     if (isNaN(value)) {
       value = 0;
@@ -612,7 +743,7 @@ function getTotalValueFromFields(recordContext, fieldsToAddToUses, fieldValueOve
 // If field is provided, it will only return effects that match that field
 // If a target is provided, we look for effects for relevant to the caller and the target
 // such as attackTargeting, attackTargetingFive, attackTargetingGreaterFive
-function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
+function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
   let results = [];
 
   // First collect modifiers from effects
@@ -620,10 +751,10 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
-      const ruleType = rule?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = rule.value || '';
-      if (rule.valueType === 'number') {
+      const ruleType = rule?.type || "";
+      const isPenalty = ruleType.toLowerCase().includes("penalty");
+      let value = rule.value || "";
+      if (rule.valueType === "number") {
         value = parseInt(rule.value, 10);
         if (isNaN(value)) {
           value = 0;
@@ -631,62 +762,69 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
         if (isPenalty && value > 0) {
           value = -value;
         }
-      }
-      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
-        value = '-' + value;
+      } else if (
+        rule.valueType === "string" &&
+        !value.trim().startsWith("-") &&
+        isPenalty &&
+        !value.includes("disadvantage")
+      ) {
+        value = "-" + value;
       }
       // Check for strings that require replacements
-      if (rule.valueType === 'string') {
+      if (rule.valueType === "string") {
         value = checkForReplacements(value);
       }
-      if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
+      if (
+        value !== 0 &&
+        (rule.valueType === "number" || rule.valueType === "string")
+      ) {
         results.push({
-          name: effect.name || 'Effect',
+          name: effect.name || "Effect",
           value: value,
           active: true,
           modifierType: ruleType,
-          field: rule?.field || '',
+          field: rule?.field || "",
           valueType: rule.valueType,
           isPenalty: isPenalty,
           isEffect: true,
         });
-      }
-      else if (rule.valueType === 'api') {
-        let value = parseInt(record?.effectValues?.[effect?._id] || '0', 10);
+      } else if (rule.valueType === "api") {
+        let value = parseInt(record?.effectValues?.[effect?._id] || "0", 10);
         if (isPenalty && value > 0) {
           value = -value;
         }
         if (value !== 0) {
           results.push({
-            name: effect.name || 'Effect',
+            name: effect.name || "Effect",
             value: value,
             active: true,
             modifierType: ruleType,
-            field: rule?.field || '',
+            field: rule?.field || "",
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
           });
         }
-      }
-      else if (rule.valueType === 'stack') {
+      } else if (rule.valueType === "stack") {
         // The value is the number of times they have this effect
-        let value = record?.effectIds?.filter(id => id === effect?._id).length;
+        let value = record?.effectIds?.filter(
+          (id) => id === effect?._id
+        ).length;
         if (isPenalty && value > 0) {
           value = -value;
         }
         // Check if there is addtional math to apply to it
-        const math = rule?.value || '';
+        const math = rule?.value || "";
         if (math) {
           value = applyMath(value, math);
         }
         if (value !== 0) {
           results.push({
-            name: effect.name || 'Effect',
+            name: effect.name || "Effect",
             value: value,
             active: true,
             modifierType: ruleType,
-            field: rule?.field || '',
+            field: rule?.field || "",
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
@@ -700,15 +838,18 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
   const features = record?.data?.features || [];
   const items = record?.data?.inventory || [];
   // Filter items that are not equipped or that require attunement and not attuned
-  const equippedItems = items.filter(item => item.data?.carried === 'equipped'
-    && (!item.data?.attunement || item.data?.attuned === 'true'));
+  const equippedItems = items.filter(
+    (item) =>
+      item.data?.carried === "equipped" &&
+      (!item.data?.attunement || item.data?.attuned === "true")
+  );
   [...features, ...equippedItems].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
     modifiers.forEach((modifier) => {
-      const ruleType = modifier.data?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = modifier.data?.value || '';
-      if (modifier.data?.valueType === 'number') {
+      const ruleType = modifier.data?.type || "";
+      const isPenalty = ruleType.toLowerCase().includes("penalty");
+      let value = modifier.data?.value || "";
+      if (modifier.data?.valueType === "number") {
         value = parseInt(modifier.data?.value, 10);
         if (isNaN(value)) {
           value = 0;
@@ -716,32 +857,34 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
         if (isPenalty && value > 0) {
           value = -value;
         }
-      }
-      else if (modifier.data?.valueType === 'field') {
-        const fieldToUse = modifier.data?.value || '';
+      } else if (modifier.data?.valueType === "field") {
+        const fieldToUse = modifier.data?.value || "";
         if (fieldToUse) {
-          value = record?.data?.[fieldToUse] || '';
+          value = record?.data?.[fieldToUse] || "";
         }
-      }
-      else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
-        value = '-' + value;
+      } else if (
+        modifier.data?.valueType === "string" &&
+        !value.trim().startsWith("-") &&
+        isPenalty
+      ) {
+        value = "-" + value;
       }
 
       // Check for strings that require replacements
-      if (modifier.data?.valueType === 'string') {
+      if (modifier.data?.valueType === "string") {
         value = checkForReplacements(value);
       }
 
       // Only relevant if it has a value
       if (value !== 0) {
-        // Check if this only applies to equipped item and mark it with ID if so 
+        // Check if this only applies to equipped item and mark it with ID if so
         const itemOnly = modifier.data?.itemOnly || false;
         results.push({
-          name: feature?.name || 'Feature',
+          name: feature?.name || "Feature",
           value: value,
           active: modifier.data?.active === true,
           modifierType: ruleType,
-          field: modifier.data?.field || '',
+          field: modifier.data?.field || "",
           valueType: modifier.data?.valueType,
           itemId: itemOnly ? feature?._id : undefined,
           isPenalty: isPenalty,
@@ -752,31 +895,35 @@ function getEffectsAndModifiers(types = [], field = '', itemId = undefined) {
   });
 
   // Special case for armor, if this is a stealth check
-  if (field === 'stealth') {
+  if (field === "stealth") {
     const bestEquippedArmor = record?.data?.armor || undefined;
     if (bestEquippedArmor?.stealthPenalty) {
       results.push({
-        name: 'Disadvantage due to Armor',
-        value: 'disadvantage',
+        name: "Disadvantage due to Armor",
+        value: "disadvantage",
         active: true,
-        modifierType: 'skillPenalty',
+        modifierType: "skillPenalty",
         isPenalty: true,
-        field: 'stealth',
+        field: "stealth",
         isEffect: false,
       });
     }
   }
 
   if (types && types.length > 0) {
-    results = results.filter(r => types.includes(r.modifierType));
+    results = results.filter((r) => types.includes(r.modifierType));
   }
 
-  if (field && field !== '') {
-    results = results.filter(r => r.field === field || r.field === 'all' || !r.field);
+  if (field && field !== "") {
+    results = results.filter(
+      (r) => r.field === field || r.field === "all" || !r.field
+    );
   }
 
   // Filter by itemId if provided
-  results = results.filter(r => r.itemId === itemId || r.itemId === undefined);
+  results = results.filter(
+    (r) => r.itemId === itemId || r.itemId === undefined
+  );
 
   return results;
 }
@@ -790,17 +937,20 @@ function getAttackModifiersForTarget(target, distance) {
   let results = [];
 
   // Get effects that are relevant to the target
-  const effectsToCheck = ['attackTargeting'];
+  const effectsToCheck = ["attackTargeting"];
   // If we're within 5 feet, add the attackTargetingFive effect
   if (distance !== undefined && distance !== null && distance <= 5) {
-    effectsToCheck.push('attackTargetingFive');
+    effectsToCheck.push("attackTargetingFive");
   }
   // If we're greater than 5 feet, add the attackTargetingGreaterFive effect
   if (distance !== undefined && distance > 5) {
-    effectsToCheck.push('attackTargetingGreaterFive');
+    effectsToCheck.push("attackTargetingGreaterFive");
   }
-  const attackTargetingEffects = getEffectsAndModifiersForToken(target, effectsToCheck);
-  attackTargetingEffects.forEach(r => {
+  const attackTargetingEffects = getEffectsAndModifiersForToken(
+    target,
+    effectsToCheck
+  );
+  attackTargetingEffects.forEach((r) => {
     results.push({
       ...r,
       name: r.isEffect ? `Target Has the ${r.name} Effect` : r.name,
@@ -811,7 +961,12 @@ function getAttackModifiersForTarget(target, distance) {
 }
 
 // Same as getEffectsAndModifiers but for a token that is passed
-function getEffectsAndModifiersForToken(target, types = [], field = '', itemId = undefined) {
+function getEffectsAndModifiersForToken(
+  target,
+  types = [],
+  field = "",
+  itemId = undefined
+) {
   if (!target) {
     return [];
   }
@@ -822,10 +977,10 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
-      const ruleType = rule?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = rule.value || '';
-      if (rule.valueType === 'number') {
+      const ruleType = rule?.type || "";
+      const isPenalty = ruleType.toLowerCase().includes("penalty");
+      let value = rule.value || "";
+      if (rule.valueType === "number") {
         value = parseInt(rule.value, 10);
         if (isNaN(value)) {
           value = 0;
@@ -833,52 +988,59 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
         if (isPenalty && value > 0) {
           value = -value;
         }
-      }
-      else if (rule.valueType === 'string' && !value.trim().startsWith('-') && isPenalty && !value.includes('disadvantage')) {
-        value = '-' + value;
+      } else if (
+        rule.valueType === "string" &&
+        !value.trim().startsWith("-") &&
+        isPenalty &&
+        !value.includes("disadvantage")
+      ) {
+        value = "-" + value;
       }
       // Check for strings that require replacements
-      if (rule.valueType === 'string') {
-        value = checkForReplacements(value);
+      if (rule.valueType === "string") {
+        value = checkForReplacements(value, {}, target);
       }
-      if (value !== 0 && (rule.valueType === 'number' || rule.valueType === 'string')) {
+      if (
+        value !== 0 &&
+        (rule.valueType === "number" || rule.valueType === "string")
+      ) {
         results.push({
-          name: effect.name || 'Effect',
+          name: effect.name || "Effect",
           value: value,
           active: true,
           modifierType: ruleType,
-          field: rule?.field || '',
+          field: rule?.field || "",
           valueType: rule.valueType,
           isPenalty: isPenalty,
           isEffect: true,
         });
-      }
-      else if (rule.valueType === 'api') {
-        let value = parseInt(target?.effectValues?.[effect?._id] || '0', 10);
+      } else if (rule.valueType === "api") {
+        let value = parseInt(target?.effectValues?.[effect?._id] || "0", 10);
         if (isPenalty && value > 0) {
           value = -value;
         }
         if (value !== 0) {
           results.push({
-            name: effect.name || 'Effect',
+            name: effect.name || "Effect",
             value: value,
             active: true,
             modifierType: ruleType,
-            field: rule?.field || '',
+            field: rule?.field || "",
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
           });
         }
-      }
-      else if (rule.valueType === 'stack') {
+      } else if (rule.valueType === "stack") {
         // The value is the number of times they have this effect
-        let value = target?.effectIds?.filter(id => id === effect?._id).length;
+        let value = target?.effectIds?.filter(
+          (id) => id === effect?._id
+        ).length;
         if (isPenalty && value > 0) {
           value = -value;
         }
         // Check if there is addtional math to apply to it
-        const math = rule?.value || '';
+        const math = rule?.value || "";
         if (math) {
           value = applyMath(value, math);
         }
@@ -887,11 +1049,11 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
         }
         if (value !== 0) {
           results.push({
-            name: effect.name || 'Effect',
+            name: effect.name || "Effect",
             value: value,
             active: true,
             modifierType: ruleType,
-            field: rule?.field || '',
+            field: rule?.field || "",
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
@@ -905,15 +1067,18 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   const features = target?.data?.features || [];
   const items = target?.data?.inventory || [];
   // Filter items that are not equipped or that require attunement and not attuned
-  const equippedItems = items.filter(item => item.data?.carried === 'equipped'
-    && (!item.data?.attunement || item.data?.attuned === 'true'));
+  const equippedItems = items.filter(
+    (item) =>
+      item.data?.carried === "equipped" &&
+      (!item.data?.attunement || item.data?.attuned === "true")
+  );
   [...features, ...equippedItems].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
     modifiers.forEach((modifier) => {
-      const ruleType = modifier.data?.type || '';
-      const isPenalty = ruleType.toLowerCase().includes('penalty');
-      let value = modifier.data?.value || '';
-      if (modifier.data?.valueType === 'number') {
+      const ruleType = modifier.data?.type || "";
+      const isPenalty = ruleType.toLowerCase().includes("penalty");
+      let value = modifier.data?.value || "";
+      if (modifier.data?.valueType === "number") {
         value = parseInt(modifier.data?.value, 10);
         if (isNaN(value)) {
           value = 0;
@@ -921,32 +1086,34 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
         if (isPenalty && value > 0) {
           value = -value;
         }
-      }
-      else if (modifier.data?.valueType === 'field') {
-        const fieldToUse = modifier.data?.value || '';
+      } else if (modifier.data?.valueType === "field") {
+        const fieldToUse = modifier.data?.value || "";
         if (fieldToUse) {
-          value = target?.data?.[fieldToUse] || '';
+          value = target?.data?.[fieldToUse] || "";
         }
-      }
-      else if (modifier.data?.valueType === 'string' && !value.trim().startsWith('-') && isPenalty) {
-        value = '-' + value;
+      } else if (
+        modifier.data?.valueType === "string" &&
+        !value.trim().startsWith("-") &&
+        isPenalty
+      ) {
+        value = "-" + value;
       }
 
       // Check for strings that require replacements
-      if (modifier.data?.valueType === 'string') {
-        value = checkForReplacements(value);
+      if (modifier.data?.valueType === "string") {
+        value = checkForReplacements(value, {}, target);
       }
 
       // Only relevant if it has a value
       if (value !== 0) {
-        // Check if this only applies to equipped item and mark it with ID if so 
+        // Check if this only applies to equipped item and mark it with ID if so
         const itemOnly = modifier.data?.itemOnly || false;
         results.push({
-          name: feature?.name || 'Feature',
+          name: feature?.name || "Feature",
           value: value,
           active: modifier.data?.active === true,
           modifierType: ruleType,
-          field: modifier.data?.field || '',
+          field: modifier.data?.field || "",
           valueType: modifier.data?.valueType,
           itemId: itemOnly ? feature?._id : undefined,
           isPenalty: isPenalty,
@@ -957,38 +1124,42 @@ function getEffectsAndModifiersForToken(target, types = [], field = '', itemId =
   });
 
   // Special case for armor, if this is a stealth check
-  if (field === 'stealth') {
+  if (field === "stealth") {
     const bestEquippedArmor = target?.data?.armor || undefined;
     if (bestEquippedArmor?.stealthPenalty) {
       results.push({
-        name: 'Disadvantage due to Armor',
-        value: 'disadvantage',
+        name: "Disadvantage due to Armor",
+        value: "disadvantage",
         active: true,
-        modifierType: 'skillPenalty',
+        modifierType: "skillPenalty",
         isPenalty: true,
-        field: 'stealth',
+        field: "stealth",
         isEffect: false,
       });
     }
   }
 
   if (types && types.length > 0) {
-    results = results.filter(r => types.includes(r.modifierType));
+    results = results.filter((r) => types.includes(r.modifierType));
   }
 
-  if (field && field !== '') {
-    results = results.filter(r => r.field === field || r.field === 'all' || !r.field);
+  if (field && field !== "") {
+    results = results.filter(
+      (r) => r.field === field || r.field === "all" || !r.field
+    );
   }
 
   // Filter by itemId if provided
-  results = results.filter(r => r.itemId === itemId || r.itemId === undefined);
+  results = results.filter(
+    (r) => r.itemId === itemId || r.itemId === undefined
+  );
 
   return results;
 }
 
 function getConcentrationMacro(damage) {
   // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30
-  const saveDc = Math.min(Math.max(Math.floor(damage / 2), 10), 30)
+  const saveDc = Math.min(Math.max(Math.floor(damage / 2), 10), 30);
   return `
 \`\`\`Concentration_Check
 const selectedTokens = api.getSelectedOrDroppedToken();
@@ -1032,11 +1203,11 @@ function getMinRollModifier(modifiers) {
   // Look for highest `minroll(number)` modifier and use that as the minRoll
   const minRollMatch = /minroll(\d+)/;
   const minRollMods = modifiers
-    .map(m => {
+    .map((m) => {
       const match = m.value.toString().match(minRollMatch);
       return match ? parseInt(match[1], 10) : null;
     })
-    .filter(value => value !== null);
+    .filter((value) => value !== null);
 
   let minRoll = null;
   if (minRollMods.length) {
@@ -1048,35 +1219,40 @@ function getMinRollModifier(modifiers) {
 // Used for getting the target's best AC (by calculation or what is set if that is higher)
 function getArmorClassForToken(token) {
   const record = token?.record;
-  const acCalculationMods = getEffectsAndModifiersForToken(token, ['armorClassCalculation']);
+  const acCalculationMods = getEffectsAndModifiersForToken(token, [
+    "armorClassCalculation",
+  ]);
 
   // If token is shapeshifted, we use whatever our AC is currently set to
   if (token?.data?.wildShapeNpc || token?.data?.polymorphNpc) {
-    return parseInt(token?.data?.ac || '0', 10);
+    return parseInt(token?.data?.ac || "0", 10);
   }
 
   // If this is a character, we use their dexterity modifier
-  const dexMod = parseInt(token?.data?.dexterityMod || '0', 10);
+  const dexMod = parseInt(token?.data?.dexterityMod || "0", 10);
   const bestEquippedArmor = token?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
   // Else, we use the armor class value (for tokens)
-  if (record?.recordType === 'npcs') {
-    armorClass = parseInt(token?.data?.ac || '0', 10);
-  }
-  else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+  if (record?.recordType === "npcs") {
+    armorClass = parseInt(token?.data?.ac || "0", 10);
+  } else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
     // PC's base class is the best equipped armor if provided
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
-    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    armorClass =
+      bestEquippedArmor.ac +
+      (bestEquippedArmor.maxDex
+        ? Math.min(dexMod, bestEquippedArmor.maxDex)
+        : 0);
   }
 
   let calcBonus = 0;
   // Only add acCalculationMods if we are unarmored
   if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
-    acCalculationMods.forEach(mod => {
+    acCalculationMods.forEach((mod) => {
       // We only benefit from the highest AC calculation modifier
-      if (mod.field && mod.field !== 'dexterity') {
-        const acBonus = parseInt(token?.data?.[`${mod.field}Mod`] || '0', 10);
+      if (mod.field && mod.field !== "dexterity") {
+        const acBonus = parseInt(token?.data?.[`${mod.field}Mod`] || "0", 10);
         if (acBonus > calcBonus) {
           calcBonus = acBonus;
         }
@@ -1084,10 +1260,13 @@ function getArmorClassForToken(token) {
     });
   }
   // Get general AC bonuses
-  const acBonuses = getEffectsAndModifiersForToken(token, ['armorClassBonus', 'armorClassPenalty']);
-  acBonuses.forEach(mod => {
+  const acBonuses = getEffectsAndModifiersForToken(token, [
+    "armorClassBonus",
+    "armorClassPenalty",
+  ]);
+  acBonuses.forEach((mod) => {
     if (mod.value) {
-      const acBonus = parseInt(mod.value || '0', 10);
+      const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
       }
@@ -1100,7 +1279,7 @@ function getArmorClassForToken(token) {
   armorClass += calcBonus;
 
   // Finally, return the max of this value against what they set in their AC field (in case they are apply bonuses there)
-  const acField = parseInt(token?.data?.ac || '0', 10);
+  const acField = parseInt(token?.data?.ac || "0", 10);
 
   return Math.max(armorClass, acField);
 }
@@ -1109,32 +1288,35 @@ function getArmorClassForToken(token) {
 function getArmorClass(bestEquippedArmor) {
   // If we are shapeshifted, we use whatever our AC is currently set to
   if (record?.data?.wildShapeNpc || record?.data?.polymorphNpc) {
-    return parseInt(record?.data?.ac || '0', 10);
+    return parseInt(record?.data?.ac || "0", 10);
   }
 
-  const acCalculationMods = getEffectsAndModifiers(['armorClassCalculation']);
+  const acCalculationMods = getEffectsAndModifiers(["armorClassCalculation"]);
 
   // If this is a character, we use their dexterity modifier
-  const dexMod = parseInt(record?.data?.dexterityMod || '0', 10);
+  const dexMod = parseInt(record?.data?.dexterityMod || "0", 10);
   let armorClass = 10 + dexMod;
   // Else, we use the armor class value
-  if (record?.recordType === 'npcs') {
-    armorClass = parseInt(record?.data?.ac || '0', 10);
-  }
-  else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
+  if (record?.recordType === "npcs") {
+    armorClass = parseInt(record?.data?.ac || "0", 10);
+  } else if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
     // PC's base class is the best equipped armor if provided
     // Add the dex bonus to the ac, using max dex as the max.
     // If maxDex is not set, we assume it is 0
-    armorClass = bestEquippedArmor.ac + (bestEquippedArmor.maxDex ? Math.min(dexMod, bestEquippedArmor.maxDex) : 0);
+    armorClass =
+      bestEquippedArmor.ac +
+      (bestEquippedArmor.maxDex
+        ? Math.min(dexMod, bestEquippedArmor.maxDex)
+        : 0);
   }
 
   let calcBonus = 0;
   // Only add acCalculationMods if we are unarmored
   if (bestEquippedArmor?.ac === 0 || !bestEquippedArmor) {
-    acCalculationMods.forEach(mod => {
+    acCalculationMods.forEach((mod) => {
       // We only benefit from the highest AC calculation modifier
-      if (mod.field && mod.field !== 'dexterity') {
-        const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || '0', 10);
+      if (mod.field && mod.field !== "dexterity") {
+        const acBonus = parseInt(record?.data?.[`${mod.field}Mod`] || "0", 10);
         if (acBonus > calcBonus) {
           calcBonus = acBonus;
         }
@@ -1142,10 +1324,13 @@ function getArmorClass(bestEquippedArmor) {
     });
   }
   // Get general AC bonuses
-  const acBonuses = getEffectsAndModifiers(['armorClassBonus', 'armorClassPenalty']);
-  acBonuses.forEach(mod => {
+  const acBonuses = getEffectsAndModifiers([
+    "armorClassBonus",
+    "armorClassPenalty",
+  ]);
+  acBonuses.forEach((mod) => {
     if (mod.value) {
-      const acBonus = parseInt(mod.value || '0', 10);
+      const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
       }
@@ -1158,7 +1343,7 @@ function getArmorClass(bestEquippedArmor) {
   // Add the bonuses
   armorClass += calcBonus;
 
-  return armorClass
+  return armorClass;
 }
 
 // Gets the best equipped armor for the context of the current PC
@@ -1172,17 +1357,20 @@ function getBestEquippedArmor() {
   };
 
   const items = record.data?.inventory || [];
-  items.forEach(item => {
-    if (item.data?.carried === 'equipped' && item.data?.type === 'armor') {
+  items.forEach((item) => {
+    if (item.data?.carried === "equipped" && item.data?.type === "armor") {
       const ac = item?.data?.armorClass || 0;
       const maxDex = item?.data?.addDex ? item?.data?.maxDex || 0 : 0;
       if (ac > bestEquippedArmor.ac) {
         bestEquippedArmor.ac = ac;
         bestEquippedArmor.maxDex = maxDex;
-        bestEquippedArmor.stealthPenalty = item?.data?.stealth === 'disadvantage';
+        bestEquippedArmor.stealthPenalty =
+          item?.data?.stealth === "disadvantage";
       }
-    }
-    else if (item.data?.carried === 'equipped' && item.data?.type === 'shield') {
+    } else if (
+      item.data?.carried === "equipped" &&
+      item.data?.type === "shield"
+    ) {
       const ac = item?.data?.armorClass || 0;
       if (ac > bestEquippedArmor.shieldAc) {
         bestEquippedArmor.shieldAc = ac;
@@ -1195,9 +1383,9 @@ function getBestEquippedArmor() {
 
 // Gets the Resistance, Immunity, and Vulnerability from a token
 function getRIV(target) {
-  const resistString = (target.data?.resistances || '').toLowerCase();
-  const immuneString = (target.data?.immunities || '').toLowerCase();
-  const vulnString = (target.data?.vulnerabilities || '').toLowerCase();
+  const resistString = (target.data?.resistances || "").toLowerCase();
+  const immuneString = (target.data?.immunities || "").toLowerCase();
+  const vulnString = (target.data?.vulnerabilities || "").toLowerCase();
 
   // Use regular expressions to match specific patterns
   const resistances = [];
@@ -1205,50 +1393,157 @@ function getRIV(target) {
   const vulnerabilities = [];
 
   const patterns = [
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'resistance', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'immunity', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i, values: ['bludgeoning', 'piercing', 'slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i, values: ['bludgeoning', 'piercing', 'slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] },
-    { type: 'vulnerability', regex: /bludgeoning, piercing, and slashing/i, values: ['bludgeoning', 'piercing', 'slashing', 'magical-bludgeoning', 'magical-piercing', 'magical-slashing', 'silvered-bludgeoning', 'silvered-piercing', 'silvered-slashing'] }
+    {
+      type: "resistance",
+      regex:
+        /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i,
+      values: ["bludgeoning", "piercing", "slashing"],
+    },
+    {
+      type: "resistance",
+      regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
+    {
+      type: "resistance",
+      regex: /bludgeoning, piercing, and slashing/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "magical-bludgeoning",
+        "magical-piercing",
+        "magical-slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
+    {
+      type: "immunity",
+      regex:
+        /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i,
+      values: ["bludgeoning", "piercing", "slashing"],
+    },
+    {
+      type: "immunity",
+      regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
+    {
+      type: "immunity",
+      regex: /bludgeoning, piercing, and slashing/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "magical-bludgeoning",
+        "magical-piercing",
+        "magical-slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
+    {
+      type: "vulnerability",
+      regex:
+        /bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered/i,
+      values: ["bludgeoning", "piercing", "slashing"],
+    },
+    {
+      type: "vulnerability",
+      regex: /bludgeoning, piercing, and slashing from nonmagical attacks/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
+    {
+      type: "vulnerability",
+      regex: /bludgeoning, piercing, and slashing/i,
+      values: [
+        "bludgeoning",
+        "piercing",
+        "slashing",
+        "magical-bludgeoning",
+        "magical-piercing",
+        "magical-slashing",
+        "silvered-bludgeoning",
+        "silvered-piercing",
+        "silvered-slashing",
+      ],
+    },
   ];
 
   // Function to extract and remove matched patterns
   function extractPatterns(string, type) {
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       if (pattern.type === type && pattern.regex.test(string)) {
-        if (type === 'resistance') resistances.push(...pattern.values);
-        if (type === 'immunity') immunities.push(...pattern.values);
-        if (type === 'vulnerability') vulnerabilities.push(...pattern.values);
-        string = string.replace(pattern.regex, ''); // Remove matched pattern
+        if (type === "resistance") resistances.push(...pattern.values);
+        if (type === "immunity") immunities.push(...pattern.values);
+        if (type === "vulnerability") vulnerabilities.push(...pattern.values);
+        string = string.replace(pattern.regex, ""); // Remove matched pattern
       }
     });
     return string;
   }
 
   // Extract complex patterns and remove them from the string
-  let remainingResistString = extractPatterns(resistString, 'resistance');
-  let remainingImmuneString = extractPatterns(immuneString, 'immunity');
-  let remainingVulnString = extractPatterns(vulnString, 'vulnerability');
+  let remainingResistString = extractPatterns(resistString, "resistance");
+  let remainingImmuneString = extractPatterns(immuneString, "immunity");
+  let remainingVulnString = extractPatterns(vulnString, "vulnerability");
 
   // Split remaining strings by commas to capture additional values
-  resistances.push(...remainingResistString.split(',').map(r => r.toLowerCase().trim()).filter(r => r));
-  immunities.push(...remainingImmuneString.split(',').map(i => i.toLowerCase().trim()).filter(i => i));
-  vulnerabilities.push(...remainingVulnString.split(',').map(v => v.toLowerCase().trim()).filter(v => v));
+  resistances.push(
+    ...remainingResistString
+      .split(",")
+      .map((r) => r.toLowerCase().trim())
+      .filter((r) => r)
+  );
+  immunities.push(
+    ...remainingImmuneString
+      .split(",")
+      .map((i) => i.toLowerCase().trim())
+      .filter((i) => i)
+  );
+  vulnerabilities.push(
+    ...remainingVulnString
+      .split(",")
+      .map((v) => v.toLowerCase().trim())
+      .filter((v) => v)
+  );
 
   // Then add RIV from modifiers
-  const modifiers = getEffectsAndModifiersForToken(target, ['resistance', 'vulnerability', 'immunity']);
-  modifiers.forEach(mod => {
-    if (mod.modifierType === 'resistance') {
+  const modifiers = getEffectsAndModifiersForToken(target, [
+    "resistance",
+    "vulnerability",
+    "immunity",
+  ]);
+  modifiers.forEach((mod) => {
+    if (mod.modifierType === "resistance") {
       resistances.push(mod.value);
-    }
-    else if (mod.modifierType === 'vulnerability') {
+    } else if (mod.modifierType === "vulnerability") {
       vulnerabilities.push(mod.value);
-    }
-    else if (mod.modifierType === 'immunity') {
+    } else if (mod.modifierType === "immunity") {
       immunities.push(mod.value);
     }
   });
@@ -1256,7 +1551,7 @@ function getRIV(target) {
   return {
     resistances,
     immunities,
-    vulnerabilities
+    vulnerabilities,
   };
 }
 
@@ -1265,12 +1560,10 @@ function getRIV(target) {
 // If they are then at 3, we add the 'Dead' effect
 function applyDeathFailures(target, isCritical) {
   if (target.data?.curhp <= 0) {
-
-    let failures = parseInt(target.data.deathSaveFailures || '0', 10);
+    let failures = parseInt(target.data.deathSaveFailures || "0", 10);
     if (isCritical) {
       failures += 2;
-    }
-    else {
+    } else {
       failures += 1;
     }
 

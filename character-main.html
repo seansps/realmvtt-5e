@@ -22,12 +22,14 @@
     newLevel,
     totalLevel,
     newHitDie,
+    recordOverride,
     additionalPrompt
   ) {
     // Here we update the characters HP and set a hidden value `hpByLevel` to track
     // the HP received at each level
     // For levels > 1 we prompt the user to determine if they are rolling or taking the average
-    const hpByLevel = record?.data?.hpByLevel || "[]";
+    const thisRecord = recordOverride || record;
+    const hpByLevel = thisRecord?.data?.hpByLevel || "[]";
     const hpByLevelArr = JSON.parse(hpByLevel);
 
     const callback = (values) => {
@@ -46,17 +48,17 @@
           });
 
           // Get CON mod
-          const conMod = parseInt(record?.data?.constitutionMod || "0", 10);
+          const conMod = parseInt(thisRecord?.data?.constitutionMod || "0", 10);
           // Add addHP + conMod
           let hpToAdd = addHp + conMod;
           // Add rolled value min of 1 after CON MOD
           if (hpToAdd < 0) {
             hpToAdd = 1;
           }
-          const curHp = parseInt(record?.data?.curhp || "0", 10);
+          const curHp = parseInt(thisRecord?.data?.curhp || "0", 10);
 
           // Calculate current max HP
-          let curHpMax = getHpForLevel(conMod, totalLevel, hpByLevelArr);
+          let curHpMax = getHpForLevel(conMod, thisRecord);
 
           const hpValuesToSet = {
             "data.curhp": curHp + hpToAdd,
@@ -66,7 +68,10 @@
 
           // Add a hitdie
           const hitDieField = `${newHitDie}HitDie`;
-          const numHitDie = parseInt(record?.data?.[hitDieField] || "0", 10);
+          const numHitDie = parseInt(
+            thisRecord?.data?.[hitDieField] || "0",
+            10
+          );
           hpValuesToSet[`data.${hitDieField}`] = numHitDie + 1;
 
           // Set values
@@ -74,7 +79,7 @@
 
           // Send a Message
           const newHp = curHpMax + hpToAdd;
-          const characterName = record?.name || "New Character";
+          const characterName = thisRecord?.name || "New Character";
           const message = `Added 1 Level of ${newClass} to ${characterName}.\n\n[color=green]New Hit Point Total:[/color] ${newHp}`;
           api.sendMessage(message, undefined, [], []);
         } else {
@@ -732,7 +737,7 @@
     };
   }
 
-  function promptSkillChoices(classObj, isMulticlass) {
+  function promptSkillChoices(classObj, isMulticlass, nextPrompt) {
     const skillChoices = getSkillChoices(classObj, isMulticlass);
     if (skillChoices.numChoices > 0 && skillChoices.skills.length > 0) {
       // Prompt the user to choose the skills, on callback, we set proficiencies
@@ -764,7 +769,15 @@
             }
           });
 
-          api.setValues(valuesToSet);
+          api.setValues(valuesToSet, (recordUpdated) => {
+            if (nextPrompt) {
+              nextPrompt(recordUpdated);
+            }
+          });
+        } else {
+          if (nextPrompt) {
+            nextPrompt(record);
+          }
         }
       };
 
@@ -788,6 +801,9 @@
         "Cancel",
         skillChoices.numChoices
       );
+    } else if (nextPrompt) {
+      // No skills, just go to next prompt
+      nextPrompt(record);
     }
   }
 
@@ -1016,6 +1032,7 @@
       }
       // If a feature was added and had an AC calc modifier, recalc AC
       if (featureAddedOrUpdated) {
+        // Check for AC Calc mods
         const acCalculationMods = (feature?.data?.modifiers || []).filter(
           (mod) => mod.data.type === "armorClassCalculation"
         );
@@ -1352,8 +1369,8 @@
       addToolProficiency(toolProficiencies);
 
       // Prompt Skill choices (we throw it in a function so we can call it later after they select their multiclass HP method)
-      promptSkillChoicesLater = () => {
-        promptSkillChoices(classObj, true);
+      promptSkillChoicesLater = (nextPrompt) => {
+        promptSkillChoices(classObj, true, nextPrompt);
       };
     }
 
@@ -1372,16 +1389,10 @@
     const bonus = getProficiencyBonus(level);
     valuesToSet["data.proficiencyBonus"] = bonus;
 
-    // Set all the values including new proficiencies, then we update the proficiency modifiers
-    api.setValues(valuesToSet, (record) => {
-      // After data is updated, update the proficiency modifiers
-      updateProficiencies(bonus, record);
-    });
-
     // Prompt for subclass (If level 3 in THIS class) - pass as additional prompt to updateHitPoints
     let promptSubclass =
       newLevel === 3
-        ? () => {
+        ? (nextPrompt) => {
             const subclassSelection = (values) => {
               if (values.length > 0) {
                 const subclass = values[0];
@@ -1410,10 +1421,17 @@
                   level,
                   newLevel
                 );
-                api.setValues({
-                  ...additionalFieldsToSet,
-                  ...spellSlotFieldsToSet,
-                });
+                api.setValues(
+                  {
+                    ...additionalFieldsToSet,
+                    ...spellSlotFieldsToSet,
+                  },
+                  (recordUpdated) => {
+                    if (nextPrompt) {
+                      nextPrompt(recordUpdated);
+                    }
+                  }
+                );
               }
             };
 
@@ -1435,6 +1453,19 @@
           }
         : null;
 
+    // Get class hit die
+    const hitDie = recordLink?.value?.data?.hitDie || "d6";
+
+    // Set all the values including new proficiencies, then we update the proficiency modifiers
+    api.setValues(valuesToSet, (record) => {
+      // After data is updated, update the proficiency modifiers
+      updateProficiencies(bonus, record);
+      // If not prompting skills or subclass, update hp
+      if (!promptSkillChoicesLater && !promptSubclass) {
+        updateHitPoints(className, newLevel, level, hitDie, record);
+      }
+    });
+
     // Add class features for added class at the new level, using the chosen subclass for it (if one)
     // and if we're not prompting for one
     if (!promptSubclass) {
@@ -1451,28 +1482,22 @@
       api.setValues(additionalFieldsToSet);
     }
 
-    // Update HP and Hit Dice
-    // Get class hit die
-    const hitDie = recordLink?.value?.data?.hitDie;
-    if (hitDie !== undefined && hitDie !== "") {
-      const promptSubClassOrSkills =
-        promptSubclass || promptSkillChoicesLater
-          ? () => {
-              // Subclasses are always level 3, so we don't need to do both
-              if (promptSkillChoicesLater) {
-                promptSkillChoicesLater();
-              } else if (promptSubclass) {
-                promptSubclass();
-              }
+    const promptSubClassOrSkills =
+      promptSubclass || promptSkillChoicesLater
+        ? (nextPrompt) => {
+            // Subclasses are always level 3, so we don't need to do both
+            if (promptSkillChoicesLater) {
+              promptSkillChoicesLater(nextPrompt);
+            } else if (promptSubclass) {
+              promptSubclass(nextPrompt);
             }
-          : null;
-      updateHitPoints(
-        className,
-        newLevel,
-        level,
-        hitDie,
-        promptSubClassOrSkills
-      );
+          }
+        : null;
+    if (promptSubClassOrSkills) {
+      // If skills or subclass, prompt first before HP
+      promptSubClassOrSkills((recordOverride) => {
+        updateHitPoints(className, newLevel, level, hitDie, recordOverride);
+      });
     }
   }
 
@@ -2086,8 +2111,12 @@
           const currentLevel = parseInt(g2, 10);
           return "";
         });
-        // Replace leading or trailing /
+        // Clean up the string by:
+        // 1. Removing multiple consecutive slashes
+        // 2. Removing leading/trailing slashes
+        // 3. Cleaning up whitespace
         classLevels = classLevels
+          .replace(/\s*\/\s*\/+\s*/g, " / ") // Replace multiple slashes with single slash
           .trim()
           .replace(/\/$/, "")
           .replace(/^\//, "")
@@ -2503,56 +2532,6 @@
     };
 
     api.promptRoll(`Death Save`, "1d20", modifiers, metadata, "deathsave");
-  }
-
-  // On update of Constitution, update HP
-  function getHpForLevel(conMod, newLevel, newHpLevelArray) {
-    // Get the max HP we should have at our current level
-    const hpByLevel = record?.data?.hpByLevel || "[]";
-    const hpByLevelArr = JSON.parse(hpByLevel);
-    let totalHp = 0;
-    // Get all the HP we rolled or set for each level
-    hpByLevelArr.forEach((hpLevel) => {
-      let thisLevel = hpLevel.hp + conMod;
-      // Each time you level you roll or take average + CON MOD to a min of 1
-      if (thisLevel < 1) {
-        thisLevel = 1;
-      }
-      totalHp += thisLevel;
-    });
-
-    // Get HP Max modifier
-    const hpMaxMods = getEffectsAndModifiers(["hitpoints"]);
-    hpMaxMods.forEach((mod) => {
-      // For string type in HP max, we'll use it as a field
-      // with a special case for the `field` value to mean a specific class here
-      if (mod.valueType === "string") {
-        // First check if it is in values we are setting
-        let bonus =
-          mod.value === "level"
-            ? newLevel
-            : parseInt(record?.data?.[mod.value] || "0", 10);
-        const relevantClass = mod.field;
-        if (relevantClass && mod.value === "level") {
-          // Bonus = total level in the given class
-          newHpLevelArray.forEach((hpLevel) => {
-            if (hpLevel.className === relevantClass) {
-              bonus += 1;
-            }
-          });
-        }
-        if (!isNaN(bonus)) {
-          totalHp += bonus;
-        }
-      } else if (mod.valueType === "number") {
-        const bonus = parseInt(mod.value || "0", 10);
-        if (!isNaN(bonus)) {
-          totalHp += bonus;
-        }
-      }
-    });
-
-    return totalHp;
   }
 </script>
 
