@@ -79,6 +79,7 @@
     const valuesToSet = {};
     const isAttack = description.toLowerCase().includes("attack roll");
     const isRanged = description.toLowerCase().includes("ranged attack roll");
+    const action = api.getValue(actionDataPath);
 
     if (isAttack || isRanged) {
       valuesToSet[`${actionDataPath}.data.isAttack`] = isAttack;
@@ -116,7 +117,11 @@
       valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = false;
     } else {
       valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = true;
-      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = true;
+      if (action?.data?.damage) {
+        valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = false;
+      } else {
+        valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = true;
+      }
       valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
     }
 
@@ -222,6 +227,14 @@
     api.setValue(
       `${actionDataPath}.fields.useBtn.hidden`,
       (effects || []).length === 0
+    );
+  }
+
+  function updateDamage(damage) {
+    const actionDataPath = dataPath.replace(".data.damage", "");
+    api.setValue(
+      `${actionDataPath}.fields.rollDamageBtn.hidden`,
+      damage === "" || damage === undefined || damage === null
     );
   }
 
@@ -731,6 +744,7 @@ ${effectButtons}
         size="xs"
         width="50%"
         placeholder="Enter Damage..."
+        onchange="updateDamage(value);"
       ></stringfield>
     </div>
     <div
