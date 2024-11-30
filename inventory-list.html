@@ -4,23 +4,34 @@
     const items = record.data?.inventory || [];
     let totalWeight = 0;
 
-    items.forEach(item => {
-      if (item.data?.carried !== 'dropped') {
-        let weight = parseFloat(item.data?.weight || '0');
-        let count = parseFloat(item.data?.count || '0');
+    items.forEach((item) => {
+      if (item.data?.carried !== "dropped") {
+        let weight = parseFloat(item.data?.weight || "0");
+        let count = parseFloat(item.data?.count || "0");
         if (count === undefined || isNaN(count)) {
           count = 0;
         }
         if (weight !== undefined && !isNaN(weight)) {
-          totalWeight += (weight * count);
+          totalWeight += weight * count;
         }
       }
     });
 
-    if (setValues) {
-      api.setValue('data.totalWeight', totalWeight);
+    // Include coinage if set
+    const includeCoinage = api.getSetting("coinWeight") === "yes";
+    if (includeCoinage) {
+      const totalCoins =
+        (record?.data?.cp || 0) +
+        (record?.data?.sp || 0) +
+        (record?.data?.ep || 0) +
+        (record?.data?.gp || 0) +
+        (record?.data?.pp || 0);
+      totalWeight += parseFloat((totalCoins / 50).toFixed(1));
     }
-    else {
+
+    if (setValues) {
+      api.setValue("data.totalWeight", totalWeight);
+    } else {
       return totalWeight;
     }
   }
@@ -29,36 +40,37 @@
     // Deduct count by 1, delete item if count is 0,
     // and output the description to Chat
     // If it is a scoll with a spell set, output a link to the spell
-    const itemDataPath = dataPath.replace('.data.useBtn', '');
+    const itemDataPath = dataPath.replace(".data.useBtn", "");
     const itemCount = api.getValue(`${itemDataPath}.data.count`);
-    const indexValue = parseInt(itemDataPath.split('.').pop());
+    const indexValue = parseInt(itemDataPath.split(".").pop());
 
     // Output the description to Chat
-    const description = api.getValue(`${itemDataPath}.data.description`) || '';
-    const markdownDescription = api.richTextToMarkdown(description || '');
+    const description = api.getValue(`${itemDataPath}.data.description`) || "";
+    const markdownDescription = api.richTextToMarkdown(description || "");
     let recordLinks;
     const spell = api.getValue(`${itemDataPath}.data.spell`);
     if (spell) {
-      const spellName = JSON.parse(spell)?.name || '';
-      const spellId = JSON.parse(spell)?._id || '';
+      const spellName = JSON.parse(spell)?.name || "";
+      const spellId = JSON.parse(spell)?._id || "";
       if (spellId) {
-        recordLinks = [{
-          tooltip: spellName,
-          type: 'records',
-          value: {
-            _id: spellId,
-            recordType: 'spells'
-          }
-        }];
+        recordLinks = [
+          {
+            tooltip: spellName,
+            type: "records",
+            value: {
+              _id: spellId,
+              recordType: "spells",
+            },
+          },
+        ];
       }
     }
     api.sendMessage(markdownDescription, undefined, recordLinks);
 
-    const count = parseFloat(itemCount || '0');
+    const count = parseFloat(itemCount || "0");
     if (count - 1 > 0) {
       api.setValue(`${itemDataPath}.data.count`, count - 1);
-    }
-    else if (!isNaN(indexValue)) {
+    } else if (!isNaN(indexValue)) {
       api.removeValue(`data.inventory`, indexValue);
     }
   }
@@ -70,20 +82,23 @@
     const valuesToSet = {};
     const totalWeight = setTotalWeight(false);
     if (totalWeight !== record?.data?.totalWeight) {
-      valuesToSet['data.totalWeight'] = totalWeight;
+      valuesToSet["data.totalWeight"] = totalWeight;
     }
 
-    // Get the current ac due to armor and set it on the 
+    // Get the current ac due to armor and set it on the
     // record
     const bestEquippedArmor = getBestEquippedArmor();
 
-    if (JSON.stringify(record?.data?.armor || '{}') !== JSON.stringify(bestEquippedArmor)) {
-      valuesToSet['data.armor'] = bestEquippedArmor;
+    if (
+      JSON.stringify(record?.data?.armor || "{}") !==
+      JSON.stringify(bestEquippedArmor)
+    ) {
+      valuesToSet["data.armor"] = bestEquippedArmor;
     }
 
     const totalAc = getArmorClass(bestEquippedArmor);
     if (record?.data?.ac !== totalAc) {
-      valuesToSet['data.ac'] = totalAc;
+      valuesToSet["data.ac"] = totalAc;
     }
 
     if (Object.keys(valuesToSet).length > 0) {
@@ -92,24 +107,61 @@
   }
 </script>
 
-<div style='height: 30px; display: flex; gap: 4px; align-items: center'>
-  <div style='width: 30px; min-width: 30px'>
-    <portrait width='30px' height='30px' name='portrait'></portrait>
+<div style="height: 30px; display: flex; gap: 4px; align-items: center">
+  <div style="width: 30px; min-width: 30px">
+    <portrait width="30px" height="30px" name="portrait"></portrait>
   </div>
-  <div style='width: 60px'>
-    <numberfield size='xs' variant='tooltip' label='Count' field='count' placeholder='0' onchange='setTotalWeight();' />
-    </numberfield>
+  <div style="width: 60px">
+    <numberfield
+      size="xs"
+      variant="tooltip"
+      label="Count"
+      field="count"
+      placeholder="0"
+      onchange="setTotalWeight();"
+    ></numberfield>
   </div>
-  <div style='flex-grow: 1'>
-    <namefield size='xs' variant='standard' placeholder='Item' field='namefield' />
+  <div style="flex-grow: 1">
+    <namefield
+      size="xs"
+      variant="standard"
+      placeholder="Item"
+      field="namefield"
+    />
   </div>
-  <iconbutton hidden="true" size='sm' field="attuned" variant="default"
+  <iconbutton
+    hidden="true"
+    size="sm"
+    field="attuned"
+    variant="default"
     options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "true"}]'
-    onchange='' onclick=''></iconbutton>
-  <button hidden="true" size='xs' radius='xs' field="useBtn" variant="light" onclick='useItem();' label='Use'></button>
-  <stringfield width='100px' size='xs' variant='tooltip' label='Location' field='location' placeholder='Location...'>
+    onchange=""
+    onclick=""
+  ></iconbutton>
+  <button
+    hidden="true"
+    size="xs"
+    radius="xs"
+    field="useBtn"
+    variant="light"
+    onclick="useItem();"
+    label="Use"
+  ></button>
+  <stringfield
+    width="100px"
+    size="xs"
+    variant="tooltip"
+    label="Location"
+    field="location"
+    placeholder="Location..."
+  >
   </stringfield>
-  <iconbutton size='sm' field="carried" variant="default"
+  <iconbutton
+    size="sm"
+    field="carried"
+    variant="default"
     options='[{"icon": "IconMoneybag", "label": "Carried", "value": "carried"}, {"icon": "IconShirt", "label": "Equipped", "value": "equipped"}, {"icon": "IconArrowDown", "label": "Dropped", "value": "dropped"}]'
-    onchange='onItemEquipped();' onclick=''></iconbutton>
+    onchange="onItemEquipped();"
+    onclick=""
+  ></iconbutton>
 </div>

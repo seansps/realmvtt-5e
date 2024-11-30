@@ -1,190 +1,270 @@
 <script>
-	function updateTotalWeight(record, setValue = true) {
-		// Update total weight
-		const items = record?.data?.inventory || [];
-		let totalWeight = 0;
-		items.forEach((item, index) => {
-			let weight = parseFloat(item.data?.weight || '0');
-			let count = parseFloat(item.data?.count || '0');
-			if (count === undefined || isNaN(count)) {
-				count = 0;
-			}
-			if (weight !== undefined && !isNaN(weight)) {
-				totalWeight += (weight * count);
-			}
-		});
+  function updateCoinage() {
+    updateTotalWeight(record);
+  }
 
-		if (setValue) {
-			api.setValue('data.totalWeight', totalWeight);
-		}
-		else {
-			return totalWeight;
-		}
-	}
+  function updateTotalWeight(record, setValue = true) {
+    // Update total weight
+    const items = record?.data?.inventory || [];
+    let totalWeight = 0;
+    items.forEach((item) => {
+      if (item.data?.carried !== "dropped") {
+        let weight = parseFloat(item.data?.weight || "0");
+        let count = parseFloat(item.data?.count || "0");
+        if (count === undefined || isNaN(count)) {
+          count = 0;
+        }
+        if (weight !== undefined && !isNaN(weight)) {
+          totalWeight += weight * count;
+        }
+      }
+    });
 
-	function onDropItem(recordLink) {
-		const item = recordLink?.value;
+    // Include coinage if set
+    const includeCoinage = api.getSetting("coinWeight") === "yes";
+    if (includeCoinage) {
+      const totalCoins =
+        (record?.data?.cp || 0) +
+        (record?.data?.sp || 0) +
+        (record?.data?.ep || 0) +
+        (record?.data?.gp || 0) +
+        (record?.data?.pp || 0);
+      totalWeight += parseFloat((totalCoins / 50).toFixed(1));
+    }
 
-		const hasAttunement = item.data?.attunement || false;
-		const isConsumable = item.data?.consumable || false;
-		const isTwoHanded = item.data?.weaponProperties?.includes('Two-Handed');
-		const isThrown = item.data?.weaponProperties?.includes('Thrown'); // Only thrown weapons can be toggled melee/range
-		const isMelee = (item.data?.type || '').toLowerCase().includes('melee'); // Melee shown only melee icon
+    if (setValue) {
+      api.setValue("data.totalWeight", totalWeight);
+    } else {
+      return totalWeight;
+    }
+  }
 
-		// Add the item and set the attunement hidden field to visible if requires attunement
-		const itemToAdd = {
-			...item,
-			data: {
-				...item?.data,
-				// Default count to 1
-				count: 1
-			},
-			fields: {
-				...item?.fields,
-				attuned: {
-					hidden: !hasAttunement
-				},
-				useBtn: {
-					hidden: !isConsumable
-				},
-				handBtn: {
-					hidden: isTwoHanded
-				},
-				rangeToggleBtn: {
-					hidden: !isThrown
-				},
-				rangeToggleBtnDisabled: {
-					hidden: isMelee || isThrown
-				},
-				meleeToggleBtnDisabled: {
-					hidden: !isMelee || isThrown
-				},
-				ammo: {
-					hidden: isMelee && !isThrown
-				}
-			}
-		}
+  function onDropItem(recordLink) {
+    const item = recordLink?.value;
 
-		// Determine if we are adding the item or adding count to an existing item
-		const items = record?.data?.inventory || [];
-		const index = items.findIndex(i => i._id === item._id);
+    const hasAttunement = item.data?.attunement || false;
+    const isConsumable = item.data?.consumable || false;
+    const isTwoHanded = item.data?.weaponProperties?.includes("Two-Handed");
+    const isThrown = item.data?.weaponProperties?.includes("Thrown"); // Only thrown weapons can be toggled melee/range
+    const isMelee = (item.data?.type || "").toLowerCase().includes("melee"); // Melee shown only melee icon
 
-		// If the item is an item pack, we're adding a list of items
-		if (item.data?.type === "pack") {
-			// Get the total weight of all items in the pack
-			const itemsInPack = item.data?.items || [];
-			const itemsToAdd = itemsInPack.map(item => {
-				// If this is existing item, get the current count
-				const existingItem = index !== -1 ? items[index] : undefined;
-				let curCount = parseFloat(existingItem?.data?.count || '0');
-				return {
-					...item,
-					data: { ...item.data, count: (item.data?.count || 1) + curCount }
-				}
-			});
-			api.addValues(`data.inventory`, itemsToAdd, (record) => {
-				// Update total weight
-				updateTotalWeight(record);
-			});
-		}
-		else {
-			const existingItem = index !== -1 ? items[index] : undefined;
-			if (existingItem) {
-				// Add count to existing item
-				const count = parseFloat(existingItem.data?.count || '0');
-				// Update the value
-				api.setValue(`data.inventory.${index}.data.count`, count + 1, (record) => {
-					// Update total weight
-					updateTotalWeight(record);
-				});
-			}
-			else {
-				// Add the item to the list
-				api.addValue(`data.inventory`, itemToAdd, (record) => {
-					// Update total weight
-					updateTotalWeight(record);
-				});
-			}
-		}
-	}
+    // Add the item and set the attunement hidden field to visible if requires attunement
+    const itemToAdd = {
+      ...item,
+      data: {
+        ...item?.data,
+        // Default count to 1
+        count: 1,
+      },
+      fields: {
+        ...item?.fields,
+        attuned: {
+          hidden: !hasAttunement,
+        },
+        useBtn: {
+          hidden: !isConsumable,
+        },
+        handBtn: {
+          hidden: isTwoHanded,
+        },
+        rangeToggleBtn: {
+          hidden: !isThrown,
+        },
+        rangeToggleBtnDisabled: {
+          hidden: isMelee || isThrown,
+        },
+        meleeToggleBtnDisabled: {
+          hidden: !isMelee || isThrown,
+        },
+        ammo: {
+          hidden: isMelee && !isThrown,
+        },
+      },
+    };
 
-	function onDrop(type, recordLink) {
-		if (type === 'items') {
-			onDropItem(recordLink);
-		}
-	}
+    // Determine if we are adding the item or adding count to an existing item
+    const items = record?.data?.inventory || [];
+    const index = items.findIndex((i) => i._id === item._id);
 
-	function onItemDeleted() {
-		// Fetch the character record again to get latest data
-		const valuesToSet = {};
-		const totalWeight = updateTotalWeight(record, false);
-		if (totalWeight !== record?.data?.totalWeight) {
-			valuesToSet['data.totalWeight'] = totalWeight;
-		}
+    // If the item is an item pack, we're adding a list of items
+    if (item.data?.type === "pack") {
+      // Get the total weight of all items in the pack
+      const itemsInPack = item.data?.items || [];
+      const itemsToAdd = itemsInPack.map((item) => {
+        // If this is existing item, get the current count
+        const existingItem = index !== -1 ? items[index] : undefined;
+        let curCount = parseFloat(existingItem?.data?.count || "0");
+        return {
+          ...item,
+          data: { ...item.data, count: (item.data?.count || 1) + curCount },
+        };
+      });
+      api.addValues(`data.inventory`, itemsToAdd, (record) => {
+        // Update total weight
+        updateTotalWeight(record);
+      });
+    } else {
+      const existingItem = index !== -1 ? items[index] : undefined;
+      if (existingItem) {
+        // Add count to existing item
+        const count = parseFloat(existingItem.data?.count || "0");
+        // Update the value
+        api.setValue(
+          `data.inventory.${index}.data.count`,
+          count + 1,
+          (record) => {
+            // Update total weight
+            updateTotalWeight(record);
+          }
+        );
+      } else {
+        // Add the item to the list
+        api.addValue(`data.inventory`, itemToAdd, (record) => {
+          // Update total weight
+          updateTotalWeight(record);
+        });
+      }
+    }
+  }
 
-		// Get the current ac due to armor and set it on the 
-		// record
-		const bestEquippedArmor = getBestEquippedArmor();
+  function onDrop(type, recordLink) {
+    if (type === "items") {
+      onDropItem(recordLink);
+    }
+  }
 
-		if (JSON.stringify(record?.data?.armor || '{}') !== JSON.stringify(bestEquippedArmor)) {
-			valuesToSet['data.armor'] = bestEquippedArmor;
-		}
+  function onItemDeleted() {
+    // Fetch the character record again to get latest data
+    const valuesToSet = {};
+    const totalWeight = updateTotalWeight(record, false);
+    if (totalWeight !== record?.data?.totalWeight) {
+      valuesToSet["data.totalWeight"] = totalWeight;
+    }
 
-		const totalAc = getArmorClass(bestEquippedArmor);
-		if (record?.data?.ac !== totalAc) {
-			valuesToSet['data.ac'] = totalAc;
-		}
+    // Get the current ac due to armor and set it on the
+    // record
+    const bestEquippedArmor = getBestEquippedArmor();
 
-		if (Object.keys(valuesToSet).length > 0) {
-			api.setValues(valuesToSet);
-		}
-	}
+    if (
+      JSON.stringify(record?.data?.armor || "{}") !==
+      JSON.stringify(bestEquippedArmor)
+    ) {
+      valuesToSet["data.armor"] = bestEquippedArmor;
+    }
+
+    const totalAc = getArmorClass(bestEquippedArmor);
+    if (record?.data?.ac !== totalAc) {
+      valuesToSet["data.ac"] = totalAc;
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
 </script>
 
 <div>
-	<label variant="bold" textalign='center' label='Inventory'></label>
+  <label variant="bold" textalign="center" label="Inventory"></label>
 </div>
 
-<div style="display: flex; flex-direction: row;">
-	<div style="margin-left: 34px;">
-		<label variant="bold" size="xs" textalign='left' label='Count'></label>
-	</div>
-	<div style="margin-left: 30px;">
-		<label variant="bold" size="xs" textalign='left' label='Item'></label>
-	</div>
-	<div style="margin-left: auto;">
-		<label variant="bold" size="xs" textalign='left' label='Location / Equipped'></label>
-	</div>
+<div style="display: flex; flex-direction: row">
+  <div style="margin-left: 34px">
+    <label variant="bold" size="xs" textalign="left" label="Count"></label>
+  </div>
+  <div style="margin-left: 30px">
+    <label variant="bold" size="xs" textalign="left" label="Item"></label>
+  </div>
+  <div style="margin-left: auto">
+    <label
+      variant="bold"
+      size="xs"
+      textalign="left"
+      label="Location / Equipped"
+    ></label>
+  </div>
 </div>
 
-<div style="display: flex; flex-direction: column; flex-grow:1">
-	<list listtype='inventory_list' radius='none' variant='striped' field='inventory' onchange='onItemDeleted();' />
-	</list>
+<div style="display: flex; flex-direction: column; flex-grow: 1">
+  <list
+    listtype="inventory_list"
+    radius="none"
+    variant="striped"
+    field="inventory"
+    onchange="onItemDeleted();"
+    onload="updateTotalWeight(record);"
+  >
+  </list>
 </div>
 
-<div style="margin-top: 8px;">
-	<divider label="Encumbrance" textalign="center"></divider>
+<div style="margin-top: 8px">
+  <divider label="Encumbrance" textalign="center"></divider>
 </div>
 
-<div style="display: flex; flex-direction: row; gap: 4px;">
-	<numberfield width="33%" placeholder='0' field="totalWeight" label="Total Weight"></numberfield>
-	<numberfield width="33%" placeholder='0' field="maxCarryWeight" label="Max Carry Weight"></numberfield>
-	<numberfield width="33%" placeholder='0' field="dragLiftPush" label="Drag/Lift/Push"></numberfield>
+<div style="display: flex; flex-direction: row; gap: 4px">
+  <numberfield
+    width="33%"
+    placeholder="0"
+    field="totalWeight"
+    label="Total Weight"
+  ></numberfield>
+  <numberfield
+    width="33%"
+    placeholder="0"
+    field="maxCarryWeight"
+    label="Max Carry Weight"
+  ></numberfield>
+  <numberfield
+    width="33%"
+    placeholder="0"
+    field="dragLiftPush"
+    label="Drag/Lift/Push"
+  ></numberfield>
 </div>
 
-<div style="margin-top: 8px;">
-	<divider label="Treasure" textalign="center"></divider>
+<div style="margin-top: 8px">
+  <divider label="Treasure" textalign="center"></divider>
 </div>
 
-<div style="display: flex; flex-direction: row; gap: 4px;">
-	<numberfield placeholder='0' field="cp" label="CP"></numberfield>
-	<numberfield placeholder='0' field="sp" label="SP"></numberfield>
-	<numberfield placeholder='0' field="ep" label="EP"></numberfield>
-	<numberfield placeholder='0' field="gp" label="GP"></numberfield>
-	<numberfield placeholder='0' field="pp" label="PP"></numberfield>
+<div style="display: flex; flex-direction: row; gap: 4px">
+  <numberfield
+    placeholder="0"
+    field="cp"
+    label="CP"
+    onchange="updateCoinage();"
+  ></numberfield>
+  <numberfield
+    placeholder="0"
+    field="sp"
+    label="SP"
+    onchange="updateCoinage();"
+  ></numberfield>
+  <numberfield
+    placeholder="0"
+    field="ep"
+    label="EP"
+    onchange="updateCoinage();"
+  ></numberfield>
+  <numberfield
+    placeholder="0"
+    field="gp"
+    label="GP"
+    onchange="updateCoinage();"
+  ></numberfield>
+  <numberfield
+    placeholder="0"
+    field="pp"
+    label="PP"
+    onchange="updateCoinage();"
+  ></numberfield>
 </div>
 
-<div style="margin-top: 8px;">
-	<stringfield placeholder='None' field="otherTreasure" label="Other Treasure" multiline='true' maxrows='4'>
-	</stringfield>
+<div style="margin-top: 8px">
+  <stringfield
+    placeholder="None"
+    field="otherTreasure"
+    label="Other Treasure"
+    multiline="true"
+    maxrows="4"
+  >
+  </stringfield>
 </div>
