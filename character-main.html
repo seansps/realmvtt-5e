@@ -820,7 +820,7 @@
   ) {
     // If we're multiclasses, we use the multiclass settings
     const isMulticlass =
-      classes.length > 1 || classes.find((c) => c._id !== classObj._id);
+      classes.length > 1 || classes.find((c) => c.name !== classObj.name);
 
     const casterType = classObj?.data?.casterType || "None";
     const fieldsToSet = {};
@@ -861,7 +861,7 @@
       // Get total levels of all spellcasting classes
       let spellCasterLevel = 0;
       let allClasses = [...classes];
-      if (!allClasses.find((c) => c._id === classObj._id)) {
+      if (!allClasses.find((c) => c.name === classObj.name)) {
         allClasses.push(classObj);
       }
       allClasses.forEach((c) => {
@@ -1262,9 +1262,8 @@
 
     const classObj = {
       ...recordLink.value,
-      _id: className,
     };
-    const hasClass = classes.find((classObj) => classObj._id === className);
+    const hasClass = classes.find((classObj) => classObj.name === className);
 
     // Add the class to the the classes list if needed
     if (!hasClass) {
@@ -1747,7 +1746,6 @@
 
     const backgroundObj = {
       ...recordLink.value,
-      _id: backgroundName,
     };
     const hasBackground = backgrounds.length > 0;
 
@@ -1880,7 +1878,6 @@
 
     const speciesObj = {
       ...recordLink.value,
-      _id: speciesName,
     };
     const hasSpecies = species.length > 0;
 
