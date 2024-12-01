@@ -360,7 +360,8 @@
       "filters": {
         "level": "Cantrip,1,2,3,4,5,6,7,8,9",
         "spellLists": "Artificer,Bard,Cleric,Druid,Paladin,Ranger,Sorcerer,Warlock,Wizard",
-        "school": "Abjuration,Conjuration,Divination,Enchantment,Evocation,Illusion,Necromancy,Transmutation"
+        "school": "Abjuration,Conjuration,Divination,Enchantment,Evocation,Illusion,Necromancy,Transmutation",
+        "castingTime": "Action, Action or Ritual,Bonus Action,1 minute,1 minute or Ritual,10 minutes,10 minutes or Ritual, 1 hour, 1 hour or Ritual"
       },
       "disableDrop": false
     },
@@ -2198,6 +2199,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1733089955147,
+  "updatedAt": 1733091381783,
   "published": true
 }]
