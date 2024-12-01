@@ -944,7 +944,16 @@
       }
     }
 
-    if (highestSpellLevel !== 0 && highestSpellLevel !== undefined) {
+    let curMaxSpellLevel = parseInt(record?.data?.maxSpellLevel || "0", 10);
+    if (record?.data?.maxSpellLevel === "Cantrip") {
+      curMaxSpellLevel = 0;
+    }
+    // Show spell levels if the highest spell level is higher than what is set
+    if (
+      highestSpellLevel !== 0 &&
+      highestSpellLevel !== undefined &&
+      highestSpellLevel > curMaxSpellLevel
+    ) {
       showSpellLevels(highestSpellLevel);
 
       // Show or hide spell slots based on the fields we're setting
@@ -970,7 +979,11 @@
       });
     }
 
-    if (highestSpellLevel !== undefined) {
+    // Update maxSpellLevel if the highest spell level is higher than what is set
+    if (
+      highestSpellLevel !== undefined &&
+      highestSpellLevel > curMaxSpellLevel
+    ) {
       fieldsToSet["data.maxSpellLevel"] = `${highestSpellLevel}`;
     }
 
