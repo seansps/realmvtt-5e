@@ -1,75 +1,22 @@
-<script>
-	function onDropItem(recordLink) {
-		const item = recordLink?.value;
-
-		// NPC Item list does not determine attacks or other properties,
-		// we just list it here so it can be looted by players
-		const itemToAdd = {
-			...item,
-			data: {
-				...item?.data,
-				// Default count to 1
-				count: 1
-			},
-			fields: {
-				...item?.fields,
-			}
-		}
-
-		// Determine if we are adding the item or adding count to an existing item
-		const items = record?.data?.inventory || [];
-		const index = items.findIndex(i => i._id === item._id);
-
-		// If the item is an item pack, we're adding a list of items
-		if (item.data?.type === "pack") {
-			const itemsInPack = item.data?.items || [];
-			const itemsToAdd = itemsInPack.map(item => {
-				// If this is existing item, get the current count
-				const existingItem = index !== -1 ? items[index] : undefined;
-				let curCount = parseFloat(existingItem?.data?.count || '0');
-				return {
-					...item,
-					data: { ...item.data, count: (item.data?.count || 1) + curCount }
-				}
-			});
-			api.addValues(`data.inventory`, itemsToAdd);
-		}
-		else {
-			const existingItem = index !== -1 ? items[index] : undefined;
-			if (existingItem) {
-				// Add count to existing item
-				const count = parseFloat(existingItem.data?.count || '0');
-				// Update the value
-				api.setValue(`data.inventory.${index}.data.count`, count + 1);
-			}
-			else {
-				// Add the item to the list
-				api.addValue(`data.inventory`, itemToAdd);
-			}
-		}
-	}
-
-	function onDrop(type, recordLink) {
-		if (type === 'items') {
-			onDropItem(recordLink);
-		}
-	}
-</script>
-
-<div>
-	<label variant="bold" textalign='center' label='Gear'></label>
-</div>
-
-<div style="display: flex; flex-direction: row;">
-	<div style="margin-left: 34px;">
-		<label variant="bold" size="xs" textalign='left' label='Count'></label>
-	</div>
-	<div style="margin-left: 30px;">
-		<label variant="bold" size="xs" textalign='left' label='Item'></label>
-	</div>
-</div>
-
-<div style="display: flex; flex-direction: column; flex-grow:1">
-	<list listtype='npc_inventory_list' radius='none' variant='striped' field='inventory' onchange='onItemDeleted();' />
-	</list>
+<div style="height: 30px; display: flex; gap: 4px; align-items: center">
+  <div style="width: 30px; min-width: 30px">
+    <portrait width="30px" height="30px" name="portrait"></portrait>
+  </div>
+  <div style="width: 60px">
+    <numberfield
+      size="xs"
+      variant="tooltip"
+      label="Count"
+      field="count"
+      placeholder="0"
+    ></numberfield>
+  </div>
+  <div style="flex-grow: 1">
+    <namefield
+      size="xs"
+      variant="standard"
+      placeholder="Item"
+      field="namefield"
+    />
+  </div>
 </div>

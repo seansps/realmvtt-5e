@@ -51,8 +51,11 @@
     // Add the item and set the attunement hidden field to visible if requires attunement
     const itemToAdd = {
       ...item,
+      icon: "IconMoneybag",
       data: {
         ...item?.data,
+        // Track old ID for count tracking
+        fromId: item._id,
         // Default count to 1
         count: 1,
       },
@@ -84,24 +87,45 @@
 
     // Determine if we are adding the item or adding count to an existing item
     const items = record?.data?.inventory || [];
-    const index = items.findIndex((i) => i._id === item._id);
+    const index = items.findIndex((i) => i.data?.fromId === item._id);
 
     // If the item is an item pack, we're adding a list of items
     if (item.data?.type === "pack") {
       // Get the total weight of all items in the pack
       const itemsInPack = item.data?.items || [];
-      const itemsToAdd = itemsInPack.map((item) => {
-        // If this is existing item, get the current count
-        const existingItem = index !== -1 ? items[index] : undefined;
-        let curCount = parseFloat(existingItem?.data?.count || "0");
-        return {
-          ...item,
-          data: { ...item.data, count: (item.data?.count || 1) + curCount },
-        };
-      });
+      const valuesToSet = {};
+      const itemsToAdd = itemsInPack
+        .map((item) => {
+          // If this is existing item, get the current count
+          const thisIndex = items.findIndex((i) => i.data?.fromId === item._id);
+          const existingItem = thisIndex !== -1 ? items[thisIndex] : undefined;
+          let curCount = parseFloat(existingItem?.data?.count || "0");
+          if (!existingItem) {
+            return {
+              ...item,
+              icon: "IconMoneybag",
+              data: {
+                ...item.data,
+                fromId: item._id,
+                count: 1,
+              },
+            };
+          } else {
+            valuesToSet[`data.inventory.${thisIndex}.data.count`] =
+              curCount + 1;
+          }
+        })
+        .filter((i) => i);
       api.addValues(`data.inventory`, itemsToAdd, (record) => {
-        // Update total weight
-        updateTotalWeight(record);
+        if (Object.keys(valuesToSet).length > 0) {
+          api.setValues(valuesToSet, (updatedRecord) => {
+            // Update total weight after setting count values
+            updateTotalWeight(updatedRecord);
+          });
+        } else {
+          // Else just update the total weight
+          updateTotalWeight(record);
+        }
       });
     } else {
       const existingItem = index !== -1 ? items[index] : undefined;
