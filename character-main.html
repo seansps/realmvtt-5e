@@ -987,7 +987,7 @@
   ) {
     const additionalFieldsToSet = {};
     const curFeatures = (record?.data?.features || []).map(
-      (feature) => `${className}-${feature.name}`
+      (feature) => `${feature?.data?.source}-${feature.name}`
     );
     const features = classObj?.data?.feature_list || [];
     const subClassFeatures = subclass?.data?.feature_list || [];
@@ -1011,6 +1011,12 @@
           // Add this feature
           api.addValue("data.features", {
             ...feature,
+            // Add the class name to the feature as the source so we know where it was from
+            // when adding features later
+            data: {
+              ...feature.data,
+              source: className,
+            },
           });
           featureAddedOrUpdated = true;
           featuresAddedThisLevel.add(`${className}-${feature.name}`);
@@ -1024,6 +1030,10 @@
             ) {
               additionalFieldsToSet[`data.features.${curFeatureIndex}`] = {
                 ...feature,
+                data: {
+                  ...feature.data,
+                  source: className,
+                },
               };
               featureAddedOrUpdated = true;
             }
@@ -1907,6 +1917,12 @@
       // Add this feature
       api.addValue("data.features", {
         ...feature,
+        data: {
+          ...feature.data,
+          source: speciesName,
+          // Always get these at level 1
+          level: 1,
+        },
       });
       // Check for AC calc mods
       const acCalculationMods = (feature?.data?.modifiers || []).filter(
