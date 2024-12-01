@@ -935,10 +935,10 @@
       fieldsToSet[`data.numPactMagic8`] = pactSlots[7];
       fieldsToSet[`data.numPactMagic9`] = pactSlots[8];
 
-      let highestPactLevel = pactSlots.findIndex((slots) => slots === 0);
-      if (highestPactLevel === -1) {
-        highestPactLevel = 9;
-      }
+      // Find the highest level that has slots
+      let highestPactLevel = pactSlots.reduce((highest, slots, index) => {
+        return slots > 0 ? index + 1 : highest;
+      }, 0);
       if (highestPactLevel > (highestSpellLevel || 0)) {
         highestSpellLevel = highestPactLevel;
       }
@@ -948,13 +948,11 @@
     if (record?.data?.maxSpellLevel === "Cantrip") {
       curMaxSpellLevel = 0;
     }
-    // Show spell levels if the highest spell level is higher than what is set
-    if (
-      highestSpellLevel !== 0 &&
-      highestSpellLevel !== undefined &&
-      highestSpellLevel > curMaxSpellLevel
-    ) {
-      showSpellLevels(highestSpellLevel);
+    if (highestSpellLevel !== 0 && highestSpellLevel !== undefined) {
+      // Call show spell levels if the highest spell level is higher than what is set
+      if (highestSpellLevel > curMaxSpellLevel) {
+        showSpellLevels(highestSpellLevel);
+      }
 
       // Show or hide spell slots based on the fields we're setting
       showHideSpellSlots({
