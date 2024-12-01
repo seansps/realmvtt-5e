@@ -1004,8 +1004,11 @@
       let featureAddedOrUpdated = false;
       // If this feature is at the level we're adding, add or update it
       if (level === newLevel) {
+        const featureKey = `${className}-${feature.name}`;
+        const existingFeature = curFeatures.find((f) => f === featureKey);
+
         if (
-          !curFeatures.includes(`${className}-${feature.name}`) &&
+          !existingFeature &&
           !featuresAddedThisLevel.has(`${className}-${feature.name}`)
         ) {
           // Add this feature
@@ -1020,7 +1023,7 @@
           });
           featureAddedOrUpdated = true;
           featuresAddedThisLevel.add(`${className}-${feature.name}`);
-        } else {
+        } else if (existingFeature) {
           // Update the existing feature if this one is a higher level
           curFeatures.forEach((curFeature, curFeatureIndex) => {
             const curFeatureLevel = curFeature?.data?.level || 0;
