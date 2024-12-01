@@ -86,6 +86,25 @@
     if (dexOrStrMod === "Dexterity") {
       modToUse = dexMod;
     }
+    // Check for attack calculation modifier
+    const attackCalculationMod = getEffectsAndModifiers(
+      ["attackCalculation"],
+      undefined,
+      attack._id
+    );
+    // If we have an attack calculation modifier, use the field defined instead
+    // of the above
+    if (attackCalculationMod.length) {
+      const attackCalculation =
+        attackCalculationMod[attackCalculationMod.length - 1]?.field;
+      if (attackCalculation) {
+        dexOrStrMod = capitalize(attackCalculation);
+        modToUse = parseInt(
+          record?.data?.[`${attackCalculation.toLowerCase()}Mod`] || "0",
+          10
+        );
+      }
+    }
 
     // Add the modifier to the modifiers array
     if (modToUse !== 0) {
@@ -364,6 +383,25 @@
     }
     if (dexOrStrMod === "Dexterity") {
       modToUse = dexMod;
+    }
+    // Check for attack calculation modifier
+    const attackCalculationMod = getEffectsAndModifiers(
+      ["attackCalculation"],
+      undefined,
+      attack._id
+    );
+    // If we have an attack calculation modifier, use the field defined instead
+    // of the above
+    if (attackCalculationMod.length) {
+      const attackCalculation =
+        attackCalculationMod[attackCalculationMod.length - 1]?.field;
+      if (attackCalculation) {
+        dexOrStrMod = capitalize(attackCalculation);
+        modToUse = parseInt(
+          record?.data?.[`${attackCalculation.toLowerCase()}Mod`] || "0",
+          10
+        );
+      }
     }
 
     let damage = attack?.data?.damage || "1d4";
