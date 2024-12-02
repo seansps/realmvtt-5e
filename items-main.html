@@ -13,8 +13,7 @@
       valuesToShow.push("weaponType");
       valuesToShow.push("weaponMastery");
       valuesToShow.push("weaponProperties");
-    }
-    else {
+    } else {
       valuesToHide.push("damage");
       valuesToHide.push("weaponType");
       valuesToHide.push("weaponMastery");
@@ -23,8 +22,7 @@
 
     if (typeStr === "shield" || typeStr === "armor") {
       valuesToShow.push("armorClass");
-    }
-    else {
+    } else {
       valuesToHide.push("armorClass");
     }
 
@@ -34,8 +32,7 @@
       valuesToShow.push("maxDex");
       valuesToShow.push("strength");
       valuesToShow.push("stealth");
-    }
-    else {
+    } else {
       valuesToHide.push("armorCategory");
       valuesToHide.push("addDex");
       valuesToHide.push("maxDex");
@@ -43,10 +40,14 @@
       valuesToHide.push("stealth");
     }
 
-    if (typeStr === "armor" || typeStr === "shield" || typeStr === "melee weapon" || typeStr === "ranged weapon") {
+    if (
+      typeStr === "armor" ||
+      typeStr === "shield" ||
+      typeStr === "melee weapon" ||
+      typeStr === "ranged weapon"
+    ) {
       valuesToHide.push("consumable");
-    }
-    else if (typeStr !== "pack") {
+    } else if (typeStr !== "pack") {
       valuesToShow.push("consumable");
     }
 
@@ -56,8 +57,7 @@
       valuesToHide.push("rarity");
       valuesToHide.push("consumable");
       valuesToHide.push("attunement");
-    }
-    else {
+    } else {
       valuesToHide.push("itemListLabel");
       valuesToHide.push("items");
       valuesToShow.push("rarity");
@@ -79,10 +79,17 @@
     if (subtype.toLowerCase().includes("scroll")) {
       valuesToShow.push("spell");
       valuesToShow.push("spellLevel");
-    }
-    else {
+    } else {
       valuesToHide.push("spell");
       valuesToHide.push("spellLevel");
+    }
+
+    if (subtype.toLowerCase().includes("potion")) {
+      valuesToShow.push("effects");
+      valuesToShow.push("healing");
+    } else {
+      valuesToHide.push("effects");
+      valuesToHide.push("healing");
     }
 
     if (valuesToHide.length > 0) {
@@ -119,7 +126,11 @@
       valuesToShow.push("versatileDamage");
     }
 
-    if (!values.includes("Range") && !values.includes("Thrown") && !values.includes("Ammunition")) {
+    if (
+      !values.includes("Range") &&
+      !values.includes("Thrown") &&
+      !values.includes("Ammunition")
+    ) {
       valuesToHide.push("normalRange");
       valuesToHide.push("maxRange");
       valuesToHide.push("rangeLabel");
@@ -142,46 +153,116 @@
   }
 </script>
 
-<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
-  <div style='display: flex; gap: 4px'>
-    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
-      <portrait width='125px' height='125px' field="portrait"></portrait>
+<div
+  style="display: flex; flex-direction: column; width: 100%; margin-bottom: 4px"
+>
+  <div style="display: flex; gap: 4px">
+    <div
+      style="width: 125px; height: 125px; min-height: 125px; min-width: 125px"
+    >
+      <portrait width="125px" height="125px" field="portrait"></portrait>
     </div>
-    <div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
-      <dropdown multiselect='1' placeholder='Select Type' onchange="showHideValues(value);" field="type" label="Type"
+    <div
+      style="
+        display: flex;
+        gap: 4px;
+        flex-direction: column;
+        width: 100%;
+        margin-bottom: 4px;
+      "
+    >
+      <dropdown
+        multiselect="1"
+        placeholder="Select Type"
+        onchange="showHideValues(value);"
+        field="type"
+        label="Type"
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
       {"label": "Ranged Weapon", "value": "ranged weapon"}, {"label": "Armor", "value": "armor"}, {"label": "Shield", "value": "shield"},
-      {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}, {"label": "Item Pack", "value": "pack"}]'>
+      {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}, {"label": "Item Pack", "value": "pack"}]'
+      >
       </dropdown>
-      <stringfield width="100%" field="subtype" label="Subtype" onchange="showHideValuesSubtype(value);"
-        placeholder='Enter Subtype...'></stringfield>
+      <stringfield
+        width="100%"
+        field="subtype"
+        label="Subtype"
+        onchange="showHideValuesSubtype(value);"
+        placeholder="Enter Subtype..."
+      ></stringfield>
     </div>
   </div>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <stringfield width='50%' field="cost" label="Cost" placeholder='Enter cost...'></stringfield>
-    <numberfield width='50%' field="weight" label="Weight" placeholder='0'></numberfield>
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <stringfield
+      width="50%"
+      field="cost"
+      label="Cost"
+      placeholder="Enter cost..."
+    ></stringfield>
+    <numberfield
+      width="50%"
+      field="weight"
+      label="Weight"
+      placeholder="0"
+    ></numberfield>
   </div>
 
   <!-- Other General Properties -->
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: center;">
-    <dropdown width='100%' field="rarity" label="Rarity" placeholder='--'
-      options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}]'>
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      gap: 8px;
+      align-items: center;
+    "
+  >
+    <dropdown
+      width="100%"
+      field="rarity"
+      label="Rarity"
+      placeholder="--"
+      options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}]'
+    >
     </dropdown>
 
-    <checkbox hidden="true" width='150px' field="consumable" label="Consumable" textalign='left' size="sm"></checkbox>
-    <checkbox width='250px' field="attunement" label="Requires Attunement" textalign='left' size="sm">
+    <checkbox
+      hidden="true"
+      width="150px"
+      field="consumable"
+      label="Consumable"
+      textalign="left"
+      size="sm"
+    ></checkbox>
+    <checkbox
+      width="250px"
+      field="attunement"
+      label="Requires Attunement"
+      textalign="left"
+      size="sm"
+    >
     </checkbox>
   </div>
 
   <!-- Weapon Properties -->
 
-  <stringfield width='100%' hidden="true" field="damage" label="Damage"></stringfield>
+  <stringfield
+    width="100%"
+    hidden="true"
+    field="damage"
+    label="Damage"
+  ></stringfield>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <dropdown width='50%' hidden="true" field="weaponType" label='Weapon Type' placeholder='Select Weapon Type'
-      searchable='true' options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <dropdown
+      width="50%"
+      hidden="true"
+      field="weaponType"
+      label="Weapon Type"
+      placeholder="Select Weapon Type"
+      searchable="true"
+      options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
     {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"}, 
     {"label": "Javelin", "value": "Javelin"}, {"label": "Light Hammer", "value": "Light Hammer"}, 
     {"label": "Mace", "value": "Mace"}, {"label": "Quarterstaff", "value": "Quarterstaff"},
@@ -200,93 +281,245 @@
     {"label": "Whip", "value": "Whip"}, {"label": "Blowgun", "value": "Blowgun"},
     {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
     {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
-    {"label": "Pistol", "value": "Pistol"}]'>
+    {"label": "Pistol", "value": "Pistol"}]'
+    >
     </dropdown>
-    <dropdown width='50%' hidden="true" field="weaponMastery" label='Mastery' placeholder='Select Mastery Property'
-      searchable='true' options='[{"label": "Cleave", "value": "Cleave"}, {"label": "Graze", "value": "Graze"}, 
+    <dropdown
+      width="50%"
+      hidden="true"
+      field="weaponMastery"
+      label="Mastery"
+      placeholder="Select Mastery Property"
+      searchable="true"
+      options='[{"label": "Cleave", "value": "Cleave"}, {"label": "Graze", "value": "Graze"}, 
     {"label": "Nick", "value": "Nick"}, {"label": "Push", "value": "Push"}, 
     {"label": "Sap", "value": "Sap"}, {"label": "Slow", "value": "Slow"}, 
-    {"label": "Topple", "value": "Topple"}, {"label": "Vex", "value": "Vex"}]'>
+    {"label": "Topple", "value": "Topple"}, {"label": "Vex", "value": "Vex"}]'
+    >
     </dropdown>
   </div>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <dropdown width='100%' hidden="true" field="weaponProperties" label='Weapon Properties'
-      onchange="showHideWeaponValues(value);" multiselect='10' placeholder='Select Weapon Properties' searchable='true'
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <dropdown
+      width="100%"
+      hidden="true"
+      field="weaponProperties"
+      label="Weapon Properties"
+      onchange="showHideWeaponValues(value);"
+      multiselect="10"
+      placeholder="Select Weapon Properties"
+      searchable="true"
       options='[{"label": "Ammunition", "value": "Ammunition"}, {"label": "Finesse", "value": "Finesse"}, 
     {"label": "Heavy", "value": "Heavy"}, {"label": "Light", "value": "Light"}, 
     {"label": "Loading", "value": "Loading"}, {"label": "Range", "value": "Range"}, 
     {"label": "Reach", "value": "Reach"}, {"label": "Thrown", "value": "Thrown"},
-    {"label": "Two-Handed", "value": "Two-Handed"}, {"label": "Versatile", "value": "Versatile"}]'>
+    {"label": "Two-Handed", "value": "Two-Handed"}, {"label": "Versatile", "value": "Versatile"}]'
+    >
     </dropdown>
   </div>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: flex-end;">
-    <numberfield width='100%' hidden="true" field="normalRange" label="Normal Range" placeholder='Enter Range...'>
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      gap: 8px;
+      align-items: flex-end;
+    "
+  >
+    <numberfield
+      width="100%"
+      hidden="true"
+      field="normalRange"
+      label="Normal Range"
+      placeholder="Enter Range..."
+    >
     </numberfield>
     <label hidden="true" field="rangeLabel" label="/" variable="bold"></label>
-    <numberfield width='100%' hidden="true" field="maxRange" label="Max Range" placeholder='Enter Max Range...'>
+    <numberfield
+      width="100%"
+      hidden="true"
+      field="maxRange"
+      label="Max Range"
+      placeholder="Enter Max Range..."
+    >
     </numberfield>
-    <stringfield width='100%' hidden="true" field="ammoType" label="Ammo Type" placeholder='Enter Ammo Type...'>
+    <stringfield
+      width="100%"
+      hidden="true"
+      field="ammoType"
+      label="Ammo Type"
+      placeholder="Enter Ammo Type..."
+    >
     </stringfield>
   </div>
 
-  <stringfield width='100%' hidden="true" field="versatileDamage" label="Versatile Damage"
-    placeholder='Enter damage for two-handed use...'></stringfield>
+  <stringfield
+    width="100%"
+    hidden="true"
+    field="versatileDamage"
+    label="Versatile Damage"
+    placeholder="Enter damage for two-handed use..."
+  ></stringfield>
 
   <!-- Armor Properties -->
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <numberfield width='100%' hidden="true" field="armorClass" label="AC (Armor Class)" placeholder='Enter AC...'>
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <numberfield
+      width="100%"
+      hidden="true"
+      field="armorClass"
+      label="AC (Armor Class)"
+      placeholder="Enter AC..."
+    >
     </numberfield>
-    <dropdown width='100%' hidden="true" field="armorCategory" label='Armor Category'
-      placeholder='Select Armor Category' searchable='true'
-      options='[{"label": "Light", "value": "Light"}, {"label": "Medium", "value": "Medium"}, {"label": "Heavy", "value": "Heavy"}]'>
+    <dropdown
+      width="100%"
+      hidden="true"
+      field="armorCategory"
+      label="Armor Category"
+      placeholder="Select Armor Category"
+      searchable="true"
+      options='[{"label": "Light", "value": "Light"}, {"label": "Medium", "value": "Medium"}, {"label": "Heavy", "value": "Heavy"}]'
+    >
     </dropdown>
   </div>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px; align-items: center;">
-    <checkbox hidden="true" width='170px' field="addDex" label="Add Dex Mod" textalign='left' size="sm"></checkbox>
-    <numberfield hidden="true" width='100%' field="maxDex" label="Max Dex Mod" placeholder='Enter Max Dex Mod...'>
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      gap: 8px;
+      align-items: center;
+    "
+  >
+    <checkbox
+      hidden="true"
+      width="170px"
+      field="addDex"
+      label="Add Dex Mod"
+      textalign="left"
+      size="sm"
+    ></checkbox>
+    <numberfield
+      hidden="true"
+      width="100%"
+      field="maxDex"
+      label="Max Dex Mod"
+      placeholder="Enter Max Dex Mod..."
+    >
     </numberfield>
   </div>
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <numberfield width='100%' hidden="true" field="strength" label="Strength" placeholder='--'>
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <numberfield
+      width="100%"
+      hidden="true"
+      field="strength"
+      label="Strength"
+      placeholder="--"
+    >
     </numberfield>
-    <dropdown width='100%' hidden="true" field="stealth" label="Stealth" placeholder='--'
-      options='[{"label": "No Disadvantage", "value": "none"}, {"label": "Disadvantage", "value": "disadvantage"}]'>
+    <dropdown
+      width="100%"
+      hidden="true"
+      field="stealth"
+      label="Stealth"
+      placeholder="--"
+      options='[{"label": "No Disadvantage", "value": "none"}, {"label": "Disadvantage", "value": "disadvantage"}]'
+    >
     </dropdown>
+  </div>
+
+  <!-- Magic Item (Potion) Properties -->
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <dropdown
+      width="100%"
+      hidden="true"
+      field="effects"
+      label="Effects"
+      placeholder="Select Effects if Applicable..."
+      multiselect="10"
+      optionsquery='{"type": "effects", "query": {}}'
+    >
+    </dropdown>
+    <stringfield
+      width="100%"
+      hidden="true"
+      field="healing"
+      label="Healing"
+      placeholder="Enter Healing if Applicable..."
+    ></stringfield>
   </div>
 
   <!-- Magic Item (Scroll) Properties -->
 
-  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px;">
-    <dropdown width='100%' hidden="true" field="spell" label="Spell" placeholder='Select Spell...'
-      optionsquery='{"type": "spells", "query": {}}'>
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <dropdown
+      width="100%"
+      hidden="true"
+      field="spell"
+      label="Spell"
+      placeholder="Select Spell..."
+      optionsquery='{"type": "spells", "query": {}}'
+    >
     </dropdown>
-    <numberfield width='100%' hidden="true" field="spellLevel" label="Level" placeholder='Enter Level...'></numberfield>
+    <numberfield
+      width="100%"
+      hidden="true"
+      field="spellLevel"
+      label="Level"
+      placeholder="Enter Level..."
+    ></numberfield>
   </div>
-</div>
 
-<div style='margin-top: 8px;'>
-  <label hidden="true" field='itemListLabel' label='Items in Pack' size="sm" variant='bold'></label>
-</div>
+  <!-- Pack Properties -->
 
-<div>
-  <list hidden="true" listtype="item_list" field='items' variant='striped' allowadd=''></list>
-</div>
+  <div style="margin-top: 8px">
+    <label
+      hidden="true"
+      field="itemListLabel"
+      label="Items in Pack"
+      size="sm"
+      variant="bold"
+    ></label>
+  </div>
 
-<div style='margin-top: 8px;'>
-  <divider label='Description'></divider>
-</div>
+  <div>
+    <list
+      hidden="true"
+      listtype="item_list"
+      field="items"
+      variant="striped"
+      allowadd=""
+    ></list>
+  </div>
 
-<div style='margin-top: 8px;'>
-  <richtextfield field='description' label='Description' placeholder='Enter Item description...'
-    hidewhenidentified="false">
-  </richtextfield>
-</div>
+  <!-- Description -->
 
-<stringfield field='unidentifiedDescription' label='Unidentified Description' placeholder='Enter description...'
-  multiline='true' maxrows='4' hidewhenidentified="true">
-</stringfield>
+  <div style="margin-top: 8px">
+    <divider label="Description"></divider>
+  </div>
+
+  <div style="margin-top: 8px">
+    <richtextfield
+      field="description"
+      label="Description"
+      placeholder="Enter Item description..."
+      hidewhenidentified="false"
+    >
+    </richtextfield>
+  </div>
+
+  <stringfield
+    field="unidentifiedDescription"
+    label="Unidentified Description"
+    placeholder="Enter description..."
+    multiline="true"
+    maxrows="4"
+    hidewhenidentified="true"
+  >
+  </stringfield>
+</div>

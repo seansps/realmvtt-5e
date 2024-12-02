@@ -41,12 +41,15 @@
     // and output the description to Chat
     // If it is a scoll with a spell set, output a link to the spell
     const itemDataPath = dataPath.replace(".data.useBtn", "");
+    const itemName = api.getValue(`${itemDataPath}.name`);
     const itemCount = api.getValue(`${itemDataPath}.data.count`);
     const indexValue = parseInt(itemDataPath.split(".").pop());
 
     // Output the description to Chat
     const description = api.getValue(`${itemDataPath}.data.description`) || "";
-    const markdownDescription = api.richTextToMarkdown(description || "");
+    const effects = api.getValue(`${itemDataPath}.data.effects`) || [];
+    const healing = api.getValue(`${itemDataPath}.data.healing`);
+    let markdownDescription = api.richTextToMarkdown(description || "");
     let recordLinks;
     const spell = api.getValue(`${itemDataPath}.data.spell`);
     if (spell) {
@@ -65,6 +68,37 @@
         ];
       }
     }
+
+    // If we're using a potion with an effect or healing, add the buttons
+    if (effects) {
+      // Create macros for all effects that this action can apply
+      let effectButtons = "";
+      effects.forEach((effectJson) => {
+        const effect = JSON.parse(effectJson);
+        const effectName = effect?.name || "";
+        const effectID = effect?._id || "";
+        const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
+        if (effectButtons !== "") {
+          effectButtons += "\n";
+        }
+        effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+  api.addEffectById('${effectID}', target);
+});
+\`\`\``;
+      });
+
+      markdownDescription += `\n${effectButtons}`;
+    }
+
+    if (healing) {
+      const healingButton = `\`\`\`Roll_Healing
+api.promptRoll('${itemName}', '${healing}', [], {}, 'healing')
+\`\`\``;
+      markdownDescription += `\n${healingButton}`;
+    }
+
     api.sendMessage(markdownDescription, undefined, recordLinks);
 
     const count = parseFloat(itemCount || "0");
