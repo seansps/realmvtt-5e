@@ -422,7 +422,20 @@ selectedTokens.forEach(token => {
   });
 
   const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
-  saveMods.forEach(mod => {
+  // Also get modifiers specific to spells
+  const spellSaveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'spell');
+  
+  // Filter out duplicates based on name, value, type, and active status
+  const allMods = [...saveMods, ...spellSaveMods].filter((mod, index, array) => {
+    return index === array.findIndex(m => 
+      m.name === mod.name && 
+      m.value === mod.value && 
+      m.modifierType === mod.modifierType && 
+      m.active === mod.active
+    );
+  });
+  
+  allMods.forEach(mod => {
     saveModifiers.push(mod);
   });
 
