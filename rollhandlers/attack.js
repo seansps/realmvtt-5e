@@ -267,6 +267,9 @@ let autoCritical = data?.roll?.metadata?.autoCritical;
 let critOn = data?.roll?.metadata?.critOn || 20;
 const minRoll = data?.roll?.metadata?.minRoll;
 
+// If it was a spell attack, we need to pass this along in damage metadata
+const isSpell = data?.roll?.metadata?.isSpell === true;
+
 // Find the undropped d20, and if minroll is set
 // alter the actual roll to be the minroll if it's lower
 const roll = {
@@ -368,6 +371,8 @@ const tags = [
 const damageMetadata = {
   // This is so that our damage handler script can tell if it was from a critical hit
   critical: isCritical,
+  // So we can tell the damage handler script if it was a spell-related damage
+  isSpell: isSpell,
 };
 
 // Add damage button to message

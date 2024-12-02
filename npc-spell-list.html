@@ -268,7 +268,7 @@
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
     const saveDamageMetadata = spell?.data?.isSave
-      ? { save: savingThrow, saveDc: saveDc }
+      ? { save: savingThrow, saveDc: saveDc, isSpell: true }
       : {};
     const damageButton =
       spell?.data?.damage && spell?.data?.isSave
@@ -374,7 +374,8 @@ targets.forEach(target => {
     "damageModifiers": ${JSON.stringify(modifiers)},
     "autoCritical": autoCritical,
     "critOn": critOn,
-    "minRoll": minRoll
+    "minRoll": minRoll,
+    "isSpell": true
   }
   api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
@@ -389,7 +390,8 @@ if (!targets.length) {
     "damage": "${spellDamage}",
     "critOn": critOn,
     "damageModifiers": ${JSON.stringify(modifiers)},
-    "minRoll": minRoll
+    "minRoll": minRoll,
+    "isSpell": true
   }
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage

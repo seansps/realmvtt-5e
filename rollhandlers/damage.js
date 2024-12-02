@@ -1,12 +1,17 @@
 const isCritical = data.roll?.metadata?.critical === true;
 
 // Here we need to determine if it was a hit or miss and display in the chat.
-const tags = [{
-  name: "Damage",
-  tooltip: "Damage Roll"
-}];
+const tags = [
+  {
+    name: "Damage",
+    tooltip: "Damage Roll",
+  },
+];
 
-const showHalf = data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== '';
+const showHalf =
+  data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== "";
+// If the damage came from a spell, we track that here for "spell" resistance/immunity/vulnerability
+const isSpell = data.roll?.metadata?.isSpell === true;
 
 const damageMacro = `
 \`\`\`Apply_Damage
@@ -41,13 +46,16 @@ targets.forEach(target => {
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = damageByType[type];
-      if (RIV.resistances.includes(type.toLowerCase() || '')) {
+      if (RIV.resistances.includes(type.toLowerCase() || '')
+        || (${isSpell} && RIV.resistances.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 0.5);
       }
-      if (RIV.immunities.includes(type.toLowerCase() || '')) {
+      if (RIV.immunities.includes(type.toLowerCase() || '')
+        || (${isSpell} && RIV.immunities.includes('spell'))) {
         thisDamage = 0;
       }
-      if (RIV.vulnerabilities.includes(type.toLowerCase() || '')) {
+      if (RIV.vulnerabilities.includes(type.toLowerCase() || '')
+        || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 2);
       }
       damage += thisDamage;
@@ -142,7 +150,8 @@ targets.forEach(target => {
 \`\`\`
 `;
 
-const halfDamageMacro = showHalf ? `
+const halfDamageMacro = showHalf
+  ? `
 \`\`\`Apply_Half_Damage
 let targets = api.getSelectedOrDroppedToken();
 
@@ -168,13 +177,16 @@ targets.forEach(target => {
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     data.roll.types.forEach(type => {
       let thisDamage = Math.floor(type.value / 2);
-      if (RIV.resistances.includes(type?.type?.toLowerCase() || '')) {
+      if (RIV.resistances.includes(type?.type?.toLowerCase() || '') 
+        || (${isSpell} && RIV.resistances.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 0.5);
       }
-      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')) {
+      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')
+        || (${isSpell} && RIV.immunities.includes('spell'))) {
         thisDamage = 0;
       }
-      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')) {
+      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')
+        || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 2);
       }
       damage += thisDamage;
@@ -267,7 +279,8 @@ targets.forEach(target => {
   }
 });
 \`\`\`
-` : '';
+`
+  : "";
 
 const message = `
 ${damageMacro}
