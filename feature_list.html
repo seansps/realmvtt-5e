@@ -1,49 +1,120 @@
-<div style='min-height: 30px; display: flex; flex-direction: column; gap: 4px'>
-  <div style='display: flex; gap: 4px'>
-    <numberfield width='70px' size='xs' field="level" label="Level"></numberfield>
-    <namefield width='100%' size='xs' label="Name" field="namefield"></namefield>
+<div style="min-height: 30px; display: flex; flex-direction: column; gap: 4px">
+  <div style="display: flex; gap: 4px">
+    <numberfield
+      width="70px"
+      size="xs"
+      field="level"
+      label="Level"
+    ></numberfield>
+    <namefield
+      width="100%"
+      size="xs"
+      label="Name"
+      field="namefield"
+    ></namefield>
   </div>
-  <accordion size='xs' variant='default' field="descriptionAcc" label="Description">
-    <richtextfield field="description" placeholder='Enter Feature description...'></richtextfield>
+  <accordion
+    size="xs"
+    variant="default"
+    field="descriptionAcc"
+    label="Description"
+  >
+    <richtextfield
+      field="description"
+      placeholder="Enter Feature description..."
+    ></richtextfield>
   </accordion>
-  <accordion size='xs' variant='default' field="rulesAcc" label="Rules Elements">
-    <divider label='Ability' textalign="center"></divider>
-    <div style='display: flex; gap: 8px;'>
-      <dropdown size='xs' width="50%" field="ability" label="Grants Ability" searchable='true'
-        description='If applicable, an Ability that this Feature grants'
-        optionsquery='{"type": "abilities", "query": {}}' placeholder='Select Ability...'>
+  <accordion
+    size="xs"
+    variant="default"
+    field="rulesAcc"
+    label="Rules Elements"
+  >
+    <divider label="Ability" textalign="center"></divider>
+    <div style="display: flex; gap: 8px">
+      <dropdown
+        size="xs"
+        width="50%"
+        field="ability"
+        label="Grants Ability"
+        searchable="true"
+        description="If applicable, an Ability that this Feature grants"
+        optionsquery='{"type": "abilities", "query": {}}'
+        placeholder="Select Ability..."
+      >
       </dropdown>
-      <stringfield width="50%" label="Ability Group Name" description='Adds an Ability Group with this Name'
-        field="abilityGroupName" size='xs' placeholder='N/A'>
+      <stringfield
+        width="50%"
+        label="Ability Group Name"
+        description="Adds an Ability Group with this Name"
+        field="abilityGroupName"
+        size="xs"
+        placeholder="N/A"
+      >
       </stringfield>
     </div>
-    <div style='display: flex; gap: 8px;'>
-      <numberfield width="33%" label="Ability Uses per Day" field="maxDailyUses" description='Initial uses per day'
-        size='xs' placeholder='N/A'>
+    <div style="display: flex; gap: 8px">
+      <numberfield
+        width="33%"
+        label="Ability Uses per Day"
+        field="maxDailyUses"
+        description="Initial uses per day"
+        size="xs"
+        placeholder="N/A"
+      >
       </numberfield>
-      <stringfield width="33%" label="Ability Value" description='Value of the Ability Group' field="value" size='xs'
-        placeholder='N/A'>
+      <stringfield
+        width="33%"
+        label="Ability Value"
+        description="Value of the Ability Group"
+        field="value"
+        size="xs"
+        placeholder="N/A"
+      >
       </stringfield>
-      <dropdown width="33%" size='xs' field="restoreOn" placeholder='N/A' description='How uses are restored'
+      <dropdown
+        width="33%"
+        size="xs"
+        field="restoreOn"
+        placeholder="N/A"
+        description="How uses are restored"
         label="Ability Restores On"
-        options='[{"label": "Short Rest", "value": "shortrest"}, {"label": "Long Rest", "value": "longrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'>
+        options='[{"label": "Short Rest", "value": "shortrest"}, {"label": "Long Rest", "value": "longrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'
+      >
       </dropdown>
     </div>
-    <div style='display: flex; gap: 8px;'>
-      <dropdown width="50%" label="Max Daily Uses Fields"
-        description='Uses the values of these fields to calculate Uses' field="fieldsToAddToUses" size='xs'
-        placeholder='Select Fields' multiselect='10'
-        options='[{"label": "Strength Modifier", "value": "strengthMod"}, {"label": "Dexterity Modifier", "value": "dexterityMod"}, {"label": "Constitution Modifier", "value": "constitutionMod"}, {"label": "Intelligence Modifier", "value": "intelligenceMod"}, {"label": "Wisdom Modifier", "value": "wisdomMod"}, {"label": "Charisma Modifier", "value": "charismaMod"}, {"label": "Proficiency Bonus", "value": "proficiencyBonus"}, {"label": "Barbarian Level", "value": "barbarianLevel"}, {"label": "Bard Level", "value": "bardLevel"}, {"label": "Cleric Level", "value": "clericLevel"}, {"label": "Druid Level", "value": "druidLevel"}, {"label": "Fighter Level", "value": "fighterLevel"}, {"label": "Monk Level", "value": "monkLevel"}, {"label": "Paladin Level", "value": "paladinLevel"}, {"label": "Ranger Level", "value": "rangerLevel"}, {"label": "Rogue Level", "value": "rogueLevel"}, {"label": "Sorcerer Level", "value": "sorcererLevel"}, {"label": "Warlock Level", "value": "warlockLevel"}, {"label": "Wizard Level", "value": "wizardLevel"}, {"label": "Total of Values x 5", "value": "times5"}]'>
+    <div style="display: flex; gap: 8px">
+      <dropdown
+        width="50%"
+        label="Max Daily Uses Fields"
+        description="Uses the values of these fields to calculate Uses"
+        field="fieldsToAddToUses"
+        size="xs"
+        placeholder="Select Fields"
+        multiselect="10"
+        options='[{"label": "Strength Modifier", "value": "strengthMod"}, {"label": "Dexterity Modifier", "value": "dexterityMod"}, {"label": "Constitution Modifier", "value": "constitutionMod"}, {"label": "Intelligence Modifier", "value": "intelligenceMod"}, {"label": "Wisdom Modifier", "value": "wisdomMod"}, {"label": "Charisma Modifier", "value": "charismaMod"}, {"label": "Proficiency Bonus", "value": "proficiencyBonus"}, {"label": "Barbarian Level", "value": "barbarianLevel"}, {"label": "Bard Level", "value": "bardLevel"}, {"label": "Cleric Level", "value": "clericLevel"}, {"label": "Druid Level", "value": "druidLevel"}, {"label": "Fighter Level", "value": "fighterLevel"}, {"label": "Monk Level", "value": "monkLevel"}, {"label": "Paladin Level", "value": "paladinLevel"}, {"label": "Ranger Level", "value": "rangerLevel"}, {"label": "Rogue Level", "value": "rogueLevel"}, {"label": "Sorcerer Level", "value": "sorcererLevel"}, {"label": "Warlock Level", "value": "warlockLevel"}, {"label": "Wizard Level", "value": "wizardLevel"}, {"label": "Total of Values x 5", "value": "times5"}, {"label": "Total of Values Plus 1", "value": "plus1"}]'
+      >
       </dropdown>
-      <dropdown width="50%" field="savingThrowAbility" label="Saving Throw Ability" placeholder='N/A' size='xs'
-        description='How to calculate the DC in this Group, if any saves'
-        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+      <dropdown
+        width="50%"
+        field="savingThrowAbility"
+        label="Saving Throw Ability"
+        placeholder="N/A"
+        size="xs"
+        description="How to calculate the DC in this Group, if any saves"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      >
       </dropdown>
     </div>
     <!-- List of Modifiers, if Any -->
-    <div style='width: 100%; margin-top: 4px'>
-      <divider label='Modifiers' textalign="center"></divider>
-      <list listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
+    <div style="width: 100%; margin-top: 4px">
+      <divider label="Modifiers" textalign="center"></divider>
+      <list
+        listtype="modifier_list"
+        field="modifiers"
+        variant="striped"
+        allowadd=""
+      ></list>
     </div>
   </accordion>
 </div>

@@ -707,10 +707,13 @@ function getTotalValueFromFields(
 ) {
   let total = 0;
   let times5 = false;
+  let plus1 = false;
   fieldsToAddToUses.forEach((field) => {
     let value = 0;
     if (field === "times5") {
       times5 = true;
+    } else if (field === "plus1") {
+      plus1 = true;
     } else if (isClassLevel(field)) {
       value = getClassLevel(recordContext, field, fieldValueOverrides);
     } else {
@@ -733,6 +736,9 @@ function getTotalValueFromFields(
   }
   if (times5) {
     total *= 5;
+  }
+  if (plus1) {
+    total += 1;
   }
   return total;
 }

@@ -2,7 +2,10 @@
   function showHideCounter() {
     const maxDailyUses = value;
     // We're in a list, so we need to use the data path to the fields metadata
-    const dataPathToHideCounter = dataPath.replace('.data.maxDailyUses', '.fields.dailyUses.hidden');
+    const dataPathToHideCounter = dataPath.replace(
+      ".data.maxDailyUses",
+      ".fields.dailyUses.hidden"
+    );
     if (maxDailyUses > 0) {
       api.setValue(dataPathToHideCounter, false);
     } else {
@@ -15,9 +18,15 @@
       const totalUses = getTotalValueFromFields(record, fieldsToAddToUses);
       const valuesToSet = {};
       if (totalUses > 0) {
-        const dataPathToMaxDailyUses = dataPath.replace('.data.fieldsToAddToUses', '.data.maxDailyUses');
+        const dataPathToMaxDailyUses = dataPath.replace(
+          ".data.fieldsToAddToUses",
+          ".data.maxDailyUses"
+        );
         valuesToSet[dataPathToMaxDailyUses] = totalUses;
-        const dataPathToHideCounter = dataPath.replace('.data.fieldsToAddToUses', '.fields.dailyUses.hidden');
+        const dataPathToHideCounter = dataPath.replace(
+          ".data.fieldsToAddToUses",
+          ".fields.dailyUses.hidden"
+        );
         valuesToSet[dataPathToHideCounter] = false;
         api.setValues(valuesToSet);
       }
@@ -25,38 +34,103 @@
   }
 </script>
 
-<label textalign='center' variant='bold' size='md' field='namefield'></label>
+<label textalign="center" variant="bold" size="md" field="namefield"></label>
 
-<div style="width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
-  <counter hidden="true" textalign="center" label="Uses" field="dailyUses" maxvalue='1' maxvaluefield="maxDailyUses"
-    color='default' size="xs">
+<div
+  style="
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  "
+>
+  <counter
+    hidden="true"
+    textalign="center"
+    label="Uses"
+    field="dailyUses"
+    maxvalue="1"
+    maxvaluefield="maxDailyUses"
+    color="default"
+    size="xs"
+  >
   </counter>
 </div>
 
-<accordion size="sm" field="settingsOpen" label="Settings" hideonlocked="true" variant="contained">
-  <namefield width="100%" size='xs' label='Abilty List Name' placeholder='Enter Ability List Name...' field="namefield"
-    size='md'></namefield>
-  <dropdown field="restore" label="Restore Uses On" placeholder="N/A" size="xs"
-    options='[{"label": "Long Rest", "value": "longrest"}, {"label": "Short Rest", "value": "shortrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'>
+<accordion
+  size="sm"
+  field="settingsOpen"
+  label="Settings"
+  hideonlocked="true"
+  variant="contained"
+>
+  <namefield
+    width="100%"
+    size="xs"
+    label="Abilty List Name"
+    placeholder="Enter Ability List Name..."
+    field="namefield"
+    size="md"
+  ></namefield>
+  <dropdown
+    field="restore"
+    label="Restore Uses On"
+    placeholder="N/A"
+    size="xs"
+    options='[{"label": "Long Rest", "value": "longrest"}, {"label": "Short Rest", "value": "shortrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'
+  >
   </dropdown>
-  <div style='display: flex; gap: 4px;'>
-    <numberfield width="50%" field="maxDailyUses" label="Number of Uses" placeholder='N/A' size='xs'
-      description='Max number of times abilities can be used' onchange="showHideCounter();"></numberfield>
-    <stringfield width="50%" field="value" label="Ability Value" placeholder='N/A'
-      description='Dice string or number value for the ability group' size='xs'></stringfield>
+  <div style="display: flex; gap: 4px">
+    <numberfield
+      width="50%"
+      field="maxDailyUses"
+      label="Number of Uses"
+      placeholder="N/A"
+      size="xs"
+      description="Max number of times abilities can be used"
+      onchange="showHideCounter();"
+    ></numberfield>
+    <stringfield
+      width="50%"
+      field="value"
+      label="Ability Value"
+      placeholder="N/A"
+      description="Dice string or number value for the ability group"
+      size="xs"
+    ></stringfield>
   </div>
-  <div style='display: flex; gap: 8px;'>
-    <dropdown width="50%" label="Max Daily Uses Fields" description='Uses the values of these fields to calculate Uses'
-      field="fieldsToAddToUses" size='xs' placeholder='Select Fields' multiselect='10' onchange="updateUses(value);"
-      options='[{"label": "Strength Modifier", "value": "strengthMod"}, {"label": "Dexterity Modifier", "value": "dexterityMod"}, {"label": "Constitution Modifier", "value": "constitutionMod"}, {"label": "Intelligence Modifier", "value": "intelligenceMod"}, {"label": "Wisdom Modifier", "value": "wisdomMod"}, {"label": "Charisma Modifier", "value": "charismaMod"}, {"label": "Proficiency Bonus", "value": "proficiencyBonus"}, {"label": "Barbarian Level", "value": "barbarianLevel"}, {"label": "Bard Level", "value": "bardLevel"}, {"label": "Cleric Level", "value": "clericLevel"}, {"label": "Druid Level", "value": "druidLevel"}, {"label": "Fighter Level", "value": "fighterLevel"}, {"label": "Monk Level", "value": "monkLevel"}, {"label": "Paladin Level", "value": "paladinLevel"}, {"label": "Ranger Level", "value": "rangerLevel"}, {"label": "Rogue Level", "value": "rogueLevel"}, {"label": "Sorcerer Level", "value": "sorcererLevel"}, {"label": "Warlock Level", "value": "warlockLevel"}, {"label": "Wizard Level", "value": "wizardLevel"}, {"label": "Total of Values x 5", "value": "times5"}]'>
+  <div style="display: flex; gap: 8px">
+    <dropdown
+      width="50%"
+      label="Max Daily Uses Fields"
+      description="Uses the values of these fields to calculate Uses"
+      field="fieldsToAddToUses"
+      size="xs"
+      placeholder="Select Fields"
+      multiselect="10"
+      onchange="updateUses(value);"
+      options='[{"label": "Strength Modifier", "value": "strengthMod"}, {"label": "Dexterity Modifier", "value": "dexterityMod"}, {"label": "Constitution Modifier", "value": "constitutionMod"}, {"label": "Intelligence Modifier", "value": "intelligenceMod"}, {"label": "Wisdom Modifier", "value": "wisdomMod"}, {"label": "Charisma Modifier", "value": "charismaMod"}, {"label": "Proficiency Bonus", "value": "proficiencyBonus"}, {"label": "Barbarian Level", "value": "barbarianLevel"}, {"label": "Bard Level", "value": "bardLevel"}, {"label": "Cleric Level", "value": "clericLevel"}, {"label": "Druid Level", "value": "druidLevel"}, {"label": "Fighter Level", "value": "fighterLevel"}, {"label": "Monk Level", "value": "monkLevel"}, {"label": "Paladin Level", "value": "paladinLevel"}, {"label": "Ranger Level", "value": "rangerLevel"}, {"label": "Rogue Level", "value": "rogueLevel"}, {"label": "Sorcerer Level", "value": "sorcererLevel"}, {"label": "Warlock Level", "value": "warlockLevel"}, {"label": "Wizard Level", "value": "wizardLevel"}, {"label": "Total of Values x 5", "value": "times5"}, {"label": "Total of Values Plus 1", "value": "plus1"}]'
+    >
     </dropdown>
-    <dropdown width="50%" field="savingThrowAbility" label="Saving Throw Ability" placeholder='N/A' size='xs'
-      description='How to calculate the DC in this Group, if any saves'
-      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+    <dropdown
+      width="50%"
+      field="savingThrowAbility"
+      label="Saving Throw Ability"
+      placeholder="N/A"
+      size="xs"
+      description="How to calculate the DC in this Group, if any saves"
+      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+    >
     </dropdown>
   </div>
 </accordion>
 
-<div style='margin-top: 8px; width: 100%'>
-  <list listtype="ability_list" field='abilities' variant='outline-striped' radius='xs' allowadd=''></list>
+<div style="margin-top: 8px; width: 100%">
+  <list
+    listtype="ability_list"
+    field="abilities"
+    variant="outline-striped"
+    radius="xs"
+    allowadd=""
+  ></list>
 </div>
