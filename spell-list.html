@@ -746,7 +746,7 @@ ${effectButtons}
         field="prepared"
         variant="default"
         onchange="toggleDaily();"
-        options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}]'
+        options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}, {"icon": "IconCircleLetterA", "label": "At Will", "value": "atwill"}]'
       >
       </iconbutton>
     </div>
@@ -807,12 +807,16 @@ ${effectButtons}
       align-items: center;
     "
   >
-    <checkbox
-      size="xs"
-      field="restoreOnRest"
-      label="Restore on Rest"
-      hidden="true"
-    ></checkbox>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <dropdown
+        size="xs"
+        field="restoreOnRest"
+        label="Restore On"
+        width="100px"
+        hidden="true"
+        options='[{"label": "Manual", "value": "no"}, {"label": "Long Rest", "value": "long"}, {"label": "Short Rest", "value": "short"}]'
+      ></dropdown>
+    </div>
     <numberfield
       hidden="true"
       width="100px"

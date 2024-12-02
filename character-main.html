@@ -2453,6 +2453,29 @@
       }
     });
 
+    // Restore any Spells that have Daily Uses and restore on short rest
+    const spellLists = [
+      "cantrips",
+      "spells1",
+      "spells2",
+      "spells3",
+      "spells4",
+      "spells5",
+      "spells6",
+      "spells7",
+      "spells8",
+      "spells9",
+    ];
+    spellLists.forEach((spellList, index) => {
+      const spells = record?.data?.[spellList] || [];
+      spells.forEach((spell, index) => {
+        const restoreOnRest = spell?.data?.restoreOnRest || "no";
+        if (spell?.data?.dailyUses > 0 && restoreOnRest === "short") {
+          valuesToSet[`data.${spellList}.${index}.data.dailyUses`] = 0;
+        }
+      });
+    });
+
     api.setValues(valuesToSet);
     api.sendMessage(message, undefined, [], []);
   }
@@ -2524,8 +2547,8 @@
     spellLists.forEach((spellList, index) => {
       const spells = record?.data?.[spellList] || [];
       spells.forEach((spell, index) => {
-        const restoreOnRest = spell?.data?.restoreOnRest || false;
-        if (spell?.data?.dailyUses > 0 && restoreOnRest) {
+        const restoreOnRest = spell?.data?.restoreOnRest || "no";
+        if (spell?.data?.dailyUses > 0 && restoreOnRest !== "no") {
           valuesToSet[`data.${spellList}.${index}.data.dailyUses`] = 0;
         }
       });

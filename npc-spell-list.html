@@ -633,6 +633,11 @@ ${effectButtons}
       valuesToSet[dataPathToHideCounter] = false;
       // Hide the upcast level button
       valuesToSet[dataPathToHideUpcast] = true;
+    } else if (prepared === "will") {
+      valuesToSet[dataPathToHideDaily] = true;
+      valuesToSet[dataPathToHideCounter] = true;
+      // Hide the upcast level button
+      valuesToSet[dataPathToHideUpcast] = true;
     } else {
       valuesToSet[dataPathToHideDaily] = true;
       valuesToSet[dataPathToHideCounter] = true;
