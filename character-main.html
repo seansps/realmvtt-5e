@@ -2103,7 +2103,15 @@
     });
 
     // Set all values
-    api.setValues(fieldsToSet);
+    api.setValues(fieldsToSet, (updatedRecord) => {
+      // Trigger an update of HP incase species contained HP bonuses
+      const conMod = parseInt(updatedRecord?.data?.constitutionMod || "0", 10);
+      const newHp = getHpForLevel(conMod, updatedRecord);
+      // Set our HP to be totalHp per level + conMod * level
+      if (newHp > updatedRecord?.data?.hitpoints) {
+        api.setValue("data.hitpoints", newHp);
+      }
+    });
   }
 
   function onDrop(type, recordLink) {
