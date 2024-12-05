@@ -1,5 +1,17 @@
 const isCritical = data.roll?.metadata?.critical === true;
 
+// Get any ignore resistances or immunities from the metadata
+const damageIgnoresResistances = (
+  data.roll?.metadata?.damageIgnoresResistances || ""
+)
+  .split(",")
+  .map((s) => s.toLowerCase().trim());
+const damageIgnoresImmunities = (
+  data.roll?.metadata?.damageIgnoresImmunities || ""
+)
+  .split(",")
+  .map((s) => s.toLowerCase().trim());
+
 // Here we need to determine if it was a hit or miss and display in the chat.
 const tags = [
   {
@@ -46,13 +58,23 @@ targets.forEach(target => {
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = damageByType[type];
-      if (RIV.resistances.includes(type.toLowerCase() || '')
-        || (${isSpell} && RIV.resistances.includes('spell'))) {
-        thisDamage = Math.floor(thisDamage * 0.5);
+      // If the damage type is in the ignore resistances list, we don't apply resistances
+      if (!${JSON.stringify(
+        damageIgnoresResistances
+      )}.includes(type.toLowerCase())) {
+        if (RIV.resistances.includes(type.toLowerCase() || '')
+          || (${isSpell} && RIV.resistances.includes('spell'))) {
+          thisDamage = Math.floor(thisDamage * 0.5);
+        }
       }
-      if (RIV.immunities.includes(type.toLowerCase() || '')
-        || (${isSpell} && RIV.immunities.includes('spell'))) {
-        thisDamage = 0;
+      // If the damage type is in the ignore immunities list, we don't apply immunities
+      if (!${JSON.stringify(
+        damageIgnoresImmunities
+      )}.includes(type.toLowerCase())) {
+        if (RIV.immunities.includes(type.toLowerCase() || '')
+          || (${isSpell} && RIV.immunities.includes('spell'))) {
+          thisDamage = 0;
+        }
       }
       if (RIV.vulnerabilities.includes(type.toLowerCase() || '')
         || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
@@ -177,13 +199,23 @@ targets.forEach(target => {
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     data.roll.types.forEach(type => {
       let thisDamage = Math.floor(type.value / 2);
-      if (RIV.resistances.includes(type?.type?.toLowerCase() || '') 
-        || (${isSpell} && RIV.resistances.includes('spell'))) {
-        thisDamage = Math.floor(thisDamage * 0.5);
+      // If the damage type is in the ignore resistances list, we don't apply resistances
+      if (!${JSON.stringify(
+        damageIgnoresResistances
+      )}.includes(type?.type?.toLowerCase())) {
+        if (RIV.resistances.includes(type?.type?.toLowerCase() || '') 
+          || (${isSpell} && RIV.resistances.includes('spell'))) {
+          thisDamage = Math.floor(thisDamage * 0.5);
+        } 
       }
-      if (RIV.immunities.includes(type?.type?.toLowerCase() || '')
-        || (${isSpell} && RIV.immunities.includes('spell'))) {
-        thisDamage = 0;
+      // If the damage type is in the ignore immunities list, we don't apply immunities
+      if (!${JSON.stringify(
+        damageIgnoresImmunities
+      )}.includes(type?.type?.toLowerCase())) {
+        if (RIV.immunities.includes(type?.type?.toLowerCase() || '')
+          || (${isSpell} && RIV.immunities.includes('spell'))) {
+          thisDamage = 0;
+        }
       }
       if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')
         || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {

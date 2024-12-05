@@ -258,6 +258,10 @@ const attack = data?.roll?.metadata?.attack;
 const targetName = data?.roll?.metadata?.targetName;
 const tooltip = data?.roll?.metadata?.tooltip;
 let damageModifiers = data?.roll?.metadata?.damageModifiers || [];
+const damageIgnoresResistances =
+  data?.roll?.metadata?.damageIgnoresResistances || "";
+const damageIgnoresImmunities =
+  data?.roll?.metadata?.damageIgnoresImmunities || "";
 const icon = data?.roll?.metadata?.icon;
 const masteryProperties = data?.roll?.metadata?.masteryProperties || [];
 const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
@@ -373,6 +377,8 @@ const damageMetadata = {
   critical: isCritical,
   // So we can tell the damage handler script if it was a spell-related damage
   isSpell: isSpell,
+  damageIgnoresResistances: damageIgnoresResistances,
+  damageIgnoresImmunities: damageIgnoresImmunities,
 };
 
 // Add damage button to message
