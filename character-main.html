@@ -2584,12 +2584,16 @@
   }
 
   function rollDeathSave() {
-    const modifiers = [];
     const metadata = {
       rollName: "Death Save",
     };
 
-    api.promptRoll(`Death Save`, "1d20", modifiers, metadata, "deathsave");
+    const saveModifiers = getEffectsAndModifiers(
+      ["saveBonus", "savePenalty"],
+      "death"
+    );
+
+    api.promptRoll(`Death Save`, "1d20", saveModifiers, metadata, "deathsave");
   }
 </script>
 
