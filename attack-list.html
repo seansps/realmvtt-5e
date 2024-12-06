@@ -195,6 +195,31 @@
       };
     });
 
+    // Determine if we are making a damage roll that ignores resistances / immunities
+    const damageIgnoresResistances = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          mod.value.trim().toLowerCase().includes("resistance")
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    const damageIgnoresImmunities = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          (mod.value.trim().toLowerCase().includes("immunities") ||
+            mod.value.trim().toLowerCase().includes("immunity"))
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    damageModifiers = damageModifiers.filter(
+      (m) => !m.value.toString().toLowerCase().includes("ignore")
+    );
+
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
     if (damage.includes("d") || name.toLowerCase().includes("unarmed")) {
       // The modifier is inactive by default if this was an off-hand attack, unless the modifier is a penalty
@@ -319,6 +344,8 @@
         dc: targetAc,
         damage: damage,
         damageModifiers: damageModifiers,
+        damageIgnoresResistances: damageIgnoresResistances,
+        damageIgnoresImmunities: damageIgnoresImmunities,
         masteryProperties: masteryProperties,
         attackerProficiencyBonus: proficiencyBonus,
         minRoll: minRoll,
@@ -338,6 +365,8 @@
         damageModifiers: damageModifiers,
         masteryProperties: masteryProperties,
         attackerProficiencyBonus: proficiencyBonus,
+        damageIgnoresResistances: damageIgnoresResistances,
+        damageIgnoresImmunities: damageIgnoresImmunities,
         critOn: critOn,
         minRoll: minRoll,
       };
@@ -435,10 +464,37 @@
       };
     });
 
+    // Determine if we are making a damage roll that ignores resistances / immunities
+    const damageIgnoresResistances = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          mod.value.trim().toLowerCase().includes("resistance")
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    const damageIgnoresImmunities = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          (mod.value.trim().toLowerCase().includes("immunities") ||
+            mod.value.trim().toLowerCase().includes("immunity"))
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    damageModifiers = damageModifiers.filter(
+      (m) => !m.value.toString().toLowerCase().includes("ignore")
+    );
+
     const damageMetadata = {
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
       critical: isCritical,
+      damageIgnoresResistances: damageIgnoresResistances,
+      damageIgnoresImmunities: damageIgnoresImmunities,
     };
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
