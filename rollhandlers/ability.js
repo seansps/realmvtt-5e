@@ -1,6 +1,6 @@
 const name = data?.roll?.metadata?.rollName;
 const tooltip = data?.roll?.metadata?.tooltip;
-const description = data?.roll?.metadata?.description || '';
+const description = data?.roll?.metadata?.description || "";
 const damageTypes = data?.roll?.metadata?.damageTypes || [];
 const showHalf = data?.roll?.metadata?.showHalf || false;
 const showHealing = data?.roll?.metadata?.showHealing || false;
@@ -11,53 +11,51 @@ const minRoll = data?.roll?.metadata?.minRoll;
 const roll = {
   ...data.roll,
   dice: [...(data?.roll?.dice || [])],
-  total: data?.roll?.total !== undefined ? data?.roll?.total : 0
-}
+  total: data?.roll?.total !== undefined ? data?.roll?.total : 0,
+};
 
 if (roll.dice) {
-  roll.dice = roll.dice.map(d => {
+  roll.dice = roll.dice.map((d) => {
     let value = parseInt(d.value, 10);
-    if (d.type === 20 && d.reason !== 'dropped') {
+    if (d.type === 20 && d.reason !== "dropped") {
       if (minRoll && value < minRoll) {
-        roll.total += (minRoll - value);
+        roll.total += minRoll - value;
         value = minRoll;
       }
     }
     return {
       ...d,
-      value: value
+      value: value,
     };
   });
 }
 
-let message = '';
+let message = "";
 
 let dc = 0;
-dc = parseInt(data?.roll?.metadata?.dc || '0', 10);
+dc = parseInt(data?.roll?.metadata?.dc || "0", 10);
 if (isNaN(dc)) {
   dc = 0;
 }
 if (dc > 0) {
   const total = roll.total;
   if (total >= dc) {
-    message = `**[center][color=green]SUCCESS[/color] [gm]vs DC ${dc}[/gm][/center]**`
-  }
-  else {
-    message = `**[center][color=red]FAILURE[/color] [gm]vs DC ${dc}[/gm][/center]**`
+    message = `**[center][color=green]SUCCESS[/color] [gm]vs DC ${dc}[/gm][/center]**`;
+  } else {
+    message = `**[center][color=red]FAILURE[/color] [gm]vs DC ${dc}[/gm][/center]**`;
   }
 }
 
 if (description) {
   if (message) {
     message += `\n\n${description}`;
-  }
-  else {
+  } else {
     message = description;
   }
 }
 
 if (damageTypes.length > 0) {
-  damageTypes.forEach(damageType => {
+  damageTypes.forEach((damageType) => {
     const damageMacro = `
 \`\`\`Apply_${capitalize(damageType)}_Damage
 let targets = api.getSelectedOrDroppedToken();
@@ -93,6 +91,11 @@ targets.forEach(target => {
       thisDamage = Math.floor(thisDamage * 2);
     }
     damage += thisDamage;
+
+    // Apply additional one-off resistances per damage type
+    if (RIV.resistanceByDamage[damageType.toLowerCase()]) {
+      damage -= RIV.resistanceByDamage[damageType.toLowerCase()];
+    }
 
     // We cannot deal negative damage
     if (damage < 0) {
@@ -183,7 +186,8 @@ targets.forEach(target => {
 \`\`\`
 `;
 
-    const halfDamageMacro = showHalf ? `
+    const halfDamageMacro = showHalf
+      ? `
 \`\`\`Apply_Half_${capitalize(damageType)}_Damage
 let targets = api.getSelectedOrDroppedToken();
 
@@ -218,6 +222,11 @@ targets.forEach(target => {
       thisDamage = Math.floor(thisDamage * 2);
     }
     damage += thisDamage;
+
+    // Apply additional one-off resistances per damage type
+    if (RIV.resistanceByDamage[damageType.toLowerCase()]) {
+      damage -= RIV.resistanceByDamage[damageType.toLowerCase()];
+    }
 
     // We cannot deal negative damage
     if (damage < 0) {
@@ -311,7 +320,8 @@ targets.forEach(target => {
   }
 });
 \`\`\`
-` : '';
+`
+      : "";
 
     message = `${message}
 ${damageMacro}
@@ -321,11 +331,18 @@ ${halfDamageMacro}
 }
 
 if (showHealing) {
-  // Separate roll by temp healing and regular healing 
-  const tempHealing = data.roll.types.reduce((acc, type) => type.type == 'temp' ? acc + type.value : acc, 0);
-  const regularHealing = data.roll.types.reduce((acc, type) => type.type != 'temp' ? acc + type.value : acc, 0);
+  // Separate roll by temp healing and regular healing
+  const tempHealing = data.roll.types.reduce(
+    (acc, type) => (type.type == "temp" ? acc + type.value : acc),
+    0
+  );
+  const regularHealing = data.roll.types.reduce(
+    (acc, type) => (type.type != "temp" ? acc + type.value : acc),
+    0
+  );
 
-  const tempMacro = tempHealing ? `
+  const tempMacro = tempHealing
+    ? `
 \`\`\`Apply_Temporary_HP
 const tempHp = ${tempHealing};
 
@@ -356,9 +373,11 @@ targets.forEach(target => {
   api.sendMessage(\`\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
 });
 \`\`\`
-` : '';
+`
+    : "";
 
-  const healingMacro = regularHealing ? `
+  const healingMacro = regularHealing
+    ? `
   \`\`\`Apply_Healing
   const healing = ${regularHealing};
   
@@ -393,7 +412,8 @@ targets.forEach(target => {
     }
   });
   \`\`\`
-  ` : '';
+  `
+    : "";
 
   message = `${message}
   ${healingMacro}
@@ -401,7 +421,14 @@ targets.forEach(target => {
   `;
 }
 
-api.sendMessage(message, roll, [], [{
-  name: name || "Ability",
-  tooltip: tooltip || `${name || ""} Ability Roll`
-}]);
+api.sendMessage(
+  message,
+  roll,
+  [],
+  [
+    {
+      name: name || "Ability",
+      tooltip: tooltip || `${name || ""} Ability Roll`,
+    },
+  ]
+);

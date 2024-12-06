@@ -1545,12 +1545,31 @@ function getRIV(target) {
     "immunity",
   ]);
   modifiers.forEach((mod) => {
-    if (mod.modifierType === "resistance") {
+    if (mod.modifierType === "resistance" && mod.valueType === "string") {
       resistances.push(mod.value);
-    } else if (mod.modifierType === "vulnerability") {
+    } else if (
+      mod.modifierType === "vulnerability" &&
+      mod.valueType === "string"
+    ) {
       vulnerabilities.push(mod.value);
-    } else if (mod.modifierType === "immunity") {
+    } else if (mod.modifierType === "immunity" && mod.valueType === "string") {
       immunities.push(mod.value);
+    }
+  });
+  // Get additional one-off resistances per damage type
+  const resistanceByDamage = {};
+  modifiers.forEach((mod) => {
+    if (
+      mod.modifierType === "resistance" &&
+      mod.field !== undefined &&
+      mod.field !== null &&
+      mod.field.trim() !== ""
+    ) {
+      const value =
+        mod.valueType === "number"
+          ? parseInt(mod.value || "0", 10)
+          : evaluateMath(mod.value);
+      resistanceByDamage[mod.field.toLowerCase()] = value;
     }
   });
 
@@ -1558,6 +1577,7 @@ function getRIV(target) {
     resistances,
     immunities,
     vulnerabilities,
+    resistanceByDamage,
   };
 }
 

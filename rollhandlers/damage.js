@@ -80,6 +80,15 @@ targets.forEach(target => {
         || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 2);
       }
+
+      // Apply additional one-off resistances per damage type
+      if (RIV.resistanceByDamage[type.toLowerCase()]) {
+        thisDamage -= RIV.resistanceByDamage[type.toLowerCase()];
+        if (thisDamage < 0) {
+          thisDamage = 0;
+        }
+      }
+
       damage += thisDamage;
     });
 
@@ -221,6 +230,15 @@ targets.forEach(target => {
         || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 2);
       }
+
+      // Apply additional one-off resistances per damage type
+      if (RIV.resistanceByDamage[type?.type?.toLowerCase()]) {
+        thisDamage -= RIV.resistanceByDamage[type?.type?.toLowerCase()];
+        if (thisDamage < 0) {
+          thisDamage = 0;
+        }
+      }
+
       damage += thisDamage;
     });
 
