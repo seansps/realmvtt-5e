@@ -127,7 +127,7 @@
         (mod) =>
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
-          mod.value.trim().toLowerCase().includes("resistances")
+          mod.value.trim().toLowerCase().includes("resistance")
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
@@ -136,7 +136,8 @@
         (mod) =>
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
-          mod.value.trim().toLowerCase().includes("immunities")
+          (mod.value.trim().toLowerCase().includes("immunities") ||
+            mod.value.trim().toLowerCase().includes("immunity"))
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
