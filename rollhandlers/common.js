@@ -1561,6 +1561,7 @@ function getRIV(target) {
   modifiers.forEach((mod) => {
     if (
       mod.modifierType === "resistance" &&
+      mod.active &&
       mod.field !== undefined &&
       mod.field !== null &&
       mod.field.trim() !== ""
