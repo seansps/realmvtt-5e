@@ -611,32 +611,48 @@ function doubleDamageDice(damage) {
 // Checks for replacements in a string modifier
 function checkForReplacements(value, replacements = {}, recordOverride = null) {
   let thisRecord = recordOverride || record;
-  // Case for 'Half <class> Level'
+  // Case for 'Half Character Level' or 'Half <class> Level'
   const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
   const matchClassLevel = value.match(/(\w+) [Ll]evel/);
   if (matchLevel) {
     const className = matchLevel[1];
-    const characterClassLevel =
-      (thisRecord?.data?.classLevels || "").match(`${className} (\\d+)`)?.[1] ||
-      0;
-    if (characterClassLevel) {
-      value = value.replaceAll(
-        matchLevel[0],
-        Math.floor(parseInt(characterClassLevel || "1", 10) / 2)
-      );
+    if (className.toLowerCase() === "character") {
+      // Character half level
+      const characterLevel = parseInt(thisRecord?.data?.level || "1", 10);
+      value = value.replaceAll(matchLevel[0], Math.floor(characterLevel / 2));
+    } else {
+      // Class specific half level
+      const characterClassLevel =
+        (thisRecord?.data?.classLevels || "").match(
+          `${className} (\\d+)`
+        )?.[1] || 0;
+      if (characterClassLevel) {
+        value = value.replaceAll(
+          matchLevel[0],
+          Math.floor(parseInt(characterClassLevel || "1", 10) / 2)
+        );
+      }
     }
   }
   // Case for '<class> Level'
   else if (matchClassLevel) {
     const className = matchClassLevel[1];
-    const characterClassLevel =
-      (thisRecord?.data?.classLevels || "").match(`${className} (\\d+)`)?.[1] ||
-      0;
-    if (characterClassLevel) {
-      value = value.replaceAll(
-        matchClassLevel[0],
-        parseInt(characterClassLevel || "1", 10)
-      );
+    if (className.toLowerCase() === "character") {
+      // Character level
+      const characterLevel = parseInt(thisRecord?.data?.level || "1", 10);
+      value = value.replaceAll(matchClassLevel[0], characterLevel);
+    } else {
+      // Class specific level
+      const characterClassLevel =
+        (thisRecord?.data?.classLevels || "").match(
+          `${className} (\\d+)`
+        )?.[1] || 0;
+      if (characterClassLevel) {
+        value = value.replaceAll(
+          matchClassLevel[0],
+          parseInt(characterClassLevel || "1", 10)
+        );
+      }
     }
   }
   // Case for 'Proficiency Bonus'
