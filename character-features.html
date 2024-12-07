@@ -246,15 +246,25 @@
 
   function updateACAndHP(feature, updatedRecord) {
     const additionalFieldsToSet = {};
+
     // Check for AC Calc mods
+    const hasAcMods =
+      (feature?.data?.modifiers || []).filter(
+        (mod) =>
+          mod.data.type === "armorClassCalculation" ||
+          mod.data.type === "armorClassBonus"
+      ).length > 0;
+
     const acCalculationMods = (feature?.data?.modifiers || []).filter(
       (mod) => mod.data.type === "armorClassCalculation"
     );
-    if (acCalculationMods.length > 0) {
+
+    if (hasAcMods) {
       // Get other mods
-      const allAcCalculationMods = getEffectsAndModifiers([
-        "armorClassCalculation",
-      ]);
+      const allAcCalculationMods = getEffectsAndModifiersForToken(
+        updatedRecord,
+        ["armorClassCalculation"]
+      );
       acCalculationMods.forEach((mod) => {
         allAcCalculationMods.push({
           name: feature.name || "Feature",
@@ -282,7 +292,9 @@
         });
       }
       // Get general AC bonuses
-      const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
+      const acBonuses = getEffectsAndModifiersForToken(updatedRecord, [
+        "armorClassBonus",
+      ]);
       acBonuses.forEach((mod) => {
         if (mod.value) {
           const acBonus = parseInt(mod.value || "0", 10);
