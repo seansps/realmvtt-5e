@@ -80,7 +80,7 @@
     // We also get modifiers that apply only to attacks with the specific weapon properties or weapon type
     const specialModifierTypes = [
       ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
-      attack?.data?.weaponType?.toLowerCase(),
+      (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialModifierTypes.forEach((type) => {
       const specialModifiers = getEffectsAndModifiers(
@@ -216,7 +216,7 @@
     // We also get modifiers that apply only to damage of a specific weapon type or property
     const specialDamageModifierTypes = [
       ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
-      attack?.data?.weaponType?.toLowerCase(),
+      (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialDamageModifierTypes.forEach((type) => {
       const specialModifiers = getEffectsAndModifiers(
@@ -511,7 +511,7 @@
     // We also get modifiers that apply only to damage of a specific weapon type or property
     const specialDamageModifierTypes = [
       ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
-      attack?.data?.weaponType?.toLowerCase(),
+      (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialDamageModifierTypes.forEach((type) => {
       const specialModifiers = getEffectsAndModifiers(
