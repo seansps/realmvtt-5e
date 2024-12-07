@@ -79,7 +79,9 @@
 
     // We also get modifiers that apply only to attacks with the specific weapon properties or weapon type
     const specialModifierTypes = [
-      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      ...(attack?.data?.weaponProperties || [])
+        .map((p) => p.toLowerCase())
+        .filter((p) => p !== "thrown" || ranged),
       (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialModifierTypes.forEach((type) => {
@@ -215,7 +217,9 @@
 
     // We also get modifiers that apply only to damage of a specific weapon type or property
     const specialDamageModifierTypes = [
-      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      ...(attack?.data?.weaponProperties || [])
+        .map((p) => p.toLowerCase())
+        .filter((p) => p !== "thrown" || ranged),
       (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialDamageModifierTypes.forEach((type) => {
@@ -510,7 +514,9 @@
 
     // We also get modifiers that apply only to damage of a specific weapon type or property
     const specialDamageModifierTypes = [
-      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      ...(attack?.data?.weaponProperties || [])
+        .map((p) => p.toLowerCase())
+        .filter((p) => p !== "thrown" || ranged),
       (attack?.data?.weaponType || "untyped").toLowerCase(),
     ];
     specialDamageModifierTypes.forEach((type) => {
