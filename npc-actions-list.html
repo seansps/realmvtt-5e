@@ -248,13 +248,14 @@
     const attackMod = parseInt(attack?.data?.attackMod || "0", 10);
 
     const atkRoll = "1d20";
-    let modifiers = getEffectsAndModifiers(
-      ["attackBonus", "attackPenalty"],
-      undefined,
-      attack._id
-    );
 
     let ranged = attack?.data?.isRanged || false;
+
+    let modifiers = getEffectsAndModifiers(
+      ["attackBonus", "attackPenalty"],
+      ranged ? "ranged" : "melee",
+      attack._id
+    );
 
     // Add the modifier to the modifiers array
     if (attackMod !== 0) {
@@ -306,7 +307,7 @@
 
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
-      undefined,
+      ranged ? "ranged" : "melee",
       attack._id
     );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
@@ -441,7 +442,7 @@
 
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
-      undefined,
+      ranged ? "ranged" : "melee",
       attack._id
     );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type

@@ -59,11 +59,6 @@
     let modToUse = strMod;
 
     const atkRoll = "1d20";
-    let modifiers = getEffectsAndModifiers(
-      ["attackBonus", "attackPenalty"],
-      undefined,
-      attack._id
-    );
 
     let ranged = false;
     // Always ranged attack for ranged weapons
@@ -74,6 +69,39 @@
     if (attack?.data?.weaponProperties?.includes("Thrown")) {
       ranged = attack?.data?.rangeToggleBtn === "ranged";
     }
+
+    // Get modifiers for this type of attack
+    let modifiers = getEffectsAndModifiers(
+      ["attackBonus", "attackPenalty"],
+      ranged ? "ranged" : "melee",
+      attack._id
+    );
+
+    // We also get modifiers that apply only to attacks with the specific weapon properties or weapon type
+    const specialModifierTypes = [
+      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      attack?.data?.weaponType?.toLowerCase(),
+    ];
+    specialModifierTypes.forEach((type) => {
+      const specialModifiers = getEffectsAndModifiers(
+        ["attackBonus", "attackPenalty"],
+        type,
+        attack._id
+      );
+      specialModifiers.forEach((mod) => {
+        // Don't add duplicate modifiers
+        if (
+          !modifiers.some(
+            (m) =>
+              m.name === mod.name &&
+              m.value === mod.value &&
+              m.modifierType === mod.modifierType
+          )
+        ) {
+          modifiers.push(mod);
+        }
+      });
+    });
 
     // Ranged is always dexterity
     dexOrStrMod = attack?.data?.type?.includes("ranged")
@@ -181,9 +209,36 @@
 
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
-      undefined,
+      ranged ? "ranged" : "melee",
       attack._id
     );
+
+    // We also get modifiers that apply only to damage of a specific weapon type or property
+    const specialDamageModifierTypes = [
+      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      attack?.data?.weaponType?.toLowerCase(),
+    ];
+    specialDamageModifierTypes.forEach((type) => {
+      const specialModifiers = getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        type,
+        attack._id
+      );
+      specialModifiers.forEach((mod) => {
+        // Don't add duplicate modifiers
+        if (
+          !damageModifiers.some(
+            (m) =>
+              m.name === mod.name &&
+              m.value === mod.value &&
+              m.modifierType === mod.modifierType
+          )
+        ) {
+          damageModifiers.push(mod);
+        }
+      });
+    });
+
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map((mod) => {
@@ -449,9 +504,36 @@
 
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
-      undefined,
+      ranged ? "ranged" : "melee",
       attack._id
     );
+
+    // We also get modifiers that apply only to damage of a specific weapon type or property
+    const specialDamageModifierTypes = [
+      ...(attack?.data?.weaponProperties || []).map((p) => p.toLowerCase()),
+      attack?.data?.weaponType?.toLowerCase(),
+    ];
+    specialDamageModifierTypes.forEach((type) => {
+      const specialModifiers = getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        type,
+        attack._id
+      );
+      specialModifiers.forEach((mod) => {
+        // Don't add duplicate modifiers
+        if (
+          !damageModifiers.some(
+            (m) =>
+              m.name === mod.name &&
+              m.value === mod.value &&
+              m.modifierType === mod.modifierType
+          )
+        ) {
+          damageModifiers.push(mod);
+        }
+      });
+    });
+
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map((mod) => {
@@ -459,6 +541,7 @@
       const type = modType === "untyped" ? mod?.type || damageType : "";
       return {
         ...mod,
+        // If this is a critical hit, double the dice
         value: isCritical ? doubleDamageDice(mod.value) : mod.value,
         type: type,
       };
