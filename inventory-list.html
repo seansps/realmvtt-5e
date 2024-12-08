@@ -111,6 +111,20 @@ api.promptRoll('${itemName}', '${healing}', [], {}, 'healing')
 
   // Then update AC calculation in character-main.html and getArmorClassForToken
   function onItemEquipped() {
+    const itemDataPath = dataPath.replace(".data.carried", "");
+
+    const itemFields = api.getValue(`${itemDataPath}.fields`) || {};
+    const itemType = api.getValue(`${itemDataPath}.data.type`);
+    const weaponProperties =
+      api.getValue(`${itemDataPath}.data.weaponProperties`) || [];
+    const hasAttunement =
+      api.getValue(`${itemDataPath}.data.attunement`) || false;
+    const isConsumable =
+      api.getValue(`${itemDataPath}.data.consumable`) || false;
+    const isTwoHanded = weaponProperties.includes("Two-Handed");
+    const isThrown = weaponProperties.includes("Thrown"); // Only thrown weapons can be toggled melee/range
+    const isMelee = (itemType || "").toLowerCase().includes("melee"); // Melee shown only melee icon
+
     // If an item's equipped status changes, we need to recalculate the total weight
     // and update any bonuses such as AC if it's a piece of armor
     const valuesToSet = {};
@@ -134,6 +148,28 @@ api.promptRoll('${itemName}', '${healing}', [], {}, 'healing')
     if (record?.data?.ac !== totalAc) {
       valuesToSet["data.ac"] = totalAc;
     }
+
+    // Update the fields to show/hide the correct buttons on attack list
+    // based on type incase it changed
+    valuesToSet[`${itemDataPath}.fields`] = {
+      ...itemFields,
+      attuned: { hidden: !hasAttunement },
+      useBtn: { hidden: !isConsumable },
+      handBtn: { hidden: isTwoHanded },
+      // Show toggle button only for melee throwing weapons
+      rangeToggleBtn: {
+        hidden: !(isMelee && isThrown),
+      },
+      // Hide disabled range button for melee weapons or when toggle is showing
+      rangeToggleBtnDisabled: {
+        hidden: isMelee,
+      },
+      // Hide disabled melee button for ranged weapons or thrown melee weapons
+      meleeToggleBtnDisabled: {
+        hidden: !isMelee || (isMelee && isThrown),
+      },
+      ammo: { hidden: isMelee && !isThrown },
+    };
 
     if (Object.keys(valuesToSet).length > 0) {
       api.setValues(valuesToSet);
