@@ -65,8 +65,8 @@
     if (attack?.data?.type?.includes("ranged")) {
       ranged = true;
     }
-    // If this is a thrown weapon, check the rangeToggleBtn
-    if (attack?.data?.weaponProperties?.includes("Thrown")) {
+    // If this is a thrown melee weapon, check the rangeToggleBtn
+    if (attack?.data?.weaponProperties?.includes("Thrown") && !ranged) {
       ranged = attack?.data?.rangeToggleBtn === "ranged";
     }
 

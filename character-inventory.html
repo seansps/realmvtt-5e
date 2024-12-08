@@ -61,27 +61,22 @@
       },
       fields: {
         ...item?.fields,
-        attuned: {
-          hidden: !hasAttunement,
-        },
-        useBtn: {
-          hidden: !isConsumable,
-        },
-        handBtn: {
-          hidden: isTwoHanded,
-        },
+        attuned: { hidden: !hasAttunement },
+        useBtn: { hidden: !isConsumable },
+        handBtn: { hidden: isTwoHanded },
+        // Show toggle button only for melee throwing weapons
         rangeToggleBtn: {
-          hidden: !isThrown,
+          hidden: !(isMelee && isThrown),
         },
+        // Hide disabled range button for melee weapons or when toggle is showing
         rangeToggleBtnDisabled: {
-          hidden: isMelee || isThrown,
+          hidden: isMelee,
         },
+        // Hide disabled melee button for ranged weapons or thrown melee weapons
         meleeToggleBtnDisabled: {
-          hidden: !isMelee || isThrown,
+          hidden: !isMelee || (isMelee && isThrown),
         },
-        ammo: {
-          hidden: isMelee && !isThrown,
-        },
+        ammo: { hidden: isMelee && !isThrown },
       },
     };
 
