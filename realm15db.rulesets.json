@@ -294,7 +294,8 @@
         "type": "gear, melee weapon, ranged weapon, armor, shield, tool, magic item, pack",
         "subtype": "Simple Melee Weapon, Martial Melee Weapon, Simple Ranged Weapon, Martial Ranged Weapon, Light Armor, Medium Armor, Heavy Armor, Ammunition, Treasure, Art Object, Scroll, Potion, Jewelry, Staff, Wand, Clothing",
         "weaponType": "Club, Dagger, Greatclub, Handaxe, Javelin, Light Hammer, Mace, Quarterstaff, Sickle, Spear, Dart, Light Crossbow, Shortbow, Sling, Battleaxe, Flail, Glaive, Greataxe, Greatsword, Halberd, Lance, Longsword, Maul, Morningstar, Pike, Rapier, Scimitar, Shortsword, Trident, Warhammer, War Pick, Whip, Blowgun, Hand Crossbow, Heavy Crossbow, Longbow, Musket, Pistol",
-        "weaponMastery": "Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex"
+        "weaponMastery": "Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex",
+        "rarity": "common,uncommon,rare,very rare,legendary"
       },
       "disableDrop": false
     },
@@ -2199,6 +2200,6 @@
   "version": 1,
   "ownerId": "65e24e77d1d78ddf0805a94b",
   "createdAt": 1726181718296,
-  "updatedAt": 1733698815661,
+  "updatedAt": 1733701023766,
   "published": true
 }]
