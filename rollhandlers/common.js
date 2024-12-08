@@ -409,7 +409,7 @@ function setModifier(
   if (bestEquippedArmor && bestEquippedArmor.ac > 0) {
     // PC's base class is the best equipped armor if provided
     // Add the dex bonus to the ac, using max dex as the max.
-    // If maxDex is not set, we assume it is 0
+    // If maxDex is not set or is 0, we set it to 99 to allow for max dex bonus
     armorClass =
       bestEquippedArmor.ac +
       (bestEquippedArmor.maxDex
@@ -1382,7 +1382,7 @@ function getBestEquippedArmor() {
   items.forEach((item) => {
     if (item.data?.carried === "equipped" && item.data?.type === "armor") {
       const ac = item?.data?.armorClass || 0;
-      const maxDex = item?.data?.addDex ? item?.data?.maxDex || 0 : 0;
+      const maxDex = item?.data?.addDex ? item?.data?.maxDex || 99 : 0;
       if (ac > bestEquippedArmor.ac) {
         bestEquippedArmor.ac = ac;
         bestEquippedArmor.maxDex = maxDex;
