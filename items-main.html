@@ -84,12 +84,26 @@
       valuesToHide.push("spellLevel");
     }
 
-    if (subtype.toLowerCase().includes("potion")) {
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+
+  function showHideConsumableValues(isConsumable) {
+    const valuesToHide = [];
+    const valuesToShow = [];
+
+    if (isConsumable) {
       valuesToShow.push("effects");
       valuesToShow.push("healing");
+      valuesToShow.push("useDamage");
     } else {
       valuesToHide.push("effects");
       valuesToHide.push("healing");
+      valuesToHide.push("useDamage");
     }
 
     if (valuesToHide.length > 0) {
@@ -234,6 +248,7 @@
       label="Consumable"
       textalign="left"
       size="sm"
+      onchange="showHideConsumableValues(value);"
     ></checkbox>
     <checkbox
       width="250px"
@@ -432,25 +447,31 @@
     </dropdown>
   </div>
 
-  <!-- Magic Item (Potion) Properties -->
-
+  <!-- Properties for Consumable Items -->
+  <dropdown
+    width="100%"
+    hidden="true"
+    field="effects"
+    label="Effects"
+    placeholder="Select Effects if Applicable..."
+    multiselect="10"
+    optionsquery='{"type": "effects", "query": {}}'
+  >
+  </dropdown>
   <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
-    <dropdown
-      width="100%"
-      hidden="true"
-      field="effects"
-      label="Effects"
-      placeholder="Select Effects if Applicable..."
-      multiselect="10"
-      optionsquery='{"type": "effects", "query": {}}'
-    >
-    </dropdown>
     <stringfield
-      width="100%"
+      width="50%"
       hidden="true"
       field="healing"
       label="Healing"
       placeholder="Enter Healing if Applicable..."
+    ></stringfield>
+    <stringfield
+      width="50%"
+      hidden="true"
+      field="useDamage"
+      label="Damage"
+      placeholder="Enter Damage if Applicable..."
     ></stringfield>
   </div>
 
