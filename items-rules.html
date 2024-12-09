@@ -11,17 +11,46 @@
     if (Object.keys(valuesToSet).length > 0) {
       api.setValues(valuesToSet);
     }
-  }  
+  }
 </script>
 
-<div>
-  <label label="Modifiers" size='md' variant='bold' textalign="center"></label>
-  <label label="Modifiers applied When Equipped" size='sm' textalign="center"></label>
+<dropdown
+  width="100%"
+  field="equipEffect"
+  textalign="center"
+  size="md"
+  label="Effect"
+  description="Effect applied when equipped"
+  placeholder="Select Effect if Applicable..."
+  optionsquery='{"type": "effects", "query": {}}'
+  hidewhenidentified="false"
+>
+</dropdown>
+
+<div style="margin-top: 4px">
+  <label label="Modifiers" size="md" variant="bold" textalign="center"></label>
+  <label
+    label="Modifiers applied when equipped"
+    size="sm"
+    textalign="center"
+    color="dark.2"
+  ></label>
 </div>
 
-<label hidewhenidentified="true" label="Item Unidentified" size='sm' textalign="center"></label>
+<label
+  hidewhenidentified="true"
+  label="Item Unidentified"
+  size="sm"
+  textalign="center"
+></label>
 
-<div style='width: 100%'>
-  <list hidewhenidentified="false" listtype="modifier_list" field='modifiers' variant='striped' allowadd=''
-    onchange='onChangeModifiers();'></list>
+<div style="width: 100%">
+  <list
+    hidewhenidentified="false"
+    listtype="modifier_list"
+    field="modifiers"
+    variant="striped"
+    allowadd=""
+    onchange="onChangeModifiers();"
+  ></list>
 </div>

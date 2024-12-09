@@ -144,6 +144,21 @@ api.promptRoll('${itemName}', '${damage}', [], {}, 'damage')
     const isThrown = weaponProperties.includes("Thrown"); // Only thrown weapons can be toggled melee/range
     const isMelee = (itemType || "").toLowerCase().includes("melee"); // Melee shown only melee icon
 
+    // Some items add/remove effects when equipped
+    const equipEffect = api.getValue(`${itemDataPath}.data.equipEffect`);
+    const isEquipEffect = value === "equipped";
+
+    if (equipEffect) {
+      const effect = JSON.parse(equipEffect);
+      const effectId = effect?._id || "";
+      const ourToken = api.getToken();
+      if (effectId && isEquipEffect && ourToken) {
+        api.addEffectById(effectId, ourToken);
+      } else if (effectId && !isEquipEffect && ourToken) {
+        api.removeEffectById(effectId, ourToken);
+      }
+    }
+
     // If an item's equipped status changes, we need to recalculate the total weight
     // and update any bonuses such as AC if it's a piece of armor
     const valuesToSet = {};
