@@ -94,6 +94,7 @@
           // If this is existing item, get the current count
           const thisIndex = items.findIndex((i) => i.data?.fromId === item._id);
           const existingItem = thisIndex !== -1 ? items[thisIndex] : undefined;
+          const itemCount = parseFloat(item?.data?.count || "0");
           let curCount = parseFloat(existingItem?.data?.count || "0");
           if (!existingItem) {
             return {
@@ -102,12 +103,12 @@
               data: {
                 ...item.data,
                 fromId: item._id,
-                count: 1,
+                count: itemCount,
               },
             };
           } else {
             valuesToSet[`data.inventory.${thisIndex}.data.count`] =
-              curCount + 1;
+              curCount + itemCount;
           }
         })
         .filter((i) => i);
