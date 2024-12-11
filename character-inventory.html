@@ -101,6 +101,14 @@
           const thisIndex = items.findIndex((i) => i.data?.fromId === item._id);
           const existingItem = thisIndex !== -1 ? items[thisIndex] : undefined;
           const itemCount = parseFloat(item?.data?.count || "0");
+          const hasAttunement = item.data?.attunement || false;
+          const isConsumable = item.data?.consumable || false;
+          const isTwoHanded =
+            item.data?.weaponProperties?.includes("Two-Handed");
+          const isThrown = item.data?.weaponProperties?.includes("Thrown"); // Only thrown weapons can be toggled melee/range
+          const isMelee = (item.data?.type || "")
+            .toLowerCase()
+            .includes("melee"); // Melee shown only melee icon
           let curCount = parseFloat(existingItem?.data?.count || "0");
           if (!existingItem) {
             return {
@@ -110,6 +118,18 @@
                 ...item.data,
                 fromId: item._id,
                 count: itemCount,
+              },
+              fields: {
+                ...item?.fields,
+                attuned: { hidden: !hasAttunement },
+                useBtn: { hidden: !isConsumable },
+                handBtn: { hidden: isTwoHanded },
+                rangeToggleBtn: { hidden: !(isMelee && isThrown) },
+                rangeToggleBtnDisabled: { hidden: isMelee },
+                meleeToggleBtnDisabled: {
+                  hidden: !isMelee || (isMelee && isThrown),
+                },
+                ammo: { hidden: isMelee && !isThrown },
               },
             };
           } else {
