@@ -89,6 +89,12 @@
       // Get the total weight of all items in the pack
       const itemsInPack = item.data?.items || [];
       const valuesToSet = {};
+      // Add any currency in pack to character
+      valuesToSet["data.cp"] = (record?.data?.cp || 0) + (item.data?.cp || 0);
+      valuesToSet["data.sp"] = (record?.data?.sp || 0) + (item.data?.sp || 0);
+      valuesToSet["data.ep"] = (record?.data?.ep || 0) + (item.data?.ep || 0);
+      valuesToSet["data.gp"] = (record?.data?.gp || 0) + (item.data?.gp || 0);
+      valuesToSet["data.pp"] = (record?.data?.pp || 0) + (item.data?.pp || 0);
       const itemsToAdd = itemsInPack
         .map((item) => {
           // If this is existing item, get the current count

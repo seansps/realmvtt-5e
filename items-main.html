@@ -54,12 +54,22 @@
     if (typeStr === "pack") {
       valuesToShow.push("itemListLabel");
       valuesToShow.push("items");
+      valuesToShow.push("cp");
+      valuesToShow.push("sp");
+      valuesToShow.push("ep");
+      valuesToShow.push("gp");
+      valuesToShow.push("pp");
       valuesToHide.push("rarity");
       valuesToHide.push("consumable");
       valuesToHide.push("attunement");
     } else {
       valuesToHide.push("itemListLabel");
       valuesToHide.push("items");
+      valuesToHide.push("cp");
+      valuesToHide.push("sp");
+      valuesToHide.push("ep");
+      valuesToHide.push("gp");
+      valuesToHide.push("pp");
       valuesToShow.push("rarity");
       valuesToShow.push("attunement");
     }
@@ -498,7 +508,7 @@
 
   <!-- Pack Properties -->
 
-  <div style="margin-top: 8px">
+  <div>
     <label
       hidden="true"
       field="itemListLabel"
@@ -516,6 +526,39 @@
       variant="striped"
       allowadd=""
     ></list>
+  </div>
+
+  <div style="display: flex; flex-direction: row; gap: 4px">
+    <numberfield
+      placeholder="0"
+      field="cp"
+      label="CP"
+      hidden="true"
+    ></numberfield>
+    <numberfield
+      placeholder="0"
+      field="sp"
+      label="SP"
+      hidden="true"
+    ></numberfield>
+    <numberfield
+      placeholder="0"
+      field="ep"
+      label="EP"
+      hidden="true"
+    ></numberfield>
+    <numberfield
+      placeholder="0"
+      field="gp"
+      label="GP"
+      hidden="true"
+    ></numberfield>
+    <numberfield
+      placeholder="0"
+      field="pp"
+      label="PP"
+      hidden="true"
+    ></numberfield>
   </div>
 
   <!-- Description -->
