@@ -20,8 +20,9 @@ const tags = [
   },
 ];
 
-const showHalf =
-  data.roll?.metadata?.save !== undefined && data.roll?.metadata?.save !== "";
+// We'll always show half damage, even if the damage was a normal attack, in case the GM
+// needs to apply half damage
+const showHalf = true;
 // If the damage came from a spell, we track that here for "spell" resistance/immunity/vulnerability
 const isSpell = data.roll?.metadata?.isSpell === true;
 
@@ -205,14 +206,21 @@ targets.forEach(target => {
 
     const RIV = getRIV(target);
 
-    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    // First, just get the total of all damage for each type
+    const damageByType = {};
     data.roll.types.forEach(type => {
-      let thisDamage = Math.floor(type.value / 2);
+      const damageType = type.type || 'untyped';
+      damageByType[damageType] = (damageByType[damageType] || 0) + type.value;
+    });
+
+    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    Object.keys(damageByType).forEach(type => {
+      let thisDamage = Math.floor(damageByType[type] / 2);
       // If the damage type is in the ignore resistances list, we don't apply resistances
       if (!${JSON.stringify(
         damageIgnoresResistances
-      )}.includes(type?.type?.toLowerCase())) {
-        if (RIV.resistances.includes(type?.type?.toLowerCase() || '') 
+      )}.includes(type.toLowerCase())) {
+        if (RIV.resistances.includes(type.toLowerCase() || '') 
           || (${isSpell} && RIV.resistances.includes('spell'))) {
           thisDamage = Math.floor(thisDamage * 0.5);
         } 
@@ -220,20 +228,20 @@ targets.forEach(target => {
       // If the damage type is in the ignore immunities list, we don't apply immunities
       if (!${JSON.stringify(
         damageIgnoresImmunities
-      )}.includes(type?.type?.toLowerCase())) {
-        if (RIV.immunities.includes(type?.type?.toLowerCase() || '')
+      )}.includes(type.toLowerCase())) {
+        if (RIV.immunities.includes(type.toLowerCase() || '')
           || (${isSpell} && RIV.immunities.includes('spell'))) {
           thisDamage = 0;
         }
       }
-      if (RIV.vulnerabilities.includes(type?.type?.toLowerCase() || '')
+      if (RIV.vulnerabilities.includes(type.toLowerCase() || '')
         || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
         thisDamage = Math.floor(thisDamage * 2);
       }
 
       // Apply additional one-off resistances per damage type
-      if (RIV.resistanceByDamage[type?.type?.toLowerCase()]) {
-        thisDamage -= RIV.resistanceByDamage[type?.type?.toLowerCase()];
+      if (RIV.resistanceByDamage[type.toLowerCase()]) {
+        thisDamage -= RIV.resistanceByDamage[type.toLowerCase()];
         if (thisDamage < 0) {
           thisDamage = 0;
         }

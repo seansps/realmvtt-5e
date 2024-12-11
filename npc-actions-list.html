@@ -131,7 +131,7 @@
     );
     if (saveMatch) {
       valuesToSet[`${actionDataPath}.data.saveDC`] = parseInt(saveMatch[2], 10);
-      valuesToSet[`${actionDataPath}.fields.isSave.value`] = true;
+      valuesToSet[`${actionDataPath}.data.isSave`] = true;
       valuesToSet[`${actionDataPath}.data.savingThrows`] = [
         saveMatch[1].toLowerCase(),
       ];
