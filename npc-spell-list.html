@@ -504,7 +504,10 @@ ${effectButtons}
 
     let components = spell?.data?.components;
     if (components) {
-      components = components.split(",");
+      // First clean up any extra spaces around commas
+      components = components.trim().replace(/\s*,\s*/g, ",");
+      // Split on V, S, M, or F, ignoring case
+      components = components.split(/,(?=[VSMF])/i);
       components = components.map((component) => {
         const trimmedComponent = component.trim().toLowerCase(); // Trim and convert to lower case
         if (trimmedComponent === "v") {
@@ -515,8 +518,11 @@ ${effectButtons}
           return "Material";
         } else if (trimmedComponent === "f") {
           return "Focus";
-        } else if (trimmedComponent.startsWith("m (")) {
-          return "Material";
+        } else if (trimmedComponent.match(/^m\s*\(/i)) {
+          // Check if material component has a cost
+          return trimmedComponent.toLowerCase().includes("worth")
+            ? "Material $"
+            : "Material";
         }
         return component.trim(); // Return the trimmed component if no match
       });
@@ -560,7 +566,9 @@ ${effectButtons}
     if (components && Array.isArray(components) && components.length > 0) {
       components.forEach((component) => {
         tags.push({
-          tooltip: "Spell Components",
+          tooltip: component.includes("$")
+            ? "Spell Components (with Cost Requirement)"
+            : "Spell Components",
           name: component,
         });
       });
