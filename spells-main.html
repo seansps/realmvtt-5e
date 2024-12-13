@@ -1,30 +1,15 @@
-<div
-  style="
-    display: flex;
-    gap: 4px;
-    flex-direction: column;
-    width: 100%;
-    margin-bottom: 4px;
-  "
->
-  <div style="display: flex; gap: 4px; width: 100%">
+<div style="display: flex; flex-direction: column; width: 100%">
+  <div style="display: flex; gap: 4px">
     <div
       style="width: 125px; height: 125px; min-height: 125px; min-width: 125px"
     >
       <portrait width="125px" height="125px" field="portrait"></portrait>
     </div>
-    <div>
-      <div
-        style="
-          display: flex;
-          gap: 4px;
-          flex-direction: row;
-          width: 100%;
-          margin-bottom: 4px;
-        "
-      >
+    <div style="display: flex; gap: 4px; flex-direction: column; width: 100%">
+      <div style="display: flex; gap: 4px; flex-direction: row; width: 100%">
         <dropdown
           field="level"
+          width="100%"
           label="Spell Level"
           placeholder="Select level..."
           options='[{"label": "Cantrip", "value": "Cantrip"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'
@@ -32,6 +17,7 @@
         </dropdown>
         <dropdown
           field="school"
+          width="100%"
           label="School of Magic"
           placeholder="Select school..."
           options='[{"label": "Abjuration", "value": "Abjuration"}, {"label": "Conjuration", "value": "Conjuration"}, {"label": "Divination", "value": "Divination"}, {"label": "Enchantment", "value": "Enchantment"}, {"label": "Evocation", "value": "Evocation"}, {"label": "Illusion", "value": "Illusion"}, {"label": "Necromancy", "value": "Necromancy"}, {"label": "Transmutation", "value": "Transmutation"}]'
@@ -41,6 +27,7 @@
       <dropdown
         multiselect="12"
         field="spellLists"
+        width="100%"
         placeholder="Select classes..."
         label="Spell Lists"
         options='[{"label": "Artificer", "value": "Artificer"}, {"label": "Bard", "value": "Bard"}, {"label": "Cleric", "value": "Cleric"}, {"label": "Druid", "value": "Druid"}, {"label": "Paladin", "value": "Paladin"}, {"label": "Ranger", "value": "Ranger"}, {"label": "Sorcerer", "value": "Sorcerer"}, {"label": "Warlock", "value": "Warlock"}, {"label": "Wizard", "value": "Wizard"}]'
@@ -63,12 +50,16 @@
       field="castingTime"
       label="Casting Time"
       placeholder="Enter casting time..."
+      multiline="true"
+      maxrows="4"
     ></stringfield>
     <stringfield
       width="50%"
       field="range"
       label="Range"
       placeholder="Enter range..."
+      multiline="true"
+      maxrows="4"
     ></stringfield>
   </div>
   <div
@@ -85,12 +76,16 @@
       field="components"
       label="Components"
       placeholder="Enter components..."
+      multiline="true"
+      maxrows="4"
     ></stringfield>
     <stringfield
       width="50%"
       field="duration"
       label="Duration"
       placeholder="Enter duration..."
+      multiline="true"
+      maxrows="4"
     ></stringfield>
   </div>
 
