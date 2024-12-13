@@ -331,19 +331,18 @@
     }
   }
 
-  function onSelectPolymorphOrWildShape(value, recordLink) {
+  function onSelectShapeshifting(value, recordLink) {
     const npc = recordLink?.value;
     const selectedValue = value[0];
     const valuesToSet = {};
 
+    valuesToSet["fields.shapeshiftingNpc.hidden"] = false;
+    valuesToSet["fields.shapeshiftingNameNone.hidden"] = true;
+    valuesToSet["fields.Remove Shape-shift.hidden"] = false;
+
     // If wildshape, we only set physical stats, polymorph sets all stats
     let hasCircleForms = false; // True if we're wild shaping and have Circle Forms
     if (selectedValue === "polymorph") {
-      // Polymorph
-      valuesToSet["fields.polymorphNpc.hidden"] = false;
-      valuesToSet["fields.polymorphNameNone.hidden"] = true;
-      valuesToSet["fields.Remove Polymorph.hidden"] = false;
-
       // Polymorph also gets mental stats
       valuesToSet["data.intelligence"] = npc?.data?.intelligence;
       valuesToSet["data.wisdom"] = npc?.data?.wisdom;
@@ -352,26 +351,26 @@
       // You gain Temp HP equal the the HP of the new form
       valuesToSet["data.tempHp"] = npc?.data?.hitpoints;
     } else {
-      // Wild Shape
-      valuesToSet["fields.wildShapeNpc.hidden"] = false;
-      valuesToSet["fields.wildShapeNameNone.hidden"] = true;
-      valuesToSet["fields.Remove Wild Shape.hidden"] = false;
-
-      // You gain Temp HP equal to your druid level
-      const matchDruidLevel =
-        (record?.data?.classLevels || "").match(/Druid (\d+)/)?.[1] || 1;
-      if (matchDruidLevel) {
-        const druidLevel = Math.floor(parseInt(matchDruidLevel || "1", 10));
-        // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now
-        const circleFormsFeature = record?.data?.features?.find(
-          (feature) => feature?.name === "Circle Forms"
-        );
-        if (circleFormsFeature) {
-          valuesToSet["data.tempHp"] = druidLevel * 3;
-          hasCircleForms = true;
-        } else {
-          valuesToSet["data.tempHp"] = druidLevel;
+      // Wild Shape gains Temp HP equal to your druid level
+      if (selectedValue === "wildshape") {
+        const matchDruidLevel =
+          (record?.data?.classLevels || "").match(/Druid (\d+)/)?.[1] || 1;
+        if (matchDruidLevel) {
+          const druidLevel = Math.floor(parseInt(matchDruidLevel || "1", 10));
+          // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now
+          const circleFormsFeature = record?.data?.features?.find(
+            (feature) => feature?.name === "Circle Forms"
+          );
+          if (circleFormsFeature) {
+            valuesToSet["data.tempHp"] = druidLevel * 3;
+            hasCircleForms = true;
+          } else {
+            valuesToSet["data.tempHp"] = druidLevel;
+          }
         }
+      } else {
+        // Animal Shapes gets animal HP as temp HP like polymorph
+        valuesToSet["data.tempHp"] = npc?.data?.hitpoints;
       }
     }
 
@@ -418,8 +417,7 @@
     valuesToSet["data.vulnerabilities"] = npc?.data?.vulnerabilities;
 
     // First set the recordLink
-    const linkField =
-      selectedValue === "polymorph" ? "data.polymorphNpc" : "data.wildShapeNpc";
+    const linkField = "data.shapeshiftingNpc";
     api.setRecordLink(linkField, recordLink, () => {
       //  Then set the values
       api.setValues(valuesToSet, (record) => {
@@ -473,14 +471,15 @@
     const options = [
       { label: "Polymorph", value: "polymorph" },
       { label: "Wild Shape", value: "wildshape" },
+      { label: "Animal Shapes", value: "animalShapes" },
     ];
     api.showPrompt(
-      `Select Polymorph or Wild Shape`,
-      `Select Polymorph or Wild Shape for ${npc?.name}`,
-      `Select Polymorph or Wild Shape...`,
+      `Select Shape-shifting`,
+      `Select Shape-shifting for ${npc?.name}`,
+      `Select Shape-shifting...`,
       options,
       null,
-      (value) => onSelectPolymorphOrWildShape(value, recordLink),
+      (value) => onSelectShapeshifting(value, recordLink),
       "OK",
       "Cancel",
       1
@@ -495,7 +494,7 @@
     }
   }
 
-  function removePolymorphOrWildShapeEffect() {
+  function removeShapeshiftingEffect() {
     // In both cases, we apply a token change effect
     const tokenForRecord = api.getToken();
     if (tokenForRecord) {
@@ -514,18 +513,13 @@
     }
   }
 
-  function removePolymorph(value) {
-    if (value) {
-      return;
-    }
-
-    // We're removing it so proceed
+  function removeShapeshifting(value) {
     api.setValues(
       {
-        "data.polymorphNpc": null,
-        "fields.polymorphNpc.hidden": true,
-        "fields.polymorphNameNone.hidden": false,
-        "fields.Remove Polymorph.hidden": true,
+        "data.shapeshiftingNpc": null,
+        "fields.shapeshiftingNpc.hidden": true,
+        "fields.shapeshiftingNameNone.hidden": false,
+        "fields.Remove Shape-shift.hidden": true,
         "fields.polymorphActions.hidden": true,
         "data.strength": record?.data?.oldStrength,
         "data.dexterity": record?.data?.oldDexterity,
@@ -560,47 +554,7 @@
         moreValuesToSet["data.ac"] = record?.data?.oldAc;
         api.setValues(moreValuesToSet);
         // Then remove the effect
-        removePolymorphOrWildShapeEffect();
-      }
-    );
-  }
-
-  function removeWildShape() {
-    // Reset the old values
-    api.setValues(
-      {
-        "data.wildShapeNpc": null,
-        "fields.wildShapeNpc.hidden": true,
-        "fields.wildShapeNameNone.hidden": false,
-        "fields.Remove Wild Shape.hidden": true,
-        "fields.polymorphActions.hidden": true,
-        "data.strength": record?.data?.oldStrength,
-        "data.dexterity": record?.data?.oldDexterity,
-        "data.constitution": record?.data?.oldConstitution,
-        "data.intelligence": record?.data?.oldIntelligence,
-        "data.wisdom": record?.data?.oldWisdom,
-        "data.charisma": record?.data?.oldCharisma,
-        "data.ac": record?.data?.oldAc,
-        "data.senses": record?.data?.oldSenses,
-        "data.speed": record?.data?.oldSpeed,
-        "data.resistances": record?.data?.oldResistances,
-        "data.immunities": record?.data?.oldImmunities,
-        "data.vulnerabilities": record?.data?.oldVulnerabilities,
-      },
-      (record) => {
-        // Then update the modifiers
-        const moreValuesToSet = {};
-        ["strength", "dexterity", "constitution"].forEach((attribute) => {
-          const value = record?.data?.[`old${capitalize(attribute)}`];
-          setModifier(value, attribute, moreValuesToSet);
-        });
-
-        // Ensure hitpoints and AC are set to the old values after calling setModifier
-        moreValuesToSet["data.hitpoints"] = record?.data?.oldHitpoints;
-        moreValuesToSet["data.ac"] = record?.data?.oldAc;
-        api.setValues(moreValuesToSet);
-        // Then remove the effect
-        removePolymorphOrWildShapeEffect();
+        removeShapeshiftingEffect();
       }
     );
   }
@@ -726,7 +680,7 @@
   <label
     variant="bold"
     textalign="center"
-    label="Polymorph and Wild Shape"
+    label="Polymorph, Wild Shape, and Shape-shifting"
   ></label>
 </div>
 
@@ -734,7 +688,7 @@
   <label
     textalign="center"
     size="sm"
-    label="Drag an NPC to this Tab for Wild Shape or Polymorph"
+    label="Drag an NPC to this Tab to use Shape-shifting"
   ></label>
 </div>
 
@@ -752,53 +706,26 @@
       variant="bold"
       size="sm"
       textalign="left"
-      label="Polymorph: "
+      label="Shape-shifting: "
     ></label>
     <recordlink
-      field="polymorphNpc"
+      field="shapeshiftingNpc"
       hidden="true"
-      onchange="removePolymorph();"
+      onchange="removeShapeshifting();"
     ></recordlink>
     <label
       size="sm"
       textalign="left"
-      field="polymorphNameNone"
+      field="shapeshiftingNameNone"
       label="None"
     ></label>
     <iconbutton
-      field="Remove Polymorph"
+      field="Remove Shape-shift"
       size="sm"
-      variant="default"
-      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
-      onclick="removePolymorph();"
-    >
-    </iconbutton>
-  </div>
-
-  <div style="display: flex; flex-direction: row; gap: 4px; margin-top: 4px">
-    <label
-      variant="bold"
-      size="sm"
-      textalign="left"
-      label="Wild Shape: "
-    ></label>
-    <recordlink
-      field="wildShapeNpc"
       hidden="true"
-      onchange="removeWildShape();"
-    ></recordlink>
-    <label
-      size="sm"
-      textalign="left"
-      field="wildShapeNameNone"
-      label="None"
-    ></label>
-    <iconbutton
-      field="Remove Wild Shape"
-      size="sm"
       variant="default"
       options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
-      onclick="removeWildShape();"
+      onclick="removeShapeshifting();"
     >
     </iconbutton>
   </div>
