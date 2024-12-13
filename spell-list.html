@@ -349,7 +349,7 @@
     // Now that we know the spell level, go through all string modifiers and
     // replaced "Spell Level" with the actual spell level
     let levelToReplace = spellLevel;
-    if (spell?.data?.level.toLowerCase() === "cantrip") {
+    if (spell?.data?.level?.toLowerCase() === "cantrip") {
       levelToReplace = 0;
     }
     modifiers.forEach((modifier) => {
@@ -406,7 +406,7 @@
         }
       : {};
     const damageButton =
-      spell?.data?.damage && spell?.data?.isSave
+      spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_Damage
 api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
             modifiers
