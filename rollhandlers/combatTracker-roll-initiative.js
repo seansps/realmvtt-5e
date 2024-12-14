@@ -49,7 +49,6 @@ api.promptRollForToken(
   {
     rollName: "Initiative",
     tooltip: "Initiative Roll",
-    token: token,
     dc: 0,
   },
   "initiative"

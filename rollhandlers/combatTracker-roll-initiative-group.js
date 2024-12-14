@@ -55,7 +55,7 @@ api.promptRollForToken(
     rollName: "Initiative",
     tooltip: "Initiative Roll",
     dc: 0,
-    group: data?.tokens,
+    group: (data?.tokens || []).map((token) => token?._id),
   },
   "initiative"
 );
