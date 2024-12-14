@@ -538,7 +538,9 @@ ${effectButtons}
     if (castingTime) {
       tags.push({
         tooltip: "Casting Time",
-        name: castingTime,
+        name: castingTime.includes(",")
+          ? castingTime.split(",")[0]
+          : castingTime,
       });
     }
 
