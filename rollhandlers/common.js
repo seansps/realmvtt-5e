@@ -374,7 +374,7 @@ function setModifier(
   // Update hit points if this is constitution
   if (attribute === "constitution") {
     const level = parseInt(record?.data?.level || "0", 10);
-    const newHp = getHpForLevel(modVal);
+    let newHp = getHpForLevel(modVal);
     if (level > 0 && newHp < 1) {
       // To a minimum of 1
       newHp = 1;
