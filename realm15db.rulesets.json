@@ -1815,6 +1815,10 @@
           {
             "label": "Concentration Check",
             "field": "concentration"
+          },
+          {
+            "label": "Death Saving Throws",
+            "field": "death"
           }
         ]
       },
@@ -2202,6 +2206,6 @@
   "createdAt": {
     "$numberLong": "1726181718296"
   },
-  "updatedAt": 1734389376308,
+  "updatedAt": 1734390301056,
   "published": true
 }]
