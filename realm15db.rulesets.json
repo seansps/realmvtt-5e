@@ -1819,6 +1819,10 @@
           {
             "label": "Death Saving Throws",
             "field": "death"
+          },
+          {
+            "label": "All Spells",
+            "field": "spell"
           }
         ]
       },
@@ -1857,6 +1861,14 @@
           {
             "label": "Concentration Check",
             "field": "concentration"
+          },
+          {
+            "label": "Death Saving Throws",
+            "field": "death"
+          },
+          {
+            "label": "All Spells",
+            "field": "spell"
           }
         ]
       },
@@ -2206,6 +2218,6 @@
   "createdAt": {
     "$numberLong": "1726181718296"
   },
-  "updatedAt": 1734390301056,
+  "updatedAt": 1734478909452,
   "published": true
 }]
