@@ -71,10 +71,11 @@
     const spellDCBonus = parseInt(api.getValue("data.spellDCBonus") || "0", 10);
 
     // Modifiers for Damage and Healing
-    let modifiers = [];
+    let damageModifiers = [];
+    let healingModifiers = [];
     if (
-      (spell?.data?.damage || spell?.data?.healing) &&
-      spell?.data?.addAbility
+      (spell?.data?.damage && spell?.data?.addAbility) ||
+      (spell?.data?.healing && spell?.data?.addAbilityHealing)
     ) {
       // Get the ability score modifier for the spell
       const ability = spell?.data?.ability || "strength";
@@ -83,17 +84,26 @@
       const damageString = spell?.data?.damage || "";
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
       const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
-      modifiers.push({
-        name: capitalize(ability),
-        type: spell?.data?.damage ? damageType : "healing",
-        value: abilityMod,
-        active: true,
-      });
+      if (spell?.data?.damage && spell?.data?.addAbility) {
+        damageModifiers.push({
+          name: capitalize(ability),
+          type: spell?.data?.damage ? damageType : "healing",
+          value: abilityMod,
+          active: true,
+        });
+      }
+      if (spell?.data?.healing && spell?.data?.addAbilityHealing) {
+        healingModifiers.push({
+          name: capitalize(ability),
+          value: abilityMod,
+          active: true,
+        });
+      }
     }
 
     if (spell?.data?.damage) {
       // Get damage modifiers
-      const damageModifiers =
+      const moreDamageModifiers =
         spell?.data?.level?.toLowerCase() === "cantrip"
           ? getEffectsAndModifiers([
               "cantripDamageBonus",
@@ -104,25 +114,25 @@
       const damageString = spell?.data?.damage || "";
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
       const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
-      damageModifiers.forEach((modifier) => {
-        modifiers.push({
+      moreDamageModifiers.forEach((modifier) => {
+        damageModifiers.push({
           ...modifier,
           type: damageType,
         });
       });
     } else if (spell?.data?.healing) {
       // Get healing modifiers
-      const healingModifiers = getEffectsAndModifiers([
+      const moreHealingModifiers = getEffectsAndModifiers([
         "healingBonus",
         "healingPenalty",
       ]);
-      healingModifiers.forEach((modifier) => {
-        modifiers.push(modifier);
+      moreHealingModifiers.forEach((modifier) => {
+        healingModifiers.push(modifier);
       });
     }
 
     // Determine if we are casting a spell that ignores resistances / immunities
-    const damageIgnoresResistances = modifiers
+    const damageIgnoresResistances = damageModifiers
       .filter(
         (mod) =>
           mod.valueType === "string" &&
@@ -131,7 +141,7 @@
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
-    const damageIgnoresImmunities = modifiers
+    const damageIgnoresImmunities = damageModifiers
       .filter(
         (mod) =>
           mod.valueType === "string" &&
@@ -142,7 +152,7 @@
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
     // Filter these out of the modifiers array, we don't need them to be toggleable
-    modifiers = modifiers.filter(
+    damageModifiers = damageModifiers.filter(
       (m) => !m.value.toString().toLowerCase().includes("ignore")
     );
 
@@ -352,7 +362,15 @@
     if (spell?.data?.level?.toLowerCase() === "cantrip") {
       levelToReplace = 0;
     }
-    modifiers.forEach((modifier) => {
+    damageModifiers.forEach((modifier) => {
+      if (modifier?.valueType?.toLowerCase() === "string") {
+        modifier.value = modifier.value.replace(
+          /[Ss]pell [Ll]evel/g,
+          levelToReplace
+        );
+      }
+    });
+    healingModifiers.forEach((modifier) => {
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
@@ -409,7 +427,7 @@
       spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_Damage
 api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
-            modifiers
+            damageModifiers
           )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
 \`\`\``
         : "";
@@ -417,7 +435,7 @@ api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
 api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(
-          modifiers
+          healingModifiers
         )}, {}, 'healing')
 \`\`\``
       : "";
@@ -505,7 +523,7 @@ targets.forEach(target => {
     "tooltip": 'Attack Roll for ${spellName}',
     "dc": targetAc,
     "damage": "${spellDamage}",
-    "damageModifiers": ${JSON.stringify(modifiers)},
+    "damageModifiers": ${JSON.stringify(damageModifiers)},
     "damageIgnoresResistances": '${damageIgnoresResistances}',
     "damageIgnoresImmunities": '${damageIgnoresImmunities}',
     "autoCritical": autoCritical,
@@ -526,7 +544,7 @@ if (!targets.length) {
     "damage": "${spellDamage}",
     "critOn": critOn,
     "minRoll": minRoll,
-    "damageModifiers": ${JSON.stringify(modifiers)},
+    "damageModifiers": ${JSON.stringify(damageModifiers)},
     "damageIgnoresResistances": '${damageIgnoresResistances}',
     "damageIgnoresImmunities": '${damageIgnoresImmunities}',
     "isSpell": true
