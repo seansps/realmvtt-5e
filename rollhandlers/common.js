@@ -312,6 +312,41 @@ function getHpBonusFromModifiers(hpMaxMods) {
   return totalBonus;
 }
 
+function getDurationInSeconds(duration) {
+  if (!duration) return 0;
+
+  // Remove "Concentration, up to " if present
+  const cleanDuration = duration
+    .toLowerCase()
+    .replace(/^concentration,\s+up\s+to\s+/, "");
+
+  // Parse the string to get the number and unit
+  const match = cleanDuration.match(/(\d+)\s+(round|minute|hour|day|week)s?/i);
+  if (match) {
+    const timeAmount = parseInt(match[1], 10);
+    if (isNaN(timeAmount)) {
+      return 0;
+    }
+
+    const timeUnit = match[2].toLowerCase();
+    switch (timeUnit) {
+      case "round":
+        return timeAmount * 6; // 1 round = 6 seconds
+      case "minute":
+        return timeAmount * 60; // 1 minute = 60 seconds
+      case "hour":
+        return timeAmount * 3600; // 1 hour = 3600 seconds
+      case "day":
+        return timeAmount * 86400; // 1 day = 86400 seconds
+      case "week":
+        return timeAmount * 604800; // 1 week = 604800 seconds
+      default:
+        return 0;
+    }
+  }
+  return 0;
+}
+
 function getHpForLevel(conMod, recordOverride = null) {
   let thisRecord = recordOverride || record;
   // Get the max HP we should have at our current level

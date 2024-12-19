@@ -612,7 +612,13 @@ ${effectButtons}
         }
         lostConcentrationOn = oldSpellName;
         // Add concentration effect, which will replace any existing concentration effect
-        api.addEffect("Concentration", tokenForRecord, undefined, effectValue);
+        const durationSeconds = getDurationInSeconds(spell?.data?.duration);
+        api.addEffect(
+          "Concentration",
+          tokenForRecord,
+          durationSeconds,
+          effectValue
+        );
       }
     }
 
