@@ -865,8 +865,11 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
             isEffect: true,
           });
         }
-      } else if (rule.valueType === "stack" && !stackModifiers[effect?._id]) {
-        stackModifiers[effect?._id] = true;
+      } else if (
+        rule.valueType === "stack" &&
+        !stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`]
+      ) {
+        stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`] = true;
         // The value is the number of times they have this effect
         let value = record?.effectIds?.filter(
           (id) => id === effect?._id
@@ -1095,8 +1098,11 @@ function getEffectsAndModifiersForToken(
             isEffect: true,
           });
         }
-      } else if (rule.valueType === "stack" && !stackModifiers[effect?._id]) {
-        stackModifiers[effect?._id] = true;
+      } else if (
+        rule.valueType === "stack" &&
+        !stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`]
+      ) {
+        stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`] = true;
         // The value is the number of times they have this effect
         let value = target?.effectIds?.filter(
           (id) => id === effect?._id
