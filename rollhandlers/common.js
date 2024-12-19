@@ -803,6 +803,9 @@ function getTotalValueFromFields(
 function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
   let results = [];
 
+  // Set of stack modifiers that we have seen so we don't duplicate them
+  const stackModifiers = {};
+
   // First collect modifiers from effects
   const effects = record?.effects || [];
   effects.forEach((effect) => {
@@ -862,7 +865,8 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
             isEffect: true,
           });
         }
-      } else if (rule.valueType === "stack") {
+      } else if (rule.valueType === "stack" && !stackModifiers[effect?._id]) {
+        stackModifiers[effect?._id] = true;
         // The value is the number of times they have this effect
         let value = record?.effectIds?.filter(
           (id) => id === effect?._id
@@ -1029,6 +1033,9 @@ function getEffectsAndModifiersForToken(
   }
   let results = [];
 
+  // Set of stack modifiers that we have seen so we don't duplicate them
+  const stackModifiers = {};
+
   // First collect modifiers from effects
   const effects = target?.effects || [];
   effects.forEach((effect) => {
@@ -1088,7 +1095,8 @@ function getEffectsAndModifiersForToken(
             isEffect: true,
           });
         }
-      } else if (rule.valueType === "stack") {
+      } else if (rule.valueType === "stack" && !stackModifiers[effect?._id]) {
+        stackModifiers[effect?._id] = true;
         // The value is the number of times they have this effect
         let value = target?.effectIds?.filter(
           (id) => id === effect?._id
@@ -1463,9 +1471,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
     {
@@ -1475,12 +1483,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "magical-bludgeoning",
-        "magical-piercing",
-        "magical-slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
     {
@@ -1496,9 +1501,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
     {
@@ -1508,12 +1513,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "magical-bludgeoning",
-        "magical-piercing",
-        "magical-slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
     {
@@ -1529,9 +1531,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
     {
@@ -1541,12 +1543,9 @@ function getRIV(target) {
         "bludgeoning",
         "piercing",
         "slashing",
-        "magical-bludgeoning",
-        "magical-piercing",
-        "magical-slashing",
-        "silvered-bludgeoning",
-        "silvered-piercing",
-        "silvered-slashing",
+        "silveredbludgeoning",
+        "silveredpiercing",
+        "silveredslashing",
       ],
     },
   ];
