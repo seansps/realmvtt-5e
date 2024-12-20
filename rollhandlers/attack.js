@@ -394,7 +394,7 @@ const damageMetadata = {
 const dmgRollName = isCritical ? "Roll_Critical_Damage" : "Roll_Damage";
 const damageButton = damage
   ? `\`\`\`${dmgRollName}
-api.promptRoll('${attack} Damage', '${damage}', ${JSON.stringify(
+api.promptRoll(\`${attack} Damage\`, '${damage}', ${JSON.stringify(
       damageModifiers
     )}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\``

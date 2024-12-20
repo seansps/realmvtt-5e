@@ -426,7 +426,7 @@
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_Damage
-api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
+api.promptRoll(\`${spellName} Damage\`, '${spellDamage}', ${JSON.stringify(
             damageModifiers
           )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
 \`\`\``
@@ -434,7 +434,7 @@ api.promptRoll('${spellName} Damage', '${spellDamage}', ${JSON.stringify(
 
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
-api.promptRoll('${spellName} Healing', '${spellHealing}', ${JSON.stringify(
+api.promptRoll(\`${spellName} Healing\`, '${spellHealing}', ${JSON.stringify(
           healingModifiers
         )}, {}, 'healing')
 \`\`\``
@@ -517,10 +517,10 @@ targets.forEach(target => {
 
   const metadata = {  
     "rollName": 'Attack',
-    "attack": '${spellName}',
+    "attack": \`${spellName}\`,
     "icon": "IconWand",
     "targetName": targetName,
-    "tooltip": 'Attack Roll for ${spellName}',
+    "tooltip": \`Attack Roll for ${spellName}\`,
     "dc": targetAc,
     "damage": "${spellDamage}",
     "damageModifiers": ${JSON.stringify(damageModifiers)},
@@ -531,15 +531,15 @@ targets.forEach(target => {
     "minRoll": minRoll,
     "isSpell": true
   }
-  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
+  api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
 if (!targets.length) {
   const diceRoll = '1d20';
   const metadata = {
     "rollName": 'Attack',
-    "attack": '${spellName}',
+    "attack": \`${spellName}\`,
     "icon": "IconWand",
-    "tooltip": 'Attack Roll for ${spellName}',
+    "tooltip": \`Attack Roll for ${spellName}\`,
     "dc": 0,
     "damage": "${spellDamage}",
     "critOn": critOn,
@@ -559,7 +559,7 @@ if (!targets.length) {
     });
   }
 
-  api.promptRoll('${spellName}', \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
+  api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 }
 \`\`\``
       : "";
