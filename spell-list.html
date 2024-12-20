@@ -653,10 +653,14 @@ ${effectButtons}
     const castingTime = spell?.data?.castingTime;
     const range = spell?.data?.range;
     let duration = spell?.data?.duration || "";
+    // If there is a higher level duration, use that instead
+    if (spellLevel >= 2) {
+      duration = spell?.data?.[`durationLevel${spellLevel}`] || duration;
+    }
     const hasConcentration = duration
       ?.toLowerCase()
       .startsWith("concentration");
-    duration = duration.replace("Concentration, ", "").trim();
+    const durationTag = duration.replace("Concentration, ", "").trim();
 
     let components = spell?.data?.components;
     if (components) {
@@ -714,10 +718,10 @@ ${effectButtons}
       });
     }
 
-    if (duration) {
+    if (durationTag) {
       tags.push({
         tooltip: "Duration",
-        name: duration,
+        name: durationTag,
       });
     }
 
@@ -750,7 +754,7 @@ ${effectButtons}
         }
         lostConcentrationOn = oldSpellName;
         // Add concentration effect, which will replace any existing concentration effect
-        const durationSeconds = getDurationInSeconds(spell?.data?.duration);
+        const durationSeconds = getDurationInSeconds(duration);
         api.addEffect(
           "Concentration",
           tokenForRecord,
