@@ -389,7 +389,13 @@
 
     // Spell range if set
     const spellRange = parseInt(spell?.data?.range || "0", 10);
-    const rangedSpell = spellRange > 0;
+    let rangedSpell = spellRange > 0;
+    if (rangedSpell) {
+      // If the description explicity says "make a melee spell attack" it's actually melee
+      if ((spell?.data?.description || "").match(/melee spell attack/i)) {
+        rangedSpell = false;
+      }
+    }
 
     // Get save info, if Save
     const savingThrow = spell?.data?.savingThrow || "dexterity"; // Default to dexterity if not set
