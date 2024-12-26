@@ -78,6 +78,7 @@
           name: capitalize(spellcastingAbility),
           value: abilityMod,
           active: true,
+          type: spell?.data?.healing.includes("temp") ? "temp" : undefined,
         });
       }
     }
@@ -108,7 +109,10 @@
         "healingPenalty",
       ]);
       moreHealingModifiers.forEach((modifier) => {
-        healingModifiers.push(modifier);
+        healingModifiers.push({
+          ...modifier,
+          type: spell?.data?.healing.includes("temp") ? "temp" : undefined,
+        });
       });
     }
 

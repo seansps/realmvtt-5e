@@ -95,6 +95,7 @@
       if (spell?.data?.healing && spell?.data?.addAbilityHealing) {
         healingModifiers.push({
           name: capitalize(ability),
+          type: spell?.data?.healing.includes("temp") ? "temp" : undefined,
           value: abilityMod,
           active: true,
         });
@@ -127,7 +128,10 @@
         "healingPenalty",
       ]);
       moreHealingModifiers.forEach((modifier) => {
-        healingModifiers.push(modifier);
+        healingModifiers.push({
+          ...modifier,
+          type: spell?.data?.healing.includes("temp") ? "temp" : undefined,
+        });
       });
     }
 
