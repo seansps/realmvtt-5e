@@ -72,9 +72,13 @@
 
     // Modifiers for Damage and Healing
     let damageModifiers = [];
+    let primaryDamageType = "untyped";
+    let altDamageModifiers = [];
+    let altDamageType = "untyped";
     let healingModifiers = [];
     if (
-      (spell?.data?.damage && spell?.data?.addAbility) ||
+      spell?.data?.damage ||
+      spell?.data?.damage2 ||
       (spell?.data?.healing && spell?.data?.addAbilityHealing)
     ) {
       // Get the ability score modifier for the spell
@@ -84,10 +88,22 @@
       const damageString = spell?.data?.damage || "";
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
       const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
+      primaryDamageType = damageType;
+      const altDamageString = spell?.data?.damage2 || "";
+      const altDamageParts = altDamageString.trim().split(/\s+/); // Split by one or more spaces
+      altDamageType = altDamageParts.length > 1 ? altDamageParts[1] : "untyped";
       if (spell?.data?.damage && spell?.data?.addAbility) {
         damageModifiers.push({
           name: capitalize(ability),
-          type: spell?.data?.damage ? damageType : "healing",
+          type: spell?.data?.damage ? primaryDamageType : "untyped",
+          value: abilityMod,
+          active: true,
+        });
+      }
+      if (spell?.data?.damage2 && spell?.data?.addAbility2) {
+        altDamageModifiers.push({
+          name: capitalize(ability),
+          type: spell?.data?.damage2 ? altDamageType : "untyped",
           value: abilityMod,
           active: true,
         });
@@ -102,7 +118,7 @@
       }
     }
 
-    if (spell?.data?.damage) {
+    if (spell?.data?.damage || spell?.data?.damage2) {
       // Get damage modifiers
       const moreDamageModifiers =
         spell?.data?.level?.toLowerCase() === "cantrip"
@@ -111,14 +127,14 @@
               "cantripDamagePenalty",
             ])
           : getEffectsAndModifiers(["spellDamageBonus", "spellDamagePenalty"]);
-      // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
-      const damageString = spell?.data?.damage || "";
-      const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
-      const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
       moreDamageModifiers.forEach((modifier) => {
         damageModifiers.push({
           ...modifier,
-          type: damageType,
+          type: primaryDamageType,
+        });
+        altDamageModifiers.push({
+          ...modifier,
+          type: altDamageType,
         });
       });
     } else if (spell?.data?.healing) {
@@ -159,12 +175,16 @@
     damageModifiers = damageModifiers.filter(
       (m) => !m.value.toString().toLowerCase().includes("ignore")
     );
+    altDamageModifiers = altDamageModifiers.filter(
+      (m) => !m.value.toString().toLowerCase().includes("ignore")
+    );
 
     // Spell Attack Modifiers
     const attackModifiers = getSpellAttackModifiers(spell);
 
-    // Deteremine damage or healing based on level of spell / (or character if cantrip)
+    // Determine damage or healing based on level of spell / (or character if cantrip)
     let spellDamage = spell?.data?.damage;
+    let spellAltDamage = spell?.data?.damage2;
     let spellHealing = spell?.data?.healing;
 
     // Mark the level we're casting at so we can fill a slot
@@ -335,14 +355,20 @@
       const characterLevel = parseInt(api.getValue("data.level") || "1", 10);
       if (characterLevel >= 5) {
         spellDamage = spell?.data?.damageCharacterLevel5 || spell?.data?.damage;
+        spellAltDamage =
+          spell?.data?.damage2CharacterLevel5 || spell?.data?.damage2;
       }
       if (characterLevel >= 11) {
         spellDamage =
           spell?.data?.damageCharacterLevel11 || spell?.data?.damage;
+        spellAltDamage =
+          spell?.data?.damage2CharacterLevel11 || spell?.data?.damage2;
       }
       if (characterLevel >= 17) {
         spellDamage =
           spell?.data?.damageCharacterLevel17 || spell?.data?.damage;
+        spellAltDamage =
+          spell?.data?.damage2CharacterLevel17 || spell?.data?.damage2;
       }
     } else {
       // Spell handling
@@ -355,6 +381,8 @@
       if (spellLevel >= 2) {
         spellDamage =
           spell?.data?.[`damageLevel${spellLevel}`] || spell?.data?.damage;
+        spellAltDamage =
+          spell?.data?.[`damage2Level${spellLevel}`] || spell?.data?.damage2;
         spellHealing =
           spell?.data?.[`healingLevel${spellLevel}`] || spell?.data?.healing;
       }
@@ -367,6 +395,14 @@
       levelToReplace = 0;
     }
     damageModifiers.forEach((modifier) => {
+      if (modifier?.valueType?.toLowerCase() === "string") {
+        modifier.value = modifier.value.replace(
+          /[Ss]pell [Ll]evel/g,
+          levelToReplace
+        );
+      }
+    });
+    altDamageModifiers.forEach((modifier) => {
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
@@ -435,12 +471,32 @@
       : {};
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
-        ? `\`\`\`Roll_Damage
-api.promptRoll(\`${spellName} Damage\`, '${spellDamage}', ${JSON.stringify(
+        ? `\`\`\`Roll_${
+            primaryDamageType !== "untyped"
+              ? capitalize(primaryDamageType)
+              : "Spell"
+          }_Damage
+api.promptRoll(\`${spellName} ${
+            primaryDamageType !== "untyped"
+              ? capitalize(primaryDamageType)
+              : "Spell"
+          } Damage\`, '${spellDamage}', ${JSON.stringify(
             damageModifiers
           )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
 \`\`\``
         : "";
+
+    const altDamageButton = spell?.data?.damage2
+      ? `\`\`\`Roll_${
+          altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
+        }_Damage
+api.promptRoll(\`${spellName} ${
+          altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
+        } Damage\`, '${spellAltDamage}', ${JSON.stringify(
+          altDamageModifiers
+        )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+\`\`\``
+      : "";
 
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
@@ -656,6 +712,7 @@ ${spellDescription}
 ${rollAttackButton}
 ${rollSaveButton}
 ${damageButton}
+${altDamageButton}
 ${healingButton}
 ${effectButtons}
 `;

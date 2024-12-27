@@ -43,6 +43,24 @@
 <div style="display: flex; gap: 4px; align-items: flex-end">
   <stringfield
     width="100%"
+    field="damage2"
+    label="Alternate Damage"
+    description="For spells that have secondary damage"
+    placeholder="Enter Alt. Damage, if applicable..."
+  ></stringfield>
+  <checkbox
+    field="addAbility2"
+    width="100%"
+    label="Add Ability Score Modifier"
+    textalign="right"
+    size="md"
+  >
+  </checkbox>
+</div>
+
+<div style="display: flex; gap: 4px; align-items: flex-end">
+  <stringfield
+    width="100%"
     field="healing"
     label="Base Healing"
     placeholder="Enter Healing, if applicable..."
@@ -107,6 +125,49 @@
           <stringfield
             field="damageCharacterLevel17"
             placeholder="Level 17 Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+    </tbody>
+  </table>
+</accordion>
+
+<accordion
+  field="damageHigher2Cantrip"
+  label="Alt. Damage at Higher Character Levels (if Applicable Cantrip)"
+>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>5</th>
+        <th>
+          <stringfield
+            field="damage2CharacterLevel5"
+            placeholder="Level 5 Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>11</th>
+        <th>
+          <stringfield
+            field="damage2CharacterLevel11"
+            placeholder="Level 11 Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>17</th>
+        <th>
+          <stringfield
+            field="damage2CharacterLevel17"
+            placeholder="Level 17 Alt. Damage..."
           ></stringfield>
         </th>
       </tr>
@@ -195,6 +256,94 @@
           <stringfield
             field="damageLevel9"
             placeholder="9th Level Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+    </tbody>
+  </table>
+</accordion>
+
+<accordion
+  field="damage2Higher"
+  label="Alt. Damage at Higher Spell Levels (if Applicable Spell)"
+>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Damage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>2</th>
+        <th>
+          <stringfield
+            field="damage2Level2"
+            placeholder="2nd Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>3</th>
+        <th>
+          <stringfield
+            field="damage2Level3"
+            placeholder="3rd Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>4</th>
+        <th>
+          <stringfield
+            field="damage2Level4"
+            placeholder="4th Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>5</th>
+        <th>
+          <stringfield
+            field="damage2Level5"
+            placeholder="5th Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>6</th>
+        <th>
+          <stringfield
+            field="damage2Level6"
+            placeholder="6th Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>7</th>
+        <th>
+          <stringfield
+            field="damage2Level7"
+            placeholder="7th Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>8</th>
+        <th>
+          <stringfield
+            field="damage2Level8"
+            placeholder="8th Level Alt. Damage..."
+          ></stringfield>
+        </th>
+      </tr>
+      <tr>
+        <th>9</th>
+        <th>
+          <stringfield
+            field="damage2Level9"
+            placeholder="9th Level Alt. Damage..."
           ></stringfield>
         </th>
       </tr>
