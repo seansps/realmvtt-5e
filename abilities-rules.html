@@ -1,54 +1,97 @@
-<div style='margin-bottom: 4px'>
+<div style="margin-bottom: 4px">
   <divider label="Rolls"></divider>
 </div>
 
-<div style='margin-top: 4px;'>
-  <checkbox size='md' textalign="right" field="rollOnUse" label="Roll on Use"
-    description="When the ability is used, a roll is requested using the Ability List's value field."></checkbox>
+<div style="margin-top: 4px">
+  <checkbox
+    size="md"
+    textalign="right"
+    field="rollOnUse"
+    label="Roll on Use"
+    description="When the ability is used, a roll is requested using the Ability List's value field."
+  ></checkbox>
 </div>
 
-<div style='margin-top: 4px;'>
-  <stringfield field="rollOverride" label="Roll Override" placeholder="Enter custom roll..."
-    description="Override the Ability List's value with a custom roll">
+<div style="margin-top: 4px">
+  <stringfield
+    field="rollOverride"
+    label="Roll Override"
+    placeholder="Enter custom roll..."
+    description="Override the Ability List's value with a custom roll"
+  >
   </stringfield>
 </div>
 
-<div style='margin-top: 4px; display: flex; flex-direction: column; gap: 4px'>
-  <dropdown size='sm' width='100%' field="damageTypes" label="Damage Types" multiselect='5'
-    description='Damage types that this ability can apply based on the roll' placeholder="Select damage types..."
-    options='[{"label": "Acid", "value": "acid"}, {"label": "Bludgeoning", "value": "bludgeoning"}, {"label": "Cold", "value": "cold"}, {"label": "Fire", "value": "fire"}, {"label": "Force", "value": "force"}, {"label": "Lightning", "value": "lightning"}, {"label": "Necrotic", "value": "necrotic"}, {"label": "Piercing", "value": "piercing"}, {"label": "Poison", "value": "poison"}, {"label": "Psychic", "value": "psychic"}, {"label": "Radiant", "value": "radiant"}, {"label": "Slashing", "value": "slashing"}, {"label": "Thunder", "value": "thunder"}]'>
+<div style="margin-top: 4px; display: flex; flex-direction: column; gap: 4px">
+  <dropdown
+    size="sm"
+    width="100%"
+    field="damageTypes"
+    label="Damage Types"
+    multiselect="5"
+    description="Damage types that this ability can apply based on the roll"
+    placeholder="Select damage types..."
+    options='[{"label": "Acid", "value": "acid"}, {"label": "Bludgeoning", "value": "bludgeoning"}, {"label": "Cold", "value": "cold"}, {"label": "Fire", "value": "fire"}, {"label": "Force", "value": "force"}, {"label": "Lightning", "value": "lightning"}, {"label": "Necrotic", "value": "necrotic"}, {"label": "Piercing", "value": "piercing"}, {"label": "Poison", "value": "poison"}, {"label": "Psychic", "value": "psychic"}, {"label": "Radiant", "value": "radiant"}, {"label": "Slashing", "value": "slashing"}, {"label": "Thunder", "value": "thunder"}]'
+  >
   </dropdown>
-  <div style='margin-top: 4px;'>
-    <checkbox size='md' textalign="right" field="showHalf" label="Show Half Damage"
-      description="Show option to apply half damage"></checkbox>
+  <div style="margin-top: 4px">
+    <checkbox
+      size="md"
+      textalign="right"
+      field="showHalf"
+      label="Show Half Damage"
+      description="Show option to apply half damage"
+    ></checkbox>
   </div>
-  <div style='margin-top: 4px;'>
-    <checkbox size='md' textalign="right" field="showHealing" label="Show Healing"
-      description="Show option to apply healing"></checkbox>
+  <div style="margin-top: 4px">
+    <checkbox
+      size="md"
+      textalign="right"
+      field="showHealing"
+      label="Show Healing"
+      description="Show option to apply healing"
+    ></checkbox>
   </div>
 </div>
 
-<div style='margin-top: 4px; margin-bottom: 4px'>
+<div style="margin-top: 4px; margin-bottom: 4px">
   <divider label="Effects"></divider>
 </div>
 
-
-<div style='margin-top: 4px; margin-bottom: 4px'>
-  <dropdown size='sm' field="effects" label="Effects" searchable='true' multiselect='10'
-    description='Effects that this ability can apply' optionsquery='{"type": "effects", "query": {}}'
-    placeholder='Select Effects...'>
+<div style="margin-top: 4px; margin-bottom: 4px">
+  <dropdown
+    size="sm"
+    field="effects"
+    label="Effects"
+    searchable="true"
+    multiselect="20"
+    description="Effects that this ability can apply"
+    optionsquery='{"type": "effects", "query": {}}'
+    placeholder="Select Effects..."
+  >
   </dropdown>
 </div>
 
-<div style='margin-top: 4px; margin-bottom: 4px'>
+<div style="margin-top: 4px; margin-bottom: 4px">
   <divider label="Saving Throws"></divider>
 </div>
 
-<div style='display: flex; flex-direction: column; gap: 4px'>
-  <div style='display: flex; gap: 8px; align-items: center'>
-    <checkbox size='md' field="isSave" label="Has Save" textalign='right'></checkbox>
-    <dropdown size='xs' width="250px" field='savingThrows' placeholder='Select up to 2 Saving Throws...' multiselect='2'
-      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'>
+<div style="display: flex; flex-direction: column; gap: 4px">
+  <div style="display: flex; gap: 8px; align-items: center">
+    <checkbox
+      size="md"
+      field="isSave"
+      label="Has Save"
+      textalign="right"
+    ></checkbox>
+    <dropdown
+      size="xs"
+      width="250px"
+      field="savingThrows"
+      placeholder="Select up to 2 Saving Throws..."
+      multiselect="2"
+      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+    >
     </dropdown>
   </div>
 </div>
