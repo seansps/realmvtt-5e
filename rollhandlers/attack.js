@@ -392,13 +392,14 @@ const damageMetadata = {
 
 // Add damage button to message
 const dmgRollName = isCritical ? "Roll_Critical_Damage" : "Roll_Damage";
-const damageButton = damage
-  ? `\`\`\`${dmgRollName}
+const damageButton =
+  damage && damage !== ""
+    ? `\`\`\`${dmgRollName}
 api.promptRoll(\`${attack} Damage\`, '${damage}', ${JSON.stringify(
-      damageModifiers
-    )}, ${JSON.stringify(damageMetadata)}, 'damage')
+        damageModifiers
+      )}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\``
-  : "";
+    : "";
 
 let effectMacros = "";
 

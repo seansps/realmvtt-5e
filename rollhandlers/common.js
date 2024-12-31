@@ -1665,3 +1665,80 @@ function applyInstantDeath(target) {
   api.setValueOnToken(target, "data.deathSaveFailures", 3);
   api.addEffect("Dead", target);
 }
+
+// Get the alt damage buttons in the context of a Character of NPC for a given alt damage amount
+function getAltSpellDamageButtons(
+  spell,
+  altDamageAmount,
+  saveDamageMetadata,
+  levelCastAt,
+  npcSpellAction = null
+) {
+  if (!altDamageAmount) return [];
+
+  // Split the damage string by commas
+  const damageStrings = altDamageAmount.split(",").map((d) => d.trim());
+  const buttons = damageStrings.map((damageString) => {
+    const altDamageType = getDamageType(damageString);
+
+    // Get modifiers for the alt damages
+    let altDamageModifiers = [];
+
+    // Get the ability score modifier for the spell
+    let ability = spell?.data?.ability || "strength";
+
+    if (npcSpellAction) {
+      ability = npcSpellAction?.data?.spellcastingAbility || "intelligence";
+    }
+
+    const abilityMod = api.getValue(`data.${ability}Mod`) || 0;
+
+    if (spell?.data?.damage2 && spell?.data?.addAbility2) {
+      altDamageModifiers.push({
+        name: capitalize(ability),
+        type: spell?.data?.damage2 ? altDamageType : "untyped",
+        value: abilityMod,
+        active: true,
+      });
+    }
+
+    // Get additional damage modifiers
+    const moreDamageModifiers =
+      spell?.data?.level?.toLowerCase() === "cantrip"
+        ? getEffectsAndModifiers(["cantripDamageBonus", "cantripDamagePenalty"])
+        : getEffectsAndModifiers(["spellDamageBonus", "spellDamagePenalty"]);
+    moreDamageModifiers.forEach((modifier) => {
+      altDamageModifiers.push({
+        ...modifier,
+        type: altDamageType,
+      });
+    });
+
+    // Replace the spell level with the actual spell level if in a  modifier
+    altDamageModifiers.forEach((modifier) => {
+      if (modifier?.valueType?.toLowerCase() === "string") {
+        modifier.value = modifier.value.replace(
+          /[Ss]pell [Ll]evel/g,
+          levelCastAt
+        );
+      }
+    });
+
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    altDamageModifiers = altDamageModifiers.filter(
+      (m) => !m.value.toString().toLowerCase().includes("ignore")
+    );
+
+    return `\`\`\`Roll_${
+      altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
+    }_Damage
+api.promptRoll(\`${
+      altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
+    } Damage\`, '${damageString}', ${JSON.stringify(
+      altDamageModifiers
+    )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+\`\`\``;
+  });
+
+  return buttons.join("\n");
+}

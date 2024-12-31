@@ -53,8 +53,6 @@
     // Modifiers for Damage and Healing
     let damageModifiers = [];
     let primaryDamageType = "untyped";
-    let altDamageModifiers = [];
-    let altDamageType = "untyped";
     let healingModifiers = [];
     if (
       spell?.data?.damage ||
@@ -70,21 +68,10 @@
       const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
       const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
       primaryDamageType = damageType;
-      const altDamageString = spell?.data?.damage2 || "";
-      const altDamageParts = altDamageString.trim().split(/\s+/); // Split by one or more spaces
-      altDamageType = altDamageParts.length > 1 ? altDamageParts[1] : "untyped";
       if (spell?.data?.damage && spell?.data?.addAbility) {
         damageModifiers.push({
           name: capitalize(spellcastingAbility),
           type: spell?.data?.damage ? damageType : "untyped",
-          value: abilityMod,
-          active: true,
-        });
-      }
-      if (spell?.data?.damage2 && spell?.data?.addAbility2) {
-        altDamageModifiers.push({
-          name: capitalize(spellcastingAbility),
-          type: spell?.data?.damage2 ? altDamageType : "untyped",
           value: abilityMod,
           active: true,
         });
@@ -112,10 +99,6 @@
         damageModifiers.push({
           ...modifier,
           type: primaryDamageType,
-        });
-        altDamageModifiers.push({
-          ...modifier,
-          type: altDamageType,
         });
       });
     } else if (spell?.data?.healing) {
@@ -282,14 +265,6 @@
         );
       }
     });
-    altDamageModifiers.forEach((modifier) => {
-      if (modifier?.valueType?.toLowerCase() === "string") {
-        modifier.value = modifier.value.replace(
-          /[Ss]pell [Ll]evel/g,
-          levelToReplace
-        );
-      }
-    });
     healingModifiers.forEach((modifier) => {
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
@@ -348,17 +323,16 @@ api.promptRoll(\`${spellName} ${
 \`\`\``
         : "";
 
-    const altDamageButton = spell?.data?.damage2
-      ? `\`\`\`Roll_${
-          altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
-        }_Damage
-api.promptRoll(\`${spellName} ${
-          altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
-        } Damage\`, '${spellAltDamage}', ${JSON.stringify(
-          altDamageModifiers
-        )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
-\`\`\``
-      : "";
+    let altDamageButtons = "";
+    if (spellAltDamage) {
+      altDamageButtons = getAltSpellDamageButtons(
+        spell,
+        spellAltDamage,
+        saveDamageMetadata,
+        spellLevel,
+        spellAction
+      );
+    }
 
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
@@ -571,7 +545,7 @@ ${spellDescription}
 ${rollAttackButton}
 ${rollSaveButton}
 ${damageButton}
-${altDamageButton}
+${altDamageButtons}
 ${healingButton}
 ${effectButtons}
 `;
