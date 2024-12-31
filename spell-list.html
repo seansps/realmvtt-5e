@@ -599,9 +599,21 @@ if (!targets.length) {
 \`\`\``
       : "";
 
-    // Save Button for GM only - look up saves of selected tokens and prompt roll for each
-    const rollSaveButton = spell?.data?.isSave
-      ? `\`\`\`Roll_Save
+    // Saving Throw Buttons - look up saves of selected tokens and prompt roll for each
+    const possibleSavingThrows = [];
+    if (spell?.data?.isSave) {
+      if (spell?.data?.savingThrow) {
+        possibleSavingThrows.push(spell?.data?.savingThrow);
+      }
+      if (spell?.data?.additionalSavingThrows) {
+        spell?.data?.additionalSavingThrows.forEach((savingThrow) => {
+          possibleSavingThrows.push(savingThrow);
+        });
+      }
+    }
+    const rollSaveButtons = possibleSavingThrows
+      .map((savingThrow) => {
+        return `\`\`\`Roll_${capitalize(savingThrow)}_Save
 const selectedTokens = api.getSelectedOrDroppedToken();
 selectedTokens.forEach(token => {
   let saveModifiers = [];
@@ -645,8 +657,9 @@ selectedTokens.forEach(token => {
     savingThrow
   )} Save', '1d20', saveModifiers, metadata, 'save');
 });
-\`\`\``
-      : "";
+\`\`\``;
+      })
+      .join("\n");
 
     // Create macros for all effects that this spell can apply
     let effectButtons = "";
@@ -679,7 +692,7 @@ ${spellDescription}
 &nbsp;
 
 ${rollAttackButton}
-${rollSaveButton}
+${rollSaveButtons}
 ${damageButton}
 ${altDamageButtons}
 ${healingButton}
