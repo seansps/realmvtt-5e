@@ -1,649 +1,1365 @@
 <script>
-	function onTypeChange(npcType) {
-		const fieldsToHide = [];
-		const fieldsToShow = [];
-		if (npcType === 'vehicle') {
-			// Hide creature fields
-			fieldsToHide.push('tempHp');
-			fieldsToHide.push('creatureType');
-			fieldsToHide.push('alignment');
-			fieldsToHide.push('hitDice');
-			fieldsToHide.push('senses');
-			fieldsToHide.push('skills');
-			fieldsToHide.push('skillsLabel');
-			fieldsToHide.push('languages');
-			// Show vehicle fields
-			fieldsToShow.push('weight');
-			fieldsToShow.push('crew');
-			fieldsToShow.push('passengers');
-			fieldsToShow.push('cargo');
-			fieldsToShow.push('damageThreshold');
-			fieldsToShow.push('cost');
-			// Hide trap fields
-			fieldsToHide.push('trapType');
-		}
-		else if (npcType === 'trap') {
-			// Hide creature fields
-			fieldsToHide.push('tempHp');
-			fieldsToHide.push('creatureType');
-			fieldsToHide.push('alignment');
-			fieldsToHide.push('hitDice');
-			fieldsToHide.push('senses');
-			fieldsToHide.push('skills');
-			fieldsToHide.push('skillsLabel');
-			fieldsToHide.push('languages');
-			// Hide vehicle fields
-			fieldsToHide.push('weight');
-			fieldsToHide.push('crew');
-			fieldsToHide.push('passengers');
-			fieldsToHide.push('cargo');
-			fieldsToHide.push('damageThreshold');
-			// Show trap fields
-			fieldsToShow.push('trapType');
-			fieldsToShow.push('cost');
-		}
-		else {
-			// Show creature fields
-			fieldsToShow.push('tempHp');
-			fieldsToShow.push('creatureType');
-			fieldsToShow.push('alignment');
-			fieldsToShow.push('hitDice');
-			fieldsToShow.push('senses');
-			fieldsToShow.push('skills');
-			fieldsToShow.push('skillsLabel');
-			fieldsToShow.push('languages');
-			// Hide vehicle fields
-			fieldsToHide.push('weight');
-			fieldsToHide.push('crew');
-			fieldsToHide.push('passengers');
-			fieldsToHide.push('cargo');
-			fieldsToHide.push('damageThreshold');
-			fieldsToHide.push('cost');
-			// Hide trap fields
-			fieldsToHide.push('trapType');
-		}
-		api.setHidden(fieldsToHide, true, () => {
-			// Do this in callback to avoid race condition
-			api.setHidden(fieldsToShow, false);
-		});
-	}
+  function onTypeChange(npcType) {
+    const fieldsToHide = [];
+    const fieldsToShow = [];
+    if (npcType === "vehicle") {
+      // Hide creature fields
+      fieldsToHide.push("tempHp");
+      fieldsToHide.push("creatureType");
+      fieldsToHide.push("alignment");
+      fieldsToHide.push("hitDice");
+      fieldsToHide.push("senses");
+      fieldsToHide.push("skills");
+      fieldsToHide.push("skillsLabel");
+      fieldsToHide.push("languages");
+      // Show vehicle fields
+      fieldsToShow.push("weight");
+      fieldsToShow.push("crew");
+      fieldsToShow.push("passengers");
+      fieldsToShow.push("cargo");
+      fieldsToShow.push("damageThreshold");
+      fieldsToShow.push("cost");
+      // Hide trap fields
+      fieldsToHide.push("trapType");
+    } else if (npcType === "trap") {
+      // Hide creature fields
+      fieldsToHide.push("tempHp");
+      fieldsToHide.push("creatureType");
+      fieldsToHide.push("alignment");
+      fieldsToHide.push("hitDice");
+      fieldsToHide.push("senses");
+      fieldsToHide.push("skills");
+      fieldsToHide.push("skillsLabel");
+      fieldsToHide.push("languages");
+      // Hide vehicle fields
+      fieldsToHide.push("weight");
+      fieldsToHide.push("crew");
+      fieldsToHide.push("passengers");
+      fieldsToHide.push("cargo");
+      fieldsToHide.push("damageThreshold");
+      // Show trap fields
+      fieldsToShow.push("trapType");
+      fieldsToShow.push("cost");
+    } else {
+      // Show creature fields
+      fieldsToShow.push("tempHp");
+      fieldsToShow.push("creatureType");
+      fieldsToShow.push("alignment");
+      fieldsToShow.push("hitDice");
+      fieldsToShow.push("senses");
+      fieldsToShow.push("skills");
+      fieldsToShow.push("skillsLabel");
+      fieldsToShow.push("languages");
+      // Hide vehicle fields
+      fieldsToHide.push("weight");
+      fieldsToHide.push("crew");
+      fieldsToHide.push("passengers");
+      fieldsToHide.push("cargo");
+      fieldsToHide.push("damageThreshold");
+      fieldsToHide.push("cost");
+      // Hide trap fields
+      fieldsToHide.push("trapType");
+    }
+    api.setHidden(fieldsToHide, true, () => {
+      // Do this in callback to avoid race condition
+      api.setHidden(fieldsToShow, false);
+    });
+  }
 
-	function updateCR(value) {
-		// Update the level based on the challenge rating
-		let level = 0;
-		if (value.trim() === '1/8') {
-			level = 1;
-		} else if (value.trim() === '1/4') {
-			level = 1;
-		} else if (value.trim() === '1/2') {
-			level = 1;
-		} else {
-			level = parseInt(value.trim(), 10);
-		}
+  function updateCR(value) {
+    // Update the level based on the challenge rating
+    let level = 0;
+    if (value.trim() === "1/8") {
+      level = 1;
+    } else if (value.trim() === "1/4") {
+      level = 1;
+    } else if (value.trim() === "1/2") {
+      level = 1;
+    } else {
+      level = parseInt(value.trim(), 10);
+    }
 
-		const valuesToSet = {
-			'data.level': level
-		}
+    const valuesToSet = {
+      "data.level": level,
+    };
 
-		// Get PB for the level
-		const pb = getProficiencyBonus(level);
-		valuesToSet['data.proficiencyBonus'] = pb;
+    // Get PB for the level
+    const pb = getProficiencyBonus(level);
+    valuesToSet["data.proficiencyBonus"] = pb;
 
-		// Get XP for the Challenge Rating
-		const xp = getXPForCR(value.trim());
-		valuesToSet['data.xp'] = xp;
+    // Get XP for the Challenge Rating
+    const xp = getXPForCR(value.trim());
+    valuesToSet["data.xp"] = xp;
 
-		api.setValues(valuesToSet);
-	}
+    api.setValues(valuesToSet);
+  }
 
-	function setModifier(value, ability) {
-		// Set the modifier and save modifier	(if not already set)
-		const modifier = Math.floor((value - 10) / 2);
-		const saveModifierDataPath = `data.${ability}Save`;
-		const valuesToSet = {
-			[`data.${ability}Mod`]: modifier,
-		}
-		valuesToSet[saveModifierDataPath] = modifier;
-		api.setValues(valuesToSet);
-	}
+  function setModifier(value, ability) {
+    // Set the modifier and save modifier	(if not already set)
+    const modifier = Math.floor((value - 10) / 2);
+    const saveModifierDataPath = `data.${ability}Save`;
+    const valuesToSet = {
+      [`data.${ability}Mod`]: modifier,
+    };
+    valuesToSet[saveModifierDataPath] = modifier;
+    api.setValues(valuesToSet);
+  }
 
-	function rollInitiative() {
-		// Roll initiative for the npc
-		const roll = '1d20';
+  function rollInitiative() {
+    // Roll initiative for the npc
+    const roll = "1d20";
 
-		// Get modifiers for initiative, which is a dexterity check
-		const modifiers = [];
+    // Get modifiers for initiative, which is a dexterity check
+    const modifiers = [];
 
-		// Add initiative modifier, which is what NPCs use 
-		const initiativeMod = parseInt(record.data?.initiativeMod || '0', 10);
-		modifiers.push({
-			name: 'Initiative Modifier',
-			value: initiativeMod,
-			active: true
-		});
+    // Add initiative modifier, which is what NPCs use
+    const initiativeMod = parseInt(record.data?.initiativeMod || "0", 10);
+    modifiers.push({
+      name: "Initiative Modifier",
+      value: initiativeMod,
+      active: true,
+    });
 
-		// Check effects for all initiative bonuses and penalties
-		const initiativeModifiers = getEffectsAndModifiers(['initiativeBonus', 'initiativePenalty']);
-		initiativeModifiers.forEach(modifier => {
-			modifiers.push(modifier);
-		});
+    // Check effects for all initiative bonuses and penalties
+    const initiativeModifiers = getEffectsAndModifiers([
+      "initiativeBonus",
+      "initiativePenalty",
+    ]);
+    initiativeModifiers.forEach((modifier) => {
+      modifiers.push(modifier);
+    });
 
-		const dexterityCheckModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], 'dexterity');
-		dexterityCheckModifiers.forEach(modifier => {
-			modifiers.push(modifier);
-		});
+    const dexterityCheckModifiers = getEffectsAndModifiers(
+      ["abilityBonus", "abilityPenalty"],
+      "dexterity"
+    );
+    dexterityCheckModifiers.forEach((modifier) => {
+      modifiers.push(modifier);
+    });
 
-		api.promptRoll('Initiative', roll, modifiers, {
-			"rollName": "Initiative",
-			"tooltip": "Initiative Roll",
-			"dc": 0
-		}, 'initiative');
-	}
+    api.promptRoll(
+      "Initiative",
+      roll,
+      modifiers,
+      {
+        rollName: "Initiative",
+        tooltip: "Initiative Roll",
+        dc: 0,
+      },
+      "initiative"
+    );
+  }
 
-	function rollCheck(ability) {
-		const mod = `${ability}Mod`;
+  function rollCheck(ability) {
+    const mod = `${ability}Mod`;
 
-		const modifiers = [];
-		let abilityMod = parseInt(record?.data?.[mod] || '0', 10);
-		if (abilityMod === undefined || isNaN(abilityMod)) {
-			abilityMod = 0;
-		}
-		if (abilityMod !== 0) {
-			modifiers.push({
-				name: ability,
-				value: abilityMod,
-				active: true,
-			});
-		}
-		const metadata = {
-			"rollName": `${capitalize(ability)}`
-		}
+    const modifiers = [];
+    let abilityMod = parseInt(record?.data?.[mod] || "0", 10);
+    if (abilityMod === undefined || isNaN(abilityMod)) {
+      abilityMod = 0;
+    }
+    if (abilityMod !== 0) {
+      modifiers.push({
+        name: ability,
+        value: abilityMod,
+        active: true,
+      });
+    }
+    const metadata = {
+      rollName: `${capitalize(ability)}`,
+    };
 
-		const checkModifiers = getEffectsAndModifiers(['abilityBonus', 'abilityPenalty'], ability);
-		checkModifiers.forEach(modifier => {
-			modifiers.push(modifier);
-		});
+    const checkModifiers = getEffectsAndModifiers(
+      ["abilityBonus", "abilityPenalty"],
+      ability
+    );
+    checkModifiers.forEach((modifier) => {
+      modifiers.push(modifier);
+    });
 
-		api.promptRoll(`${capitalize(ability)} Check`, "1d20", modifiers, metadata, 'ability');
-	}
+    api.promptRoll(
+      `${capitalize(ability)} Check`,
+      "1d20",
+      modifiers,
+      metadata,
+      "ability"
+    );
+  }
 
-	function rollSave(save) {
-		const mod = `${save}Save`;
-		const modifiers = [];
-		let saveMod = record?.data?.[mod] || '0';
-		if (saveMod === undefined) {
-			saveMod = 0;
-		}
+  function rollSave(save) {
+    const mod = `${save}Save`;
+    const modifiers = [];
+    let saveMod = record?.data?.[mod] || "0";
+    if (saveMod === undefined) {
+      saveMod = 0;
+    }
 
-		if (saveMod !== '0') {
-			modifiers.push({
-				name: `${capitalize(save)} Save Modifier`,
-				value: saveMod,
-				active: true,
-			});
-		}
+    if (saveMod !== "0") {
+      modifiers.push({
+        name: `${capitalize(save)} Save Modifier`,
+        value: saveMod,
+        active: true,
+      });
+    }
 
-		// Check effects for all save bonuses and penalties for saves
-		const saveModifiers = getEffectsAndModifiers(['saveBonus', 'savePenalty'], save);
-		saveModifiers.forEach(modifier => {
-			modifiers.push(modifier);
-		});
+    // Check effects for all save bonuses and penalties for saves
+    const saveModifiers = getEffectsAndModifiers(
+      ["saveBonus", "savePenalty"],
+      save
+    );
+    saveModifiers.forEach((modifier) => {
+      modifiers.push(modifier);
+    });
 
-		const metadata = {
-			"rollName": `${capitalize(save)} Save`,
-			"tooltip": `${capitalize(save)} Saving Throw`,
-			"dc": 0
-		}
+    const metadata = {
+      rollName: `${capitalize(save)} Save`,
+      tooltip: `${capitalize(save)} Saving Throw`,
+      dc: 0,
+    };
 
-		api.promptRoll(`${capitalize(save)} Save`, '1d20', modifiers, metadata, 'save');
-	}
+    api.promptRoll(
+      `${capitalize(save)} Save`,
+      "1d20",
+      modifiers,
+      metadata,
+      "save"
+    );
+  }
 
-	function onHasTraitsChange() {
-		// Toggle the visibility of the traits accordion
-		api.setHidden(['featuresDivider', 'features'], !record.data.hasTraits);
-	}
+  function onHasTraitsChange() {
+    // Toggle the visibility of the traits accordion
+    api.setHidden(["featuresDivider", "features"], !record.data.hasTraits);
+  }
 
-	function onHasActionsChange() {
-		// Toggle the visibility of the actions accordion
-		api.setHidden(['actionsDivider', 'actions'], !record.data.hasActions);
-	}
+  function onHasActionsChange() {
+    // Toggle the visibility of the actions accordion
+    api.setHidden(["actionsDivider", "actions"], !record.data.hasActions);
+  }
 
-	function onHasBonusActionsChange() {
-		// Toggle the visibility of the bonus actions accordion
-		api.setHidden(['bonusActionsDivider', 'bonusActions'], !record.data.hasBonusActions);
-	}
+  function onHasBonusActionsChange() {
+    // Toggle the visibility of the bonus actions accordion
+    api.setHidden(
+      ["bonusActionsDivider", "bonusActions"],
+      !record.data.hasBonusActions
+    );
+  }
 
-	function onHasReactionsChange() {
-		// Toggle the visibility of the reactions accordion
-		// And set maxReactions 1 if it is undefined
-		const valuesToSet = {};
-		if (record?.data?.maxReactions === undefined && record?.data?.hasReactions) {
-			valuesToSet['data.maxReactions'] = 1;
-		}
-		if (record?.data?.usedReactions === undefined && record?.data?.hasReactions) {
-			valuesToSet['data.usedReactions'] = 0;
-		}
-		valuesToSet['fields.reactions.hidden'] = !record.data.hasReactions;
-		valuesToSet['fields.reactionsDivider.hidden'] = !record.data.hasReactions;
-		valuesToSet['fields.reactionsLabel.hidden'] = !record.data.hasReactions;
-		valuesToSet['fields.usedReactions.hidden'] = !record.data.hasReactions;
-		api.setValues(valuesToSet);
-	}
+  function onHasReactionsChange() {
+    // Toggle the visibility of the reactions accordion
+    // And set maxReactions 1 if it is undefined
+    const valuesToSet = {};
+    if (
+      record?.data?.maxReactions === undefined &&
+      record?.data?.hasReactions
+    ) {
+      valuesToSet["data.maxReactions"] = 1;
+    }
+    if (
+      record?.data?.usedReactions === undefined &&
+      record?.data?.hasReactions
+    ) {
+      valuesToSet["data.usedReactions"] = 0;
+    }
+    valuesToSet["fields.reactions.hidden"] = !record.data.hasReactions;
+    valuesToSet["fields.reactionsDivider.hidden"] = !record.data.hasReactions;
+    valuesToSet["fields.reactionsLabel.hidden"] = !record.data.hasReactions;
+    valuesToSet["fields.usedReactions.hidden"] = !record.data.hasReactions;
+    api.setValues(valuesToSet);
+  }
 
-	function onHasLairActionsChange() {
-		// Toggle the visibility of the lair actions accordion
-		api.setHidden(['lairActionsDivider', 'lairActions'], !record.data.hasLairActions);
-	}
+  function onHasLairActionsChange() {
+    // Toggle the visibility of the lair actions accordion
+    api.setHidden(
+      ["lairActionsDivider", "lairActions"],
+      !record.data.hasLairActions
+    );
+  }
 </script>
 
 <div style="display: flex; margin-top: 4px; flex-direction: row">
-	<div style='display: flex; flex-direction: column; width: 100%;'>
-		<div style="display: flex; flex-direction: row; gap: 4px;">
-			<div style='display: flex; flex-direction: column; gap: 0px; width: 110px;'>
-				<div style="width: 110px; min-width: 110px; max-width: 110px; min-height: 110px; max-height: 110px">
-					<portrait width='110px' height='110px'></portrait>
-				</div>
-				<dropdown size="xs" width="100%" field="type" label="Type" placeholder="NPC Type..."
-					onchange='onTypeChange(value)'
-					options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}, {"value": "trap", "label": "Trap"}]'>
-				</dropdown>
-			</div>
-			<div style='display: flex; flex-direction: column; gap: 0px; width: 100%;'>
-				<div style='display: flex; flex-direction: row; gap: 4px;'>
-					<dropdown size="xs" width="100%" field="size" label="Size" placeholder="Select Size..."
-						options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'>
-					</dropdown>
-					<stringfield size="xs" width="100%" field="creatureType" label="Creature Type" placeholder="Creature Type...">
-					</stringfield>
-					<stringfield hidden="true" size="xs" width="100%" field="trapType" label="Trap Type"
-						placeholder="Trap Type...">
-					</stringfield>
-					<dropdown size="xs" width="100%" field="alignment" label="Alignment" placeholder="Alignment..." options='[
+  <div style="display: flex; flex-direction: column; width: 100%">
+    <div style="display: flex; flex-direction: row; gap: 4px">
+      <div
+        style="display: flex; flex-direction: column; gap: 0px; width: 110px"
+      >
+        <div
+          style="
+            width: 110px;
+            min-width: 110px;
+            max-width: 110px;
+            min-height: 110px;
+            max-height: 110px;
+          "
+        >
+          <portrait width="110px" height="110px"></portrait>
+        </div>
+        <dropdown
+          size="xs"
+          width="100%"
+          field="type"
+          label="Type"
+          placeholder="NPC Type..."
+          onchange="onTypeChange(value)"
+          options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}, {"value": "trap", "label": "Trap"}]'
+        >
+        </dropdown>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0px; width: 100%">
+        <div style="display: flex; flex-direction: row; gap: 4px">
+          <dropdown
+            size="xs"
+            width="100%"
+            field="size"
+            label="Size"
+            placeholder="Select Size..."
+            options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'
+          >
+          </dropdown>
+          <stringfield
+            size="xs"
+            width="100%"
+            field="creatureType"
+            label="Creature Type"
+            placeholder="Creature Type..."
+          >
+          </stringfield>
+          <stringfield
+            hidden="true"
+            size="xs"
+            width="100%"
+            field="trapType"
+            label="Trap Type"
+            placeholder="Trap Type..."
+          >
+          </stringfield>
+          <dropdown
+            size="xs"
+            width="100%"
+            field="alignment"
+            label="Alignment"
+            placeholder="Alignment..."
+            options='[
 			{"value": "unaligned", "label": "Unaligned"},
 			{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"}, 
 			{"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"}, 
 			{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
 			{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
-			{"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
-					<!-- Vehicle fields -->
-					<numberfield hidden="true" size="xs" width="100%" field="weight" label="Weight" placeholder="Weight...">
-					</numberfield>
-					<stringfield hidden="true" size="xs" width="100%" field="cost" label="Cost" placeholder="Cost...">
-					</stringfield>
-				</div>
-				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end; width: 100%;'>
-					<numberfield size="xs" icon="IconShield" color="blue" width="100%" field="ac" label="AC" placeholder="AC...">
-					</numberfield>
-					<numberfield showsign='true' size="xs" width="100%" field="initiativeMod" label="Initiative" placeholder="0">
-					</numberfield>
-					<numberfield size="xs" width="100%" field="initiativeScore" label="Initiative Score" placeholder="0">
-					</numberfield>
-					<iconbutton size="md" field="rollInitiativeBtn" variant="outline"
-						options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]' onclick='rollInitiative();'>
-					</iconbutton>
-				</div>
-				<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end; width: 100%;'>
-					<numberfield size="xs" width="22%" icon="IconHeart" placeholder='0' field='curhp' label='HP' color='pink'>
-					</numberfield>
-					<numberfield size="xs" width="22%" icon="IconHeartFilled" placeholder='0' field='hitpoints' label='Max HP'
-						color='green'></numberfield>
-					<numberfield size="xs" width="22%" icon="IconHeartFilled" placeholder='0' field='tempHp' label='Temp HP'
-						color='blue'></numberfield>
-					<stringfield size="xs" width="34%" field="hitDice" label="Hit Dice" placeholder="Hit Dice...">
-					</stringfield>
-					<!-- Vehicle fields -->
-					<numberfield hidden="true" size="xs" width="34%" field="damageThreshold" label="Damage Threshold" color="blue"
-						placeholder="0" icon="IconShieldFilled">
-					</numberfield>
-				</div>
-			</div>
-		</div>
+			{"value": "chaotic evil", "label": "Chaotic Evil"}]'
+          ></dropdown>
+          <!-- Vehicle fields -->
+          <numberfield
+            hidden="true"
+            size="xs"
+            width="100%"
+            field="weight"
+            label="Weight"
+            placeholder="Weight..."
+          >
+          </numberfield>
+          <stringfield
+            hidden="true"
+            size="xs"
+            width="100%"
+            field="cost"
+            label="Cost"
+            placeholder="Cost..."
+          >
+          </stringfield>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            align-items: flex-end;
+            width: 100%;
+          "
+        >
+          <numberfield
+            size="xs"
+            icon="IconShield"
+            color="blue"
+            width="100%"
+            field="ac"
+            label="AC"
+            placeholder="AC..."
+          >
+          </numberfield>
+          <numberfield
+            showsign="true"
+            size="xs"
+            width="100%"
+            field="initiativeMod"
+            label="Initiative"
+            placeholder="0"
+          >
+          </numberfield>
+          <numberfield
+            size="xs"
+            width="100%"
+            field="initiativeScore"
+            label="Initiative Score"
+            placeholder="0"
+          >
+          </numberfield>
+          <iconbutton
+            size="md"
+            field="rollInitiativeBtn"
+            variant="outline"
+            options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]'
+            onclick="rollInitiative();"
+          >
+          </iconbutton>
+        </div>
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            align-items: flex-end;
+            width: 100%;
+          "
+        >
+          <numberfield
+            size="xs"
+            width="22%"
+            icon="IconHeart"
+            placeholder="0"
+            field="curhp"
+            label="HP"
+            color="pink"
+          >
+          </numberfield>
+          <numberfield
+            size="xs"
+            width="22%"
+            icon="IconHeartFilled"
+            placeholder="0"
+            field="hitpoints"
+            label="Max HP"
+            color="green"
+          ></numberfield>
+          <numberfield
+            size="xs"
+            width="22%"
+            icon="IconHeartFilled"
+            placeholder="0"
+            field="tempHp"
+            label="Temp HP"
+            color="blue"
+          ></numberfield>
+          <stringfield
+            size="xs"
+            width="34%"
+            field="hitDice"
+            label="Hit Dice"
+            placeholder="Hit Dice..."
+          >
+          </stringfield>
+          <!-- Vehicle fields -->
+          <numberfield
+            hidden="true"
+            size="xs"
+            width="34%"
+            field="damageThreshold"
+            label="Damage Threshold"
+            color="blue"
+            placeholder="0"
+            icon="IconShieldFilled"
+          >
+          </numberfield>
+        </div>
+      </div>
+    </div>
 
-		<div style='margin-top: 4px;'>
-			<divider color='pink' label="Ability Scores" textalign="center"></divider>
-		</div>
+    <div style="margin-top: 4px">
+      <divider color="pink" label="Ability Scores" textalign="center"></divider>
+    </div>
 
-		<!-- Attributes -->
-		<div style='display: flex; flex-direction: row; gap: 0px; align-items: flex-end; flex-wrap: wrap;'>
-			<table style='width: 50%; min-width: 240px; flex-grow: 1;'>
-				<thead>
-					<tr>
-						<th></th>
-						<th></th>
-						<th><label label="MOD" variant="bold" size="xs"></label></th>
-						<th><label label="SAVE" variant="bold" size="xs"></label></th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>
-							<label label="STR" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="strength" onchange="setModifier(value, 'strength')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="strengthMod" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Strength Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Strength Check", "value": "roll"}]'
-									onclick='rollCheck("strength");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="strengthSave" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Strength Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Strength Save", "value": "roll"}]'
-									onclick='rollSave("strength");'>
+    <!-- Attributes -->
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 0px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      "
+    >
+      <table style="width: 50%; min-width: 240px; flex-grow: 1">
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th><label label="MOD" variant="bold" size="xs"></label></th>
+            <th><label label="SAVE" variant="bold" size="xs"></label></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <label label="STR" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="strength"
+                onchange="setModifier(value, 'strength')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="strengthMod"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Strength Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Strength Check", "value": "roll"}]'
+                  onclick='rollCheck("strength");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="strengthSave"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Strength Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Strength Save", "value": "roll"}]'
+                  onclick='rollSave("strength");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label label="DEX" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="dexterity"
+                onchange="setModifier(value, 'dexterity')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="dexterityMod"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Dexterity Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Dexterity Check", "value": "roll"}]'
+                  onclick='rollCheck("dexterity");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="dexteritySave"
+                  placeholder="+0"
+                >
+                </numberfield>
+                <iconbutton
+                  size="md"
+                  field="Dexterity Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Dexterity Save", "value": "roll"}]'
+                  onclick='rollSave("dexterity");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label label="CON" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="constitution"
+                onchange="setModifier(value, 'constitution')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="constitutionMod"
+                  placeholder="+0"
+                >
+                </numberfield>
+                <iconbutton
+                  size="md"
+                  field="Constitution Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Constitution Check", "value": "roll"}]'
+                  onclick='rollCheck("constitution");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="constitutionSave"
+                  placeholder="+0"
+                >
+                </numberfield>
+                <iconbutton
+                  size="md"
+                  field="Constitution Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Constitution Save", "value": "roll"}]'
+                  onclick='rollSave("constitution");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<label label="DEX" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="dexterity" onchange="setModifier(value, 'dexterity')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="dexterityMod" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Dexterity Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Dexterity Check", "value": "roll"}]'
-									onclick='rollCheck("dexterity");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="dexteritySave" placeholder="+0">
-								</numberfield>
-								<iconbutton size="md" field="Dexterity Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Dexterity Save", "value": "roll"}]'
-									onclick='rollSave("dexterity");'>
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<label label="CON" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="constitution" onchange="setModifier(value, 'constitution')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="constitutionMod" placeholder="+0">
-								</numberfield>
-								<iconbutton size="md" field="Constitution Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Constitution Check", "value": "roll"}]'
-									onclick='rollCheck("constitution");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="constitutionSave" placeholder="+0">
-								</numberfield>
-								<iconbutton size="md" field="Constitution Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Constitution Save", "value": "roll"}]'
-									onclick='rollSave("constitution");'>
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-			</table>
-			<table style='width: 50%; min-width: 240px; flex-grow: 1;'>
-				<thead>
-					<tr>
-						<th></th>
-						<th></th>
-						<th><label label="MOD" variant="bold" size="xs"></label></th>
-						<th><label label="SAVE" variant="bold" size="xs"></label></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>
-							<label label="INT" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="intelligence" onchange="setModifier(value, 'intelligence')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="intelligenceMod" placeholder="+0">
-								</numberfield>
-								<iconbutton size="md" field="Intelligence Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Intelligence Check", "value": "roll"}]'
-									onclick='rollCheck("intelligence");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="intelligenceSave" placeholder="+0">
-								</numberfield>
-								<iconbutton size="md" field="Intelligence Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Intelligence Save", "value": "roll"}]'
-									onclick='rollSave("intelligence");'>
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<label label="WIS" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="wisdom" onchange="setModifier(value, 'wisdom')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="wisdomMod" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Wisdom Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Wisdom Check", "value": "roll"}]'
-									onclick='rollCheck("wisdom");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="wisdomSave" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Wisdom Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Wisdom Save", "value": "roll"}]'
-									onclick='rollSave("wisdom");'>
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<label label="CHA" variant="bold" size="xs"></label>
-						</td>
-						<td>
-							<numberfield size="xs" width="100%" field="charisma" onchange="setModifier(value, 'charisma')"
-								placeholder="0"></numberfield>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="charismaMod" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Charisma Check" variant="light"
-									options='[{"icon": "D20", "label": "Roll Charisma Check", "value": "roll"}]'
-									onclick='rollCheck("charisma");'>
-								</iconbutton>
-							</div>
-						</td>
-						<td>
-							<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-								<numberfield showsign='true' size="xs" width="100%" field="charismaSave" placeholder="+0"></numberfield>
-								<iconbutton size="md" field="Charisma Save" variant="default"
-									options='[{"icon": "D20", "label": "Roll Charisma Save", "value": "roll"}]'
-									onclick='rollSave("charisma");'>
-								</iconbutton>
-							</div>
-						</td>
-					</tr>
-			</table>
-		</div>
+      <table style="width: 50%; min-width: 240px; flex-grow: 1">
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th><label label="MOD" variant="bold" size="xs"></label></th>
+            <th><label label="SAVE" variant="bold" size="xs"></label></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <label label="INT" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="intelligence"
+                onchange="setModifier(value, 'intelligence')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="intelligenceMod"
+                  placeholder="+0"
+                >
+                </numberfield>
+                <iconbutton
+                  size="md"
+                  field="Intelligence Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Intelligence Check", "value": "roll"}]'
+                  onclick='rollCheck("intelligence");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="intelligenceSave"
+                  placeholder="+0"
+                >
+                </numberfield>
+                <iconbutton
+                  size="md"
+                  field="Intelligence Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Intelligence Save", "value": "roll"}]'
+                  onclick='rollSave("intelligence");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label label="WIS" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="wisdom"
+                onchange="setModifier(value, 'wisdom')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="wisdomMod"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Wisdom Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Wisdom Check", "value": "roll"}]'
+                  onclick='rollCheck("wisdom");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="wisdomSave"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Wisdom Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Wisdom Save", "value": "roll"}]'
+                  onclick='rollSave("wisdom");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label label="CHA" variant="bold" size="xs"></label>
+            </td>
+            <td>
+              <numberfield
+                size="xs"
+                width="100%"
+                field="charisma"
+                onchange="setModifier(value, 'charisma')"
+                placeholder="0"
+              ></numberfield>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="charismaMod"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Charisma Check"
+                  variant="light"
+                  options='[{"icon": "D20", "label": "Roll Charisma Check", "value": "roll"}]'
+                  onclick='rollCheck("charisma");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+            <td>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  gap: 4px;
+                  align-items: flex-end;
+                "
+              >
+                <numberfield
+                  showsign="true"
+                  size="xs"
+                  width="100%"
+                  field="charismaSave"
+                  placeholder="+0"
+                ></numberfield>
+                <iconbutton
+                  size="md"
+                  field="Charisma Save"
+                  variant="default"
+                  options='[{"icon": "D20", "label": "Roll Charisma Save", "value": "roll"}]'
+                  onclick='rollSave("charisma");'
+                >
+                </iconbutton>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-		<div style='margin-top: 4px;'>
-			<divider color='pink'></divider>
-		</div>
+    <div style="margin-top: 4px">
+      <divider color="pink"></divider>
+    </div>
 
-		<!-- Skills -->
-		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-start; margin-top: 4px;'>
-			<label label="Skills" variant="bold" size="xs" field="skillsLabel"></label>
-			<list listtype="skill_list" field='skills'></list>
-		</div>
+    <!-- Skills -->
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: flex-start;
+        margin-top: 4px;
+      "
+    >
+      <label
+        label="Skills"
+        variant="bold"
+        size="xs"
+        field="skillsLabel"
+      ></label>
+      <list listtype="skill_list" field="skills"></list>
+    </div>
 
-		<!-- Additional Attributes -->
-		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="speed" label="Speed"
-				placeholder="Speed...">
-			</stringfield>
-			<stringfield width="100%" multiline='true' maxrows='2' size="xs" field="senses" label="Senses"
-				placeholder="Senses..."></stringfield>
-			<!-- Vehicle fields -->
-			<stringfield hidden="true" size="xs" width="100%" field="crew" label="Crew" placeholder="Crew...">
-			</stringfield>
-		</div>
+    <!-- Additional Attributes -->
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: flex-end;
+      "
+    >
+      <stringfield
+        width="100%"
+        multiline="true"
+        maxrows="2"
+        size="xs"
+        field="speed"
+        label="Speed"
+        placeholder="Speed..."
+      >
+      </stringfield>
+      <stringfield
+        width="100%"
+        multiline="true"
+        maxrows="2"
+        size="xs"
+        field="senses"
+        label="Senses"
+        placeholder="Senses..."
+      ></stringfield>
+      <!-- Vehicle fields -->
+      <stringfield
+        hidden="true"
+        size="xs"
+        width="100%"
+        field="crew"
+        label="Crew"
+        placeholder="Crew..."
+      >
+      </stringfield>
+    </div>
 
-		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield width="100%" size="xs" multiline='true' maxrows='2' field="languages" label="Languages"
-				placeholder="Enter Languages...">
-			</stringfield>
-			<!-- Vehicle fields -->
-			<stringfield hidden="true" size="xs" width="100%" field="passengers" label="Passengers"
-				placeholder="Passengers...">
-			</stringfield>
-			<stringfield hidden="true" size="xs" width="100%" field="cargo" label="Cargo" placeholder="Cargo...">
-			</stringfield>
-		</div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: flex-end;
+      "
+    >
+      <stringfield
+        width="100%"
+        size="xs"
+        multiline="true"
+        maxrows="2"
+        field="languages"
+        label="Languages"
+        placeholder="Enter Languages..."
+      >
+      </stringfield>
+      <!-- Vehicle fields -->
+      <stringfield
+        hidden="true"
+        size="xs"
+        width="100%"
+        field="passengers"
+        label="Passengers"
+        placeholder="Passengers..."
+      >
+      </stringfield>
+      <stringfield
+        hidden="true"
+        size="xs"
+        width="100%"
+        field="cargo"
+        label="Cargo"
+        placeholder="Cargo..."
+      >
+      </stringfield>
+    </div>
 
-		<div style='display: flex; flex-direction: row; gap: 4px; align-items: flex-end;'>
-			<stringfield width="100%" size="xs" field="challengeRating" label="CR" placeholder="Enter Challenge Rating..."
-				onchange='updateCR(value);'>
-			</stringfield>
-			<stringfield width="100%" size="xs" field="xp" label="XP" placeholder="Enter XP...">
-			</stringfield>
-			<numberfield showsign='true' width="100%" size="xs" field="proficiencyBonus" label="PB" placeholder="+2">
-			</numberfield>
-			<!-- Hidden field to store level for spell casting -->
-			<numberfield size="xs" field="level" label="Level" placeholder="0" hidden="true"></numberfield>
-		</div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: flex-end;
+      "
+    >
+      <stringfield
+        width="100%"
+        size="xs"
+        field="challengeRating"
+        label="CR"
+        placeholder="Enter Challenge Rating..."
+        onchange="updateCR(value);"
+      >
+      </stringfield>
+      <stringfield
+        width="100%"
+        size="xs"
+        field="xp"
+        label="XP"
+        placeholder="Enter XP..."
+      >
+      </stringfield>
+      <numberfield
+        showsign="true"
+        width="100%"
+        size="xs"
+        field="proficiencyBonus"
+        label="PB"
+        placeholder="+2"
+      >
+      </numberfield>
+      <!-- Hidden field to store level for spell casting -->
+      <numberfield
+        size="xs"
+        field="level"
+        label="Level"
+        placeholder="0"
+        hidden="true"
+      ></numberfield>
+    </div>
 
-		<div style='width: 100%; margin-top: 4px; margin-bottom: 4px; display: flex; flex-direction: row; gap: 4px;'>
-			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="vulnerabilities" label="Vulnerabilities"
-				placeholder='None'>
-			</stringfield>
-			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="resistances" label="Resistances"
-				placeholder='None'>
-			</stringfield>
-			<stringfield width="33%" size="xs" multiline='true' maxrows='2' field="immunities" label="Immunities"
-				placeholder='None'>
-			</stringfield>
-		</div>
+    <div
+      style="
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+      "
+    >
+      <stringfield
+        width="33%"
+        size="xs"
+        multiline="true"
+        maxrows="2"
+        field="vulnerabilities"
+        label="Vulnerabilities"
+        placeholder="None"
+      >
+      </stringfield>
+      <stringfield
+        width="33%"
+        size="xs"
+        multiline="true"
+        maxrows="2"
+        field="resistances"
+        label="Resistances"
+        placeholder="None"
+      >
+      </stringfield>
+      <stringfield
+        width="33%"
+        size="xs"
+        multiline="true"
+        maxrows="2"
+        field="immunities"
+        label="Immunities"
+        placeholder="None"
+      >
+      </stringfield>
+    </div>
 
-		<divider hideonlocked='true' color='pink' label='Subsection Settings' field="settingsDivider" textalign="center">
-		</divider>
+    <divider
+      hideonlocked="true"
+      color="pink"
+      label="Subsection Settings"
+      field="settingsDivider"
+      textalign="center"
+    >
+    </divider>
 
-		<div style='display: flex; flex-direction: row; gap: 18px; flex-wrap: wrap;'>
-			<checkbox hideonlocked='true' field="hasTraits" label="Has Traits" size="sm" onchange='onHasTraitsChange()'>
-			</checkbox>
+    <div style="display: flex; flex-direction: row; gap: 18px; flex-wrap: wrap">
+      <checkbox
+        hideonlocked="true"
+        field="hasTraits"
+        label="Has Traits"
+        size="sm"
+        onchange="onHasTraitsChange()"
+      >
+      </checkbox>
 
-			<checkbox hideonlocked='true' field="hasActions" label="Has Actions" size="sm" onchange='onHasActionsChange()'>
-			</checkbox>
+      <checkbox
+        hideonlocked="true"
+        field="hasActions"
+        label="Has Actions"
+        size="sm"
+        onchange="onHasActionsChange()"
+      >
+      </checkbox>
 
-			<checkbox hideonlocked='true' field="hasBonusActions" label="Has Bonus Actions" size="sm"
-				onchange='onHasBonusActionsChange()'>
-			</checkbox>
+      <checkbox
+        hideonlocked="true"
+        field="hasBonusActions"
+        label="Has Bonus Actions"
+        size="sm"
+        onchange="onHasBonusActionsChange()"
+      >
+      </checkbox>
 
-			<checkbox hideonlocked='true' field="hasReactions" label="Has Reactions" size="sm"
-				onchange='onHasReactionsChange()'></checkbox>
+      <checkbox
+        hideonlocked="true"
+        field="hasReactions"
+        label="Has Reactions"
+        size="sm"
+        onchange="onHasReactionsChange()"
+      ></checkbox>
 
-			<checkbox hideonlocked='true' field="hasLairActions" label="Has Lair Actions" size="sm"
-				onchange='onHasLairActionsChange()'>
-			</checkbox>
-		</div>
+      <checkbox
+        hideonlocked="true"
+        field="hasLairActions"
+        label="Has Lair Actions"
+        size="sm"
+        onchange="onHasLairActionsChange()"
+      >
+      </checkbox>
+    </div>
 
-		<divider hidden="true" color='pink' label='Traits' field="featuresDivider" textalign="center"></divider>
+    <divider
+      hidden="true"
+      color="pink"
+      label="Traits"
+      field="featuresDivider"
+      textalign="center"
+    ></divider>
 
-		<div style='width: 100%'>
-			<list hidden="true" listtype="npc_traits_list" field='features'></list>
-		</div>
+    <div style="width: 100%">
+      <list hidden="true" listtype="npc_traits_list" field="features"></list>
+    </div>
 
-		<divider hidden="true" color='pink' label='Actions' field="actionsDivider" textalign="center"></divider>
+    <divider
+      hidden="true"
+      color="pink"
+      label="Actions"
+      field="actionsDivider"
+      textalign="center"
+    ></divider>
 
-		<!-- We'll list spell slots here, if they have them -->
-		<div style="margin-top: 8px">
-			<label hidden="true" variant="bold" field="spellSlotsLabel" label="Spell Slots" size='sm'
-				textalign="center"></label>
-		</div>
-		<div
-			style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
-			<counter field='spellSlots1' hidden="true" maxvaluefield="numSpellSlots1" label='Level 1' size='xs'
-				textalign="center" color='violet'></counter>
-			<counter field='spellSlots2' hidden="true" maxvaluefield="numSpellSlots2" label='Level 2' size='xs'
-				textalign="center" color='blue'></counter>
-			<counter field='spellSlots3' hidden="true" maxvaluefield="numSpellSlots3" label='Level 3' size='xs'
-				textalign="center" color='cyan'></counter>
-			<counter field='spellSlots4' hidden="true" maxvaluefield="numSpellSlots4" label='Level 4' size='xs'
-				textalign="center" color='teal'></counter>
-			<counter field='spellSlots5' hidden="true" maxvaluefield="numSpellSlots5" label='Level 5' size='xs'
-				textalign="center" color='green'></counter>
-			<counter field='spellSlots6' hidden="true" maxvaluefield="numSpellSlots6" label='Level 6' size='xs'
-				textalign="center" color='lime'></counter>
-			<counter field='spellSlots7' hidden="true" maxvaluefield="numSpellSlots7" label='Level 7' size='xs'
-				textalign="center" color='yellow'></counter>
-			<counter field='spellSlots8' hidden="true" maxvaluefield="numSpellSlots8" label='Level 8' size='xs'
-				textalign="center" color='orange'></counter>
-			<counter field='spellSlots9' hidden="true" maxvaluefield="numSpellSlots9" label='Level 9' size='xs'
-				textalign="center" color='red'></counter>
-		</div>
+    <!-- We'll list spell slots here, if they have them -->
+    <div style="margin-top: 8px">
+      <label
+        hidden="true"
+        variant="bold"
+        field="spellSlotsLabel"
+        label="Spell Slots"
+        size="sm"
+        textalign="center"
+      ></label>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+        justify-content: center;
+      "
+    >
+      <counter
+        field="spellSlots1"
+        hidden="true"
+        maxvaluefield="numSpellSlots1"
+        label="Level 1"
+        size="xs"
+        textalign="center"
+        color="violet"
+      ></counter>
+      <counter
+        field="spellSlots2"
+        hidden="true"
+        maxvaluefield="numSpellSlots2"
+        label="Level 2"
+        size="xs"
+        textalign="center"
+        color="blue"
+      ></counter>
+      <counter
+        field="spellSlots3"
+        hidden="true"
+        maxvaluefield="numSpellSlots3"
+        label="Level 3"
+        size="xs"
+        textalign="center"
+        color="cyan"
+      ></counter>
+      <counter
+        field="spellSlots4"
+        hidden="true"
+        maxvaluefield="numSpellSlots4"
+        label="Level 4"
+        size="xs"
+        textalign="center"
+        color="teal"
+      ></counter>
+      <counter
+        field="spellSlots5"
+        hidden="true"
+        maxvaluefield="numSpellSlots5"
+        label="Level 5"
+        size="xs"
+        textalign="center"
+        color="green"
+      ></counter>
+      <counter
+        field="spellSlots6"
+        hidden="true"
+        maxvaluefield="numSpellSlots6"
+        label="Level 6"
+        size="xs"
+        textalign="center"
+        color="lime"
+      ></counter>
+      <counter
+        field="spellSlots7"
+        hidden="true"
+        maxvaluefield="numSpellSlots7"
+        label="Level 7"
+        size="xs"
+        textalign="center"
+        color="yellow"
+      ></counter>
+      <counter
+        field="spellSlots8"
+        hidden="true"
+        maxvaluefield="numSpellSlots8"
+        label="Level 8"
+        size="xs"
+        textalign="center"
+        color="orange"
+      ></counter>
+      <counter
+        field="spellSlots9"
+        hidden="true"
+        maxvaluefield="numSpellSlots9"
+        label="Level 9"
+        size="xs"
+        textalign="center"
+        color="red"
+      ></counter>
+    </div>
 
-		<div style='width: 100%'>
-			<list hidden="true" listtype="npc_actions_list" field='actions'></list>
-		</div>
+    <div style="width: 100%">
+      <list hidden="true" listtype="npc_actions_list" field="actions"></list>
+    </div>
 
-		<!-- Bonus Actions -->
-		<divider hidden="true" color='pink' label='Bonus Actions' field="bonusActionsDivider" textalign="center"></divider>
+    <!-- Bonus Actions -->
+    <divider
+      hidden="true"
+      color="pink"
+      label="Bonus Actions"
+      field="bonusActionsDivider"
+      textalign="center"
+    ></divider>
 
-		<div style='width: 100%'>
-			<list hidden="true" listtype="npc_actions_list" field='bonusActions'></list>
-		</div>
+    <div style="width: 100%">
+      <list
+        hidden="true"
+        listtype="npc_actions_list"
+        field="bonusActions"
+      ></list>
+    </div>
 
-		<!-- Reactions -->
-		<divider hidden="true" color='pink' label='Reactions' field="reactionsDivider" textalign="center"></divider>
+    <!-- Reactions -->
+    <divider
+      hidden="true"
+      color="pink"
+      label="Reactions"
+      field="reactionsDivider"
+      textalign="center"
+    ></divider>
 
-		<div style="margin-top: 8px">
-			<label hidden="true" variant="bold" field="reactionsLabel" label="Reactions" size='sm' textalign="center"></label>
-		</div>
-		<div
-			style='display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center'>
-			<counter hidden="true" field='usedReactions' size='xs' maxvaluefield='maxReactions' textalign="center"></counter>
-		</div>
+    <div style="margin-top: 8px">
+      <label
+        hidden="true"
+        variant="bold"
+        field="reactionsLabel"
+        label="Reactions"
+        size="sm"
+        textalign="center"
+      ></label>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+        justify-content: center;
+      "
+    >
+      <counter
+        hidden="true"
+        field="usedReactions"
+        size="xs"
+        maxvaluefield="maxReactions"
+        textalign="center"
+      ></counter>
+    </div>
 
-		<div style='width: 100%'>
-			<list hidden="true" listtype="npc_actions_list" field='reactions'></list>
-		</div>
+    <div style="width: 100%">
+      <list hidden="true" listtype="npc_actions_list" field="reactions"></list>
+    </div>
 
-		<!-- Lair Actions -->
-		<divider hidden="true" color='pink' label='Lair Actions' field="lairActionsDivider" textalign="center"></divider>
+    <!-- Lair Actions -->
+    <divider
+      hidden="true"
+      color="pink"
+      label="Lair Actions"
+      field="lairActionsDivider"
+      textalign="center"
+    ></divider>
 
-		<div style='width: 100%'>
-			<list hidden="true" listtype="npc_actions_list" field='lairActions'></list>
-		</div>
-	</div>
+    <div style="width: 100%">
+      <list
+        hidden="true"
+        listtype="npc_actions_list"
+        field="lairActions"
+      ></list>
+    </div>
+  </div>
 </div>
