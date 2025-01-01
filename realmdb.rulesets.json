@@ -2156,6 +2156,36 @@
         "label": "Spell Damage Bonus",
         "type": "spellDamageBonus",
         "fields": []
+      },
+      {
+        "label": "Attack Calculation",
+        "type": "attackCalculation",
+        "fields": [
+          {
+            "label": "Strength",
+            "field": "strength"
+          },
+          {
+            "label": "Dexterity",
+            "field": "dexterity"
+          },
+          {
+            "label": "Constitution",
+            "field": "constitution"
+          },
+          {
+            "label": "Intelligence",
+            "field": "intelligence"
+          },
+          {
+            "label": "Wisdom",
+            "field": "wisdom"
+          },
+          {
+            "label": "Charisma",
+            "field": "charisma"
+          }
+        ]
       }
     ],
     "otherSettings": {
@@ -2206,6 +2236,6 @@
   "createdAt": {
     "$numberLong": "1726181718296"
   },
-  "updatedAt": 1735673647796,
+  "updatedAt": 1735753231743,
   "published": true
 }]
