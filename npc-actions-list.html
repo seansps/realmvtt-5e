@@ -257,6 +257,29 @@
       attack._id
     );
 
+    // If bloodied, look for bloodied modifiers
+    const curhp = record?.data?.curhp || 0;
+    const maxhp = record?.data?.hitpoints || 0;
+    if (maxhp > 0 && curhp <= Math.floor(maxhp / 2)) {
+      const bloodiedMods = getEffectsAndModifiers(
+        ["attackBonus", "attackPenalty"],
+        "bloodied",
+        attack._id
+      );
+      bloodiedMods.forEach((mod) => {
+        if (
+          !modifiers.some(
+            (m) =>
+              m.name === mod.name &&
+              m.type === mod.type &&
+              m.value === mod.value
+          )
+        ) {
+          modifiers.push(mod);
+        }
+      });
+    }
+
     // Add the modifier to the modifiers array
     if (attackMod !== 0) {
       modifiers.push({
