@@ -3,15 +3,18 @@
   function getDamage(description) {
     // Handle both formats: "7 (1d8 + 3)" and "1d8 + 3"
     const patterns = [
-      /(\d+) \((\d+d\d+)(?:\s*([-+])\s*(\d+))?\) (\w+) damage/gi, // Format: "7 (1d8 + 3) piercing"
-      /(\d+d\d+)(?:\s*([-+])\s*(\d+))? (\w+) damage/gi, // Format: "1d8 + 3 piercing"
+      /(\d+) \((\d+d\d+)(?:\s*([-+])\s*(\d+))?\) (\w+) damage(?!\s+or)/gi, // Format: "7 (1d8 + 3) piercing" not followed by "or"
+      /(\d+d\d+)(?:\s*([-+])\s*(\d+))? (\w+) damage(?!\s+or)/gi, // Format: "1d8 + 3 piercing" not followed by "or"
     ];
 
     let damageString = "";
 
+    // Take only the part before "or" if it exists
+    const mainDescription = description.split(/,?\s+or\s+/)[0];
+
     for (const pattern of patterns) {
       let match;
-      while ((match = pattern.exec(description)) !== null) {
+      while ((match = pattern.exec(mainDescription)) !== null) {
         if (match[0].includes("(")) {
           // Format: "7 (1d8 + 3) piercing"
           const [, , dice, math, bonus, type] = match;
@@ -77,23 +80,38 @@
     // e.g. Melee Attack Roll: +5, reach 5 ft. Hit: 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.
     const actionDataPath = dataPath.replace(".data.description", "");
     const valuesToSet = {};
-    const isAttack = description.toLowerCase().includes("attack roll");
-    const isRanged = description.toLowerCase().includes("ranged attack roll");
+    const isAttack =
+      description.toLowerCase().includes("attack roll") ||
+      description.toLowerCase().includes("melee weapon") ||
+      description.toLowerCase().includes("melee spell") ||
+      description.toLowerCase().includes("melee attack");
+    const isRanged =
+      description.toLowerCase().includes("ranged attack") ||
+      description.toLowerCase().includes("ranged weapon") ||
+      description.toLowerCase().includes("ranged spell");
     const action = api.getValue(actionDataPath);
 
     if (isAttack || isRanged) {
       valuesToSet[`${actionDataPath}.data.isAttack`] = isAttack;
       valuesToSet[`${actionDataPath}.data.isRanged`] = isRanged;
 
-      // Extract attack to hit
+      // Extract attack to hit - support both formats:
+      // New: "Attack Roll: +5"
+      // Old: "Melee Weapon Attack: +5 to hit"
       const attackMod = parseInt(
-        description.match(/Attack Roll: ([+-]?\d+)/)?.[1] || "0",
+        description.match(/(?:Attack Roll|to hit):\s*([+-]?\d+)/)?.[1] ||
+          description.match(/:\s*([+-]?\d+)\s+to hit/)?.[1] ||
+          "0",
         10
       );
       valuesToSet[`${actionDataPath}.data.attackMod`] = attackMod;
 
       // Extract damage components
-      const damageString = getDamage(description);
+      // Look for damage after "Hit:" for old format
+      const hitMatch = description.match(/Hit:\s*(.*?)(?:$|\.)/);
+      const damageString = hitMatch
+        ? getDamage(hitMatch[1]) // Process text after "Hit:"
+        : getDamage(description); // Fall back to processing full description
       valuesToSet[`${actionDataPath}.data.damage`] = damageString;
 
       if (isRanged) {
