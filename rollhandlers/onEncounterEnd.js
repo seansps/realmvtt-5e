@@ -1,9 +1,13 @@
 // On Encounter End, we want tally the XP for all tokens that were enemies
-const enemies = (data?.tokens || []).filter(t => t?.faction === 'enemy');
-const xp = enemies.reduce((acc, token) => acc + (parseInt(token?.data?.xp || '0', 10)), 0);
+const enemies = (data?.tokens || []).filter((t) => t?.faction === "enemy");
+const xp = enemies.reduce((acc, token) => {
+  const xp = (token?.data?.xp || "0").replace(/,/g, "");
+  const xpInt = parseInt(xp, 10);
+  return acc + xpInt;
+}, 0);
 
 // Here is a macro to award the XP to the player
-let macro = '';
+let macro = "";
 if (enemies.length > 0) {
   macro = `\`\`\`Award_XP
 if (isGM) {
@@ -13,5 +17,7 @@ if (isGM) {
 \`\`\`
 `;
 
-  api.sendMessage(`[center]Encounter Ended - Total XP: ${xp}[/center]\n${macro}`);
+  api.sendMessage(
+    `[center]Encounter Ended - Total XP: ${xp}[/center]\n${macro}`
+  );
 }

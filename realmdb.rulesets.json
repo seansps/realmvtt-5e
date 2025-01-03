@@ -1333,7 +1333,7 @@
       ],
       "onTokenAdd": "const rollHp = api.getSetting('rollHp') === 'yes';\n\nconst hitDice = data?.token?.data?.hitDice;\n\n// If this is an NPC with hitdice and rollHp is enabled, roll for the HP\nif (rollHp && hitDice && data?.token?.recordType === 'npcs') {\n  const hitPointsRoll = api.rollInstant(hitDice);\n  const hitPoints = hitPointsRoll?.total;\n  api.setValueOnToken(data?.token, 'data.curhp', hitPoints);\n  api.setValueOnToken(data?.token, 'data.hitpoints', hitPoints);\n}\n",
       "onEncounterStart": "",
-      "onEncounterEnd": "// On Encounter End, we want tally the XP for all tokens that were enemies\nconst enemies = (data?.tokens || []).filter(t => t?.faction === 'enemy');\nconst xp = enemies.reduce((acc, token) => acc + (parseInt(token?.data?.xp || '0', 10)), 0);\n\n// Here is a macro to award the XP to the player\nlet macro = '';\nif (enemies.length > 0) {\n  macro = `\\`\\`\\`Award_XP\nif (isGM) {\n  api.awardExp(${xp}, 'Encounter with ${enemies.length} enemies.');\n  api.editMessage(null, 'Awarded ${xp} XP to the Party.');\n}\n\\`\\`\\`\n`;\n\n  api.sendMessage(`[center]Encounter Ended - Total XP: ${xp}[/center]\\n${macro}`);\n}",
+      "onEncounterEnd": "// On Encounter End, we want tally the XP for all tokens that were enemies\nconst enemies = (data?.tokens || []).filter((t) => t?.faction === \"enemy\");\nconst xp = enemies.reduce((acc, token) => {\n  const xp = (token?.data?.xp || \"0\").replace(/,/g, \"\");\n  const xpInt = parseInt(xp, 10);\n  return acc + xpInt;\n}, 0);\n\n// Here is a macro to award the XP to the player\nlet macro = \"\";\nif (enemies.length > 0) {\n  macro = `\\`\\`\\`Award_XP\nif (isGM) {\n  api.awardExp(${xp}, 'Encounter with ${enemies.length} enemies.');\n  api.editMessage(null, 'Awarded ${xp} XP to the Party.');\n}\n\\`\\`\\`\n`;\n\n  api.sendMessage(\n    `[center]Encounter Ended - Total XP: ${xp}[/center]\\n${macro}`\n  );\n}\n",
       "onTurnStart": "// On the Start of an NPCs Turn, check for any Recharge effects and if the value is within the range, send a message and remove the effect\nconst token = data?.token;\nconst effects = token?.effects || [];\nconst effectValues = token?.effectValues || {};\nconst rechargeEffect = effects.find(\n  (effect) => effect?.name?.toLowerCase() === \"recharge\"\n);\n\nif (rechargeEffect) {\n  const effectValue = effectValues?.[rechargeEffect?._id];\n  const actionName = (effectValue || \"\").split(\"[\")[0].trim();\n  let effectDc = \"6\";\n  if (effectValue && effectValue.includes(\"[\")) {\n    effectDc = parseInt(effectValue.split(\"[\")[1].trim(), 10);\n    if (isNaN(effectDc)) {\n      effectDc = \"6\";\n    }\n  }\n\n  api.roll(\n    \"1d6\",\n    {\n      tokenId: token?._id,\n      actionName: actionName,\n      effectId: rechargeEffect?._id,\n      dc: effectDc,\n    },\n    \"recharge\"\n  );\n}\n\n// Update reactions if needed\nif (token?.data?.usedReactions) {\n  if (token?.data?.usedReactions > 0) {\n    api.setValueOnToken(token, \"data.usedReactions\", 0);\n  }\n}\n",
       "onTurnEnd": "",
       "onRoundStart": "",
@@ -2236,6 +2236,6 @@
   "createdAt": {
     "$numberLong": "1726181718296"
   },
-  "updatedAt": 1735836321013,
+  "updatedAt": 1735934768777,
   "published": true
 }]
