@@ -222,6 +222,7 @@
       field="cost"
       label="Cost"
       placeholder="Enter cost..."
+      hidewhenidentified="false"
     ></stringfield>
     <numberfield
       width="50%"
@@ -247,6 +248,7 @@
       field="rarity"
       label="Rarity"
       placeholder="--"
+      hidewhenidentified="false"
       options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}]'
     >
     </dropdown>
@@ -258,6 +260,7 @@
       label="Consumable"
       textalign="left"
       size="sm"
+      hidewhenidentified="false"
       onchange="showHideConsumableValues(value);"
     ></checkbox>
     <checkbox
@@ -266,6 +269,7 @@
       label="Requires Attunement"
       textalign="left"
       size="sm"
+      hidewhenidentified="false"
     >
     </checkbox>
   </div>
@@ -277,6 +281,7 @@
     hidden="true"
     field="damage"
     label="Damage"
+    placeholder="Enter Damage for attacks..."
   ></stringfield>
 
   <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
@@ -384,7 +389,7 @@
     hidden="true"
     field="versatileDamage"
     label="Versatile Damage"
-    placeholder="Enter damage for two-handed use..."
+    placeholder="Enter damage for two-handed attacks..."
   ></stringfield>
 
   <!-- Armor Properties -->
@@ -466,6 +471,7 @@
     placeholder="Select Effects if Applicable..."
     multiselect="10"
     optionsquery='{"type": "effects", "query": {}}'
+    hidewhenidentified="false"
   >
   </dropdown>
   <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
@@ -475,13 +481,15 @@
       field="healing"
       label="Healing"
       placeholder="Enter Healing if Applicable..."
+      hidewhenidentified="false"
     ></stringfield>
     <stringfield
       width="50%"
       hidden="true"
       field="useDamage"
       label="Damage"
-      placeholder="Enter Damage if Applicable..."
+      placeholder="Enter Damage when used if Applicable..."
+      hidewhenidentified="false"
     ></stringfield>
   </div>
 
@@ -495,6 +503,7 @@
       label="Spell"
       placeholder="Select Spell..."
       optionsquery='{"type": "spells", "query": {}}'
+      hidewhenidentified="false"
     >
     </dropdown>
     <numberfield
@@ -503,6 +512,7 @@
       field="spellLevel"
       label="Level"
       placeholder="Enter Level..."
+      hidewhenidentified="false"
     ></numberfield>
   </div>
 
@@ -515,6 +525,7 @@
       label="Items in Pack"
       size="sm"
       variant="bold"
+      hidewhenidentified="false"
     ></label>
   </div>
 
@@ -525,6 +536,7 @@
       field="items"
       variant="striped"
       allowadd=""
+      hidewhenidentified="false"
     ></list>
   </div>
 
@@ -534,30 +546,35 @@
       field="cp"
       label="CP"
       hidden="true"
+      hidewhenidentified="false"
     ></numberfield>
     <numberfield
       placeholder="0"
       field="sp"
       label="SP"
       hidden="true"
+      hidewhenidentified="false"
     ></numberfield>
     <numberfield
       placeholder="0"
       field="ep"
       label="EP"
       hidden="true"
+      hidewhenidentified="false"
     ></numberfield>
     <numberfield
       placeholder="0"
       field="gp"
       label="GP"
       hidden="true"
+      hidewhenidentified="false"
     ></numberfield>
     <numberfield
       placeholder="0"
       field="pp"
       label="PP"
       hidden="true"
+      hidewhenidentified="false"
     ></numberfield>
   </div>
 
