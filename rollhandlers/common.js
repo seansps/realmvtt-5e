@@ -1703,14 +1703,27 @@ function getAltSpellDamageButtons(
     }
 
     // Get additional damage modifiers
-    const moreDamageModifiers =
+    let moreDamageModifiers =
       spell?.data?.level?.toLowerCase() === "cantrip"
-        ? getEffectsAndModifiers(["cantripDamageBonus", "cantripDamagePenalty"])
-        : getEffectsAndModifiers(["spellDamageBonus", "spellDamagePenalty"]);
+        ? getEffectsAndModifiers(
+            ["cantripDamageBonus", "cantripDamagePenalty"],
+            spell?.data?.isAttack ? "attack" : "all"
+          )
+        : getEffectsAndModifiers(
+            ["spellDamageBonus", "spellDamagePenalty"],
+            spell?.data?.isAttack ? "attack" : "all"
+          );
+    // Filter attack modifiers if not attack spell
+    if (!spell?.data?.isAttack) {
+      moreDamageModifiers = moreDamageModifiers.filter(
+        (mod) => (mod?.field || "") !== "attack"
+      );
+    }
     moreDamageModifiers.forEach((modifier) => {
       altDamageModifiers.push({
         ...modifier,
-        type: altDamageType,
+        // Only set type if modifer does not have it
+        type: modifier.value.toString().split(" ")?.[1] ? "" : altDamageType,
       });
     });
 

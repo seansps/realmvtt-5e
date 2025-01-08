@@ -106,17 +106,29 @@
 
     if (spell?.data?.damage || spell?.data?.damage2) {
       // Get damage modifiers
-      const moreDamageModifiers =
+      let moreDamageModifiers =
         spell?.data?.level?.toLowerCase() === "cantrip"
-          ? getEffectsAndModifiers([
-              "cantripDamageBonus",
-              "cantripDamagePenalty",
-            ])
-          : getEffectsAndModifiers(["spellDamageBonus", "spellDamagePenalty"]);
+          ? getEffectsAndModifiers(
+              ["cantripDamageBonus", "cantripDamagePenalty"],
+              spell?.data?.isAttack ? "attack" : "all"
+            )
+          : getEffectsAndModifiers(
+              ["spellDamageBonus", "spellDamagePenalty"],
+              spell?.data?.isAttack ? "attack" : "all"
+            );
+      // Filter attack modifiers if not attack spell
+      if (!spell?.data?.isAttack) {
+        moreDamageModifiers = moreDamageModifiers.filter(
+          (mod) => (mod?.field || "") !== "attack"
+        );
+      }
       moreDamageModifiers.forEach((modifier) => {
         damageModifiers.push({
           ...modifier,
-          type: primaryDamageType,
+          // Only set type if modifer does not have it
+          type: modifier.value.toString().split(" ")?.[1]
+            ? ""
+            : primaryDamageType,
         });
       });
     } else if (spell?.data?.healing) {
