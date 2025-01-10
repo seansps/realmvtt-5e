@@ -1,57 +1,246 @@
 <script>
-	function onTraitNameChange(name) {
-		const traitDataPath = dataPath.replace('.name', '');
-		const trait = api.getValue(traitDataPath);
+  function onTraitNameChange(name) {
+    const traitDataPath = dataPath.replace(".name", "");
+    const trait = api.getValue(traitDataPath);
 
-		const valuesToSet = {};
+    const valuesToSet = {};
 
-		// Parse name for (x/Day or y/Day in Lair)
-		const usesPerDay = parseInt(name.match(/\(\s*(\d+)\s*\/day\s*/i)?.[1] || '0', 10);
-		const usesPerDayInLair = parseInt(name.match(/(\d+)\s*\/day in lair/i)?.[1] || '0', 10);
-		if (!isNaN(usesPerDay) && usesPerDay > 0) {
-			if (trait.data.uses === undefined) {
-				valuesToSet[`${traitDataPath}.data.uses`] = 0;
-			}
-			valuesToSet[`${traitDataPath}.data.maxUsesOutsideLair`] = usesPerDay;
-			valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDay;
-			valuesToSet[`${traitDataPath}.fields.uses.hidden`] = false;
+    // Parse name for (x/Day or y/Day in Lair)
+    const usesPerDay = parseInt(
+      name.match(/\(\s*(\d+)\s*\/day\s*/i)?.[1] || "0",
+      10
+    );
+    const usesPerDayInLair = parseInt(
+      name.match(/(\d+)\s*\/day in lair/i)?.[1] || "0",
+      10
+    );
+    if (!isNaN(usesPerDay) && usesPerDay > 0) {
+      if (trait.data.uses === undefined) {
+        valuesToSet[`${traitDataPath}.data.uses`] = 0;
+      }
+      valuesToSet[`${traitDataPath}.data.maxUsesOutsideLair`] = usesPerDay;
+      valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDay;
+      valuesToSet[`${traitDataPath}.fields.uses.hidden`] = false;
 
-			if (!isNaN(usesPerDayInLair) && usesPerDayInLair > 0) {
-				valuesToSet[`${traitDataPath}.data.maxUsesInLair`] = usesPerDayInLair;
-				if (record?.data?.inLair) {
-					valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDayInLair;
-				}
-			}
-		}
-		else {
-			if (trait?.fields?.uses?.hidden === false) {
-				valuesToSet[`${traitDataPath}.fields.uses.hidden`] = true;
-			}
-		}
+      if (!isNaN(usesPerDayInLair) && usesPerDayInLair > 0) {
+        valuesToSet[`${traitDataPath}.data.maxUsesInLair`] = usesPerDayInLair;
+        if (record?.data?.inLair) {
+          valuesToSet[`${traitDataPath}.data.maxUses`] = usesPerDayInLair;
+        }
+      }
+    } else {
+      if (trait?.fields?.uses?.hidden === false) {
+        valuesToSet[`${traitDataPath}.fields.uses.hidden`] = true;
+      }
+    }
 
-		if (Object.keys(valuesToSet).length > 0) {
-			api.setValues(valuesToSet);
-		}
-	}
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
+  function updateUsesPerDay(value) {
+    const traitDataPath = dataPath.replace(".data.maxUses", "");
+    const trait = api.getValue(traitDataPath);
+    const valuesToSet = {};
+
+    if (value > 0) {
+      valuesToSet[`${traitDataPath}.fields.uses.hidden`] = false;
+    } else {
+      valuesToSet[`${traitDataPath}.fields.uses.hidden`] = true;
+    }
+
+    valuesToSet[`${traitDataPath}.data.maxUsesOutsideLair`] = value;
+
+    api.setValues(valuesToSet);
+  }
+
+  function updateEffects(effects) {
+    const traitDataPath = dataPath.replace(".data.effects", "");
+    api.setValue(
+      `${traitDataPath}.fields.useBtn.hidden`,
+      (effects || []).length === 0
+    );
+  }
+
+  function useTrait() {
+    const traitDataPath = dataPath.replace(".data.useBtn", "");
+    const trait = api.getValue(traitDataPath);
+    const name = trait?.name || "";
+    const description = trait?.data?.description || "";
+
+    const uses = parseInt(trait?.data?.uses || "0", 10);
+    const maxUses = parseInt(trait?.data?.maxUses || "0", 10);
+    const valuesToSet = {};
+
+    if (maxUses > 0) {
+      if (uses < maxUses) {
+        // Deduct one use
+        valuesToSet[`${traitDataPath}.data.uses`] = uses + 1;
+      }
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+
+    // We'll send a message with the description of the trait as well as macros as relevant
+
+    // Create macros for all effects that this trait can apply
+    let effectButtons = "";
+    const effects = trait?.data?.effects || [];
+    effects.forEach((effectJson) => {
+      const effect = JSON.parse(effectJson);
+      const effectName = effect?.name || "";
+      const effectID = effect?._id || "";
+      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
+      if (effectButtons !== "") {
+        effectButtons += "\n";
+      }
+      effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+  api.addEffectById('${effectID}', target);
+});
+\`\`\``;
+    });
+
+    const message = `
+#### ${name}
+
+---
+&nbsp;
+
+${description}
+
+---
+
+${effectButtons}
+`;
+
+    api.sendMessage(message, undefined, [], []);
+  }
 </script>
 
-<div style='width: 100%'>
-	<div style='display: flex; flex-direction: row; gap: 4px;'>
-		<namefield size='xs' width='100%' field="namefield" placeholder='Enter Name...' variant="unstyled"
-			onchange='onTraitNameChange(value)'></namefield>
-		<div style='align-self: center'>
-			<checkbox hidden='true' field="inLair" width='70px' label="In Lair" size='xs'></checkbox>
-		</div>
-		<div style='margin-bottom: 2px'>
-			<counter hidden='true' width='100px' size='xs' field="uses" label='Uses' maxvaluefield='maxUses'></counter>
-		</div>
-	</div>
-	<stringfield size='xs' width='100%' field="description" placeholder='Enter Description...' multiline='true'
-		maxrows='6'></stringfield>
-	<accordion hideonlocked='true' field='modifiersAccordion' label='Modifiers' size="xs">
-		<list listtype="modifier_list" field='modifiers' variant='striped' allowadd=''></list>
-	</accordion>
-	<numberfield field="maxUses" hidden='true'></numberfield>
-	<numberfield field="maxUsesOutsideLair" hidden='true'></numberfield>
-	<numberfield field="maxUsesInLair" hidden='true'></numberfield>
+<div style="width: 100%">
+  <!-- Name and Buttons -->
+  <div style="display: flex; flex-direction: row; gap: 4px">
+    <namefield
+      size="xs"
+      width="100%"
+      field="namefield"
+      placeholder="Enter Name..."
+      variant="unstyled"
+      onchange="onTraitNameChange(value)"
+    ></namefield>
+    <div style="align-self: center">
+      <checkbox
+        hidden="true"
+        field="inLair"
+        width="70px"
+        label="In Lair"
+        size="xs"
+      ></checkbox>
+    </div>
+    <div style="margin-bottom: 2px">
+      <counter
+        hidden="true"
+        width="100px"
+        size="xs"
+        field="uses"
+        label="Uses"
+        maxvaluefield="maxUses"
+      ></counter>
+    </div>
+    <!-- Use Button -->
+    <div>
+      <button
+        hidden="true"
+        size="xs"
+        radius="xs"
+        field="useBtn"
+        label="Use"
+        variant="light"
+        onclick="useTrait();"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div style="margin-top: 2px">
+    <stringfield
+      size="xs"
+      width="100%"
+      field="description"
+      placeholder="Enter Description..."
+      multiline="true"
+      maxrows="6"
+    ></stringfield>
+  </div>
+
+  <accordion
+    hideonlocked="true"
+    field="modifiersAccordion"
+    label="Modifiers"
+    size="xs"
+  >
+    <list
+      listtype="modifier_list"
+      field="modifiers"
+      variant="striped"
+      allowadd=""
+    ></list>
+  </accordion>
+
+  <!-- Settings -->
+  <accordion
+    hideonlocked="true"
+    field="settingsAccordion"
+    label="Settings"
+    size="xs"
+  >
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: flex-end;
+      "
+    >
+      <numberfield
+        field="maxUses"
+        label="Uses per Day"
+        description="Number of Uses / Day"
+        size="xs"
+        width="50%"
+        placeholder="0"
+        onchange="updateUsesPerDay(value);"
+      >
+      </numberfield>
+      <numberfield
+        field="maxUsesInLair"
+        label="Uses per Day in Lair"
+        description="Number of Uses / Day in Lair"
+        size="xs"
+        width="50%"
+        placeholder="0"
+      >
+      </numberfield>
+    </div>
+    <dropdown
+      size="xs"
+      width="100%"
+      field="effects"
+      label="Effects"
+      searchable="true"
+      multiselect="10"
+      description="Effects that this Trait can apply"
+      optionsquery='{"type": "effects", "query": {}}'
+      placeholder="Select Effects..."
+      onchange="updateEffects(value);"
+    >
+    </dropdown>
+  </accordion>
+
+  <numberfield field="maxUsesOutsideLair" hidden="true"></numberfield>
 </div>
