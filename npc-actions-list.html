@@ -218,6 +218,30 @@
     }
   }
 
+  function updateLegendaryActions() {
+    // If this is a legendary action, we update the amount used by the cost, up to the max
+    let actionDataPath = dataPath.replace(".data.useBtn", "");
+    if (dataPath.includes("rollAttackBtn")) {
+      actionDataPath = dataPath.replace(".data.rollAttackBtn", "");
+    }
+    const action = api.getValue(actionDataPath);
+    const name = action?.name || "";
+    let cost = 1;
+    // Parse cost from name like "Action Name (Costs 2 Actions)" or "Action Name (Costs 3 Actions)"
+    const costMatch = name.match(/\(costs?\s*(\d+)\s*actions?\)/i);
+    if (costMatch) {
+      cost = parseInt(costMatch[1], 10);
+    }
+
+    if (dataPath.includes("data.legendaryActions")) {
+      const maxLegendaryActions = record?.data?.maxLegendaryActions || 1;
+      const usedLegendaryActions = record?.data?.usedLegendaryActions || 0;
+      if (usedLegendaryActions < maxLegendaryActions) {
+        api.setValue("data.usedLegendaryActions", usedLegendaryActions + cost);
+      }
+    }
+  }
+
   function updateRecharge(recharge) {
     const actionDataPath = dataPath.replace(".data.isRecharge", "");
     const action = api.getValue(actionDataPath);
@@ -464,6 +488,7 @@
     }
 
     updateReactions();
+    updateLegendaryActions();
   }
 
   function rollDamage(isCritical) {
@@ -633,6 +658,7 @@ ${effectButtons}
 
     api.sendMessage(message, undefined, [], []);
     updateReactions();
+    updateLegendaryActions();
   }
 </script>
 

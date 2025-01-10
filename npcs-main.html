@@ -267,10 +267,55 @@
     api.setValues(valuesToSet);
   }
 
+  function updateLegendaryActionsDescription(value) {
+    // Parse number of legendary actions from description
+    const match = value.toLowerCase().match(/legendary action uses:\s*(\d+)/i);
+    if (match) {
+      const uses = parseInt(match[1], 10);
+      if (uses > 0) {
+        const valuesToSet = {
+          "data.maxLegendaryActions": uses,
+          "data.maxLegendaryActionsOutsideLair": uses,
+          "data.maxLegendaryActionsInLair": uses,
+        };
+        api.setValues(valuesToSet);
+      }
+    }
+  }
+
+  function onHasLegendaryActionsChange() {
+    // Toggle the visibility of the legendary actions accordion
+    // And set maxLegendaryActions 1 if it is undefined
+    const valuesToSet = {};
+    if (
+      record?.data?.maxLegendaryActions === undefined &&
+      record?.data?.hasLegendaryActions
+    ) {
+      valuesToSet["data.maxLegendaryActions"] = 1;
+    }
+    if (
+      record?.data?.usedLegendaryActions === undefined &&
+      record?.data?.hasLegendaryActions
+    ) {
+      valuesToSet["data.usedLegendaryActions"] = 0;
+    }
+    valuesToSet["fields.legendaryActions.hidden"] =
+      !record.data.hasLegendaryActions;
+    valuesToSet["fields.legendaryActionsDivider.hidden"] =
+      !record.data.hasLegendaryActions;
+    valuesToSet["fields.legendaryActionsLabel.hidden"] =
+      !record.data.hasLegendaryActions;
+    valuesToSet["fields.usedLegendaryActions.hidden"] =
+      !record.data.hasLegendaryActions;
+    valuesToSet["fields.legendaryActionsDescription.hidden"] =
+      !record.data.hasLegendaryActions;
+    api.setValues(valuesToSet);
+  }
+
   function onHasLairActionsChange() {
     // Toggle the visibility of the lair actions accordion
     api.setHidden(
-      ["lairActionsDivider", "lairActions"],
+      ["lairActionsDivider", "lairActions", "lairActionsDescription"],
       !record.data.hasLairActions
     );
   }
@@ -1151,6 +1196,15 @@
 
       <checkbox
         hideonlocked="true"
+        field="hasLegendaryActions"
+        label="Has Legendary Actions"
+        size="sm"
+        onchange="onHasLegendaryActionsChange()"
+      >
+      </checkbox>
+
+      <checkbox
+        hideonlocked="true"
         field="hasLairActions"
         label="Has Lair Actions"
         size="sm"
@@ -1346,6 +1400,62 @@
       <list hidden="true" listtype="npc_actions_list" field="reactions"></list>
     </div>
 
+    <!-- Legendary Actions -->
+    <divider
+      hidden="true"
+      color="pink"
+      label="Legendary Actions"
+      field="legendaryActionsDivider"
+      textalign="center"
+    ></divider>
+
+    <div style="margin-top: 8px">
+      <label
+        hidden="true"
+        variant="bold"
+        field="legendaryActionsLabel"
+        label="Legendary Actions"
+        size="sm"
+        textalign="center"
+      ></label>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+        justify-content: center;
+      "
+    >
+      <counter
+        hidden="true"
+        field="usedLegendaryActions"
+        size="xs"
+        maxvaluefield="maxLegendaryActions"
+        textalign="center"
+      ></counter>
+    </div>
+
+    <stringfield
+      hidden="true"
+      field="legendaryActionsDescription"
+      placeholder="Enter Legendary Actions description..."
+      size="xs"
+      multiline="true"
+      maxrows="6"
+      onchange="updateLegendaryActionsDescription(value)"
+    ></stringfield>
+
+    <div style="width: 100%">
+      <list
+        hidden="true"
+        listtype="npc_actions_list"
+        field="legendaryActions"
+      ></list>
+    </div>
+
     <!-- Lair Actions -->
     <divider
       hidden="true"
@@ -1354,6 +1464,15 @@
       field="lairActionsDivider"
       textalign="center"
     ></divider>
+
+    <stringfield
+      hidden="true"
+      field="lairActionsDescription"
+      placeholder="Enter Lair Actions description..."
+      size="xs"
+      multiline="true"
+      maxrows="6"
+    ></stringfield>
 
     <div style="width: 100%">
       <list

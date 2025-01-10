@@ -35,3 +35,10 @@ if (token?.data?.usedReactions) {
     api.setValueOnToken(token, "data.usedReactions", 0);
   }
 }
+
+// Update legendary actions if needed
+if (token?.data?.usedLegendaryActions) {
+  if (token?.data?.usedLegendaryActions > 0) {
+    api.setValueOnToken(token, "data.usedLegendaryActions", 0);
+  }
+}
