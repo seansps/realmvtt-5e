@@ -1601,15 +1601,24 @@ function getRIV(target) {
     "immunity",
   ]);
   modifiers.forEach((mod) => {
-    if (mod.modifierType === "resistance" && mod.valueType === "string") {
-      resistances.push(mod.value);
+    if (
+      mod.modifierType === "resistance" &&
+      mod.valueType === "string" &&
+      mod.value
+    ) {
+      resistances.push(mod.value.toLowerCase());
     } else if (
       mod.modifierType === "vulnerability" &&
-      mod.valueType === "string"
+      mod.valueType === "string" &&
+      mod.value
     ) {
-      vulnerabilities.push(mod.value);
-    } else if (mod.modifierType === "immunity" && mod.valueType === "string") {
-      immunities.push(mod.value);
+      vulnerabilities.push(mod.value.toLowerCase());
+    } else if (
+      mod.modifierType === "immunity" &&
+      mod.valueType === "string" &&
+      mod.value
+    ) {
+      immunities.push(mod.value.toLowerCase());
     }
   });
   // Get additional one-off resistances per damage type
