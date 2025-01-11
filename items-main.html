@@ -62,6 +62,7 @@
       valuesToHide.push("rarity");
       valuesToHide.push("consumable");
       valuesToHide.push("attunement");
+      valuesToHide.push("hasUseBtn");
     } else {
       valuesToHide.push("itemListLabel");
       valuesToHide.push("items");
@@ -72,6 +73,7 @@
       valuesToHide.push("pp");
       valuesToShow.push("rarity");
       valuesToShow.push("attunement");
+      valuesToShow.push("hasUseBtn");
     }
 
     if (valuesToHide.length > 0) {
@@ -106,7 +108,33 @@
     const valuesToHide = [];
     const valuesToShow = [];
 
-    if (isConsumable) {
+    const isUse = record.data?.hasUseBtn || false;
+
+    if (isConsumable || isUse) {
+      valuesToShow.push("effects");
+      valuesToShow.push("healing");
+      valuesToShow.push("useDamage");
+    } else {
+      valuesToHide.push("effects");
+      valuesToHide.push("healing");
+      valuesToHide.push("useDamage");
+    }
+
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+
+  function showHideUseValues(isUse) {
+    const valuesToShow = [];
+    const valuesToHide = [];
+
+    const isConsumable = record.data?.consumable || false;
+
+    if (isConsumable || isUse) {
       valuesToShow.push("effects");
       valuesToShow.push("healing");
       valuesToShow.push("useDamage");
@@ -218,31 +246,18 @@
 
   <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
     <stringfield
-      width="50%"
+      width="100%"
       field="cost"
       label="Cost"
       placeholder="Enter cost..."
       hidewhenidentified="false"
     ></stringfield>
     <numberfield
-      width="50%"
+      width="100%"
       field="weight"
       label="Weight"
       placeholder="0"
     ></numberfield>
-  </div>
-
-  <!-- Other General Properties -->
-
-  <div
-    style="
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      gap: 8px;
-      align-items: center;
-    "
-  >
     <dropdown
       width="100%"
       field="rarity"
@@ -252,19 +267,20 @@
       options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}, {"label": "Artifact", "value": "artifact"}]'
     >
     </dropdown>
+  </div>
 
+  <!-- Other General Properties -->
+
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    "
+  >
     <checkbox
-      hidden="true"
-      width="150px"
-      field="consumable"
-      label="Consumable"
-      textalign="left"
-      size="sm"
-      hidewhenidentified="false"
-      onchange="showHideConsumableValues(value);"
-    ></checkbox>
-    <checkbox
-      width="250px"
       field="attunement"
       label="Requires Attunement"
       textalign="left"
@@ -272,6 +288,24 @@
       hidewhenidentified="false"
     >
     </checkbox>
+    <checkbox
+      hidden="false"
+      field="hasUseBtn"
+      label="Has Use"
+      textalign="left"
+      size="sm"
+      hidewhenidentified="false"
+      onchange="showHideUseValues(value);"
+    ></checkbox>
+    <checkbox
+      hidden="true"
+      field="consumable"
+      label="Consumable"
+      textalign="left"
+      size="sm"
+      hidewhenidentified="false"
+      onchange="showHideConsumableValues(value);"
+    ></checkbox>
   </div>
 
   <!-- Weapon Properties -->
@@ -468,6 +502,7 @@
     hidden="true"
     field="effects"
     label="Effects"
+    description="Effects that can be applied when used"
     placeholder="Select Effects if Applicable..."
     multiselect="10"
     optionsquery='{"type": "effects", "query": {}}'
@@ -480,6 +515,7 @@
       hidden="true"
       field="healing"
       label="Healing"
+      description="Healing roll when used"
       placeholder="Enter Healing if Applicable..."
       hidewhenidentified="false"
     ></stringfield>
@@ -488,6 +524,7 @@
       hidden="true"
       field="useDamage"
       label="Damage"
+      description="Damage roll when used"
       placeholder="Enter Damage when used if Applicable..."
       hidewhenidentified="false"
     ></stringfield>

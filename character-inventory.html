@@ -44,6 +44,7 @@
 
     const hasAttunement = item.data?.attunement || false;
     const isConsumable = item.data?.consumable || false;
+    const hasUseBtn = item.data?.hasUseBtn || false;
     const isTwoHanded = item.data?.weaponProperties?.includes("Two-Handed");
     const isThrown = item.data?.weaponProperties?.includes("Thrown"); // Only thrown weapons can be toggled melee/range
     const isMelee = (item.data?.type || "").toLowerCase().includes("melee"); // Melee shown only melee icon
@@ -62,7 +63,7 @@
       fields: {
         ...item?.fields,
         attuned: { hidden: !hasAttunement },
-        useBtn: { hidden: !isConsumable },
+        useBtn: { hidden: !isConsumable && !hasUseBtn },
         handBtn: { hidden: isTwoHanded },
         // Show toggle button only for melee throwing weapons
         rangeToggleBtn: {

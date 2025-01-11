@@ -44,6 +44,8 @@
     const itemName = api.getValue(`${itemDataPath}.name`);
     const itemCount = api.getValue(`${itemDataPath}.data.count`);
     const indexValue = parseInt(itemDataPath.split(".").pop());
+    const isConsumable =
+      api.getValue(`${itemDataPath}.data.consumable`) || false;
 
     // Output the description to Chat
     const description = api.getValue(`${itemDataPath}.data.description`) || "";
@@ -120,11 +122,14 @@ api.promptRoll(\`${itemName}\`, '${damage}', [], {}, 'damage')
 
     api.sendMessage(markdownDescription, undefined, recordLinks);
 
-    const count = parseFloat(itemCount || "0");
-    if (count - 1 > 0) {
-      api.setValue(`${itemDataPath}.data.count`, count - 1);
-    } else if (!isNaN(indexValue)) {
-      api.removeValue(`data.inventory`, indexValue);
+    // If consumable, deduct count by 1, delete item if count is 0
+    if (isConsumable) {
+      const count = parseFloat(itemCount || "0");
+      if (count - 1 > 0) {
+        api.setValue(`${itemDataPath}.data.count`, count - 1);
+      } else if (!isNaN(indexValue)) {
+        api.removeValue(`data.inventory`, indexValue);
+      }
     }
   }
 
@@ -140,6 +145,7 @@ api.promptRoll(\`${itemName}\`, '${damage}', [], {}, 'damage')
       api.getValue(`${itemDataPath}.data.attunement`) || false;
     const isConsumable =
       api.getValue(`${itemDataPath}.data.consumable`) || false;
+    const hasUseBtn = api.getValue(`${itemDataPath}.data.hasUseBtn`) || false;
     const isTwoHanded = weaponProperties.includes("Two-Handed");
     const isThrown = weaponProperties.includes("Thrown"); // Only thrown weapons can be toggled melee/range
     const isMelee = (itemType || "").toLowerCase().includes("melee"); // Melee shown only melee icon
@@ -188,7 +194,7 @@ api.promptRoll(\`${itemName}\`, '${damage}', [], {}, 'damage')
     valuesToSet[`${itemDataPath}.fields`] = {
       ...itemFields,
       attuned: { hidden: !hasAttunement },
-      useBtn: { hidden: !isConsumable },
+      useBtn: { hidden: !isConsumable && !hasUseBtn },
       handBtn: { hidden: isTwoHanded },
       // Show toggle button only for melee throwing weapons
       rangeToggleBtn: {
