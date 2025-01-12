@@ -107,15 +107,19 @@ targets.forEach(target => {
     }
 
     if (healing) {
+      const escapedName = itemName.replace(/'/g, "\\'");
+      const escapedHealing = healing.replace(/'/g, "\\'");
       const healingButton = `\`\`\`Roll_Healing
-api.promptRoll('${itemName}', '${healing}', [], {}, 'healing')
+api.promptRoll('${escapedName} Healing', '${escapedHealing}', [], {}, 'healing')
 \`\`\``;
       markdownDescription += `\n${healingButton}`;
     }
 
     if (damage) {
+      const escapedName = itemName.replace(/'/g, "\\'");
+      const escapedDamage = damage.replace(/'/g, "\\'");
       const damageButton = `\`\`\`Roll_Damage
-api.promptRoll(\`${itemName}\`, '${damage}', [], {}, 'damage')
+api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
 \`\`\``;
       markdownDescription += `\n${damageButton}`;
     }
