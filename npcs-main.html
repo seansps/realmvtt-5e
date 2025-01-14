@@ -269,14 +269,20 @@
 
   function updateLegendaryActionsDescription(value) {
     // Parse number of legendary actions from description
-    const match = value.toLowerCase().match(/legendary action uses:\s*(\d+)/i);
-    if (match) {
-      const uses = parseInt(match[1], 10);
+    const standardMatch = value
+      .toLowerCase()
+      .match(/legendary action uses:\s*(\d+)/i);
+    const lairMatch = value.toLowerCase().match(/\((\d+) in lair\)/i);
+
+    if (standardMatch) {
+      const uses = parseInt(standardMatch[1], 10);
+      const lairUses = lairMatch ? parseInt(lairMatch[1], 10) : uses;
+
       if (uses > 0) {
         const valuesToSet = {
           "data.maxLegendaryActions": uses,
           "data.maxLegendaryActionsOutsideLair": uses,
-          "data.maxLegendaryActionsInLair": uses,
+          "data.maxLegendaryActionsInLair": lairUses,
         };
         api.setValues(valuesToSet);
       }
