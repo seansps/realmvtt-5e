@@ -137,9 +137,54 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     }
   }
 
+  // Update attributes if needed
+  function updateAttributes(item, valuesToSet) {
+    const attuned = item.data.attuned === "true";
+    const equipped = item.data.carried === "equipped";
+    const requiresAttunement = item.data.attunement;
+
+    // We can return early if there are no modifiers that require this update
+    const hasModifiers =
+      (item.data.modifiers || []).filter(
+        (modifier) =>
+          modifier.data.type === "hitpoints" ||
+          modifier.data.type === "armorClassBonus" ||
+          modifier.data.type === "armorClassPenalty"
+      ).length > 0;
+
+    if (!hasModifiers) {
+      return;
+    }
+
+    [
+      "strength",
+      "dexterity",
+      "constitution",
+      "intelligence",
+      "wisdom",
+      "charisma",
+    ].forEach((attribute) => {
+      const value = record?.data?.[attribute] || 0;
+      setModifier(value, attribute, {}, valuesToSet);
+    });
+  }
+
+  function onItemAttuned() {
+    const itemDataPath = dataPath.replace(".data.attuned", "");
+    const item = api.getValue(itemDataPath);
+    const valuesToSet = {};
+
+    updateAttributes(item, valuesToSet);
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
   // Then update AC calculation in character-main.html and getArmorClassForToken
   function onItemEquipped() {
     const itemDataPath = dataPath.replace(".data.carried", "");
+    const item = api.getValue(itemDataPath);
 
     const itemFields = api.getValue(`${itemDataPath}.fields`) || {};
     const itemType = api.getValue(`${itemDataPath}.data.type`);
@@ -176,6 +221,9 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     if (totalWeight !== record?.data?.totalWeight) {
       valuesToSet["data.totalWeight"] = totalWeight;
     }
+
+    // Update attributes as per modifiers
+    updateAttributes(item, valuesToSet);
 
     // Get the current ac due to armor and set it on the
     // record
@@ -249,7 +297,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     field="attuned"
     variant="default"
     options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "true"}]'
-    onchange=""
+    onchange="onItemAttuned();"
     onclick=""
   ></iconbutton>
   <button
