@@ -1136,7 +1136,11 @@ function getEffectsAndModifiersForToken(
 
   // Now collect all modifiers from Features and Items
   const features = target?.data?.features || [];
-  const items = target?.data?.inventory || [];
+  // Ensure items is an array before filtering
+  const items = Array.isArray(target?.data?.inventory)
+    ? target?.data?.inventory
+    : [];
+
   // Filter items that are not equipped or that require attunement and not attuned
   const equippedItems = items.filter(
     (item) =>

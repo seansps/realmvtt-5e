@@ -171,7 +171,7 @@
     );
 
     // Spell Attack Modifiers
-    const attackModifiers = getSpellAttackModifiers(spell);
+    let attackModifiers = getSpellAttackModifiers(spell);
 
     // Determine damage or healing based on level of spell / (or character if cantrip)
     let spellDamage = spell?.data?.damage;
@@ -410,6 +410,18 @@
       }
     });
 
+    // If attackMod is set, use that instead
+    const attackModOverride = spell?.data?.attackMod;
+    if (attackModOverride !== undefined && attackModOverride > 0) {
+      attackModifiers = [
+        {
+          name: "Spell Attack Modifier",
+          value: attackModOverride,
+          active: true,
+        },
+      ];
+    }
+
     // Spell range if set
     const spellRange = parseInt(spell?.data?.range || "0", 10);
     let rangedSpell = spellRange > 0;
@@ -435,6 +447,11 @@
       parseInt(spellcastingAbilityMod, 10) +
       parseInt(proficiencyBonus, 10) +
       spellDCBonus;
+    // If saveDc (the override) is set, use that instead
+    const saveDcOverride = spell?.data?.saveDc;
+    if (saveDcOverride !== undefined && saveDcOverride > 0) {
+      saveDc = saveDcOverride;
+    }
     // Get spell dc modifiers
     const spellDcModifiers = getEffectsAndModifiers(["spellDCBonus"]);
     saveDc += spellDcModifiers.reduce(
@@ -870,15 +887,33 @@ ${effectButtons}
       ".data.prepared",
       ".fields.restoreOnRest.hidden"
     );
+    const dataPathToHideSaveDc = dataPath.replace(
+      ".data.prepared",
+      ".fields.saveDc.hidden"
+    );
+    const dataPathToHideAttackMod = dataPath.replace(
+      ".data.prepared",
+      ".fields.attackMod.hidden"
+    );
     const valuesToSet = {};
     if (prepared === "daily") {
       valuesToSet[dataPathToHideDaily] = false;
       valuesToSet[dataPathToHideCounter] = false;
       valuesToSet[dataPathToHideRestore] = false;
+      valuesToSet[dataPathToHideSaveDc] = false;
+      valuesToSet[dataPathToHideAttackMod] = false;
+    } else if (prepared === "atwill") {
+      valuesToSet[dataPathToHideDaily] = true;
+      valuesToSet[dataPathToHideCounter] = true;
+      valuesToSet[dataPathToHideRestore] = true;
+      valuesToSet[dataPathToHideSaveDc] = false;
+      valuesToSet[dataPathToHideAttackMod] = false;
     } else {
       valuesToSet[dataPathToHideDaily] = true;
       valuesToSet[dataPathToHideCounter] = true;
       valuesToSet[dataPathToHideRestore] = true;
+      valuesToSet[dataPathToHideSaveDc] = true;
+      valuesToSet[dataPathToHideAttackMod] = true;
     }
     api.setValues(valuesToSet);
   }
@@ -985,6 +1020,26 @@ ${effectButtons}
     </counter>
   </div>
   <accordion size="xs" field="descriptionOpen" label="Description">
+    <div style="display: flex; gap: 4px">
+      <numberfield
+        hidden="true"
+        width="50%"
+        field="saveDc"
+        placeholder="N/A"
+        label="Save DC Override"
+        size="xs"
+      >
+      </numberfield>
+      <numberfield
+        hidden="true"
+        width="50%"
+        field="attackMod"
+        placeholder="N/A"
+        label="Attack Modifier Override"
+        size="xs"
+      >
+      </numberfield>
+    </div>
     <div style="display: flex; gap: 4px">
       <stringfield
         size="xs"
