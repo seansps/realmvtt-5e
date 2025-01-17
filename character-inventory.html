@@ -29,8 +29,10 @@
         (record?.data?.ep || 0) +
         (record?.data?.gp || 0) +
         (record?.data?.pp || 0);
-      totalWeight += parseFloat((totalCoins / 50).toFixed(1));
+      totalWeight += totalCoins / 50;
     }
+
+    totalWeight = Math.round(totalWeight * 100) / 100;
 
     if (setValue) {
       api.setValue("data.totalWeight", totalWeight);
