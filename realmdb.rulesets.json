@@ -1439,10 +1439,17 @@
           "maxField": ""
         },
         {
+          "field": "inspiration",
+          "label": "H.I.",
+          "type": "checkbox",
+          "width": 30,
+          "maxField": ""
+        },
+        {
           "field": "xp",
           "label": "XP",
           "type": "progressbar",
-          "width": 145,
+          "width": 100,
           "maxField": "xpNext"
         }
       ],
@@ -2900,6 +2907,6 @@
   "createdAt": {
     "$numberLong": "1726181718296"
   },
-  "updatedAt": 1737076563139,
+  "updatedAt": 1737125512954,
   "published": true
 }]
