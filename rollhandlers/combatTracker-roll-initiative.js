@@ -41,9 +41,11 @@ dextertyCheckModifiers.forEach((modifier) => {
   modifiers.push(modifier);
 });
 
+const tokenName = token.name || token.record?.name;
+
 api.promptRollForToken(
   token,
-  "Initiative",
+  `Initiative for ${tokenName}`,
   roll,
   modifiers,
   {
