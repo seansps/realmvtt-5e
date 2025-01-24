@@ -1581,19 +1581,19 @@ function getRIV(target) {
   // Split remaining strings by commas to capture additional values
   resistances.push(
     ...remainingResistString
-      .split(",")
+      .split(/[,;]/) // Split by both comma and semicolon
       .map((r) => r.toLowerCase().trim())
       .filter((r) => r)
   );
   immunities.push(
     ...remainingImmuneString
-      .split(",")
+      .split(/[,;]/) // Split by both comma and semicolon
       .map((i) => i.toLowerCase().trim())
       .filter((i) => i)
   );
   vulnerabilities.push(
     ...remainingVulnString
-      .split(",")
+      .split(/[,;]/) // Split by both comma and semicolon
       .map((v) => v.toLowerCase().trim())
       .filter((v) => v)
   );
