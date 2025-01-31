@@ -2588,10 +2588,20 @@
       rollName: "Death Save",
     };
 
-    const saveModifiers = getEffectsAndModifiers(
+    let saveModifiers = getEffectsAndModifiers(
       ["saveBonus", "savePenalty"],
       "death"
     );
+
+    const minRoll = getMinRollModifier(saveModifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    saveModifiers = saveModifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll")
+    );
+
+    if (minRoll) {
+      metadata.minRoll = minRoll;
+    }
 
     api.promptRoll(`Death Save`, "1d20", saveModifiers, metadata, "deathsave");
   }
