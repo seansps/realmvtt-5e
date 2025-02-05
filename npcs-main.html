@@ -325,6 +325,69 @@
       !record.data.hasLairActions
     );
   }
+
+  // On load of an NPC unhide any fields that may have been set by the Generator
+  function onLoadNPC() {
+    const unHideFields = [];
+    // Toggle the visibility of the traits accordion
+    if (record.data?.hasTraits && record?.fields?.features?.hidden !== false) {
+      unHideFields.push("featuresDivider", "features");
+    }
+
+    // Toggle the visibility of the actions accordion
+    if (record.data?.hasActions && record?.fields?.actions?.hidden !== false) {
+      unHideFields.push("actionsDivider", "actions");
+    }
+    // Toggle the visibility of the bonus actions accordion
+    if (
+      record.data?.hasBonusActions &&
+      record?.fields?.bonusActions?.hidden !== false
+    ) {
+      unHideFields.push("bonusActionsDivider", "bonusActions");
+    }
+    // Toggle the visibility of the legendary actions accordion
+    if (
+      record.data?.hasLegendaryActions &&
+      record?.fields?.legendaryActions?.hidden !== false
+    ) {
+      unHideFields.push(
+        "legendaryActionsDivider",
+        "legendaryActions",
+        "legendaryActionsLabel",
+        "legendaryActionsDescription",
+        "usedLegendaryActions"
+      );
+    }
+
+    // Toggle the visibility of the lair actions accordion
+    if (
+      record.data?.hasLairActions &&
+      record?.fields?.lairActions?.hidden !== false
+    ) {
+      unHideFields.push(
+        "lairActionsDivider",
+        "lairActions",
+        "lairActionsDescription"
+      );
+    }
+
+    // Toggle the visibility of the reactions accordion
+    if (
+      record.data?.hasReactions &&
+      record?.fields?.reactions?.hidden !== false
+    ) {
+      unHideFields.push(
+        "reactionsDivider",
+        "reactions",
+        "reactionsLabel",
+        "usedReactions"
+      );
+    }
+
+    if (unHideFields.length > 0) {
+      api.setHidden(unHideFields, false);
+    }
+  }
 </script>
 
 <div style="display: flex; margin-top: 4px; flex-direction: row">
@@ -345,6 +408,7 @@
           <portrait width="110px" height="110px"></portrait>
         </div>
         <dropdown
+          onload="onLoadNPC()"
           size="xs"
           width="100%"
           field="type"
@@ -1198,7 +1262,8 @@
         label="Has Reactions"
         size="sm"
         onchange="onHasReactionsChange()"
-      ></checkbox>
+      >
+      </checkbox>
 
       <checkbox
         hideonlocked="true"
