@@ -330,25 +330,38 @@
   function onLoadNPC() {
     const unHideFields = [];
     // Toggle the visibility of the traits accordion
-    if (record.data?.hasTraits && record?.fields?.features?.hidden !== false) {
+    if (
+      record.data?.hasTraits &&
+      (record?.fields?.features?.hidden !== false ||
+        record?.fields?.featuresDivider?.hidden !== false)
+    ) {
       unHideFields.push("featuresDivider", "features");
     }
 
     // Toggle the visibility of the actions accordion
-    if (record.data?.hasActions && record?.fields?.actions?.hidden !== false) {
+    if (
+      record.data?.hasActions &&
+      (record?.fields?.actions?.hidden !== false ||
+        record?.fields?.actionsDivider?.hidden !== false)
+    ) {
       unHideFields.push("actionsDivider", "actions");
     }
     // Toggle the visibility of the bonus actions accordion
     if (
       record.data?.hasBonusActions &&
-      record?.fields?.bonusActions?.hidden !== false
+      (record?.fields?.bonusActions?.hidden !== false ||
+        record?.fields?.bonusActionsDivider?.hidden !== false)
     ) {
       unHideFields.push("bonusActionsDivider", "bonusActions");
     }
     // Toggle the visibility of the legendary actions accordion
     if (
       record.data?.hasLegendaryActions &&
-      record?.fields?.legendaryActions?.hidden !== false
+      (record?.fields?.legendaryActions?.hidden !== false ||
+        record?.fields?.legendaryActionsDivider?.hidden !== false ||
+        record?.fields?.legendaryActionsLabel?.hidden !== false ||
+        record?.fields?.usedLegendaryActions?.hidden !== false ||
+        record?.fields?.legendaryActionsDescription?.hidden !== false)
     ) {
       unHideFields.push(
         "legendaryActionsDivider",
@@ -362,7 +375,9 @@
     // Toggle the visibility of the lair actions accordion
     if (
       record.data?.hasLairActions &&
-      record?.fields?.lairActions?.hidden !== false
+      (record?.fields?.lairActions?.hidden !== false ||
+        record?.fields?.lairActionsDivider?.hidden !== false ||
+        record?.fields?.lairActionsDescription?.hidden !== false)
     ) {
       unHideFields.push(
         "lairActionsDivider",
@@ -374,7 +389,10 @@
     // Toggle the visibility of the reactions accordion
     if (
       record.data?.hasReactions &&
-      record?.fields?.reactions?.hidden !== false
+      (record?.fields?.reactions?.hidden !== false ||
+        record?.fields?.reactionsDivider?.hidden !== false ||
+        record?.fields?.reactionsLabel?.hidden !== false ||
+        record?.fields?.usedReactions?.hidden !== false)
     ) {
       unHideFields.push(
         "reactionsDivider",
