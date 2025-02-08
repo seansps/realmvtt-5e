@@ -298,6 +298,13 @@
       ?.toLowerCase()
       .includes("melee or ranged");
 
+    // Parse reach from description like "reach 10 ft." or "reach 5 ft."
+    const reachMatch = /(?:^|\s|,)reach\s+(\d+)\s*ft/i;
+    const reach = parseInt(
+      attack?.data?.description?.match(reachMatch)?.[1] || "5",
+      10
+    );
+
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       ranged ? "ranged" : "melee",
@@ -429,7 +436,7 @@
       // If this is ranged, check if it can be melee
       if (ranged && canBeMelee) {
         // And if so... check if the target is within 5 feet
-        if (targetDistance <= 5) {
+        if (targetDistance <= reach) {
           // And then assume it was meant to be melee
           ranged = false;
           icon = "IconSword";
