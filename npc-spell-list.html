@@ -729,6 +729,7 @@ ${effectButtons}
 
   function toggleDaily() {
     const prepared = value;
+    const spell = api.getValue(dataPath.replace(".data.prepared", ""));
     // We're in a list, so we need to use the data path to the fields metadata
     const dataPathToHideDaily = dataPath.replace(
       ".data.prepared",
@@ -746,19 +747,21 @@ ${effectButtons}
     if (prepared === "daily") {
       valuesToSet[dataPathToHideDaily] = false;
       valuesToSet[dataPathToHideCounter] = false;
-      // Hide the upcast level button
-      valuesToSet[dataPathToHideUpcast] = true;
     } else if (prepared === "will") {
       valuesToSet[dataPathToHideDaily] = true;
       valuesToSet[dataPathToHideCounter] = true;
-      // Hide the upcast level button
-      valuesToSet[dataPathToHideUpcast] = true;
     } else {
       valuesToSet[dataPathToHideDaily] = true;
       valuesToSet[dataPathToHideCounter] = true;
-      // Show the upcast level button
-      valuesToSet[dataPathToHideUpcast] = false;
     }
+
+    // Show the upcast level button if it's not a cantrip
+    if (spell?.data?.level?.toLowerCase() !== "cantrip") {
+      valuesToSet[dataPathToHideUpcast] = false;
+    } else {
+      valuesToSet[dataPathToHideUpcast] = true;
+    }
+
     api.setValues(valuesToSet);
   }
 </script>
