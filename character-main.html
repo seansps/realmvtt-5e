@@ -707,7 +707,11 @@
     }
 
     // If we are multiclassing parse the number of choices we get
-    if (isMulticlass) {
+    if (
+      isMulticlass &&
+      skillProficienciesMulti &&
+      skillProficienciesMulti !== "None"
+    ) {
       // Handle the case where the format is "Y skill of your choice"
       const spelledNumberPattern = /(\w+) skill of your choice/;
       const spelledMatch = skillProficienciesMulti
@@ -727,7 +731,11 @@
           ten: 10,
         };
         numChoices = numWords[spelledMatch[1].toLowerCase()] || 0;
+      } else {
+        numChoices = 0;
       }
+    } else if (isMulticlass) {
+      numChoices = 0;
     }
 
     // Return null if no valid format is found
