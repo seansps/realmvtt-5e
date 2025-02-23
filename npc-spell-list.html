@@ -707,6 +707,15 @@ ${effectButtons}
         api.setValue("data.usedReactions", usedReactions + 1);
       }
     }
+
+    // If this spellcasting action has usesPerDay, we update the amount used by 1 up to the max
+    const usesPerDay = spellAction?.data?.usesPerDay || 0;
+    if (usesPerDay > 0) {
+      const usedUsesPerDay = spellAction?.data?.uses || 0;
+      if (usedUsesPerDay < usesPerDay) {
+        api.setValue(`${spellActionDataPath}.data.uses`, usedUsesPerDay + 1);
+      }
+    }
   }
 
   // Returns the options for upcasting a spell
