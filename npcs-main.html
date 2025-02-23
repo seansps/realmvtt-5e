@@ -405,6 +405,14 @@
     if (unHideFields.length > 0) {
       api.setHidden(unHideFields, false);
     }
+
+    // Set maxReactions 1 if it is undefined and hasReactions is true
+    if (
+      record?.data?.maxReactions === undefined &&
+      record?.data?.hasReactions
+    ) {
+      api.setValues({ "data.maxReactions": 1 });
+    }
   }
 </script>
 
