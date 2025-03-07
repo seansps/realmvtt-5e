@@ -1,0 +1,50 @@
+<script>
+  function onStepEnd() {
+    const chosenSpecies = api.getValue("data.wizard.selectSpecies");
+    let speciesId = "";
+    if (chosenSpecies) {
+      try {
+        const speciesObject = JSON.parse(chosenSpecies);
+        speciesId = speciesObject._id;
+      } catch (e) {
+        console.error("Error getting species ID", e);
+      }
+    }
+
+    // Get and set the Species
+    if (speciesId) {
+      api.getRecord("species", speciesId, (speciesRecord) => {
+        // Call drop record
+        api.dropRecord(speciesRecord);
+      });
+    }
+  }
+</script>
+
+<p>
+  Select your Character's Species.
+  <br /><br />
+  All available Species in the current Campaign will be shown in the dropdown
+  below.
+  <br /><br />
+  After completing this step, select Spells by dragging them from the Spells
+  Compendium to your Actions tab.
+  <br /><br />
+  Equipment can be added by dragging Items from the Items Compendium to your
+  Inventory tab.
+  <br /><br />
+  Be sure to review your chosen Species and Background's Origin Feat as you may
+  also have additional Skills or Abilities that you need to add manually as a
+  result of these selections.
+  <br /><br />
+  From the Notes tab, you can set your Alignment, Deity, and other relevant
+  details.
+</p>
+
+<div>
+  <dropdown
+    label="Select Species"
+    field="selectSpecies"
+    optionsquery='{"type": "species", "query": {}}'
+  ></dropdown>
+</div>

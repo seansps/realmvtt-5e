@@ -1,0 +1,39 @@
+<script>
+  function onStepEnd() {
+    const chosenClass = api.getValue("data.wizard.selectClass");
+    let classId = "";
+    if (chosenClass) {
+      try {
+        const classObject = JSON.parse(chosenClass);
+        classId = classObject._id;
+      } catch (e) {
+        console.error("Error getting class ID", e);
+      }
+    }
+
+    // Get and set the Class
+    if (classId) {
+      api.getRecord("class", classId, (classRecord) => {
+        // Call drop record
+        api.dropRecord(classRecord);
+      });
+    }
+  }
+</script>
+
+<p>
+  Select your Character's Class.
+  <br /><br />
+  All available Classes in the current Campaign will be shown in the dropdown
+  below.
+  <br /><br />
+  After completing this step, select Skills from the prompt that appears.
+</p>
+
+<div>
+  <dropdown
+    label="Select Class"
+    field="selectClass"
+    optionsquery='{"type": "class", "query": {}}'
+  ></dropdown>
+</div>

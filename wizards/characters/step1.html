@@ -1,0 +1,318 @@
+<script>
+  function onStepEnd() {
+    // Set Attributes
+    const strength = api.getValue("data.wizard.strength");
+    const dexterity = api.getValue("data.wizard.dexterity");
+    const constitution = api.getValue("data.wizard.constitution");
+    const intelligence = api.getValue("data.wizard.intelligence");
+    const wisdom = api.getValue("data.wizard.wisdom");
+    const charisma = api.getValue("data.wizard.charisma");
+
+    const valuesToSet = {};
+
+    valuesToSet["data.strength"] = strength;
+    valuesToSet["data.dexterity"] = dexterity;
+    valuesToSet["data.constitution"] = constitution;
+    valuesToSet["data.intelligence"] = intelligence;
+    valuesToSet["data.wisdom"] = wisdom;
+    valuesToSet["data.charisma"] = charisma;
+
+    [
+      "strength",
+      "dexterity",
+      "constitution",
+      "intelligence",
+      "wisdom",
+      "charisma",
+    ].forEach((attribute) => {
+      setModifier(
+        valuesToSet[`data.${attribute}`],
+        attribute,
+        undefined,
+        valuesToSet
+      );
+    });
+
+    console.log(valuesToSet);
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
+  function onMethodChange(method) {
+    const valuesToHide = [];
+    const valuesToShow = [];
+
+    if (method !== "roll") {
+      valuesToHide.push("rollStrengthBtn");
+      valuesToHide.push("rollDexterityBtn");
+      valuesToHide.push("rollConstitutionBtn");
+      valuesToHide.push("rollIntelligenceBtn");
+      valuesToHide.push("rollWisdomBtn");
+      valuesToHide.push("rollCharismaBtn");
+    } else {
+      valuesToShow.push("rollStrengthBtn");
+      valuesToShow.push("rollDexterityBtn");
+      valuesToShow.push("rollConstitutionBtn");
+      valuesToShow.push("rollIntelligenceBtn");
+      valuesToShow.push("rollWisdomBtn");
+      valuesToShow.push("rollCharismaBtn");
+    }
+
+    if (method !== "point") {
+      valuesToHide.push("remainingPoints");
+      valuesToHide.push("pointBuyMsg");
+    } else {
+      valuesToShow.push("remainingPoints");
+      valuesToShow.push("pointBuyMsg");
+    }
+
+    if (valuesToHide.length > 0) {
+      api.setHidden(valuesToHide, true);
+    }
+    if (valuesToShow.length > 0) {
+      api.setHidden(valuesToShow, false);
+    }
+  }
+
+  function onAttributeChange(value, field) {
+    const method = api.getValue("data.wizard.method");
+    // Recalculate the total points based on the new value
+    const strength = api.getValue("data.wizard.strength");
+    const dexterity = api.getValue("data.wizard.dexterity");
+    const constitution = api.getValue("data.wizard.constitution");
+    const intelligence = api.getValue("data.wizard.intelligence");
+    const wisdom = api.getValue("data.wizard.wisdom");
+    const charisma = api.getValue("data.wizard.charisma");
+
+    const valuesToSet = {};
+
+    let currentPoints = 0;
+    let minLessThan8 = false;
+    for (const attribute of [
+      strength,
+      dexterity,
+      constitution,
+      intelligence,
+      wisdom,
+      charisma,
+    ]) {
+      if (attribute > 15) {
+        currentPoints += 100;
+      } else if (attribute === 15) {
+        currentPoints += 9;
+      } else if (attribute === 14) {
+        currentPoints += 7;
+      } else if (attribute === 13) {
+        currentPoints += 5;
+      } else if (attribute === 12) {
+        currentPoints += 4;
+      } else if (attribute === 11) {
+        currentPoints += 3;
+      } else if (attribute === 10) {
+        currentPoints += 2;
+      } else if (attribute === 9) {
+        currentPoints += 1;
+      } else if (attribute < 8) {
+        minLessThan8 = true;
+      }
+    }
+
+    const remainingPoints = `${currentPoints} / 27`;
+    valuesToSet["data.wizard.remainingPoints"] = remainingPoints;
+
+    let error = false;
+    if (currentPoints > 100) {
+      valuesToSet["data.wizard.pointBuyMsg"] =
+        "The maximum attribute value is 15.";
+      error = true;
+    } else if (currentPoints > 27) {
+      valuesToSet["data.wizard.pointBuyMsg"] =
+        "You have exceeded the maximum points.";
+      error = true;
+    } else if (currentPoints < 27) {
+      valuesToSet["data.wizard.pointBuyMsg"] =
+        "You have not spent all of your points.";
+      error = true;
+    } else if (minLessThan8) {
+      valuesToSet["data.wizard.pointBuyMsg"] =
+        "The minimum attribute value is 8.";
+      error = true;
+    } else {
+      valuesToSet["data.wizard.pointBuyMsg"] = "";
+      error = false;
+    }
+
+    if (method === "point") {
+      if (error) {
+        valuesToSet["fields.pointBuyMsg.hidden"] = false;
+      } else {
+        valuesToSet["fields.pointBuyMsg.hidden"] = true;
+      }
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
+  function roll4d6DropLowest(field) {
+    api.roll(
+      "4d6dl1",
+      { field: field, forceAutoRoll: true },
+      "wizardAttributes"
+    );
+  }
+</script>
+
+<dropdown
+  label="Method"
+  field="method"
+  placeholder="Select Attribute Method"
+  defaultvalue="manual"
+  options='[{"label": "Manual", "value": "manual"}, {"label": "Roll 4d6 Drop Lowest", "value": "roll"}, {"label": "Point Buy", "value": "point"}]'
+  onchange="onMethodChange(value)"
+></dropdown>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Strength"
+    field="strength"
+    onchange="onAttributeChange(value, 'strength')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollStrengthBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('strength')"
+  ></iconbutton>
+</div>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Dexterity"
+    field="dexterity"
+    onchange="onAttributeChange(value, 'dexterity')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollDexterityBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('dexterity')"
+  ></iconbutton>
+</div>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Constitution"
+    field="constitution"
+    onchange="onAttributeChange(value, 'constitution')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollConstitutionBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('constitution')"
+  ></iconbutton>
+</div>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Intelligence"
+    field="intelligence"
+    onchange="onAttributeChange(value, 'intelligence')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollIntelligenceBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('intelligence')"
+  ></iconbutton>
+</div>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Wisdom"
+    field="wisdom"
+    onchange="onAttributeChange(value, 'wisdom')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollWisdomBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('wisdom')"
+  ></iconbutton>
+</div>
+
+<div
+  style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end"
+>
+  <numberfield
+    placeholder="0"
+    label="Charisma"
+    field="charisma"
+    onchange="onAttributeChange(value, 'charisma')"
+  ></numberfield>
+  <iconbutton
+    size="md"
+    hidden="true"
+    field="rollCharismaBtn"
+    variant="default"
+    options='[{"icon": "IconDice", "label": "Roll 4d6 Drop Lowest", "value": "roll4d6droplowest"}]'
+    onclick="roll4d6DropLowest('charisma')"
+  ></iconbutton>
+</div>
+
+<div
+  style="
+    margin-top: 8px;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: flex-end;
+  "
+>
+  <stringfield
+    placeholder="0 / 27"
+    label="Used Points"
+    field="remainingPoints"
+    width="100px"
+    hidden="true"
+    variant="unstyled"
+  ></stringfield>
+  <stringfield
+    label="Error"
+    defaultvalue="You have not spent all of your points."
+    width="100%"
+    field="pointBuyMsg"
+    hidden="true"
+    color="red"
+    variant="unstyled"
+  ></stringfield>
+</div>
