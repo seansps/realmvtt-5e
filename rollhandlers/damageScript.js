@@ -3,7 +3,7 @@
 let damage = value;
 // Ignore negative damage as that is what healing is for
 if (damage > 0) {
-  const oldTempHp = parseInt(record.data?.tempHp || '0', 10);
+  const oldTempHp = parseInt(record.data?.tempHp || "0", 10);
   const newTempHp = Math.max(oldTempHp - damage, 0);
   damage = Math.max(damage - oldTempHp, 0);
 
@@ -11,9 +11,22 @@ if (damage > 0) {
     api.setValue("data.tempHp", newTempHp);
   }
 
-  var curhp = parseInt(record.data?.curhp, '0', 10);
+  var curhp = parseInt(record.data?.curhp, "0", 10);
   curhp -= damage;
-  if (curhp < 0) { curhp = 0; }
-  if (curhp > record.data?.hitpoints) { curhp = record.data?.hitpoints; }
+  if (curhp < 0) {
+    curhp = 0;
+  }
+  if (curhp > record.data?.hitpoints) {
+    curhp = record.data?.hitpoints;
+  }
   api.setValue("data.curhp", curhp);
+}
+
+// If damage > 0, float text
+const token = api.getToken();
+if (value > 0 && token) {
+  if (curhp <= 0 && token.recordType === "npcs") {
+    api.addEffect("Dead", token);
+  }
+  api.floatText(token, `-${value}`, "#FF0000");
 }

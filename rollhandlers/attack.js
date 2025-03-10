@@ -56,8 +56,18 @@ targets.forEach(target => {
       damage = 0;
     }
 
-    // First deduct from Temp HP
+    var curhp = target.data?.curhp || 0;
     const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
+
+    // If damage > 0, float text
+    if (damage > 0) {
+      if ((curhp + oldTempHp) - damage <= 0 && target.recordType === 'npcs') {
+        api.addEffect("Dead", target);
+      }
+      api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
+    }
+
+    // First deduct from Temp HP
     const newTempHp = Math.max(oldTempHp - damage, 0);
     damage = Math.max(damage - oldTempHp, 0);
     let usedTempHp = false;
@@ -67,13 +77,12 @@ targets.forEach(target => {
     }
 
     // Then deduct from Current HP
-    var curhp = target.data?.curhp || 0;
     curhp -= damage;
     if (curhp < 0) { curhp = 0; }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
-    
+
     const unIdentified = target.identified === false;
     const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
 

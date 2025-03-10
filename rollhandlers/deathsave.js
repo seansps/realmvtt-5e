@@ -63,6 +63,10 @@ api.getRecord("characters", recordId, (record) => {
       [],
       []
     );
+    const token = api.getToken();
+    if (token) {
+      api.floatText(token, `+1`, "#1bc91b");
+    }
   } else if (criticalFailure) {
     // Add 2 failures
     numFailures += 2;
