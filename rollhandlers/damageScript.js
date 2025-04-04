@@ -25,8 +25,12 @@ if (damage > 0) {
 // If damage > 0, float text
 const token = api.getToken();
 if (value > 0 && token) {
-  if (curhp <= 0 && token.recordType === "npcs") {
-    api.addEffect("Dead", token);
+  if (curhp <= 0) {
+    if (token.recordType === "npcs") {
+      api.addEffect("Dead", token);
+    } else {
+      api.addEffects(["Unconscious", "Prone"], token);
+    }
   }
   api.floatText(token, `-${value}`, "#FF0000");
 }

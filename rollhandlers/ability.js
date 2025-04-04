@@ -115,8 +115,13 @@ targets.forEach(target => {
 
     // If damage > 0, float text
     if (damage > 0) {
-      if ((curhp + oldTempHp) - damage <= 0 && target.recordType === 'npcs') {
-        api.addEffect("Dead", target);
+      if ((curhp + oldTempHp) - damage <= 0) {
+        if (target.recordType === 'npcs') {
+          api.addEffect("Dead", target);
+        }
+        else {
+          api.addEffects(["Unconscious", "Prone"], target);
+        }
       }
       api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
     }
@@ -260,8 +265,13 @@ targets.forEach(target => {
 
     // If damage > 0, float text
     if (damage > 0) {
-      if ((curhp + oldTempHp) - damage <= 0 && target.recordType === 'npcs') {
-        api.addEffect("Dead", target);
+      if ((curhp + oldTempHp) - damage <= 0) {
+        if (target.recordType === 'npcs') {
+          api.addEffect("Dead", target);
+        }
+        else {
+          api.addEffects(["Unconscious", "Prone"], target);
+        }
       }
       api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
     }

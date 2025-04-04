@@ -111,8 +111,13 @@ targets.forEach(target => {
 
     // If damage > 0, float text
     if (damage > 0) {
-      if ((curhp + oldTempHp) - damage <= 0 && target.recordType === 'npcs') {
-        api.addEffect("Dead", target);
+      if ((curhp + oldTempHp) - damage <= 0) {
+        if (target.recordType === 'npcs') {
+          api.addEffect("Dead", target);
+        }
+        else {
+          api.addEffects(["Unconscious", "Prone"], target);
+        }
       }
       api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
     }
@@ -158,10 +163,6 @@ targets.forEach(target => {
     else if (damage > 0 && target.recordType === 'characters') {
       // If damage was done, we apply death failures if necessary and not instant death
       applyDeathFailures(target, ${isCritical});
-    }
-
-    if (target.recordType === 'npcs' && curhp <= 0) {
-      api.addEffect("Dead", target);
     }
 
     // Check for Concentration effect, and add a button to Roll Concentration Check
@@ -281,8 +282,13 @@ targets.forEach(target => {
 
     // If damage > 0, float text
     if (damage > 0) {
-      if ((curhp + oldTempHp) - damage <= 0 && target.recordType === 'npcs') {
-        api.addEffect("Dead", target);
+      if ((curhp + oldTempHp) - damage <= 0) {
+        if (target.recordType === 'npcs') {
+          api.addEffect("Dead", target);
+        }
+        else {
+          api.addEffects(["Unconscious", "Prone"], target);
+        }
       }
       api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
     }
