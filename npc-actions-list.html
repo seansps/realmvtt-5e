@@ -351,7 +351,7 @@
     const normalRange = parseInt(attack?.data?.normalRange || "0", 10);
     const maxRange = parseInt(attack?.data?.maxRange || "0", 10);
 
-    // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
+    // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn't have the Incapacitated condition
     // Get range to all other tokens
     let disDueToProximity = false;
     const ourToken = api.getToken();
@@ -365,11 +365,22 @@
           token?.faction !== "neutral" &&
           token?.faction !== ourToken?.faction
         ) {
-          // Check if they have incapacitated condition
-          const hasIncapacitated = (token?.effects || []).some(
-            (eff) => eff.name === "Incapacitated"
+          // Check if you have the Invisible condition
+          const hasInvisible = (ourToken?.effects || []).some((eff) =>
+            eff.name.toLowerCase().includes("invisible")
           );
-          if (!hasIncapacitated) {
+          // Check if they have incapacitated condition or are blinded
+          const hasIncapacitated = (token?.effects || []).some(
+            (eff) =>
+              eff.name.toLowerCase().includes("incapacitated") ||
+              eff.name.toLowerCase().includes("stunned") ||
+              eff.name.toLowerCase().includes("paralyzed") ||
+              eff.name.toLowerCase().includes("unconscious") ||
+              eff.name.toLowerCase().includes("petrified") ||
+              eff.name.toLowerCase().includes("dead") ||
+              eff.name.toLowerCase().includes("blinded")
+          );
+          if (!hasIncapacitated && !hasInvisible) {
             // Check distance
             const distance = api.getDistance(ourToken, token);
             if (distance !== undefined && distance !== null && distance <= 5) {
@@ -423,6 +434,15 @@
       (m) => !m.value.toString().startsWith("minroll")
     );
 
+    // Only add the disadvantage if it's ranged and an enemy is within 5 feet
+    if (ranged && disDueToProximity) {
+      modifiers.push({
+        name: "Enemy is Within 5 Feet",
+        value: "disadvantage",
+        active: true,
+      });
+    }
+
     const targets = api.getTargets();
     targets.forEach((target) => {
       // Get calculated AC from modifiers - use if any
@@ -454,15 +474,6 @@
       } else if (ranged && targetDistance > normalRange && normalRange > 0) {
         modifiers.push({
           name: "Target is Beyond Normal Range",
-          value: "disadvantage",
-          active: true,
-        });
-      }
-
-      // Only add the disadvantage if it's ranged and an enemy is within 5 feet
-      if (ranged && disDueToProximity) {
-        modifiers.push({
-          name: "Enemy is Within 5 Feet",
           value: "disadvantage",
           active: true,
         });

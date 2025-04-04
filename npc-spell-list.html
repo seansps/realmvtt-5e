@@ -367,9 +367,22 @@ if (${rangedSpell} && ourToken) {
       return;
     }
     if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
-      // Check if they have incapacitated condition
-      const hasIncapacitated = (token?.effects || []).some(eff => eff.name === 'Incapacitated');
-      if (!hasIncapacitated) {
+        // Check if you have the Invisible condition
+        const hasInvisible = (ourToken?.effects || []).some((eff) =>
+          eff.name.toLowerCase().includes("invisible")
+        );
+        // Check if they have incapacitated condition or are blinded
+        const hasIncapacitated = (token?.effects || []).some(
+          (eff) =>
+            eff.name.toLowerCase().includes("incapacitated") ||
+            eff.name.toLowerCase().includes("stunned") ||
+            eff.name.toLowerCase().includes("paralyzed") ||
+            eff.name.toLowerCase().includes("unconscious") ||
+            eff.name.toLowerCase().includes("petrified") ||
+            eff.name.toLowerCase().includes("dead") ||
+            eff.name.toLowerCase().includes("blinded")
+        );
+        if (!hasIncapacitated && !hasInvisible) {
         // Check distance
         const distance = api.getDistance(ourToken, token);
         if (distance !== undefined && distance !== null && distance <= 5) {
