@@ -1488,12 +1488,12 @@
     const hitDie = recordLink?.value?.data?.hitDie || "d6";
 
     // Set all the values including new proficiencies, then we update the proficiency modifiers
-    api.setValues(valuesToSet, (record) => {
+    api.setValues(valuesToSet, (updatedRecord) => {
       // After data is updated, update the proficiency modifiers
-      updateProficiencies(bonus, record);
+      updateProficiencies(bonus, updatedRecord);
       // If not prompting skills or subclass, update hp
       if (!promptSkillChoicesLater && !promptSubclass) {
-        updateHitPoints(className, newLevel, level, hitDie, record);
+        updateHitPoints(className, newLevel, level, hitDie, updatedRecord);
       }
     });
 
@@ -1527,7 +1527,10 @@
     if (promptSubClassOrSkills) {
       // If skills or subclass, prompt first before HP
       promptSubClassOrSkills((recordOverride) => {
-        updateHitPoints(className, newLevel, level, hitDie, recordOverride);
+        // Requery for the record
+        api.getRecord("characters", recordOverride?._id, (recordUpdated) => {
+          updateHitPoints(className, newLevel, level, hitDie, recordUpdated);
+        });
       });
     }
   }
@@ -2143,27 +2146,30 @@
       // Parse class name
       const regex = /(\w+) (\d+)/i;
       const found = classLevel.match(regex);
-      const className = found[1];
+      // Check if match was found before accessing array elements
+      if (found) {
+        const className = found[1];
 
-      // If this class is NOT in existing classes, remove it
-      if (!existingClasses.includes(className.trim())) {
-        // Parse level from hidden string
-        const regex = new RegExp(`(${className} (\\d+))`, "i");
-        // Replace the found class and level
-        classLevels = classLevels.replace(regex, (match, g1, g2) => {
-          const currentLevel = parseInt(g2, 10);
-          return "";
-        });
-        // Clean up the string by:
-        // 1. Removing multiple consecutive slashes
-        // 2. Removing leading/trailing slashes
-        // 3. Cleaning up whitespace
-        classLevels = classLevels
-          .replace(/\s*\/\s*\/+\s*/g, " / ") // Replace multiple slashes with single slash
-          .trim()
-          .replace(/\/$/, "")
-          .replace(/^\//, "")
-          .trim();
+        // If this class is NOT in existing classes, remove it
+        if (!existingClasses.includes(className.trim())) {
+          // Parse level from hidden string
+          const regex = new RegExp(`(${className} (\\d+))`, "i");
+          // Replace the found class and level
+          classLevels = classLevels.replace(regex, (match, g1, g2) => {
+            const currentLevel = parseInt(g2, 10);
+            return "";
+          });
+          // Clean up the string by:
+          // 1. Removing multiple consecutive slashes
+          // 2. Removing leading/trailing slashes
+          // 3. Cleaning up whitespace
+          classLevels = classLevels
+            .replace(/\s*\/\s*\/+\s*/g, " / ") // Replace multiple slashes with single slash
+            .trim()
+            .replace(/\/$/, "")
+            .replace(/^\//, "")
+            .trim();
+        }
       }
     });
 
@@ -2196,7 +2202,12 @@
 
     //  Update HP and Hit Dice
     const hpByLevel = record?.data?.hpByLevel || "[]";
-    const hpByLevelArr = JSON.parse(hpByLevel);
+    let hpByLevelArr = [];
+    try {
+      hpByLevelArr = JSON.parse(hpByLevel);
+    } catch (e) {
+      hpByLevelArr = [];
+    }
 
     // Remove all entries from hpByLevelArr where className no longer exists
     let newHpByLevel = [...hpByLevelArr];
@@ -2269,8 +2280,8 @@
     valuesToSet["data.proficiencyBonus"] = bonus;
 
     // Set values then update proficiencies based on Level
-    api.setValues(valuesToSet, (record) => {
-      updateProficiencies(bonus, record);
+    api.setValues(valuesToSet, (updatedRecord) => {
+      updateProficiencies(bonus, updatedRecord);
     });
   }
 
