@@ -210,13 +210,52 @@
       api.setValues(valuesToSet);
     }
   }
+
+  function getLocations() {
+    const inventory = record?.data?.inventory || [];
+    const locations = inventory.map((item) => item.data?.location || "");
+    // Filter out duplicates by creating a Set and converting back to array
+    // Also filter out empty strings
+    const uniqueLocations = [...new Set(locations)].filter(
+      (location) => location !== ""
+    );
+
+    // Always include the "All" option at the beginning
+    return [
+      { value: "", label: "All" },
+      ...uniqueLocations.map((location) => ({
+        value: location,
+        label: location,
+      })),
+    ];
+  }
 </script>
 
 <div>
   <label variant="bold" textalign="center" label="Inventory"></label>
 </div>
 
-<div style="display: flex; flex-direction: row">
+<div style="display: flex; flex-direction: row; gap: 4px">
+  <dropdown
+    field="filterByType"
+    label="Filter by Type"
+    size="xs"
+    defaultvalue=""
+    placeholder="Select Type..."
+    options='[{"label": "All", "value": ""}, {"label": "Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"}, {"label": "Ranged Weapon", "value": "ranged weapon"}, {"label": "Armor", "value": "armor"}, {"label": "Shield", "value": "shield"}, {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}, {"label": "Pack", "value": "pack"}]'
+  >
+  </dropdown>
+  <dropdown
+    field="filterByLocation"
+    label="Filter by Location"
+    size="xs"
+    defaultvalue=""
+    placeholder="Select Location..."
+    optionsFunction="return getLocations();"
+  ></dropdown>
+</div>
+
+<div style="display: flex; flex-direction: row; margin-top: 4px">
   <div style="margin-left: 34px">
     <label variant="bold" size="xs" textalign="left" label="Count"></label>
   </div>
