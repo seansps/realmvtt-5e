@@ -38,6 +38,10 @@ if (className && newLevel && newHitDie && newHp && recordId) {
       [`data.hitpoints`]: newHpMax,
       [`data.curhp`]: (recordUpdated?.data?.curhp || 0) + newHpDiff,
     };
+
+    // Update hpByLevel fields
+    setHpPerLevel(recordUpdated, newValuesToSet);
+
     api.setValues(newValuesToSet);
 
     const characterName = record?.name || "New Character";

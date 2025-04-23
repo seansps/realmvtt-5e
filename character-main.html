@@ -66,6 +66,9 @@
             "data.hpByLevel": JSON.stringify(hpByLevelArr),
           };
 
+          // Update hpByLevel fields
+          setHpPerLevel(thisRecord, hpValuesToSet);
+
           // Add a hitdie
           const hitDieField = `${newHitDie}HitDie`;
           const numHitDie = parseInt(
@@ -1329,6 +1332,10 @@
     const nextLevelXp = getNextLevelXp(level);
     valuesToSet["data.xpNext"] = nextLevelXp;
 
+    // Update the level up button
+    valuesToSet["fields.levelUpButton.hidden"] =
+      level <= 19 && record?.data?.xp >= nextLevelXp ? false : true;
+
     // If we're level 1, set the initial proficiencies
     let promptSkillChoicesLater = null;
     if (level === 1) {
@@ -2200,6 +2207,10 @@
     const nextLevelXp = getNextLevelXp(level);
     valuesToSet["data.xpNext"] = nextLevelXp;
 
+    // Update the level up button
+    valuesToSet["fields.levelUpButton.hidden"] =
+      level <= 19 && record?.data?.xp >= nextLevelXp ? false : true;
+
     //  Update HP and Hit Dice
     const hpByLevel = record?.data?.hpByLevel || "[]";
     let hpByLevelArr = [];
@@ -2278,6 +2289,9 @@
 
     const bonus = getProficiencyBonus(level);
     valuesToSet["data.proficiencyBonus"] = bonus;
+
+    // Update hpByLevel fields
+    setHpPerLevel(record, valuesToSet);
 
     // Set values then update proficiencies based on Level
     api.setValues(valuesToSet, (updatedRecord) => {
@@ -2624,6 +2638,84 @@
 
     api.promptRoll(`Death Save`, "1d20", saveModifiers, metadata, "deathsave");
   }
+
+  function updateHpPerLevel() {
+    // First re-query the record, in case we're in the middle of updating
+    const recordId = record._id;
+    setTimeout(() => {
+      api.getRecord("characters", recordId, (record) => {
+        const valuesToSet = {};
+
+        const hpByLevel = record?.data?.hpByLevel || "[]";
+        try {
+          const hpByLevelArr = JSON.parse(hpByLevel);
+          hpByLevelArr.forEach((hpLevel, index) => {
+            hpByLevelArr[index].hp = record?.data?.[`hpLevel${index + 1}`] || 0;
+          });
+          api.setValues(
+            {
+              "data.hpByLevel": JSON.stringify(hpByLevelArr),
+            },
+            (updatedRecord) => {
+              if (updatedRecord) {
+                // Update hp
+                const conMod = parseInt(
+                  updatedRecord?.data?.constitutionMod || "0",
+                  10
+                );
+                let newHpByLevel = getHpForLevel(conMod, updatedRecord);
+                let curHp = updatedRecord?.data?.curhp || 0;
+                let hpToAdd = newHpByLevel - curHp;
+                valuesToSet["data.curhp"] = curHp + hpToAdd;
+                valuesToSet["data.hitpoints"] = newHpByLevel;
+                valuesToSet["data.hpByLevel"] = JSON.stringify(hpByLevelArr);
+
+                api.setValues(valuesToSet);
+              }
+            }
+          );
+        } catch (error) {
+          // No-op
+        }
+      });
+    }, 500);
+  }
+
+  function onLoadCharacter() {
+    setHpPerLevel(record);
+    showHideLevelUpButton(record);
+  }
+
+  function showHideLevelUp() {
+    showHideLevelUpButton(record);
+  }
+
+  function levelUp() {
+    // Prompt for classes to add
+    const classSelection = (values) => {
+      if (values.length > 0) {
+        const classObject = values[0];
+        onDropClass("class", {
+          value: classObject,
+          tooltip: classObject.name,
+        });
+      }
+    };
+
+    const optionsQuery = {
+      type: "class",
+      query: {},
+    };
+
+    api.showPrompt(
+      `Level Up to ${(record?.data?.level || 0) + 1}`,
+      "Class",
+      "Select a Class to Add...",
+      null,
+      optionsQuery,
+      classSelection
+    );
+  }
 </script>
 
 <div style="display: flex; margin-top: 4px; flex-direction: row">
@@ -2945,7 +3037,9 @@
           </div>
         </div>
 
-        <div style="width: 100%; display: flex; gap: 4px">
+        <div
+          style="width: 100%; display: flex; gap: 4px; align-items: flex-end"
+        >
           <numberfield
             width="50%"
             placeholder="0"
@@ -2963,6 +3057,201 @@
             color="blue"
           >
           </numberfield>
+          <!-- Panel to edit HP per level -->
+          <popover onclose="updateHpPerLevel();">
+            <popover.target>
+              <iconbutton
+                field="Edit Hit Points per Level"
+                size="md"
+                variant="light"
+                color="red"
+                onload="onLoadCharacter();"
+                options='[{"icon": "IconHeart", "label": "Edit Hit Points per Level", "value": "hpPerLevel"}]'
+              >
+              </iconbutton>
+            </popover.target>
+            <popover.dropdown>
+              <div style="max-height: 300px; overflow-y: auto">
+                <label
+                  label="Hit Points Gained per Level"
+                  field="hpPerLevelLabel"
+                ></label>
+                <label
+                  field="noLevelsLabel"
+                  size="xs"
+                  hidden="false"
+                  label="No Levels"
+                ></label>
+                <numberfield
+                  field="hpLevel1"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 1"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel2"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 2"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel3"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 3"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel4"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 4"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel5"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 5"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel6"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 6"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel7"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 7"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel8"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 8"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel9"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 9"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel10"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 10"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel11"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 11"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel12"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 12"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel13"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 13"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel14"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 14"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel15"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 15"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel16"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 16"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel17"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 17"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel18"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 18"
+                  updateonblur="true"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel19"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 19"
+                ></numberfield>
+                <numberfield
+                  field="hpLevel20"
+                  size="xs"
+                  hidden="true"
+                  width="100px"
+                  label="Level 20"
+                  updateonblur="true"
+                ></numberfield>
+                <div style="margin-top: 8px">
+                  <button
+                    size="xs"
+                    label="Set HP per Level"
+                    variant="outline"
+                    onclick="api.closeOpenedPopovers();"
+                  ></button>
+                </div>
+              </div>
+            </popover.dropdown>
+          </popover>
         </div>
 
         <div style="width: 100%; display: flex; gap: 4px; margin-top: 16px">
@@ -3069,6 +3358,7 @@
             size="xs"
             placeholder="0"
             field="xp"
+            onchange="showHideLevelUp();"
             label="XP"
           ></numberfield>
           <numberfield
@@ -3077,6 +3367,7 @@
             placeholder="0"
             field="xpNext"
             label="Next Level"
+            onchange="showHideLevelUp();"
           ></numberfield>
           <numberfield
             width="20%"
@@ -3098,6 +3389,15 @@
         placeholder="Drag and drop a Class to add a Level"
         label="Class & Level"
       ></stringfield>
+      <button
+        size="xs"
+        label="Level Up"
+        width="105px"
+        hidden="true"
+        field="levelUpButton"
+        variant="filled"
+        onclick="levelUp();"
+      ></button>
       <list
         width="fit-content"
         height="30px"

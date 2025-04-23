@@ -1768,3 +1768,84 @@ api.promptRoll(\`${
 
   return buttons.join("\n");
 }
+
+function setHpPerLevel(recordOverride = null, moreValuesToSet = undefined) {
+  record = recordOverride || record;
+  // We check the JSON value in the hpByLevel field and
+  // set individual number values for each level
+  const hpByLevel =
+    moreValuesToSet?.["data.hpByLevel"] || record?.data?.hpByLevel || "[]";
+  const valuesToSet = {
+    "fields.noLevelsLabel.hidden": false,
+    "fields.hpLevel1.hidden": true,
+    "fields.hpLevel2.hidden": true,
+    "fields.hpLevel3.hidden": true,
+    "fields.hpLevel4.hidden": true,
+    "fields.hpLevel5.hidden": true,
+    "fields.hpLevel6.hidden": true,
+    "fields.hpLevel7.hidden": true,
+    "fields.hpLevel8.hidden": true,
+    "fields.hpLevel9.hidden": true,
+    "fields.hpLevel10.hidden": true,
+    "fields.hpLevel11.hidden": true,
+    "fields.hpLevel12.hidden": true,
+    "fields.hpLevel13.hidden": true,
+    "fields.hpLevel14.hidden": true,
+    "fields.hpLevel15.hidden": true,
+    "fields.hpLevel16.hidden": true,
+    "fields.hpLevel17.hidden": true,
+    "fields.hpLevel18.hidden": true,
+    "fields.hpLevel19.hidden": true,
+    "fields.hpLevel20.hidden": true,
+  };
+  let changesMade = false;
+  try {
+    const hpByLevelArr = JSON.parse(hpByLevel);
+    let level = 1;
+    hpByLevelArr.forEach((hpLevel) => {
+      if (
+        (moreValuesToSet?.["data.hpLevel" + level] &&
+          moreValuesToSet?.["data.hpLevel" + level] !== hpLevel.hp) ||
+        record?.data?.[`hpLevel${level}`] !== hpLevel.hp
+      ) {
+        valuesToSet[`data.hpLevel${level}`] = hpLevel.hp;
+        changesMade = true;
+      }
+      valuesToSet[`fields.noLevelsLabel.hidden`] = true;
+      valuesToSet[`fields.hpLevel${level}.hidden`] = false;
+      level += 1;
+    });
+    if (changesMade) {
+      if (moreValuesToSet) {
+        Object.keys(valuesToSet).forEach((key) => {
+          moreValuesToSet[key] = valuesToSet[key];
+        });
+      } else {
+        api.setValues(valuesToSet);
+      }
+    }
+  } catch (error) {
+    // No-op
+  }
+}
+
+function showHideLevelUpButton(record) {
+  const valuesToSet = {
+    "fields.levelUpButton.hidden": true,
+  };
+
+  const curLevel = record?.data?.level || 0;
+  const curXp = record?.data?.xp || 0;
+  const nextLevelXp = record?.data?.xpNext || 0;
+  if (curLevel <= 19 && curXp >= nextLevelXp) {
+    if (
+      record?.fields?.levelUpButton?.hidden ||
+      record?.fields?.levelUpButton?.hidden === undefined
+    ) {
+      valuesToSet["fields.levelUpButton.hidden"] = false;
+      api.setValues(valuesToSet);
+    }
+  } else if (!record?.fields?.levelUpButton?.hidden) {
+    api.setValues(valuesToSet);
+  }
+}
