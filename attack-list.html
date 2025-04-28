@@ -366,7 +366,8 @@
 
     const targets = api.getTargets();
 
-    const autoCritical = modifiers.some((m) => m.value === "critical");
+    let autoCritical = modifiers.some((m) => m.value === "critical");
+
     // Check for crit on 19 or some other number
     const critOnMatch = /critical(\d+)/;
     const critOnMods = modifiers
@@ -422,7 +423,11 @@
         targetDistance
       );
       targetEffects.forEach((r) => {
-        modifiers.push(r);
+        if (r.value === "critical") {
+          autoCritical = true;
+        } else {
+          modifiers.push(r);
+        }
       });
 
       const diceRoll = "1d20";

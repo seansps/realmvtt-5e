@@ -546,7 +546,7 @@ if (${rangedSpell} && ourToken) {
 
 let attackModifiers = ${JSON.stringify(attackModifiers)};
 
-const autoCritical = attackModifiers.some(m => m.value === 'critical');
+let autoCritical = attackModifiers.some(m => m.value === 'critical');
 // Check for crit on 19 or some other number
 const critOnMatch = /critical(\d+)/;
 const critOnMods = attackModifiers
@@ -589,7 +589,11 @@ targets.forEach(target => {
   // Get effects and modifiers for the target
   const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
   targetEffects.forEach(r => {
-    attackModifiers.push(r);
+    if (r.value === "critical") {
+      autoCritical = true;
+    } else {
+      attackModifiers.push(r);
+    }
   });
 
   const metadata = {  

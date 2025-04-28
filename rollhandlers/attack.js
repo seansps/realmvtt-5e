@@ -291,6 +291,7 @@ const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
 // This means it's automatically a critical hit, if it was a hit
 let autoCritical = data?.roll?.metadata?.autoCritical;
+
 let critOn = data?.roll?.metadata?.critOn || 20;
 const minRoll = data?.roll?.metadata?.minRoll;
 
