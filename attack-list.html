@@ -43,6 +43,11 @@
     const attackDataPath = dataPath.replace(".data.rollBtn", "");
     const attack = api.getValue(attackDataPath);
 
+    if (!attack) {
+      console.error("Attack is undefined at path:", attackDataPath);
+      return;
+    }
+
     let name = attack?.name || "New Item";
     if (attack?.identified === false) {
       name = attack?.unidentifiedName || "Unidentified Item";
