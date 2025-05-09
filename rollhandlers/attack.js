@@ -74,6 +74,7 @@ targets.forEach(target => {
 
     // First deduct from Temp HP
     const newTempHp = Math.max(oldTempHp - damage, 0);
+    const originalDamage = damage;
     damage = Math.max(damage - oldTempHp, 0);
     let usedTempHp = false;
     if (newTempHp !== oldTempHp) {
@@ -93,7 +94,7 @@ targets.forEach(target => {
 
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {
-      message = \`\$\{targetName\} took \$\{damage\} damage after deducting Temp HP.\`;
+      message = \`\$\{targetName\} took \$\{originalDamage\} damage and lost \$\{damage\} HP after deducting Temp HP.\`;
     }
 
     // If damage was done, we apply death failures if necessary
@@ -106,9 +107,9 @@ targets.forEach(target => {
     const effects = target.effects || [];
     const concentration = effects.find(effect => effect.name === 'Concentration');
     let oldSpellName = '';
-    if (concentration && damage > 0 && curhp > 0) {
+    if (concentration && originalDamage > 0 && curhp > 0) {
       // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30      
-      concentrationMacro = getConcentrationMacro(damage);
+      concentrationMacro = getConcentrationMacro(originalDamage);
     }
     else if (concentration && curhp <= 0) {
       // Remove the Concentration effect
