@@ -255,21 +255,38 @@
   ></dropdown>
 </div>
 
-<div style="display: flex; flex-direction: row; margin-top: 4px">
+<div style="display: flex; flex-direction: row; margin-top: 4px; width: 100%">
   <div style="margin-left: 34px">
     <label variant="bold" size="xs" textalign="left" label="Count"></label>
   </div>
-  <div style="margin-left: 30px">
+  <div style="margin-left: 30px; flex-grow: 1">
     <label variant="bold" size="xs" textalign="left" label="Item"></label>
   </div>
-  <div style="margin-left: auto">
-    <label
-      variant="bold"
-      size="xs"
-      textalign="left"
-      label="Location / Equipped"
-    ></label>
+  <div
+    style="
+      margin-left: 4px;
+      max-width: 100px;
+      min-width: 68px;
+      flex: 1;
+      display: flex;
+    "
+  >
+    <label variant="bold" size="xs" textalign="left" label="Location"></label>
   </div>
+  <div
+    style="
+      margin-left: 4px;
+      max-width: 95px;
+      min-width: 65px;
+      flex: 1;
+      display: flex;
+    "
+  >
+    <label variant="bold" size="xs" textalign="left" label="Equipped"></label>
+  </div>
+  <box field="spacerRight" hideonlocked="true">
+    <div style="width: 16px"></div>
+  </box>
 </div>
 
 <div style="display: flex; flex-direction: column; flex-grow: 1">

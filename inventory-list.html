@@ -318,16 +318,18 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     variant="tooltip-underline"
     label="Location"
     field="location"
-    placeholder="Location..."
+    placeholder="Enter Location..."
     updateonblur="true"
   >
   </stringfield>
-  <iconbutton
-    size="sm"
+  <dropdown
+    size="xs"
     field="carried"
     variant="default"
-    options='[{"icon": "IconMoneybag", "label": "Carried", "value": "carried"}, {"icon": "IconShirt", "label": "Equipped", "value": "equipped"}, {"icon": "IconArrowDown", "label": "Dropped", "value": "dropped"}]'
+    width="95px"
+    defaultvalue="carried"
+    disablediflocked="false"
+    options='[{"label": "Carried", "value": "carried"}, {"label": "Equipped", "value": "equipped"}, {"label": "Dropped", "value": "dropped"}]'
     onchange="onItemEquipped();"
-    onclick=""
-  ></iconbutton>
+  ></dropdown>
 </div>
