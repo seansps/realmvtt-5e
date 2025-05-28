@@ -799,13 +799,27 @@ function getTotalValueFromFields(
   return total;
 }
 
+function getEffectAppliedBy(record, effect) {
+  const effectValue = record?.effectValues?.[effect?._id];
+  if (effectValue && effectValue?.tokenId !== "null") {
+    return effectValue?.tokenId;
+  }
+  return null;
+}
+
 // Collects all effects and modifiers for the record (assuming this is
 // called in the context of a record.)
 // If types is provided, it will only return effects of those types
 // If field is provided, it will only return effects that match that field
 // If a target is provided, we look for effects for relevant to the caller and the target
 // such as attackTargeting, attackTargetingFive, attackTargetingGreaterFive
-function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
+// If appliedById is provided, it will only return effects that were applied by that tokenId
+function getEffectsAndModifiers(
+  types = [],
+  field = "",
+  itemId = undefined,
+  appliedById = undefined
+) {
   let results = [];
 
   // Set of stack modifiers that we have seen so we don't duplicate them
@@ -852,6 +866,7 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
           valueType: rule.valueType,
           isPenalty: isPenalty,
           isEffect: true,
+          appliedBy: getEffectAppliedBy(record, effect),
         });
       } else if (rule.valueType === "api") {
         let value = parseInt(record?.effectValues?.[effect?._id] || "0", 10);
@@ -868,6 +883,7 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
+            appliedBy: null,
           });
         }
       } else if (
@@ -897,6 +913,7 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
+            appliedBy: getEffectAppliedBy(record, effect),
           });
         }
       }
@@ -994,10 +1011,46 @@ function getEffectsAndModifiers(types = [], field = "", itemId = undefined) {
     (r) => r.itemId === itemId || r.itemId === undefined
   );
 
+  // Filter by appliedById if provided
+  if (appliedById) {
+    results = results.filter((r) => r.appliedBy === appliedById);
+  }
+
   return results;
 }
 
-// In this call, we look for effects that are relevant to the caller and the target
+// In this call we look for effects that are relevant to the caller and the target for damage rolls
+function getDamageEffectsForTarget(ourToken, target) {
+  if (!target) {
+    return [];
+  }
+
+  let results = [];
+
+  // Get effects that are relevant to the target
+  // damageTargetBonus is for damage bonuses to attacks specific to the target
+  // and the token that applied the effect
+  const effectsToCheck = ["damageTargetBonus"];
+
+  const damageEffects = getEffectsAndModifiersForToken(
+    target, // Look for effects on this target
+    effectsToCheck, // that match damageTargetBonus
+    "", // field is irrelevant
+    undefined, // itemId is irrelevant
+    ourToken?._id // appliedById is the caller
+  );
+
+  damageEffects.forEach((r) => {
+    results.push({
+      ...r,
+      name: r.isEffect ? `Target Has the ${r.name} Effect` : r.name,
+    });
+  });
+
+  return results;
+}
+
+// In this call, we look for effects that are relevant to the caller and the target for attack rolls
 function getAttackModifiersForTarget(target, distance) {
   if (!target) {
     return [];
@@ -1034,7 +1087,8 @@ function getEffectsAndModifiersForToken(
   target,
   types = [],
   field = "",
-  itemId = undefined
+  itemId = undefined,
+  appliedById = undefined
 ) {
   if (!target) {
     return [];
@@ -1085,6 +1139,7 @@ function getEffectsAndModifiersForToken(
           valueType: rule.valueType,
           isPenalty: isPenalty,
           isEffect: true,
+          appliedBy: getEffectAppliedBy(target, effect),
         });
       } else if (rule.valueType === "api") {
         let value = parseInt(target?.effectValues?.[effect?._id] || "0", 10);
@@ -1101,6 +1156,7 @@ function getEffectsAndModifiersForToken(
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
+            appliedBy: null,
           });
         }
       } else if (
@@ -1133,6 +1189,7 @@ function getEffectsAndModifiersForToken(
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
+            appliedBy: getEffectAppliedBy(target, effect),
           });
         }
       }
@@ -1233,6 +1290,11 @@ function getEffectsAndModifiersForToken(
   results = results.filter(
     (r) => r.itemId === itemId || r.itemId === undefined
   );
+
+  // Filter by appliedById if provided
+  if (appliedById) {
+    results = results.filter((r) => r.appliedBy === appliedById);
+  }
 
   return results;
 }
@@ -1978,11 +2040,17 @@ function getAnimationFor({
       abilityName.toLowerCase().match(/\bshortbow\b/i)
     ) {
       animation.animationName = "arrow_1";
+    } else if (isRanged) {
+      animation.animationName = "arrow_2";
+    } else if (!isRanged) {
+      animation.animationName = "pierce_1";
     }
   } else if (damage.includes("bludgeoning")) {
     animation.sound = isRanged ? "bolt_1" : "bludgeon_1";
     if (isRanged) {
       animation.animationName = "bullet_1";
+    } else {
+      animation.animationName = "bludgeon_1";
     }
   } else if (damage.includes("slashing")) {
     animation.sound = isRanged ? "bolt_1" : "slash_1";
@@ -2001,34 +2069,34 @@ function getAnimationFor({
     animation.animationName = "slash_1";
     animation.sound = "whip_1";
   } else if (abilityName.toLowerCase().includes("pistol")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("rifle")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("arquebus")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("musket")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("shotgun")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("revolver")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("grenade")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "explosive_1";
   } else if (abilityName.toLowerCase().includes("gunpowder")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "explosive_1";
   } else if (abilityName.toLowerCase().includes("dynamite")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "explosive_1";
   } else if (abilityName.toLowerCase().includes("bomb")) {
-    animation.animationName = "bullet_1";
+    animation.animationName = "bullet_2";
     animation.sound = "explosive_1";
   }
 
@@ -2045,4 +2113,32 @@ function getAnimationFor({
   }
 
   return animation;
+}
+
+function getEffectMacrosFor(effects = []) {
+  let effectButtons = "";
+  const ourToken = api.getToken();
+  const ourTokenId = ourToken?._id || "";
+  let ourTokenName = ourToken?.name || ourToken?.record?.name || "";
+  if (ourToken?.identified === false) {
+    ourTokenName =
+      ourToken?.unidentifiedName || ourToken?.record?.unidentifiedName;
+  }
+  effects.forEach((effectJson) => {
+    const effect = JSON.parse(effectJson);
+    const effectName = effect?.name || "";
+    const effectID = effect?._id || "";
+    const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
+    if (effectButtons !== "") {
+      effectButtons += "\n";
+    }
+    effectButtons += `\`\`\`${effectTitle}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+const ourToken = '${ourTokenId}' ? {_id: '${ourTokenId}', name: '${ourTokenName}'} : undefined;
+api.addEffectById('${effectID}', target, undefined, ourToken);
+});
+\`\`\``;
+  });
+  return effectButtons;
 }

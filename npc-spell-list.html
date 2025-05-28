@@ -449,6 +449,18 @@ targets.forEach(target => {
     }
   });
 
+  // Get damage effects for the target
+  const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
+    damageModifiers
+  )}));
+  const targetDamageEffects = getDamageEffectsForTarget(
+    ourToken,
+    target?.token,
+  );
+  targetDamageEffects.forEach((r) => {
+    damageModifiers.push(r);
+  });
+
   const metadata = {  
     "rollName": 'Attack',
     "attack": \`${spellName}\`,
@@ -457,7 +469,7 @@ targets.forEach(target => {
     "tooltip": \`Attack Roll for ${spellName}\`,
     "dc": targetAc,
     "damage": "${spellDamage}",
-    "damageModifiers": ${JSON.stringify(damageModifiers)},
+    "damageModifiers": damageModifiers,
     "autoCritical": autoCritical,
     "critOn": critOn,
     "minRoll": minRoll,
@@ -564,23 +576,8 @@ selectedTokens.forEach(token => {
       .join("\n");
 
     // Create macros for all effects that this spell can apply
-    let effectButtons = "";
     const effects = spell?.data?.effects || [];
-    effects.forEach((effectJson) => {
-      const effect = JSON.parse(effectJson);
-      const effectName = effect?.name || "";
-      const effectID = effect?._id || "";
-      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
-      if (effectButtons !== "") {
-        effectButtons += "\n";
-      }
-      effectButtons += `\`\`\`${effectTitle}
-let targets = api.getSelectedOrDroppedToken();
-targets.forEach(target => {
-  api.addEffectById('${effectID}', target);
-});
-\`\`\``;
-    });
+    let effectButtons = getEffectMacrosFor(effects);
 
     const message = `
 #### ${spellIcon}${spellName}
@@ -740,24 +737,17 @@ ${effectButtons}
     if (!rollAttackButton && animation) {
       // Get targets if needed
       const ourToken = api.getToken();
+      const targets = api.getTargets();
       const animationProps = {
         ...animation,
         originToken: ourToken,
       };
-      if (
-        ourToken &&
-        (animation.moveToDestination ||
-          animation.stretchToDestination ||
-          animation.destinationOnly)
-      ) {
-        const targets = api.getTargets();
-        if (targets.length > 0) {
-          targets.forEach((target) => {
-            if (target.token) {
-              api.playAnimation(animation, ourToken._id, target.token._id);
-            }
-          });
-        }
+      if (ourToken && targets.length > 0) {
+        targets.forEach((target) => {
+          if (target.token) {
+            api.playAnimation(animation, ourToken._id, target.token._id);
+          }
+        });
       } else if (ourToken) {
         api.playAnimation(animation, ourToken._id);
       }

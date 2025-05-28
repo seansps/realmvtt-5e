@@ -87,23 +87,8 @@
     // We'll send a message with the description of the trait as well as macros as relevant
 
     // Create macros for all effects that this trait can apply
-    let effectButtons = "";
     const effects = trait?.data?.effects || [];
-    effects.forEach((effectJson) => {
-      const effect = JSON.parse(effectJson);
-      const effectName = effect?.name || "";
-      const effectID = effect?._id || "";
-      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
-      if (effectButtons !== "") {
-        effectButtons += "\n";
-      }
-      effectButtons += `\`\`\`${effectTitle}
-let targets = api.getSelectedOrDroppedToken();
-targets.forEach(target => {
-  api.addEffectById('${effectID}', target);
-});
-\`\`\``;
-    });
+    let effectButtons = getEffectMacrosFor(effects);
 
     const message = `
 #### ${name}

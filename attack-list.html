@@ -435,6 +435,15 @@
         }
       });
 
+      // Get damage effects for the target
+      const targetDamageEffects = getDamageEffectsForTarget(
+        ourToken,
+        target?.token
+      );
+      targetDamageEffects.forEach((r) => {
+        damageModifiers.push(r);
+      });
+
       const diceRoll = "1d20";
       const metadata = {
         rollName: "Attack",
@@ -592,6 +601,20 @@
         ) {
           damageModifiers.push(mod);
         }
+      });
+    });
+
+    // Get damage effects for the target
+    const targets = api.getTargets();
+    const ourToken = api.getToken();
+    targets.forEach((target) => {
+      // Get damage effects for the target
+      const targetDamageEffects = getDamageEffectsForTarget(
+        ourToken,
+        target?.token
+      );
+      targetDamageEffects.forEach((r) => {
+        damageModifiers.push(r);
       });
     });
 

@@ -492,6 +492,15 @@
         }
       });
 
+      // Get damage effects for the target
+      const targetDamageEffects = getDamageEffectsForTarget(
+        ourToken,
+        target?.token
+      );
+      targetDamageEffects.forEach((r) => {
+        damageModifiers.push(r);
+      });
+
       const diceRoll = "1d20";
       const metadata = {
         rollName: "Attack",
@@ -554,6 +563,21 @@
       ranged ? "ranged" : "melee",
       attack._id
     );
+
+    // Get damage effects for the target
+    const targets = api.getTargets();
+    const ourToken = api.getToken();
+    targets.forEach((target) => {
+      // Get damage effects for the target
+      const targetDamageEffects = getDamageEffectsForTarget(
+        ourToken,
+        target?.token
+      );
+      targetDamageEffects.forEach((r) => {
+        damageModifiers.push(r);
+      });
+    });
+
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
     damageModifiers = damageModifiers.map((mod) => {
@@ -666,23 +690,8 @@ api.promptRoll('${name} Healing', '${action?.data?.healing}', [], {}, 'healing')
       : "";
 
     // Create macros for all effects that this action can apply
-    let effectButtons = "";
     const effects = action?.data?.effects || [];
-    effects.forEach((effectJson) => {
-      const effect = JSON.parse(effectJson);
-      const effectName = effect?.name || "";
-      const effectID = effect?._id || "";
-      const effectTitle = `Apply_${effectName.replace(/ /g, "_")}`;
-      if (effectButtons !== "") {
-        effectButtons += "\n";
-      }
-      effectButtons += `\`\`\`${effectTitle}
-let targets = api.getSelectedOrDroppedToken();
-targets.forEach(target => {
-  api.addEffectById('${effectID}', target);
-});
-\`\`\``;
-    });
+    let effectButtons = getEffectMacrosFor(effects);
 
     const message = `
 #### ${name}
