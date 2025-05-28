@@ -491,6 +491,11 @@ if (animation && animation.animationName) {
     isRanged,
   });
   if (animation && animation.animationName) {
-    api.playAnimation(animation, tokenId, targetId);
+    if (isRanged && targetId) {
+      // Only play the animation for ranged attacks if we have a target token
+      api.playAnimation(animation, tokenId, targetId);
+    } else if (!isRanged && tokenId) {
+      api.playAnimation(animation, tokenId, targetId);
+    }
   }
 }
