@@ -12,6 +12,24 @@
       api.setValues(valuesToSet);
     }
   }
+
+  function onLoad() {
+    // Hide if not a weapon
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const item = itemDataPath ? api.getValue(itemDataPath) : record;
+    const isWeapon = (item?.data?.type || "").toLowerCase().includes("weapon");
+    if (
+      (isWeapon && record.fields?.animationProps?.hidden === true) ||
+      (isWeapon && record.fields?.animationProps?.hidden === undefined)
+    ) {
+      api.setHidden("animationProps", false);
+    } else if (
+      (!isWeapon && record.fields?.animationProps?.hidden === false) ||
+      record.fields?.animationProps?.hidden === undefined
+    ) {
+      api.setHidden("animationProps", true);
+    }
+  }
 </script>
 
 <dropdown
@@ -54,3 +72,19 @@
     onchange="onChangeModifiers();"
   ></list>
 </div>
+
+<box field="animationProps" hidden="true">
+  <div style="margin-top: 4px">
+    <label
+      label="Animations"
+      size="md"
+      variant="bold"
+      textalign="center"
+    ></label>
+    <fxcontrol
+      field="animation"
+      label="Attack Animation"
+      onload="onLoad()"
+    ></fxcontrol>
+  </div>
+</box>

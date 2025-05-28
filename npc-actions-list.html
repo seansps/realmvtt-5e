@@ -434,15 +434,6 @@
       (m) => !m.value.toString().startsWith("minroll")
     );
 
-    // Only add the disadvantage if it's ranged and an enemy is within 5 feet
-    if (ranged && disDueToProximity) {
-      modifiers.push({
-        name: "Enemy is Within 5 Feet",
-        value: "disadvantage",
-        active: true,
-      });
-    }
-
     const targets = api.getTargets();
     targets.forEach((target) => {
       // Get calculated AC from modifiers - use if any
@@ -461,6 +452,15 @@
           ranged = false;
           icon = "IconSword";
         }
+      }
+
+      // Only add the disadvantage if it's ranged and an enemy is within 5 feet
+      if (ranged && disDueToProximity) {
+        modifiers.push({
+          name: "Enemy is Within 5 Feet",
+          value: "disadvantage",
+          active: true,
+        });
       }
 
       // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
@@ -505,6 +505,9 @@
         autoCritical: autoCritical,
         critOn: critOn,
         minRoll: minRoll,
+        tokenId: ourToken?._id,
+        targetId: target?.token?._id,
+        isRanged: ranged,
       };
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
@@ -521,6 +524,8 @@
         damageModifiers: damageModifiers,
         critOn: critOn,
         minRoll: minRoll,
+        tokenId: ourToken?._id,
+        isRanged: ranged,
       };
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }

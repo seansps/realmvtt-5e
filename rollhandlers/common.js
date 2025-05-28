@@ -58,6 +58,11 @@ function camelToNormal(skill) {
   });
 }
 
+const getNearestParentDataPath = (dataPath) => {
+  const parts = dataPath.split(".data");
+  return parts.length > 1 ? parts.slice(0, -1).join(".data") : "";
+};
+
 function getProficiencyBonus(level) {
   if (level <= 4) {
     return 2;
@@ -1848,4 +1853,196 @@ function showHideLevelUpButton(record) {
   } else if (!record?.fields?.levelUpButton?.hidden) {
     api.setValues(valuesToSet);
   }
+}
+
+// Automatically determine an animation based on the attack or spell damage and ranged/melee
+function getAnimationFor({
+  abilityName,
+  damage = "",
+  healing = "",
+  isRanged = false,
+}) {
+  if (!abilityName) return null;
+
+  const animation = {
+    animationName: isRanged ? "bolt_1" : "slash_1",
+    sound: isRanged ? "bolt_1" : "slash_1",
+    moveToDestination: isRanged,
+    stretchToDestination:
+      isRanged &&
+      (abilityName.toLowerCase().match(/\bray\b/i) ||
+        abilityName.toLowerCase().match(/\bspray\b/i) ||
+        abilityName.toLowerCase().match(/\bbeam\b/i) ||
+        abilityName.toLowerCase().match(/\bdisintegrate\b/i)),
+    destinationOnly: false,
+    startAtCenter: false,
+  };
+
+  if (!damage) {
+    animation.animationName = "";
+    animation.sound = "";
+  }
+
+  if (
+    isRanged &&
+    damage &&
+    (abilityName.toLowerCase().match(/\borb\b/i) ||
+      abilityName.toLowerCase().match(/\bmissile\b/i))
+  ) {
+    animation.animationName = "orb_1";
+  }
+
+  // If this is actually healing, we use a different animation
+  if (healing) {
+    animation.animationName = "radiant_1";
+    animation.scale = 0.5;
+    animation.opacity = 0.75;
+    animation.sound = "healing_1";
+    animation.moveToDestination = false;
+    animation.startAtCenter = true;
+    animation.destinationOnly = true;
+    return animation;
+  }
+
+  // Based on the damage, set the animation name and props
+  if (damage.includes("fire")) {
+    animation.animationName = "fire_1";
+    animation.sound = "bolt_2";
+    animation.hue = undefined;
+    animation.contrast = undefined;
+    animation.brightness = undefined;
+    if (abilityName.toLowerCase().includes("fireball")) {
+      animation.animationName = "fire_2";
+    }
+  } else if (damage.includes("cold")) {
+    animation.animationName = "ice_1";
+    animation.hue = 180;
+    animation.contrast = 1.0;
+    animation.brightness = 0.5;
+  } else if (damage.includes("acid")) {
+    animation.animationName = "splash_1";
+    animation.sound = "water_1";
+    animation.hue = 100;
+    animation.contrast = 1.0;
+    animation.brightness = 0.8;
+  } else if (damage.includes("lightning")) {
+    animation.animationName = "lightning_1";
+    animation.sound = "lightning_1";
+    animation.hue = 244;
+    animation.opacity = 0.5;
+    animation.contrast = 1.0;
+    animation.brightness = 0.5;
+  } else if (damage.includes("poison")) {
+    animation.hue = 128;
+    animation.contrast = 1.0;
+    animation.brightness = 0.1;
+  } else if (damage.includes("necrotic")) {
+    animation.animationName = "necrotic_1";
+    animation.hue = 240;
+    animation.contrast = 0.1;
+    animation.brightness = 0.1;
+    animation.scale = 0.5;
+    animation.opacity = 0.75;
+  } else if (damage.includes("radiant")) {
+    animation.animationName = "radiant_1";
+    animation.hue = 50;
+    animation.contrast = 1.0;
+    animation.brightness = 0.8;
+    animation.scale = 0.5;
+    animation.opacity = 0.75;
+  } else if (damage.includes("thunder")) {
+    animation.animationName = "lightning_1";
+    animation.sound = "lightning_1";
+    animation.hue = 244;
+    animation.contrast = 1.0;
+    animation.brightness = 0.8;
+  } else if (damage.includes("force")) {
+    animation.hue = 284;
+    animation.contrast = 1.0;
+    animation.brightness = 0.2;
+    if (abilityName.toLowerCase().includes("disintegrate")) {
+      animation.hue = 128;
+    }
+  } else if (damage.includes("psychic")) {
+    animation.hue = 330;
+    animation.contrast = 1.0;
+    animation.brightness = 0.2;
+  } else if (damage.includes("piercing")) {
+    animation.sound = isRanged ? "arrow_1" : "slash_1";
+    // If this is a ranged bow use arrow_1 animationName
+    if (
+      (isRanged &&
+        (abilityName.toLowerCase().match(/\bbow\b/i) ||
+          abilityName.toLowerCase().match(/\bcrossbow\b/i))) ||
+      abilityName.toLowerCase().match(/\longbow\b/i) ||
+      abilityName.toLowerCase().match(/\bshortbow\b/i)
+    ) {
+      animation.animationName = "arrow_1";
+    }
+  } else if (damage.includes("bludgeoning")) {
+    animation.sound = isRanged ? "bolt_1" : "bludgeon_1";
+    if (isRanged) {
+      animation.animationName = "bullet_1";
+    }
+  } else if (damage.includes("slashing")) {
+    animation.sound = isRanged ? "bolt_1" : "slash_1";
+  }
+
+  // Alternatively, if the ability name includes something that indicates a metallic weapon, we use slash_2
+  // or a whip, use whip_1, or guns use gun_1
+  if (
+    (abilityName.toLowerCase().includes("sword") ||
+      abilityName.toLowerCase().includes("axe")) &&
+    damage.includes("slashing")
+  ) {
+    animation.animationName = "slash_1";
+    animation.sound = "slash_2";
+  } else if (abilityName.toLowerCase().includes("whip")) {
+    animation.animationName = "slash_1";
+    animation.sound = "whip_1";
+  } else if (abilityName.toLowerCase().includes("pistol")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("rifle")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("arquebus")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("musket")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("shotgun")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("revolver")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "gun_1";
+  } else if (abilityName.toLowerCase().includes("grenade")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "explosive_1";
+  } else if (abilityName.toLowerCase().includes("gunpowder")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "explosive_1";
+  } else if (abilityName.toLowerCase().includes("dynamite")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "explosive_1";
+  } else if (abilityName.toLowerCase().includes("bomb")) {
+    animation.animationName = "bullet_1";
+    animation.sound = "explosive_1";
+  }
+
+  if (!damage && !healing) {
+    if (abilityName.match(/\bshield\b/i)) {
+      animation.animationName = "shield_1";
+      animation.sound = "healing_1";
+    }
+  }
+
+  if (!animation.animationName) {
+    // If not a spell or ability, we can't determine an animation
+    return null;
+  }
+
+  return animation;
 }

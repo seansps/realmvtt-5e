@@ -42,6 +42,18 @@
     );
 
     let ranged = attack?.data?.isRanged || false;
+    // Some attacks can be both, so check description to see
+    // if that is the case
+    const canBeMelee = attack?.data?.description
+      ?.toLowerCase()
+      .includes("melee or ranged");
+
+    // Parse reach from description like "reach 10 ft." or "reach 5 ft."
+    const reachMatch = /(?:^|\s|,)reach\s+(\d+)\s*ft/i;
+    const reach = parseInt(
+      attack?.data?.description?.match(reachMatch)?.[1] || "5",
+      10
+    );
 
     // Add the modifier to the modifiers array
     if (attackMod !== 0) {
@@ -118,14 +130,6 @@
       };
     });
 
-    if (disDueToProximity) {
-      modifiers.push({
-        name: "Enemy is Within 5 Feet",
-        value: "disadvantage",
-        active: true,
-      });
-    }
-
     let autoCritical = modifiers.some((m) => m.value === "critical");
     // Check for crit on 19 or some other number
     const critOnMatch = /critical(\d+)/;
@@ -154,6 +158,24 @@
           ? target?.token?.record?.unidentifiedName
           : target?.token?.record?.name;
       const targetDistance = target?.distance || 0;
+
+      // If this is ranged, check if it can be melee
+      if (ranged && canBeMelee) {
+        // And if so... check if the target is within 5 feet
+        if (targetDistance <= reach) {
+          // And then assume it was meant to be melee
+          ranged = false;
+          icon = "IconSword";
+        }
+      }
+
+      if (ranged && disDueToProximity) {
+        modifiers.push({
+          name: "Enemy is Within 5 Feet",
+          value: "disadvantage",
+          active: true,
+        });
+      }
 
       // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
       // and if it was greater than the max, make it apparent in the roll prompt
@@ -196,6 +218,9 @@
         damageModifiers: damageModifiers,
         autoCritical: autoCritical,
         critOn: critOn,
+        isRanged: ranged,
+        tokenId: ourToken?._id,
+        targetId: target?.token?._id,
       };
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
@@ -211,6 +236,8 @@
         damage: damage,
         critOn: critOn,
         damageModifiers: damageModifiers,
+        isRanged: ranged,
+        tokenId: ourToken?._id,
       };
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }

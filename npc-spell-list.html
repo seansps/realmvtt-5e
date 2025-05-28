@@ -48,6 +48,9 @@
       ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) `
       : "";
 
+    // Get animation
+    let animation = spell?.data?.animation;
+
     // Get the spell caster's attack modifier for this action group
     const spellModifier = spellAction?.data?.spellMod || 0;
     const spellDC = spellAction?.data?.spellDC || 0;
@@ -458,7 +461,11 @@ targets.forEach(target => {
     "autoCritical": autoCritical,
     "critOn": critOn,
     "minRoll": minRoll,
-    "isSpell": true
+    "isSpell": true,
+    "animation": ${JSON.stringify(animation)},
+    "isRanged": ${rangedSpell},
+    "tokenId": ourToken?._id,
+    "targetId": target?.token?._id
   }
   api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
 });
@@ -474,7 +481,10 @@ if (!targets.length) {
     "critOn": critOn,
     "damageModifiers": ${JSON.stringify(damageModifiers)},
     "minRoll": minRoll,
-    "isSpell": true
+    "isSpell": true,
+    "animation": ${JSON.stringify(animation)},
+    "isRanged": ${rangedSpell},
+    "tokenId": ourToken?._id,
   }
 
   // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
@@ -714,6 +724,43 @@ ${effectButtons}
         [],
         []
       );
+    }
+
+    if (animation === undefined || animation === null) {
+      // Try to guess an animation based on the spell name and damage
+      animation = getAnimationFor({
+        abilityName: spellName,
+        damage: spellDamage,
+        healing: spellHealing,
+        isRanged: rangedSpell,
+      });
+    }
+
+    // If not an attack and there is an animation, play it
+    if (!rollAttackButton && animation) {
+      // Get targets if needed
+      const ourToken = api.getToken();
+      const animationProps = {
+        ...animation,
+        originToken: ourToken,
+      };
+      if (
+        ourToken &&
+        (animation.moveToDestination ||
+          animation.stretchToDestination ||
+          animation.destinationOnly)
+      ) {
+        const targets = api.getTargets();
+        if (targets.length > 0) {
+          targets.forEach((target) => {
+            if (target.token) {
+              api.playAnimation(animation, ourToken._id, target.token._id);
+            }
+          });
+        }
+      } else if (ourToken) {
+        api.playAnimation(animation, ourToken._id);
+      }
     }
 
     // If this is a reaction spell, we update the amount used by 1 up to the max

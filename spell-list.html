@@ -70,6 +70,9 @@
     // Get and additional modifiers from spell caster settings
     const spellDCBonus = parseInt(api.getValue("data.spellDCBonus") || "0", 10);
 
+    // Get animation
+    let animation = spell?.data?.animation;
+
     // Modifiers for Damage and Healing
     let damageModifiers = [];
     let primaryDamageType = "untyped";
@@ -476,14 +479,14 @@
               ? capitalize(primaryDamageType)
               : "Spell"
           }_Damage
-api.promptRoll(\`${spellName} ${
+  api.promptRoll(\`${spellName} ${
             primaryDamageType !== "untyped"
               ? capitalize(primaryDamageType)
               : "Spell"
           } Damage\`, '${spellDamage}', ${JSON.stringify(
             damageModifiers
           )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
-\`\`\``
+  \`\`\``
         : "";
 
     let altDamageButtons = "";
@@ -498,151 +501,158 @@ api.promptRoll(\`${spellName} ${
 
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
-api.promptRoll(\`${spellName} Healing\`, '${spellHealing}', ${JSON.stringify(
+  api.promptRoll(\`${spellName} Healing\`, '${spellHealing}', ${JSON.stringify(
           healingModifiers
         )}, {}, 'healing')
-\`\`\``
+  \`\`\``
       : "";
 
     // Roll Attack Button, if Spell is an Attack, in the handler we get the targets and
     // roll for each target - DC for Attacks is the enemy's AC
     const rollAttackButton = spell?.data?.isAttack
       ? `\`\`\`Roll_Attack
-const targets = api.getTargets();
-const ourToken = api.getToken();
-let disDueToProximity = false;
-if (${rangedSpell} && ourToken) {
-  api.getOtherTokens().forEach(token => {
-    if (disDueToProximity) {
-      // Short circuit if we already have disadvantage due to proximity
-      return;
-    }
-    if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
-      // Check if you have the Invisible condition
-      const hasInvisible = (ourToken?.effects || []).some((eff) =>
-        eff.name.toLowerCase().includes("invisible")
-      );
-      // Check if they have incapacitated condition or are blinded
-      const hasIncapacitated = (token?.effects || []).some(
-        (eff) =>
-          eff.name.toLowerCase().includes("incapacitated") ||
-          eff.name.toLowerCase().includes("stunned") ||
-          eff.name.toLowerCase().includes("paralyzed") ||
-          eff.name.toLowerCase().includes("unconscious") ||
-          eff.name.toLowerCase().includes("petrified") ||
-          eff.name.toLowerCase().includes("dead") ||
-          eff.name.toLowerCase().includes("blinded")
-      );
-      if (!hasIncapacitated && !hasInvisible) {
-        // Check distance
-        const distance = api.getDistance(ourToken, token);
-        if (distance !== undefined && distance !== null && distance <= 5) {
-          disDueToProximity = true;
+  const targets = api.getTargets();
+  const ourToken = api.getToken();
+  let disDueToProximity = false;
+  if (${rangedSpell} && ourToken) {
+    api.getOtherTokens().forEach(token => {
+      if (disDueToProximity) {
+        // Short circuit if we already have disadvantage due to proximity
+        return;
+      }
+      if (token?.faction !== 'neutral' && token?.faction !== ourToken?.faction) {
+        // Check if you have the Invisible condition
+        const hasInvisible = (ourToken?.effects || []).some((eff) =>
+          eff.name.toLowerCase().includes("invisible")
+        );
+        // Check if they have incapacitated condition or are blinded
+        const hasIncapacitated = (token?.effects || []).some(
+          (eff) =>
+            eff.name.toLowerCase().includes("incapacitated") ||
+            eff.name.toLowerCase().includes("stunned") ||
+            eff.name.toLowerCase().includes("paralyzed") ||
+            eff.name.toLowerCase().includes("unconscious") ||
+            eff.name.toLowerCase().includes("petrified") ||
+            eff.name.toLowerCase().includes("dead") ||
+            eff.name.toLowerCase().includes("blinded")
+        );
+        if (!hasIncapacitated && !hasInvisible) {
+          // Check distance
+          const distance = api.getDistance(ourToken, token);
+          if (distance !== undefined && distance !== null && distance <= 5) {
+            disDueToProximity = true;
+          }
         }
       }
-    }
-  });
-}
-
-let attackModifiers = ${JSON.stringify(attackModifiers)};
-
-let autoCritical = attackModifiers.some(m => m.value === 'critical');
-// Check for crit on 19 or some other number
-const critOnMatch = /critical(\d+)/;
-const critOnMods = attackModifiers
-  .map(m => {
-    const match = m.value.toString().match(critOnMatch);
-    return match ? parseInt(match[1], 10) : null;
-  })
-  .filter(value => value !== null);
-
-let critOn = null;
-if (critOnMods.length) {
-  critOn = Math.min(...critOnMods);
-}
-
-// Filter these out of the modifiers array, we don't need them to be toggleable
-attackModifiers = attackModifiers.filter(m => !m.value.toString().startsWith('critical'));
-
-const minRoll = getMinRollModifier(attackModifiers);
-// Filter these out of the modifiers array, we don't need them to be toggleable
-attackModifiers = attackModifiers.filter(
-  (m) => !m.value.toString().startsWith("minroll")
-);
-
-targets.forEach(target => {
-  // Get calculated AC from modifiers - use if any
-  const targetAc = getArmorClassForToken(target?.token);
-  const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
-  const targetDistance = api.getDistance(ourToken, target?.token);
-  const diceRoll = '1d20';
-
-  // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
-  if (disDueToProximity) {
-    attackModifiers.push({
-      name: 'Enemy is Within 5 Feet',
-      value: 'disadvantage',
-      active: true
     });
   }
 
-  // Get effects and modifiers for the target
-  const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
-  targetEffects.forEach(r => {
-    if (r.value === "critical") {
-      autoCritical = true;
-    } else {
-      attackModifiers.push(r);
+  let attackModifiers = ${JSON.stringify(attackModifiers)};
+
+  let autoCritical = attackModifiers.some(m => m.value === 'critical');
+  // Check for crit on 19 or some other number
+  const critOnMatch = /critical(\d+)/;
+  const critOnMods = attackModifiers
+    .map(m => {
+      const match = m.value.toString().match(critOnMatch);
+      return match ? parseInt(match[1], 10) : null;
+    })
+    .filter(value => value !== null);
+
+  let critOn = null;
+  if (critOnMods.length) {
+    critOn = Math.min(...critOnMods);
+  }
+
+  // Filter these out of the modifiers array, we don't need them to be toggleable
+  attackModifiers = attackModifiers.filter(m => !m.value.toString().startsWith('critical'));
+
+  const minRoll = getMinRollModifier(attackModifiers);
+  // Filter these out of the modifiers array, we don't need them to be toggleable
+  attackModifiers = attackModifiers.filter(
+    (m) => !m.value.toString().startsWith("minroll")
+  );
+
+  targets.forEach(target => {
+    // Get calculated AC from modifiers - use if any
+    const targetAc = getArmorClassForToken(target?.token);
+    const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
+    const targetDistance = api.getDistance(ourToken, target?.token);
+    const diceRoll = '1d20';
+
+    // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
+    if (disDueToProximity) {
+      attackModifiers.push({
+        name: 'Enemy is Within 5 Feet',
+        value: 'disadvantage',
+        active: true
+      });
     }
-  });
 
-  const metadata = {  
-    "rollName": 'Attack',
-    "attack": \`${spellName}\`,
-    "icon": "IconWand",
-    "targetName": targetName,
-    "tooltip": \`Attack Roll for ${spellName}\`,
-    "dc": targetAc,
-    "damage": "${spellDamage}",
-    "damageModifiers": ${JSON.stringify(damageModifiers)},
-    "damageIgnoresResistances": '${damageIgnoresResistances}',
-    "damageIgnoresImmunities": '${damageIgnoresImmunities}',
-    "autoCritical": autoCritical,
-    "critOn": critOn,
-    "minRoll": minRoll,
-    "isSpell": true
-  }
-  api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
-});
-if (!targets.length) {
-  const diceRoll = '1d20';
-  const metadata = {
-    "rollName": 'Attack',
-    "attack": \`${spellName}\`,
-    "icon": "IconWand",
-    "tooltip": \`Attack Roll for ${spellName}\`,
-    "dc": 0,
-    "damage": "${spellDamage}",
-    "critOn": critOn,
-    "minRoll": minRoll,
-    "damageModifiers": ${JSON.stringify(damageModifiers)},
-    "damageIgnoresResistances": '${damageIgnoresResistances}',
-    "damageIgnoresImmunities": '${damageIgnoresImmunities}',
-    "isSpell": true
-  }
-
-  // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
-  if (disDueToProximity) {
-    attackModifiers.push({
-      name: 'Enemy is Within 5 Feet',
-      value: 'disadvantage',
-      active: true
+    // Get effects and modifiers for the target
+    const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
+    targetEffects.forEach(r => {
+      if (r.value === "critical") {
+        autoCritical = true;
+      } else {
+        attackModifiers.push(r);
+      }
     });
-  }
 
-  api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
-}
-\`\`\``
+    const metadata = {
+      "rollName": 'Attack',
+      "attack": \`${spellName}\`,
+      "icon": "IconWand",
+      "targetName": targetName,
+      "tooltip": \`Attack Roll for ${spellName}\`,
+      "dc": targetAc,
+      "damage": "${spellDamage}",
+      "damageModifiers": ${JSON.stringify(damageModifiers)},
+      "damageIgnoresResistances": '${damageIgnoresResistances}',
+      "damageIgnoresImmunities": '${damageIgnoresImmunities}',
+      "autoCritical": autoCritical,
+      "critOn": critOn,
+      "minRoll": minRoll,
+      "isSpell": true,
+      "animation": ${JSON.stringify(animation)},
+      "isRanged": ${rangedSpell},
+      "tokenId": ourToken?._id,
+      "targetId": target?.token?._id
+    }
+    api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
+  });
+  if (!targets.length) {
+    const diceRoll = '1d20';
+    const metadata = {
+      "rollName": 'Attack',
+      "attack": \`${spellName}\`,
+      "icon": "IconWand",
+      "tooltip": \`Attack Roll for ${spellName}\`,
+      "dc": 0,
+      "damage": "${spellDamage}",
+      "critOn": critOn,
+      "minRoll": minRoll,
+      "damageModifiers": ${JSON.stringify(damageModifiers)},
+      "damageIgnoresResistances": '${damageIgnoresResistances}',
+      "damageIgnoresImmunities": '${damageIgnoresImmunities}',
+      "animation": ${JSON.stringify(animation)},
+      "isRanged": ${rangedSpell},
+      "tokenId": ourToken?._id,
+      "isSpell": true
+    }
+
+    // If this is a ranged spell, and there are enemies within 5 feet, apply disadvantage
+    if (disDueToProximity) {
+      attackModifiers.push({
+        name: 'Enemy is Within 5 Feet',
+        value: 'disadvantage',
+        active: true
+      });
+    }
+
+    api.promptRoll(\`${spellName}\`, \`\$\{diceRoll\}\`, attackModifiers, metadata, 'attack');
+  }
+  \`\`\``
       : "";
 
     // Saving Throw Buttons - look up saves of selected tokens and prompt roll for each
@@ -660,50 +670,50 @@ if (!targets.length) {
     const rollSaveButtons = possibleSavingThrows
       .map((savingThrow) => {
         return `\`\`\`Roll_${capitalize(savingThrow)}_Save
-const selectedTokens = api.getSelectedOrDroppedToken();
-selectedTokens.forEach(token => {
-  let saveModifiers = [];
-  const modifier = token?.data?.['${savingThrow}Save'] || 0;
-  saveModifiers.push({
-    name: '${capitalize(savingThrow)} Save',
-    value: modifier,
-    active: true,
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach(token => {
+    let saveModifiers = [];
+    const modifier = token?.data?.['${savingThrow}Save'] || 0;
+    saveModifiers.push({
+      name: '${capitalize(savingThrow)} Save',
+      value: modifier,
+      active: true,
+    });
+
+    const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+    // Also get modifiers specific to spells
+    const spellSaveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'spell');
+
+    // Filter out duplicates based on name, value, type, and active status
+    const allMods = [...saveMods, ...spellSaveMods].filter((mod, index, array) => {
+      return index === array.findIndex(m =>
+        m.name === mod.name &&
+        m.value === mod.value &&
+        m.modifierType === mod.modifierType &&
+        m.active === mod.active
+      );
+    });
+
+    allMods.forEach(mod => {
+      saveModifiers.push(mod);
+    });
+
+    const minRoll = getMinRollModifier(saveModifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    saveModifiers = saveModifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
+    const metadata = {
+      "rollName": '${capitalize(savingThrow)} Save',
+      "tooltip": '${capitalize(savingThrow)} Saving Throw',
+      "dc": ${saveDc},
+      "minRoll": minRoll
+    }
+
+    api.promptRollForToken(token, '${capitalize(
+      savingThrow
+    )} Save', '1d20', saveModifiers, metadata, 'save');
   });
-
-  const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
-  // Also get modifiers specific to spells
-  const spellSaveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'spell');
-  
-  // Filter out duplicates based on name, value, type, and active status
-  const allMods = [...saveMods, ...spellSaveMods].filter((mod, index, array) => {
-    return index === array.findIndex(m => 
-      m.name === mod.name && 
-      m.value === mod.value && 
-      m.modifierType === mod.modifierType && 
-      m.active === mod.active
-    );
-  });
-  
-  allMods.forEach(mod => {
-    saveModifiers.push(mod);
-  });
-
-  const minRoll = getMinRollModifier(saveModifiers);
-  // Filter these out of the modifiers array, we don't need them to be toggleable
-  saveModifiers = saveModifiers.filter(m => !m.value.toString().startsWith('minroll'));
-
-  const metadata = {
-    "rollName": '${capitalize(savingThrow)} Save',
-    "tooltip": '${capitalize(savingThrow)} Saving Throw',
-    "dc": ${saveDc},
-    "minRoll": minRoll
-  }
-
-  api.promptRollForToken(token, '${capitalize(
-    savingThrow
-  )} Save', '1d20', saveModifiers, metadata, 'save');
-});
-\`\`\``;
+  \`\`\``;
       })
       .join("\n");
 
@@ -719,31 +729,31 @@ selectedTokens.forEach(token => {
         effectButtons += "\n";
       }
       effectButtons += `\`\`\`${effectTitle}
-let targets = api.getSelectedOrDroppedToken();
-targets.forEach(target => {
-  api.addEffectById('${effectID}', target);
-});
-\`\`\``;
+  let targets = api.getSelectedOrDroppedToken();
+  targets.forEach(target => {
+    api.addEffectById('${effectID}', target);
+  });
+  \`\`\``;
     });
 
     const message = `
-#### ${spellIcon}${spellName}
+  #### ${spellIcon}${spellName}
 
----
-&nbsp;
+  ---
+  &nbsp;
 
-${spellDescription}
+  ${spellDescription}
 
----
-&nbsp;
+  ---
+  &nbsp;
 
-${rollAttackButton}
-${rollSaveButtons}
-${damageButton}
-${altDamageButtons}
-${healingButton}
-${effectButtons}
-`;
+  ${rollAttackButton}
+  ${rollSaveButtons}
+  ${damageButton}
+  ${altDamageButtons}
+  ${healingButton}
+  ${effectButtons}
+  `;
 
     const castingTime = spell?.data?.castingTime;
     const range = spell?.data?.range;
@@ -868,6 +878,43 @@ ${effectButtons}
         [],
         []
       );
+    }
+
+    if (animation === undefined || animation === null) {
+      // Try to guess an animation based on the spell name and damage
+      animation = getAnimationFor({
+        abilityName: spellName,
+        damage: spellDamage,
+        healing: spellHealing,
+        isRanged: rangedSpell,
+      });
+    }
+
+    // If not an attack and there is an animation, play it
+    if (!rollAttackButton && animation && animation.animationName) {
+      // Get targets if needed
+      const ourToken = api.getToken();
+      const animationProps = {
+        ...animation,
+        originToken: ourToken,
+      };
+      if (
+        ourToken &&
+        (animation.moveToDestination ||
+          animation.stretchToDestination ||
+          animation.destinationOnly)
+      ) {
+        const targets = api.getTargets();
+        if (targets.length > 0) {
+          targets.forEach((target) => {
+            if (target.token) {
+              api.playAnimation(animation, ourToken._id, target.token._id);
+            }
+          });
+        }
+      } else if (ourToken) {
+        api.playAnimation(animation, ourToken._id);
+      }
     }
   }
 

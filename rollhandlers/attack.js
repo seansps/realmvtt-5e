@@ -292,6 +292,10 @@ const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
 // This means it's automatically a critical hit, if it was a hit
 let autoCritical = data?.roll?.metadata?.autoCritical;
+const animation = data?.roll?.metadata?.animation;
+const tokenId = data?.roll?.metadata?.tokenId;
+const targetId = data?.roll?.metadata?.targetId;
+const isRanged = data?.roll?.metadata?.isRanged;
 
 let critOn = data?.roll?.metadata?.critOn || 20;
 const minRoll = data?.roll?.metadata?.minRoll;
@@ -469,3 +473,24 @@ ${effectMacros}
 `;
 
 api.sendMessage(message, roll, [], tags);
+if (animation && animation.animationName) {
+  if (
+    (animation.moveToDestination ||
+      animation.stretchToDestination ||
+      animation.destinationOnly) &&
+    !targetId
+  ) {
+    // These require a target token to be set
+    return;
+  }
+  api.playAnimation(animation, tokenId, targetId);
+} else if (animation === undefined && damage) {
+  const animation = getAnimationFor({
+    abilityName: attack,
+    damage,
+    isRanged,
+  });
+  if (animation && animation.animationName) {
+    api.playAnimation(animation, tokenId, targetId);
+  }
+}

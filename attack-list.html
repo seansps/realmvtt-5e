@@ -441,6 +441,8 @@
         attack: `${name}`,
         icon: icon,
         targetName: targetName,
+        tokenId: ourToken?._id,
+        targetId: target?.token?._id,
         tooltip: `Attack Roll for ${name}`,
         autoCritical: autoCritical,
         critOn: critOn,
@@ -452,6 +454,10 @@
         masteryProperties: masteryProperties,
         attackerProficiencyBonus: proficiencyBonus,
         minRoll: minRoll,
+        isRanged: ranged,
+        animation: attack?.data?.animation?.animationName
+          ? attack?.data?.animation
+          : undefined,
       };
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
@@ -465,6 +471,7 @@
         tooltip: `Attack Roll for ${name}`,
         dc: 0,
         damage: damage,
+        tokenId: ourToken?._id,
         damageModifiers: damageModifiers,
         masteryProperties: masteryProperties,
         attackerProficiencyBonus: proficiencyBonus,
@@ -472,6 +479,10 @@
         damageIgnoresImmunities: damageIgnoresImmunities,
         critOn: critOn,
         minRoll: minRoll,
+        isRanged: ranged,
+        animation: attack?.data?.animation?.animationName
+          ? attack?.data?.animation
+          : undefined,
       };
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }
