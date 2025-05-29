@@ -108,12 +108,20 @@ ${savingThrowButtons}
 
     api.sendMessage(message, undefined, [], []);
 
+    const ourToken = api.getToken();
+    const targets = api.getTargets();
+    const tokenId = ourToken?._id;
+    const targetId = targets.length > 0 ? targets[0]?.token?._id : null;
+
     const metadata = {
       rollName: abilityName,
       tooltip: `${abilityName} Result`,
       damageTypes: ability?.data?.damageTypes || [],
       showHalf: ability?.data?.showHalf || false,
       showHealing: ability?.data?.showHealing || false,
+      tokenId: tokenId,
+      targetId: targetId,
+      animation: ability?.data?.animation || null,
     };
 
     let rollValue = abilityGroupValue || "1d20";
@@ -124,6 +132,8 @@ ${savingThrowButtons}
 
     if (promptRoll) {
       api.promptRoll(abilityName, rollValue, undefined, metadata, "ability");
+    } else if (ability?.data?.animation && tokenId) {
+      api.playAnimation(ability?.data?.animation, tokenId, targetId);
     }
   }
 </script>

@@ -5,6 +5,9 @@ const damageTypes = data?.roll?.metadata?.damageTypes || [];
 const showHalf = data?.roll?.metadata?.showHalf || false;
 const showHealing = data?.roll?.metadata?.showHealing || false;
 const minRoll = data?.roll?.metadata?.minRoll;
+const tokenId = data?.roll?.metadata?.tokenId;
+const targetId = data?.roll?.metadata?.targetId;
+const animation = data?.roll?.metadata?.animation || null;
 
 // Find the undropped d20, and if minroll is set
 // alter the actual roll to be the minroll if it's lower
@@ -472,3 +475,18 @@ api.sendMessage(
     },
   ]
 );
+
+let animationToPlay = animation;
+
+if (!animationToPlay && (damageTypes.length > 0 || showHealing)) {
+  animationToPlay = getAnimationFor({
+    abilityName: name || "Ability",
+    damage: !showHealing ? damageTypes.join(", ") : "",
+    healing: showHealing ? "healing" : "",
+    isRanged: true,
+  });
+}
+
+if (animationToPlay && animationToPlay.animationName && tokenId) {
+  api.playAnimation(animationToPlay, tokenId, targetId);
+}
