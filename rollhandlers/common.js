@@ -1956,9 +1956,9 @@ function getAnimationFor({
 
   // If this is actually healing, we use a different animation
   if (healing) {
-    animation.animationName = "radiant_1";
-    animation.scale = 0.5;
-    animation.opacity = 0.75;
+    animation.animationName = "healing_1";
+    animation.scale = 0.75;
+    animation.opacity = 1;
     animation.sound = "healing_1";
     animation.moveToDestination = false;
     animation.startAtCenter = true;
@@ -2087,17 +2087,29 @@ function getAnimationFor({
     animation.animationName = "bullet_2";
     animation.sound = "gun_1";
   } else if (abilityName.toLowerCase().includes("grenade")) {
-    animation.animationName = "bullet_2";
+    animation.animationName = "explosion_1";
     animation.sound = "explosive_1";
+    animation.moveToDestination = false;
+    animation.stretchToDestination = false;
+    animation.destinationOnly = true;
   } else if (abilityName.toLowerCase().includes("gunpowder")) {
-    animation.animationName = "bullet_2";
+    animation.animationName = "explosion_1";
     animation.sound = "explosive_1";
+    animation.moveToDestination = false;
+    animation.stretchToDestination = false;
+    animation.destinationOnly = true;
   } else if (abilityName.toLowerCase().includes("dynamite")) {
-    animation.animationName = "bullet_2";
+    animation.animationName = "explosion_1";
     animation.sound = "explosive_1";
+    animation.moveToDestination = false;
+    animation.stretchToDestination = false;
+    animation.destinationOnly = true;
   } else if (abilityName.toLowerCase().includes("bomb")) {
-    animation.animationName = "bullet_2";
+    animation.animationName = "explosion_1";
     animation.sound = "explosive_1";
+    animation.moveToDestination = false;
+    animation.stretchToDestination = false;
+    animation.destinationOnly = true;
   }
 
   if (!damage && !healing) {
