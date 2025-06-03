@@ -2136,6 +2136,7 @@ function getEffectMacrosFor(effects = []) {
     ourTokenName =
       ourToken?.unidentifiedName || ourToken?.record?.unidentifiedName;
   }
+  ourTokenName = ourTokenName.replace(/'/g, "\\'"); // First escape single quotes
   effects.forEach((effectJson) => {
     const effect = JSON.parse(effectJson);
     const effectName = effect?.name || "";

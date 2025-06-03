@@ -129,6 +129,31 @@
       });
     }
 
+    // Determine if we are casting a spell that ignores resistances / immunities
+    const damageIgnoresResistances = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          mod.value.trim().toLowerCase().includes("resistance")
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    const damageIgnoresImmunities = damageModifiers
+      .filter(
+        (mod) =>
+          mod.valueType === "string" &&
+          mod.value.trim().toLowerCase().startsWith("ignore") &&
+          (mod.value.trim().toLowerCase().includes("immunities") ||
+            mod.value.trim().toLowerCase().includes("immunity"))
+      )
+      ?.map((mod) => mod.value.split(" ")[1])
+      .join(",");
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    damageModifiers = damageModifiers.filter(
+      (m) => !m.value.toString().toLowerCase().includes("ignore")
+    );
+
     // Spell Attack Modifiers
     const attackModifiers = getSpellAttackModifiers(spell, spellModifier);
 
@@ -318,8 +343,14 @@
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
     const saveDamageMetadata = spell?.data?.isSave
-      ? { save: savingThrow, saveDc: saveDc, isSpell: true }
-      : {};
+      ? {
+          save: savingThrow,
+          saveDc: saveDc,
+          isSpell: true,
+          damageIgnoresResistances,
+          damageIgnoresImmunities,
+        }
+      : { isSpell: true, damageIgnoresResistances, damageIgnoresImmunities };
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_${
@@ -470,6 +501,8 @@ targets.forEach(target => {
     "dc": targetAc,
     "damage": "${spellDamage}",
     "damageModifiers": damageModifiers,
+    "damageIgnoresResistances": '${damageIgnoresResistances}',
+    "damageIgnoresImmunities": '${damageIgnoresImmunities}',
     "autoCritical": autoCritical,
     "critOn": critOn,
     "minRoll": minRoll,
@@ -492,6 +525,8 @@ if (!targets.length) {
     "damage": "${spellDamage}",
     "critOn": critOn,
     "damageModifiers": ${JSON.stringify(damageModifiers)},
+    "damageIgnoresResistances": '${damageIgnoresResistances}',
+    "damageIgnoresImmunities": '${damageIgnoresImmunities}',
     "minRoll": minRoll,
     "isSpell": true,
     "animation": ${JSON.stringify(animation)},

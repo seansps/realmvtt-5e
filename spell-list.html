@@ -471,7 +471,7 @@
           damageIgnoresResistances,
           damageIgnoresImmunities,
         }
-      : {};
+      : { isSpell: true, damageIgnoresResistances, damageIgnoresImmunities };
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_${
