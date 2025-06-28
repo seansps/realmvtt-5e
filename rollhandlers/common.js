@@ -857,17 +857,25 @@ function getEffectsAndModifiers(
         value !== 0 &&
         (rule.valueType === "number" || rule.valueType === "string")
       ) {
-        results.push({
-          name: effect.name || "Effect",
-          value: value,
-          active: true,
-          modifierType: ruleType,
-          field: rule?.field || "",
-          valueType: rule.valueType,
-          isPenalty: isPenalty,
-          isEffect: true,
-          appliedBy: getEffectAppliedBy(record, effect),
-        });
+        let name = effect.name || "Effect";
+        // If this is a stackable effect, add the effect per stack amount with a different name each time
+        let times = 1;
+        if (effect.stackable) {
+          times = record?.effectIds?.filter((id) => id === effect?._id).length;
+        }
+        for (let i = 0; i < times; i++) {
+          results.push({
+            name: i > 0 ? `${name} (x${i + 1})` : name,
+            value: value,
+            active: true,
+            modifierType: ruleType,
+            field: rule?.field || "",
+            valueType: rule.valueType,
+            isPenalty: isPenalty,
+            isEffect: true,
+            appliedBy: getEffectAppliedBy(record, effect),
+          });
+        }
       } else if (rule.valueType === "api") {
         let value = parseInt(record?.effectValues?.[effect?._id] || "0", 10);
         if (isPenalty && value > 0) {
@@ -1130,17 +1138,25 @@ function getEffectsAndModifiersForToken(
         value !== 0 &&
         (rule.valueType === "number" || rule.valueType === "string")
       ) {
-        results.push({
-          name: effect.name || "Effect",
-          value: value,
-          active: true,
-          modifierType: ruleType,
-          field: rule?.field || "",
-          valueType: rule.valueType,
-          isPenalty: isPenalty,
-          isEffect: true,
-          appliedBy: getEffectAppliedBy(target, effect),
-        });
+        let name = effect.name || "Effect";
+        // If this is a stackable effect, add the effect per stack amount with a different name each time
+        let times = 1;
+        if (effect.stackable) {
+          times = record?.effectIds?.filter((id) => id === effect?._id).length;
+        }
+        for (let i = 0; i < times; i++) {
+          results.push({
+            name: i > 0 ? `${name} (x${i + 1})` : name,
+            value: value,
+            active: true,
+            modifierType: ruleType,
+            field: rule?.field || "",
+            valueType: rule.valueType,
+            isPenalty: isPenalty,
+            isEffect: true,
+            appliedBy: getEffectAppliedBy(record, effect),
+          });
+        }
       } else if (rule.valueType === "api") {
         let value = parseInt(target?.effectValues?.[effect?._id] || "0", 10);
         if (isPenalty && value > 0) {
