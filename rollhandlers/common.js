@@ -1142,7 +1142,7 @@ function getEffectsAndModifiersForToken(
         // If this is a stackable effect, add the effect per stack amount with a different name each time
         let times = 1;
         if (effect.stackable) {
-          times = record?.effectIds?.filter((id) => id === effect?._id).length;
+          times = target?.effectIds?.filter((id) => id === effect?._id).length;
         }
         for (let i = 0; i < times; i++) {
           results.push({
@@ -1154,7 +1154,7 @@ function getEffectsAndModifiersForToken(
             valueType: rule.valueType,
             isPenalty: isPenalty,
             isEffect: true,
-            appliedBy: getEffectAppliedBy(record, effect),
+            appliedBy: getEffectAppliedBy(target, effect),
           });
         }
       } else if (rule.valueType === "api") {
