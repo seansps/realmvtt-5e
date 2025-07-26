@@ -145,11 +145,17 @@
         if (Object.keys(valuesToSet).length > 0) {
           api.setValues(valuesToSet, (updatedRecord) => {
             // Update total weight after setting count values
-            updateTotalWeight(updatedRecord);
+            // Requery the record to get the latest data
+            api.getRecord(record.recordType, record._id, (record2) => {
+              updateTotalWeight(record2);
+            });
           });
         } else {
           // Else just update the total weight
-          updateTotalWeight(record);
+          // Requery the record to get the latest data
+          api.getRecord(record.recordType, record._id, (record2) => {
+            updateTotalWeight(record2);
+          });
         }
       });
     } else {
