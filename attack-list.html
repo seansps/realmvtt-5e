@@ -698,14 +698,17 @@
       <portrait width="30px" height="30px" field="portrait"></portrait>
     </div>
     <div style="width: 100%">
-      <namefield field="namefield" variant="standard"></namefield>
+      <namefield
+        field="namefield"
+        variant="standard"
+        placeholder="Item Name..."
+      ></namefield>
     </div>
     <!-- Ammo Field for Ranged Weapons -->
     <numberfield
       hidden="true"
       field="ammo"
       placeholder="0"
-      maxvalue="100"
       minvalue="0"
       variant="tooltip"
       label="Ammo Remaining"
