@@ -54,7 +54,7 @@
     const effects = api.getValue(`${itemDataPath}.data.effects`) || [];
     const healing = api.getValue(`${itemDataPath}.data.healing`);
     const damage = api.getValue(`${itemDataPath}.data.useDamage`);
-    const portrait = api.getValue(`${itemDataPath}.portrait`);
+    const portrait = encodeURI(api.getValue(`${itemDataPath}.portrait`));
     const itemIcon = portrait
       ? `![${itemName}](${assetUrl}${portrait}?width=40&height=40) `
       : "";

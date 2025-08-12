@@ -45,7 +45,9 @@
       spell?.data?.description || ""
     );
     const spellIcon = spell?.portrait
-      ? `![${spellName}](${assetUrl}${spell?.portrait}?width=40&height=40) `
+      ? `![${spellName}](${assetUrl}${encodeURI(
+          spell?.portrait
+        )}?width=40&height=40) `
       : "";
 
     // Get animation

@@ -12,7 +12,9 @@
       ability?.data?.description || ""
     );
     const abilityIcon = ability?.portrait
-      ? `![${abilityName}](${assetUrl}${ability?.portrait}?width=40&height=40) `
+      ? `![${abilityName}](${assetUrl}${encodeURI(
+          ability?.portrait
+        )}?width=40&height=40) `
       : "";
 
     // To get the uses we need maxDailyUses and dailUses from the parent ability group list
