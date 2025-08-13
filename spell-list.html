@@ -971,145 +971,145 @@
   }
 </script>
 
-<div style="display: column; gap: 2px; width: 100%">
-  <div style="display: flex; gap: 2px; width: 100%">
-    <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
-      <portrait width="30px" height="30px" field="portrait"></portrait>
-    </div>
-    <div style="margin-top: auto; margin-bottom: auto">
-      <iconbutton
-        size="sm"
-        field="prepared"
-        variant="default"
-        onchange="toggleDaily();"
-        options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}, {"icon": "IconCircleLetterA", "label": "At Will", "value": "atwill"}]'
-      >
-      </iconbutton>
-    </div>
-    <namefield
-      size="xs"
-      width="100%"
-      variant="unstyled"
-      field="namefield"
-    ></namefield>
-    <stringfield
-      size="xs"
-      field="castingTime"
-      label="Casting Time"
-      variant="tooltip-underline"
-    ></stringfield>
-    <stringfield
-      size="xs"
-      field="range"
-      label="Range"
-      variant="tooltip-underline"
-    ></stringfield>
-    <div style="margin-top: auto; margin-bottom: auto">
-      <iconbutton
-        size="sm"
-        field="ability"
-        variant="default"
-        options='[{"icon": "IconSquareLetterS", "label": "Strength", "value": "strength"}, {"icon": "IconSquareLetterD", "label": "Dexterity", "value": "dexterity"}, {"icon": "IconSquareLetterC", "label": "Constitution", "value": "constitution"}, {"icon": "IconSquareLetterI", "label": "Intelligence", "value": "intelligence"}, {"icon": "IconSquareLetterW", "label": "Wisdom", "value": "wisdom"}, {"icon": "IconSquareLetterC", "label": "Charisma", "value": "charisma"}]'
-      >
-      </iconbutton>
-    </div>
-    <div style="margin-top: auto; margin-bottom: auto">
-      <iconbutton
-        size="sm"
-        field="upcastLevel"
-        color="pink"
-        variant="light"
-        getoptions="return getLevelOptions();"
-      >
-      </iconbutton>
-    </div>
-    <div style="margin-left: auto">
-      <button
+<accordion size="xs" field="descriptionOpen">
+  <accordion.control>
+    <div style="display: flex; gap: 2px; width: 100%">
+      <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
+        <portrait width="30px" height="30px" field="portrait"></portrait>
+      </div>
+      <div style="margin-top: auto; margin-bottom: auto">
+        <iconbutton
+          size="sm"
+          field="prepared"
+          variant="default"
+          onchange="toggleDaily();"
+          options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}, {"icon": "IconCircleLetterA", "label": "At Will", "value": "atwill"}]'
+        >
+        </iconbutton>
+      </div>
+      <namefield
         size="xs"
-        radius="xs"
-        field="castBtn"
-        label="Cast"
-        variant="light"
-        onclick="castSpell();"
-      ></button>
-    </div>
-  </div>
-  <div
-    style="
-      display: flex;
-      flex-direction: row;
-      gap: 8px;
-      width: 100%;
-      align-items: center;
-    "
-  >
-    <div style="display: flex; flex-direction: column; gap: 2px">
-      <dropdown
+        width="100%"
+        variant="unstyled"
+        field="namefield"
+      ></namefield>
+      <stringfield
         size="xs"
-        field="restoreOnRest"
-        label="Restore On"
-        width="100px"
+        field="castingTime"
+        label="Casting Time"
+        variant="tooltip-underline"
+      ></stringfield>
+      <stringfield
+        size="xs"
+        field="range"
+        label="Range"
+        variant="tooltip-underline"
+      ></stringfield>
+      <div style="margin-top: auto; margin-bottom: auto">
+        <iconbutton
+          size="sm"
+          field="ability"
+          variant="default"
+          options='[{"icon": "IconSquareLetterS", "label": "Strength", "value": "strength"}, {"icon": "IconSquareLetterD", "label": "Dexterity", "value": "dexterity"}, {"icon": "IconSquareLetterC", "label": "Constitution", "value": "constitution"}, {"icon": "IconSquareLetterI", "label": "Intelligence", "value": "intelligence"}, {"icon": "IconSquareLetterW", "label": "Wisdom", "value": "wisdom"}, {"icon": "IconSquareLetterC", "label": "Charisma", "value": "charisma"}]'
+        >
+        </iconbutton>
+      </div>
+      <div style="margin-top: auto; margin-bottom: auto">
+        <iconbutton
+          size="sm"
+          field="upcastLevel"
+          color="pink"
+          variant="light"
+          getoptions="return getLevelOptions();"
+        >
+        </iconbutton>
+      </div>
+      <div style="margin-left: auto; margin-right: 4px">
+        <button
+          size="xs"
+          radius="xs"
+          field="castBtn"
+          label="Cast"
+          variant="light"
+          onclick="castSpell();"
+        ></button>
+      </div>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        width: 100%;
+        align-items: center;
+      "
+    >
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <dropdown
+          size="xs"
+          field="restoreOnRest"
+          label="Restore On"
+          width="100px"
+          hidden="true"
+          options='[{"label": "Manual", "value": "no"}, {"label": "Long Rest", "value": "long"}, {"label": "Short Rest", "value": "short"}]'
+        ></dropdown>
+      </div>
+      <numberfield
         hidden="true"
-        options='[{"label": "Manual", "value": "no"}, {"label": "Long Rest", "value": "long"}, {"label": "Short Rest", "value": "short"}]'
-      ></dropdown>
+        width="100px"
+        field="maxDailyUses"
+        placeholder="1"
+        label="Uses Per Day"
+        size="xs"
+      >
+      </numberfield>
+      <counter
+        hidden="true"
+        width="80%"
+        field="dailyUses"
+        maxvalue="1"
+        maxvaluefield="maxDailyUses"
+      >
+      </counter>
     </div>
+  </accordion.control>
+  <div style="display: flex; gap: 4px">
     <numberfield
       hidden="true"
-      width="100px"
-      field="maxDailyUses"
-      placeholder="1"
-      label="Uses Per Day"
+      width="50%"
+      field="saveDc"
+      placeholder="N/A"
+      label="Save DC Override"
       size="xs"
     >
     </numberfield>
-    <counter
+    <numberfield
       hidden="true"
-      width="80%"
-      field="dailyUses"
-      maxvalue="1"
-      maxvaluefield="maxDailyUses"
+      width="50%"
+      field="attackMod"
+      placeholder="N/A"
+      label="Attack Modifier Override"
+      size="xs"
     >
-    </counter>
+    </numberfield>
   </div>
-  <accordion size="xs" field="descriptionOpen" label="Description">
-    <div style="display: flex; gap: 4px">
-      <numberfield
-        hidden="true"
-        width="50%"
-        field="saveDc"
-        placeholder="N/A"
-        label="Save DC Override"
-        size="xs"
-      >
-      </numberfield>
-      <numberfield
-        hidden="true"
-        width="50%"
-        field="attackMod"
-        placeholder="N/A"
-        label="Attack Modifier Override"
-        size="xs"
-      >
-      </numberfield>
-    </div>
-    <div style="display: flex; gap: 4px">
-      <stringfield
-        size="xs"
-        width="50%"
-        field="components"
-        label="Components"
-      ></stringfield>
-      <stringfield
-        size="xs"
-        width="50%"
-        field="duration"
-        label="Duration"
-      ></stringfield>
-    </div>
-    <div style="margin-top: 4px">
-      <richtextfield disablecontrols="true" field="description"></richtextfield>
-    </div>
-  </accordion>
-</div>
+  <div style="display: flex; gap: 4px">
+    <stringfield
+      size="xs"
+      width="50%"
+      field="components"
+      label="Components"
+    ></stringfield>
+    <stringfield
+      size="xs"
+      width="50%"
+      field="duration"
+      label="Duration"
+    ></stringfield>
+  </div>
+  <div style="margin-top: 4px">
+    <richtextfield disablecontrols="true" field="description"></richtextfield>
+  </div>
+</accordion>
 
 <numberfield hidden="true" field="level"></numberfield>

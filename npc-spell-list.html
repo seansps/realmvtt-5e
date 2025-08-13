@@ -862,109 +862,118 @@ ${effectButtons}
   }
 </script>
 
-<div style="display: column; gap: 2px; width: 100%">
-  <div style="display: flex; gap: 2px; width: 100%">
-    <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
-      <portrait width="30px" height="30px" field="portrait"></portrait>
-    </div>
-    <div style="margin-top: auto; margin-bottom: auto">
-      <iconbutton
-        size="sm"
-        field="prepared"
-        variant="default"
-        onchange="toggleDaily();"
-        options='[{"icon": "IconCircleLetterW", "label": "At Will", "value": "will"}, {"icon": "IconCircleLetterD", "label": "Daily (Has Uses Per Day)", "value": "daily"}, {"icon": "IconWand", "label": "Prepared (Uses Spell Slots)", "value": "prepared"}]'
+<accordion
+  size="xs"
+  field="descriptionOpen"
+  label="Description"
+  chevronposition="left"
+>
+  <accordion.control>
+    <div style="display: column; gap: 2px; width: 100%">
+      <div style="display: flex; gap: 2px; width: 100%">
+        <div
+          style="width: 30px; height: 30px; min-width: 30px; min-height: 30px"
+        >
+          <portrait width="30px" height="30px" field="portrait"></portrait>
+        </div>
+        <div style="margin-top: auto; margin-bottom: auto">
+          <iconbutton
+            size="sm"
+            field="prepared"
+            variant="default"
+            onchange="toggleDaily();"
+            options='[{"icon": "IconCircleLetterW", "label": "At Will", "value": "will"}, {"icon": "IconCircleLetterD", "label": "Daily (Has Uses Per Day)", "value": "daily"}, {"icon": "IconWand", "label": "Prepared (Uses Spell Slots)", "value": "prepared"}]'
+          >
+          </iconbutton>
+        </div>
+        <namefield
+          size="xs"
+          width="100%"
+          variant="unstyled"
+          field="namefield"
+        ></namefield>
+        <stringfield
+          size="xs"
+          field="castingTime"
+          label="Casting Time"
+          variant="tooltip-underline"
+        ></stringfield>
+        <stringfield
+          size="xs"
+          field="range"
+          label="Range"
+          variant="tooltip-underline"
+        ></stringfield>
+        <div style="margin-top: auto; margin-bottom: auto">
+          <!-- For NPCs we don't want to show the upcast level button unless they use spell slots -->
+          <iconbutton
+            hidden="true"
+            size="sm"
+            field="upcastLevel"
+            color="pink"
+            variant="light"
+            getoptions="return getLevelOptions();"
+          >
+          </iconbutton>
+        </div>
+        <div style="margin-left: auto">
+          <button
+            size="xs"
+            radius="xs"
+            field="castBtn"
+            label="Cast"
+            variant="light"
+            onclick="castSpell();"
+          ></button>
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          width: 100%;
+          align-items: center;
+        "
       >
-      </iconbutton>
+        <numberfield
+          width="100px"
+          hidden="true"
+          field="maxDailyUses"
+          placeholder="1"
+          label="Uses Per Day"
+          size="xs"
+        >
+        </numberfield>
+        <counter
+          editable="true"
+          width="80%"
+          hidden="true"
+          field="dailyUses"
+          maxvalue="1"
+          maxvaluefield="maxDailyUses"
+        >
+        </counter>
+      </div>
     </div>
-    <namefield
-      size="xs"
-      width="100%"
-      variant="unstyled"
-      field="namefield"
-    ></namefield>
+  </accordion.control>
+  <div style="display: flex; gap: 4px">
     <stringfield
       size="xs"
-      field="castingTime"
-      label="Casting Time"
-      variant="tooltip-underline"
+      width="50%"
+      field="components"
+      label="Components"
     ></stringfield>
     <stringfield
       size="xs"
-      field="range"
-      label="Range"
-      variant="tooltip-underline"
+      width="50%"
+      field="duration"
+      label="Duration"
     ></stringfield>
-    <div style="margin-top: auto; margin-bottom: auto">
-      <!-- For NPCs we don't want to show the upcast level button unless they use spell slots -->
-      <iconbutton
-        hidden="true"
-        size="sm"
-        field="upcastLevel"
-        color="pink"
-        variant="light"
-        getoptions="return getLevelOptions();"
-      >
-      </iconbutton>
-    </div>
-    <div style="margin-left: auto">
-      <button
-        size="xs"
-        radius="xs"
-        field="castBtn"
-        label="Cast"
-        variant="light"
-        onclick="castSpell();"
-      ></button>
-    </div>
   </div>
-  <div
-    style="
-      display: flex;
-      flex-direction: row;
-      gap: 8px;
-      width: 100%;
-      align-items: center;
-    "
-  >
-    <numberfield
-      width="100px"
-      hidden="true"
-      field="maxDailyUses"
-      placeholder="1"
-      label="Uses Per Day"
-      size="xs"
-    >
-    </numberfield>
-    <counter
-      editable="true"
-      width="80%"
-      hidden="true"
-      field="dailyUses"
-      maxvalue="1"
-      maxvaluefield="maxDailyUses"
-    >
-    </counter>
+  <div style="margin-top: 4px">
+    <richtextfield disablecontrols="true" field="description"></richtextfield>
   </div>
-  <accordion size="xs" field="descriptionOpen" label="Description">
-    <div style="display: flex; gap: 4px">
-      <stringfield
-        size="xs"
-        width="50%"
-        field="components"
-        label="Components"
-      ></stringfield>
-      <stringfield
-        size="xs"
-        width="50%"
-        field="duration"
-        label="Duration"
-      ></stringfield>
-    </div>
-    <div style="margin-top: 4px">
-      <richtextfield disablecontrols="true" field="description"></richtextfield>
-    </div>
-  </accordion>
-</div>
+</accordion>
 
 <numberfield hidden="true" field="level"></numberfield>

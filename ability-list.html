@@ -136,31 +136,43 @@ ${savingThrowButtons}
   }
 </script>
 
-<div style="display: column; gap: 2px; width: 100%">
-  <div style="display: flex; gap: 2px; width: 100%">
-    <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
-      <portrait width="30px" height="30px" field="portrait"></portrait>
+<accordion
+  size="xs"
+  field="descriptionOpen"
+  label="Description"
+  chevronposition="left"
+>
+  <accordion.control>
+    <div style="display: column; gap: 2px; width: 100%">
+      <div style="display: flex; gap: 2px; width: 100%">
+        <div
+          style="width: 30px; height: 30px; min-width: 30px; min-height: 30px"
+        >
+          <portrait width="30px" height="30px" field="portrait"></portrait>
+        </div>
+        <namefield
+          size="xs"
+          width="100%"
+          variant="unstyled"
+          field="namefield"
+          placeholder="Ability Name..."
+        ></namefield>
+        <div style="margin-left: auto">
+          <button
+            size="xs"
+            radius="xs"
+            field="useBtn"
+            label="Use"
+            variant="light"
+            onclick="useAbility();"
+          ></button>
+        </div>
+      </div>
     </div>
-    <namefield
-      size="xs"
-      width="100%"
-      variant="unstyled"
-      field="namefield"
-    ></namefield>
-    <div style="margin-left: auto">
-      <button
-        size="xs"
-        radius="xs"
-        field="useBtn"
-        label="Use"
-        variant="light"
-        onclick="useAbility();"
-      ></button>
-    </div>
-  </div>
-  <accordion size="xs" field="descriptionOpen" label="Description">
-    <div style="margin-top: 4px">
-      <richtextfield disablecontrols="true" field="description"></richtextfield>
-    </div>
-  </accordion>
-</div>
+  </accordion.control>
+  <richtextfield
+    disablecontrols="true"
+    field="description"
+    placeholder="Enter description..."
+  ></richtextfield>
+</accordion>
