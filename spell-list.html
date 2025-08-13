@@ -971,7 +971,7 @@
   }
 </script>
 
-<accordion size="xs" field="descriptionOpen">
+<accordion size="xs" field="descriptionOpen" chevronposition="left">
   <accordion.control>
     <div style="display: flex; gap: 2px; width: 100%">
       <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
@@ -1049,6 +1049,8 @@
           size="xs"
           field="restoreOnRest"
           label="Restore On"
+          placeholder="Manual"
+          defaultvalue="no"
           width="100px"
           hidden="true"
           options='[{"label": "Manual", "value": "no"}, {"label": "Long Rest", "value": "long"}, {"label": "Short Rest", "value": "short"}]'
@@ -1059,7 +1061,7 @@
         width="100px"
         field="maxDailyUses"
         placeholder="1"
-        label="Uses Per Day"
+        label="Uses / Day"
         size="xs"
       >
       </numberfield>
