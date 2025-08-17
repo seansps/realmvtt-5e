@@ -730,6 +730,7 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
 
 function isClassLevel(field) {
   return [
+    "artificerLevel",
     "barbarianLevel",
     "bardLevel",
     "clericLevel",
