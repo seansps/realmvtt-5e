@@ -256,7 +256,15 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
   }
 </script>
 
-<div style="height: 30px; display: flex; gap: 4px; align-items: center">
+<div
+  style="
+    height: 30px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    width: 100%;
+  "
+>
   <div style="width: 30px; min-width: 30px">
     <portrait width="30px" height="30px" name="portrait"></portrait>
   </div>
@@ -265,15 +273,17 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       size="xs"
       variant="tooltip"
       label="Count"
+      width="100%"
       field="count"
       placeholder="0"
       onchange="setTotalWeight();"
     ></numberfield>
   </div>
-  <div style="flex-grow: 1">
+  <div style="min-width: 50px; flex-grow: 1">
     <namefield
       size="xs"
       variant="standard"
+      width="100%"
       placeholder="Item"
       field="namefield"
       updateonblur="true"
@@ -288,33 +298,40 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     onchange="onItemAttuned();"
     onclick=""
   ></iconbutton>
-  <button
-    hidden="true"
-    size="xs"
-    radius="xs"
-    field="useBtn"
-    variant="light"
-    onclick="useItem();"
-    label="Use"
-  ></button>
-  <stringfield
-    width="100px"
-    size="xs"
-    variant="tooltip-underline"
-    label="Location"
-    field="location"
-    placeholder="Enter Location..."
-    updateonblur="true"
-  >
-  </stringfield>
-  <dropdown
-    size="xs"
-    field="carried"
-    variant="default"
-    width="95px"
-    defaultvalue="carried"
-    disablediflocked="false"
-    options='[{"label": "Carried", "value": "carried"}, {"label": "Equipped", "value": "equipped"}, {"label": "Dropped", "value": "dropped"}]'
-    onchange="onItemEquipped();"
-  ></dropdown>
+  <div style="width: 60px; min-width: 60px">
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      width="100%"
+      field="useBtn"
+      variant="light"
+      onclick="useItem();"
+      label="Use"
+    ></button>
+  </div>
+  <div style="width: 100px; min-width: 100px">
+    <stringfield
+      width="100%"
+      size="xs"
+      variant="tooltip-underline"
+      label="Location"
+      field="location"
+      placeholder="Enter Location..."
+      updateonblur="true"
+    >
+    </stringfield>
+  </div>
+  <div style="width: 100px; min-width: 100px">
+    <dropdown
+      size="xs"
+      field="carried"
+      variant="default"
+      width="95px"
+      defaultvalue="carried"
+      disablediflocked="false"
+      options='[{"label": "Carried", "value": "carried"}, {"label": "Equipped", "value": "equipped"}, {"label": "Dropped", "value": "dropped"}]'
+      onchange="onItemEquipped();"
+    ></dropdown>
+  </div>
 </div>
