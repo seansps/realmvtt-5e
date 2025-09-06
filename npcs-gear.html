@@ -11,8 +11,8 @@
         ...item?.data,
         // Track old ID for count tracking
         fromId: item._id,
-        // Default count to 1
-        count: 1,
+        // Default count to 1 unless otherwise specified
+        count: item.data?.count || 1,
       },
       fields: {
         ...item?.fields,
@@ -59,19 +59,41 @@
       const existingItem = index !== -1 ? items[index] : undefined;
       if (existingItem) {
         // Add count to existing item
+        const countToAdd = parseFloat(item.data?.count || "1");
         const count = parseFloat(existingItem.data?.count || "0");
         // Update the value
-        api.setValue(`data.inventory.${index}.data.count`, count + 1);
+        api.setValue(`data.inventory.${index}.data.count`, count + countToAdd);
       } else {
         // Add the item to the list
         api.addValue(`data.inventory`, itemToAdd);
       }
     }
+
+    return true;
   }
 
-  function onDrop(type, recordLink) {
+  function onDrop(type, recordLink, sourceInfo) {
     if (type === "items") {
       onDropItem(recordLink);
+      if (sourceInfo) {
+        if (sourceInfo?.type === "list") {
+          // Query for the record first, then remove the item from the source list
+          api.getRecord(
+            sourceInfo.recordType,
+            sourceInfo.recordId,
+            (sourceRecord) => {
+              api.removeValueFromRecord(
+                sourceRecord,
+                sourceInfo.dataPath,
+                sourceInfo.index
+              );
+            }
+          );
+        } else if (sourceInfo?.type === "partysheet") {
+          // Remove the item from party sheet
+          api.removePartySheetItem(sourceInfo.itemId);
+        }
+      }
     }
   }
 </script>

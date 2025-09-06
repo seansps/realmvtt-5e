@@ -327,6 +327,7 @@
   }
 
   // On load of an NPC unhide any fields that may have been set by the Generator
+  // or otheriwse
   function onLoadNPC() {
     const unHideFields = [];
     // Toggle the visibility of the traits accordion
@@ -400,6 +401,13 @@
         "reactionsLabel",
         "usedReactions"
       );
+    }
+
+    if (
+      record.data?.type === "pack" &&
+      record.fields?.packProperties?.hidden !== false
+    ) {
+      unHideFields.push("packProperties");
     }
 
     if (unHideFields.length > 0) {
