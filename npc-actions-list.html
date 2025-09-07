@@ -517,6 +517,9 @@
         tokenId: ourToken?._id,
         targetId: target?.token?._id,
         isRanged: ranged,
+        animation: attack?.data?.animation?.animationName
+          ? attack?.data?.animation
+          : undefined,
       };
       api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
     });
@@ -535,6 +538,9 @@
         minRoll: minRoll,
         tokenId: ourToken?._id,
         isRanged: ranged,
+        animation: attack?.data?.animation?.animationName
+          ? attack?.data?.animation
+          : undefined,
       };
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }
@@ -1010,6 +1016,20 @@ ${effectButtons}
         description="The modifier used for this NPC's Spell Attack Rolls"
       >
       </numberfield>
+    </div>
+    <div style="margin-top: 4px">
+      <accordion
+        field="animationAccordion"
+        label="Attack Animation"
+        size="xs"
+        variant="contained"
+      >
+        <fxcontrol
+          field="animation"
+          label="Attack Animation"
+          size="xs"
+        ></fxcontrol>
+      </accordion>
     </div>
   </accordion>
 
