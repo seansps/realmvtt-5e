@@ -2172,3 +2172,238 @@ api.addEffectById('${effectID}', target, undefined, ourToken);
   });
   return effectButtons;
 }
+
+function rollSavingThrow(save, dc) {
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach((token) => {
+    save = save.toLowerCase();
+    const mod = `${save}Save`;
+    let modifiers = [];
+    let saveMod = token?.data?.[mod] || "0";
+    if (saveMod === undefined) {
+      saveMod = 0;
+    }
+
+    if (saveMod !== "0") {
+      modifiers.push({
+        name: `${capitalize(save)} Save Modifier`,
+        value: saveMod,
+        active: true,
+      });
+    }
+
+    // Check effects for all save bonuses and penalties for saves
+    const saveModifiers = getEffectsAndModifiersForToken(
+      token,
+      ["saveBonus", "savePenalty"],
+      save
+    );
+    saveModifiers.forEach((modifier) => {
+      modifiers.push(modifier);
+    });
+
+    const minRoll = getMinRollModifier(modifiers);
+    // Filter these out of the modifiers array, we don't need them to be toggleable
+    modifiers = modifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll")
+    );
+
+    const metadata = {
+      rollName: `${capitalize(save)} Save`,
+      tooltip: `${capitalize(save)} Saving Throw`,
+      dc: dc,
+      minRoll: minRoll,
+    };
+
+    api.promptRollForToken(
+      token,
+      `${capitalize(save)} Save`,
+      "1d20",
+      modifiers,
+      metadata,
+      "save"
+    );
+  });
+}
+
+function rollSkillCheck(skill, dc) {
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach((token) => {
+    if (token.linked === false) {
+      // This is an NPC
+      // Parse the skill name to get the skill name and modifier
+      let modValue = "0";
+      // Look for a skill in the list with this name
+      const npcSkills = token.data?.skills || [];
+      const npcSkill = npcSkills.find((s) =>
+        s.name.trim().toLowerCase().startsWith(skill.trim().toLowerCase())
+      );
+      let skillNameWithoutMod = npcSkill?.name || "";
+      let skillName = npcSkill?.name || "";
+      if (skillName) {
+        skillNameWithoutMod = skillName;
+        modValue = "0";
+        if (skillNameWithoutMod.includes("+")) {
+          skillNameWithoutMod = skillNameWithoutMod.split("+")[0].trim();
+          modValue = skillName.split("+")[1].trim();
+        } else if (skillNameWithoutMod.includes("-")) {
+          skillNameWithoutMod = skillNameWithoutMod.split("-")[0].trim();
+          modValue = `-${skillName.split("-")[1].trim()}`;
+        }
+        modValue = parseInt(modValue, 10);
+        if (isNaN(modValue)) {
+          modValue = 0;
+        }
+      }
+
+      modValue = parseInt(modValue, 10);
+      if (isNaN(modValue)) {
+        modValue = 0;
+      }
+      // Roll the check
+      const modifiers = [
+        {
+          name: `${skillNameWithoutMod} Modifier`,
+          value: modValue,
+          active: true,
+        },
+      ];
+
+      // Get any bonus or penalties for abilities and skills
+      // Try to guess the ability from the skill name
+      const ability = getAbilityFromSkill(
+        skillNameWithoutMod.split(" ")[0].toLowerCase()
+      );
+      const checkModifiers = getEffectsAndModifiersForToken(
+        token,
+        ["abilityBonus", "abilityPenalty"],
+        ability
+      );
+      checkModifiers.forEach((modifier) => {
+        modifiers.push(modifier);
+      });
+
+      const skillModifiers = getEffectsAndModifiersForToken(
+        token,
+        ["skillBonus", "skillPenalty"],
+        skillNameWithoutMod.toLowerCase()
+      );
+      skillModifiers.forEach((modifier) => {
+        modifiers.push(modifier);
+      });
+
+      const metadata = {
+        rollName: `${capitalize(skillNameWithoutMod)}`,
+        tooltip: `${capitalize(skillNameWithoutMod)} Check`,
+        dc: dc,
+      };
+      api.promptRollForToken(
+        token,
+        `${capitalize(skillNameWithoutMod)} Check`,
+        "1d20",
+        modifiers,
+        metadata,
+        "ability"
+      );
+    } else {
+      const ability =
+        token?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+      const mod = `${ability}Mod`;
+
+      let modifiers = [];
+      let abilityMod = parseInt(token?.data?.[mod] || "0", 10);
+      if (abilityMod === undefined || isNaN(abilityMod)) {
+        abilityMod = 0;
+      }
+
+      const proficiencyBonus = parseInt(
+        token?.data?.proficiencyBonus || "0",
+        10
+      );
+      const proficiency = token?.data?.[`${skill}Prof`] || "false";
+      const isHalfProficient = proficiency === "half";
+      const isExpertise = proficiency === "expertise";
+      const isProficient = proficiency === "true";
+
+      modifiers.push({
+        name: ability,
+        value: abilityMod,
+        active: true,
+      });
+
+      if (isHalfProficient) {
+        modifiers.push({
+          name: "Half Proficiency",
+          value: Math.floor(proficiencyBonus / 2),
+          active: true,
+        });
+      } else if (isExpertise) {
+        modifiers.push({
+          name: "Expertise",
+          value: proficiencyBonus * 2,
+          active: true,
+        });
+      } else if (isProficient) {
+        modifiers.push({
+          name: "Proficient",
+          value: proficiencyBonus,
+          active: true,
+        });
+      }
+
+      // Get any bonus or penalties for abilities and skills
+      const checkModifiers = getEffectsAndModifiersForToken(
+        token,
+        ["abilityBonus", "abilityPenalty"],
+        ability
+      );
+      checkModifiers.forEach((modifier) => {
+        modifiers.push(modifier);
+      });
+
+      const skillModifiers = getEffectsAndModifiersForToken(
+        token,
+        ["skillBonus", "skillPenalty"],
+        skill
+      );
+      skillModifiers.forEach((modifier) => {
+        modifiers.push(modifier);
+      });
+
+      // If we're proficient, get bonues that apply only to proficient checks
+      if (isProficient) {
+        const skillModifiers = getEffectsAndModifiersForToken(
+          token,
+          ["skillBonus"],
+          "proficient"
+        );
+        skillModifiers.forEach((modifier) => {
+          modifiers.push(modifier);
+        });
+      }
+
+      const minRoll = getMinRollModifier(modifiers);
+      // Filter these out of the modifiers array, we don't need them to be toggleable
+      modifiers = modifiers.filter(
+        (m) => !m.value.toString().startsWith("minroll")
+      );
+
+      const metadata = {
+        rollName: `${camelToNormal(skill).trim()}`,
+        tooltip: `${camelToNormal(ability)} (${camelToNormal(
+          skill
+        ).trim()}) Check`,
+        dc: dc,
+        minRoll: minRoll,
+      };
+      api.promptRollForToken(
+        token,
+        `${camelToNormal(ability)} (${camelToNormal(skill).trim()}) Check`,
+        "1d20",
+        modifiers,
+        metadata,
+        "ability"
+      );
+    }
+  });
+}
