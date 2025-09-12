@@ -2642,43 +2642,41 @@
   function updateHpPerLevel() {
     // First re-query the record, in case we're in the middle of updating
     const recordId = record._id;
-    setTimeout(() => {
-      api.getRecord("characters", recordId, (record) => {
-        const valuesToSet = {};
+    api.getRecord("characters", recordId, (record) => {
+      const valuesToSet = {};
 
-        const hpByLevel = record?.data?.hpByLevel || "[]";
-        try {
-          const hpByLevelArr = JSON.parse(hpByLevel);
-          hpByLevelArr.forEach((hpLevel, index) => {
-            hpByLevelArr[index].hp = record?.data?.[`hpLevel${index + 1}`] || 0;
-          });
-          api.setValues(
-            {
-              "data.hpByLevel": JSON.stringify(hpByLevelArr),
-            },
-            (updatedRecord) => {
-              if (updatedRecord) {
-                // Update hp
-                const conMod = parseInt(
-                  updatedRecord?.data?.constitutionMod || "0",
-                  10
-                );
-                let newHpByLevel = getHpForLevel(conMod, updatedRecord);
-                let curHp = updatedRecord?.data?.curhp || 0;
-                let hpToAdd = newHpByLevel - curHp;
-                valuesToSet["data.curhp"] = curHp + hpToAdd;
-                valuesToSet["data.hitpoints"] = newHpByLevel;
-                valuesToSet["data.hpByLevel"] = JSON.stringify(hpByLevelArr);
+      const hpByLevel = record?.data?.hpByLevel || "[]";
+      try {
+        const hpByLevelArr = JSON.parse(hpByLevel);
+        hpByLevelArr.forEach((hpLevel, index) => {
+          hpByLevelArr[index].hp = record?.data?.[`hpLevel${index + 1}`] || 0;
+        });
+        api.setValues(
+          {
+            "data.hpByLevel": JSON.stringify(hpByLevelArr),
+          },
+          (updatedRecord) => {
+            if (updatedRecord) {
+              // Update hp
+              const conMod = parseInt(
+                updatedRecord?.data?.constitutionMod || "0",
+                10
+              );
+              let newHpByLevel = getHpForLevel(conMod, updatedRecord);
+              let curHp = updatedRecord?.data?.curhp || 0;
+              let hpToAdd = newHpByLevel - curHp;
+              valuesToSet["data.curhp"] = curHp + hpToAdd;
+              valuesToSet["data.hitpoints"] = newHpByLevel;
+              valuesToSet["data.hpByLevel"] = JSON.stringify(hpByLevelArr);
 
-                api.setValues(valuesToSet);
-              }
+              api.setValues(valuesToSet);
             }
-          );
-        } catch (error) {
-          // No-op
-        }
-      });
-    }, 500);
+          }
+        );
+      } catch (error) {
+        // No-op
+      }
+    });
   }
 
   function onLoadCharacter() {
