@@ -1,206 +1,242 @@
 <script>
-  // Show or hide relavant values based on the type of item
-  // gear, melee weapon, ranged weapon, armor, shield, tool, magic item, pack
-  // Subtypes are optional and are generally one of:
-  // Simple Melee Weapon, Martial Melee Weapon, Simple Ranged Weapon, Martial Ranged Weapon, Light Armor, Medium Armor, Heavy Armor, Ammunition, Treasure, Art Object, Scroll, Potion, Jewelry, Staff, Wand, Clothing
-  // Weapon Type is used for weapon masteries and is one of
-  // Club, Dagger, Greatclub, Handaxe, Javelin, Light Hammer, Mace, Quarterstaff, Sickle, Spear, Dart, Light Crossbow, Shortbow, Sling, Battleaxe, Flail, Glaive, Greataxe, Greatsword, Halberd, Lance, Longsword, Maul, Morningstar, Pike, Rapier, Scimitar, Shortsword, Trident, Warhammer, War Pick, Whip, Blowgun, Hand Crossbow, Heavy Crossbow, Longbow, Musket, Pistol
-  function showHideValues(typeStr) {
-    const valuesToHide = [];
-    const valuesToShow = [];
-    if (typeStr === "melee weapon" || typeStr === "ranged weapon") {
-      valuesToShow.push("damage");
-      valuesToShow.push("weaponType");
-      valuesToShow.push("weaponMastery");
-      valuesToShow.push("weaponProperties");
-    } else {
-      valuesToHide.push("damage");
-      valuesToHide.push("weaponType");
-      valuesToHide.push("weaponMastery");
-      valuesToHide.push("weaponProperties");
+  function showHideFields(recordOverride = undefined) {
+    record = recordOverride || record;
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const item = itemDataPath ? api.getValue(itemDataPath) : record;
+    const dataPrefix = itemDataPath ? `${itemDataPath}.data` : "data";
+    const fieldsPath = itemDataPath ? `${itemDataPath}.fields` : "fields";
+
+    const valuesToSet = {};
+
+    const typeStr = item.data?.type || "";
+    const subtype = item.data?.subtype || "";
+    const weaponProperties = item.data?.weaponProperties || [];
+    const isConsumable = item.data?.consumable || false;
+    const hasUseBtn = item.data?.hasUseBtn || false;
+
+    const isWeapon = typeStr === "melee weapon" || typeStr === "ranged weapon";
+    const isArmorOrShield = typeStr === "shield" || typeStr === "armor";
+    const isArmor = typeStr === "armor";
+    const isPack = typeStr === "pack";
+    const isScroll = subtype.toLowerCase().includes("scroll");
+    const hasRange =
+      weaponProperties.includes("Range") ||
+      weaponProperties.includes("Thrown") ||
+      weaponProperties.includes("Ammunition");
+    const hasAmmo = weaponProperties.includes("Ammunition");
+    const hasVersatile = weaponProperties.includes("Versatile");
+
+    if (isWeapon && item.fields?.damage?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.damage.hidden`] = false;
+    } else if (!isWeapon && item.fields?.damage?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.damage.hidden`] = true;
     }
 
-    if (typeStr === "shield" || typeStr === "armor") {
-      valuesToShow.push("armorClass");
-    } else {
-      valuesToHide.push("armorClass");
+    if (isWeapon && item.fields?.weaponType?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.weaponType.hidden`] = false;
+    } else if (!isWeapon && item.fields?.weaponType?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.weaponType.hidden`] = true;
     }
 
-    if (typeStr === "armor") {
-      valuesToShow.push("armorCategory");
-      valuesToShow.push("addDex");
-      valuesToShow.push("maxDex");
-      valuesToShow.push("strength");
-      valuesToShow.push("stealth");
-    } else {
-      valuesToHide.push("armorCategory");
-      valuesToHide.push("addDex");
-      valuesToHide.push("maxDex");
-      valuesToHide.push("strength");
-      valuesToHide.push("stealth");
+    if (isWeapon && item.fields?.weaponMastery?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.weaponMastery.hidden`] = false;
+    } else if (!isWeapon && item.fields?.weaponMastery?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.weaponMastery.hidden`] = true;
     }
 
-    if (
-      typeStr === "armor" ||
-      typeStr === "shield" ||
-      typeStr === "melee weapon" ||
-      typeStr === "ranged weapon"
-    ) {
-      valuesToHide.push("consumable");
-    } else if (typeStr !== "pack") {
-      valuesToShow.push("consumable");
+    if (isWeapon && item.fields?.weaponProperties?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.weaponProperties.hidden`] = false;
+    } else if (!isWeapon && item.fields?.weaponProperties?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.weaponProperties.hidden`] = true;
     }
 
-    if (typeStr === "pack") {
-      valuesToShow.push("itemListLabel");
-      valuesToShow.push("items");
-      valuesToShow.push("cp");
-      valuesToShow.push("sp");
-      valuesToShow.push("ep");
-      valuesToShow.push("gp");
-      valuesToShow.push("pp");
-      valuesToHide.push("rarity");
-      valuesToHide.push("consumable");
-      valuesToHide.push("attunement");
-      valuesToHide.push("hasUseBtn");
-    } else {
-      valuesToHide.push("itemListLabel");
-      valuesToHide.push("items");
-      valuesToHide.push("cp");
-      valuesToHide.push("sp");
-      valuesToHide.push("ep");
-      valuesToHide.push("gp");
-      valuesToHide.push("pp");
-      valuesToShow.push("rarity");
-      valuesToShow.push("attunement");
-      valuesToShow.push("hasUseBtn");
+    if (isArmorOrShield && item.fields?.armorClass?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.armorClass.hidden`] = false;
+    } else if (!isArmorOrShield && item.fields?.armorClass?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.armorClass.hidden`] = true;
     }
 
-    if (valuesToHide.length > 0) {
-      api.setHidden(valuesToHide, true);
-    }
-    if (valuesToShow.length > 0) {
-      api.setHidden(valuesToShow, false);
-    }
-  }
-
-  function showHideValuesSubtype(subtype) {
-    const valuesToHide = [];
-    const valuesToShow = [];
-
-    if (subtype.toLowerCase().includes("scroll")) {
-      valuesToShow.push("spell");
-      valuesToShow.push("spellLevel");
-    } else {
-      valuesToHide.push("spell");
-      valuesToHide.push("spellLevel");
+    if (isArmor && item.fields?.armorCategory?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.armorCategory.hidden`] = false;
+    } else if (!isArmor && item.fields?.armorCategory?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.armorCategory.hidden`] = true;
     }
 
-    if (valuesToHide.length > 0) {
-      api.setHidden(valuesToHide, true);
-    }
-    if (valuesToShow.length > 0) {
-      api.setHidden(valuesToShow, false);
-    }
-  }
-
-  function showHideConsumableValues(isConsumable) {
-    const valuesToHide = [];
-    const valuesToShow = [];
-
-    const isUse = record.data?.hasUseBtn || false;
-
-    if (isConsumable || isUse) {
-      valuesToShow.push("effects");
-      valuesToShow.push("healing");
-      valuesToShow.push("useDamage");
-    } else {
-      valuesToHide.push("effects");
-      valuesToHide.push("healing");
-      valuesToHide.push("useDamage");
+    if (isArmor && item.fields?.addDex?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.addDex.hidden`] = false;
+    } else if (!isArmor && item.fields?.addDex?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.addDex.hidden`] = true;
     }
 
-    if (valuesToHide.length > 0) {
-      api.setHidden(valuesToHide, true);
-    }
-    if (valuesToShow.length > 0) {
-      api.setHidden(valuesToShow, false);
-    }
-  }
-
-  function showHideUseValues(isUse) {
-    const valuesToShow = [];
-    const valuesToHide = [];
-
-    const isConsumable = record.data?.consumable || false;
-
-    if (isConsumable || isUse) {
-      valuesToShow.push("effects");
-      valuesToShow.push("healing");
-      valuesToShow.push("useDamage");
-    } else {
-      valuesToHide.push("effects");
-      valuesToHide.push("healing");
-      valuesToHide.push("useDamage");
+    if (isArmor && item.fields?.maxDex?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.maxDex.hidden`] = false;
+    } else if (!isArmor && item.fields?.maxDex?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.maxDex.hidden`] = true;
     }
 
-    if (valuesToHide.length > 0) {
-      api.setHidden(valuesToHide, true);
-    }
-    if (valuesToShow.length > 0) {
-      api.setHidden(valuesToShow, false);
-    }
-  }
-
-  function showHideWeaponValues(values) {
-    const valuesToHide = [];
-    const valuesToShow = [];
-    if (values.includes("Ammunition")) {
-      valuesToShow.push("ammoType");
-      valuesToShow.push("normalRange");
-      valuesToShow.push("maxRange");
-      valuesToShow.push("rangeLabel");
+    if (isArmor && item.fields?.strength?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.strength.hidden`] = false;
+    } else if (!isArmor && item.fields?.strength?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.strength.hidden`] = true;
     }
 
-    if (values.includes("Range")) {
-      valuesToShow.push("normalRange");
-      valuesToShow.push("maxRange");
-      valuesToShow.push("rangeLabel");
-    }
-
-    if (values.includes("Thrown")) {
-      valuesToShow.push("normalRange");
-      valuesToShow.push("maxRange");
-      valuesToShow.push("rangeLabel");
-    }
-
-    if (values.includes("Versatile")) {
-      valuesToShow.push("versatileDamage");
+    if (isArmor && item.fields?.stealth?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.stealth.hidden`] = false;
+    } else if (!isArmor && item.fields?.stealth?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.stealth.hidden`] = true;
     }
 
     if (
-      !values.includes("Range") &&
-      !values.includes("Thrown") &&
-      !values.includes("Ammunition")
+      !isWeapon &&
+      !isArmorOrShield &&
+      !isPack &&
+      item.fields?.consumable?.hidden !== false
     ) {
-      valuesToHide.push("normalRange");
-      valuesToHide.push("maxRange");
-      valuesToHide.push("rangeLabel");
+      valuesToSet[`${fieldsPath}.consumable.hidden`] = false;
+    } else if (
+      (isWeapon || isArmorOrShield || isPack) &&
+      item.fields?.consumable?.hidden !== true
+    ) {
+      valuesToSet[`${fieldsPath}.consumable.hidden`] = true;
     }
 
-    if (!values.includes("Ammunition")) {
-      valuesToHide.push("ammoType");
+    if (isPack && item.fields?.itemListLabel?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.itemListLabel.hidden`] = false;
+    } else if (!isPack && item.fields?.itemListLabel?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.itemListLabel.hidden`] = true;
     }
 
-    if (!values.includes("Versatile")) {
-      valuesToHide.push("versatileDamage");
+    if (isPack && item.fields?.items?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.items.hidden`] = false;
+    } else if (!isPack && item.fields?.items?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.items.hidden`] = true;
     }
 
-    if (valuesToHide.length > 0) {
-      api.setHidden(valuesToHide, true);
+    if (isPack && item.fields?.cp?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.cp.hidden`] = false;
+    } else if (!isPack && item.fields?.cp?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.cp.hidden`] = true;
     }
-    if (valuesToShow.length > 0) {
-      api.setHidden(valuesToShow, false);
+
+    if (isPack && item.fields?.sp?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.sp.hidden`] = false;
+    } else if (!isPack && item.fields?.sp?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.sp.hidden`] = true;
+    }
+
+    if (isPack && item.fields?.ep?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.ep.hidden`] = false;
+    } else if (!isPack && item.fields?.ep?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.ep.hidden`] = true;
+    }
+
+    if (isPack && item.fields?.gp?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.gp.hidden`] = false;
+    } else if (!isPack && item.fields?.gp?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.gp.hidden`] = true;
+    }
+
+    if (isPack && item.fields?.pp?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.pp.hidden`] = false;
+    } else if (!isPack && item.fields?.pp?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.pp.hidden`] = true;
+    }
+
+    if (!isPack && item.fields?.rarity?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.rarity.hidden`] = false;
+    } else if (isPack && item.fields?.rarity?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.rarity.hidden`] = true;
+    }
+
+    if (!isPack && item.fields?.attunement?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.attunement.hidden`] = false;
+    } else if (isPack && item.fields?.attunement?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.attunement.hidden`] = true;
+    }
+
+    if (!isPack && item.fields?.hasUseBtn?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.hasUseBtn.hidden`] = false;
+    } else if (isPack && item.fields?.hasUseBtn?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.hasUseBtn.hidden`] = true;
+    }
+
+    if (isScroll && item.fields?.spell?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.spell.hidden`] = false;
+    } else if (!isScroll && item.fields?.spell?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.spell.hidden`] = true;
+    }
+
+    if (isScroll && item.fields?.spellLevel?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.spellLevel.hidden`] = false;
+    } else if (!isScroll && item.fields?.spellLevel?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.spellLevel.hidden`] = true;
+    }
+
+    if ((isConsumable || hasUseBtn) && item.fields?.effects?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.effects.hidden`] = false;
+    } else if (
+      !isConsumable &&
+      !hasUseBtn &&
+      item.fields?.effects?.hidden !== true
+    ) {
+      valuesToSet[`${fieldsPath}.effects.hidden`] = true;
+    }
+
+    if ((isConsumable || hasUseBtn) && item.fields?.healing?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.healing.hidden`] = false;
+    } else if (
+      !isConsumable &&
+      !hasUseBtn &&
+      item.fields?.healing?.hidden !== true
+    ) {
+      valuesToSet[`${fieldsPath}.healing.hidden`] = true;
+    }
+
+    if (
+      (isConsumable || hasUseBtn) &&
+      item.fields?.useDamage?.hidden !== false
+    ) {
+      valuesToSet[`${fieldsPath}.useDamage.hidden`] = false;
+    } else if (
+      !isConsumable &&
+      !hasUseBtn &&
+      item.fields?.useDamage?.hidden !== true
+    ) {
+      valuesToSet[`${fieldsPath}.useDamage.hidden`] = true;
+    }
+
+    if (hasRange && item.fields?.normalRange?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.normalRange.hidden`] = false;
+    } else if (!hasRange && item.fields?.normalRange?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.normalRange.hidden`] = true;
+    }
+
+    if (hasRange && item.fields?.maxRange?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.maxRange.hidden`] = false;
+    } else if (!hasRange && item.fields?.maxRange?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.maxRange.hidden`] = true;
+    }
+
+    if (hasRange && item.fields?.rangeLabel?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.rangeLabel.hidden`] = false;
+    } else if (!hasRange && item.fields?.rangeLabel?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.rangeLabel.hidden`] = true;
+    }
+
+    if (hasAmmo && item.fields?.ammoType?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.ammoType.hidden`] = false;
+    } else if (!hasAmmo && item.fields?.ammoType?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.ammoType.hidden`] = true;
+    }
+
+    if (hasVersatile && item.fields?.versatileDamage?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.versatileDamage.hidden`] = false;
+    } else if (!hasVersatile && item.fields?.versatileDamage?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.versatileDamage.hidden`] = true;
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
     }
   }
 </script>
@@ -226,7 +262,8 @@
       <dropdown
         multiselect="1"
         placeholder="Select Type"
-        onchange="showHideValues(value);"
+        onchange="showHideFields();"
+        onload="showHideFields();"
         field="type"
         label="Type"
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
@@ -238,7 +275,7 @@
         width="100%"
         field="subtype"
         label="Subtype"
-        onchange="showHideValuesSubtype(value);"
+        onchange="showHideFields();"
         placeholder="Enter Subtype..."
       ></stringfield>
     </div>
@@ -295,7 +332,7 @@
       textalign="left"
       size="sm"
       hidewhenidentified="false"
-      onchange="showHideUseValues(value);"
+      onchange="showHideFields();"
     ></checkbox>
     <checkbox
       hidden="true"
@@ -304,7 +341,7 @@
       textalign="left"
       size="sm"
       hidewhenidentified="false"
-      onchange="showHideConsumableValues(value);"
+      onchange="showHideFields();"
     ></checkbox>
   </div>
 
@@ -369,7 +406,7 @@
       hidden="true"
       field="weaponProperties"
       label="Weapon Properties"
-      onchange="showHideWeaponValues(value);"
+      onchange="showHideFields();"
       multiselect="10"
       placeholder="Select Weapon Properties"
       searchable="true"

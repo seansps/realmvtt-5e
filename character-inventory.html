@@ -212,9 +212,7 @@
     // Fetch the character record again to get latest data
     const valuesToSet = {};
     const totalWeight = updateTotalWeight(record, false);
-    if (totalWeight !== record?.data?.totalWeight) {
-      valuesToSet["data.totalWeight"] = totalWeight;
-    }
+    valuesToSet["data.totalWeight"] = totalWeight;
 
     // Get the current ac due to armor and set it on the
     // record
