@@ -210,29 +210,31 @@
 
   function onItemDeleted() {
     // Fetch the character record again to get latest data
-    const valuesToSet = {};
-    const totalWeight = updateTotalWeight(record, false);
-    valuesToSet["data.totalWeight"] = totalWeight;
+    api.getRecord(record.recordType, record._id, (record2) => {
+      const valuesToSet = {};
+      const totalWeight = updateTotalWeight(record2, false);
+      valuesToSet["data.totalWeight"] = totalWeight;
 
-    // Get the current ac due to armor and set it on the
-    // record
-    const bestEquippedArmor = getBestEquippedArmor();
+      // Get the current ac due to armor and set it on the
+      // record
+      const bestEquippedArmor = getBestEquippedArmor();
 
-    if (
-      JSON.stringify(record?.data?.armor || "{}") !==
-      JSON.stringify(bestEquippedArmor)
-    ) {
-      valuesToSet["data.armor"] = bestEquippedArmor;
-    }
+      if (
+        JSON.stringify(record2?.data?.armor || "{}") !==
+        JSON.stringify(bestEquippedArmor)
+      ) {
+        valuesToSet["data.armor"] = bestEquippedArmor;
+      }
 
-    const totalAc = getArmorClass(bestEquippedArmor);
-    if (record?.data?.ac !== totalAc) {
-      valuesToSet["data.ac"] = totalAc;
-    }
+      const totalAc = getArmorClass(bestEquippedArmor);
+      if (record2?.data?.ac !== totalAc) {
+        valuesToSet["data.ac"] = totalAc;
+      }
 
-    if (Object.keys(valuesToSet).length > 0) {
-      api.setValues(valuesToSet);
-    }
+      if (Object.keys(valuesToSet).length > 0) {
+        api.setValues(valuesToSet);
+      }
+    });
   }
 
   function getLocations() {
