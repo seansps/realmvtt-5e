@@ -1338,7 +1338,10 @@ selectedTokens.forEach(token => {
 
   const concentrationMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'concentration');
 	concentrationMods.forEach(mod => {
-		saveModifiers.push(mod);
+    // Only if not already in the array
+    if (!saveModifiers.some(m => m.name === mod.name && m.value === mod.value && m.active === mod.active)) {
+      saveModifiers.push(mod);
+    }
 	});
 
 	const minRoll = getMinRollModifier(saveModifiers);
