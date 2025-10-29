@@ -154,7 +154,8 @@ targets.forEach(target => {
     api.setValueOnToken(target, "data.curhp", curhp);
     
     const unIdentified = target.identified === false;
-    const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {
@@ -305,7 +306,8 @@ targets.forEach(target => {
     api.setValueOnToken(target, "data.curhp", curhp);
 
     const unIdentified = target.identified === false;
-    const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {
@@ -399,7 +401,8 @@ targets.forEach(target => {
   const newTempHp = Math.max(tempHp, oldTempHp);
   api.setValueOnToken(target, "data.tempHp", newTempHp);
   const unIdentified = target.identified === false;
-  const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+  let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+  targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
   
   const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
   

@@ -90,7 +90,8 @@ targets.forEach(target => {
     api.setValueOnToken(target, "data.curhp", curhp);
 
     const unIdentified = target.identified === false;
-    const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
     let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
     if (usedTempHp) {

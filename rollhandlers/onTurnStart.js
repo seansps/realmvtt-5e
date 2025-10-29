@@ -86,7 +86,8 @@ targets.forEach(target => {
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
     const unIdentified = target.identified === false;
-    const targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
     const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} healed for \$\{healing\} HP.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
     
