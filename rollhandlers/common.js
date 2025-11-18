@@ -2241,7 +2241,7 @@ function rollSkillCheck(skill, dc) {
       const npcSkill = npcSkills.find((s) =>
         s.name.trim().toLowerCase().startsWith(skill.trim().toLowerCase())
       );
-      let skillNameWithoutMod = npcSkill?.name || "";
+      let skillNameWithoutMod = npcSkill?.name || capitalize(skill);
       let skillName = npcSkill?.name || "";
       if (skillName) {
         skillNameWithoutMod = skillName;
@@ -2256,6 +2256,15 @@ function rollSkillCheck(skill, dc) {
         modValue = parseInt(modValue, 10);
         if (isNaN(modValue)) {
           modValue = 0;
+        }
+      } else {
+        skillName = capitalize(skill);
+        // Look up the stat associated with the skill
+        const stat = getSkills().find(
+          (s) => s.name.toLowerCase() === skill.toLowerCase()
+        )?.ability;
+        if (stat) {
+          modValue = token?.data?.[`${stat}Mod`] || 0;
         }
       }
 
