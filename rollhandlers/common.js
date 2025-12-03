@@ -2180,7 +2180,7 @@ function rollSavingThrow(save, dc) {
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
     save = save.toLowerCase();
-    const mod = `${save}Save`;
+    const mod = `${save.trim().toLowerCase()}Save`;
     let modifiers = [];
     let saveMod = token?.data?.[mod] || "0";
     if (saveMod === undefined) {
@@ -2261,7 +2261,7 @@ function rollSkillCheck(skill, dc) {
         skillName = capitalize(skill);
         // Look up the stat associated with the skill
         const stat = getSkills().find(
-          (s) => s.name.toLowerCase() === skill.toLowerCase()
+          (s) => s.name.trim().toLowerCase() === skill.trim().toLowerCase()
         )?.ability;
         if (stat) {
           modValue = token?.data?.[`${stat}Mod`] || 0;
@@ -2319,7 +2319,8 @@ function rollSkillCheck(skill, dc) {
       );
     } else {
       const ability =
-        token?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
+        token?.data?.[`${skill.trim().toLowerCase()}Ability`] ||
+        getAbilityFromSkill(skill.trim().toLowerCase());
       const mod = `${ability}Mod`;
 
       let modifiers = [];
@@ -2332,7 +2333,8 @@ function rollSkillCheck(skill, dc) {
         token?.data?.proficiencyBonus || "0",
         10
       );
-      const proficiency = token?.data?.[`${skill}Prof`] || "false";
+      const proficiency =
+        token?.data?.[`${skill.trim().toLowerCase()}Prof`] || "false";
       const isHalfProficient = proficiency === "half";
       const isExpertise = proficiency === "expertise";
       const isProficient = proficiency === "true";
@@ -2384,13 +2386,23 @@ function rollSkillCheck(skill, dc) {
 
       // If we're proficient, get bonues that apply only to proficient checks
       if (isProficient) {
-        const skillModifiers = getEffectsAndModifiersForToken(
+        const proficientModifiers = getEffectsAndModifiersForToken(
           token,
           ["skillBonus"],
           "proficient"
         );
-        skillModifiers.forEach((modifier) => {
-          modifiers.push(modifier);
+        proficientModifiers.forEach((modifier) => {
+          // Only add if not already in the array
+          if (
+            !modifiers.some(
+              (m) =>
+                m.name === modifier.name &&
+                m.value === modifier.value &&
+                m.active === modifier.active
+            )
+          ) {
+            modifiers.push(modifier);
+          }
         });
       }
 

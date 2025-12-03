@@ -121,12 +121,22 @@
 
     // If we're proficient, get bonues that apply only to proficient checks
     if (isProficient) {
-      const skillModifiers = getEffectsAndModifiers(
+      const proficientModifiers = getEffectsAndModifiers(
         ["skillBonus"],
         "proficient"
       );
-      skillModifiers.forEach((modifier) => {
-        modifiers.push(modifier);
+      proficientModifiers.forEach((modifier) => {
+        // Only add if not already in the array
+        if (
+          !modifiers.some(
+            (m) =>
+              m.name === modifier.name &&
+              m.value === modifier.value &&
+              m.active === modifier.active
+          )
+        ) {
+          modifiers.push(modifier);
+        }
       });
     }
 
