@@ -30,6 +30,16 @@ if (className && newLevel && newHitDie && newHp && recordId) {
   api.setValues(valuesToSet, (recordUpdated) => {
     // Send a Message
     const conMod = parseInt(recordUpdated?.data?.constitutionMod || "0", 10);
+
+    // Deduplicate hpByLevel in case of re-rolls
+    let hpByLevelArr = JSON.parse(recordUpdated?.data?.hpByLevel || "[]");
+    const { deduplicated, hasChanges } = deduplicateHpByLevel(hpByLevelArr);
+
+    if (hasChanges) {
+      hpByLevelArr = deduplicated;
+      // We'll include this in the next setValues call
+    }
+
     const newHpMax = getHpForLevel(conMod, recordUpdated);
 
     const newHpDiff = newHpMax - (recordUpdated?.data?.hitpoints || 0);
@@ -38,6 +48,11 @@ if (className && newLevel && newHitDie && newHp && recordId) {
       [`data.hitpoints`]: newHpMax,
       [`data.curhp`]: (recordUpdated?.data?.curhp || 0) + newHpDiff,
     };
+
+    // Update hpByLevel if we deduplicated
+    if (hasChanges) {
+      newValuesToSet[`data.hpByLevel`] = JSON.stringify(hpByLevelArr);
+    }
 
     // Update hpByLevel fields
     setHpPerLevel(recordUpdated, newValuesToSet);

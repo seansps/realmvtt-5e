@@ -352,11 +352,43 @@ function getDurationInSeconds(duration) {
   return 0;
 }
 
+// Helper function to deduplicate hpByLevel array
+// When users re-roll, they may get duplicate levels
+// We keep the highest HP value and remove duplicates
+function deduplicateHpByLevel(hpByLevelArr) {
+  const levelMap = new Map();
+
+  // Build a map of level -> entry with highest HP
+  hpByLevelArr.forEach((entry) => {
+    const key = entry.level;
+    const existing = levelMap.get(key);
+
+    if (!existing || entry.hp > existing.hp) {
+      levelMap.set(key, entry);
+    }
+  });
+
+  // Convert back to array, sorted by level
+  const deduplicated = Array.from(levelMap.values()).sort(
+    (a, b) => a.level - b.level
+  );
+
+  // Check if deduplication actually changed anything
+  const hasChanges = deduplicated.length !== hpByLevelArr.length;
+
+  return { deduplicated, hasChanges };
+}
+
 function getHpForLevel(conMod, recordOverride = null) {
   let thisRecord = recordOverride || record;
   // Get the max HP we should have at our current level
   const hpByLevel = thisRecord?.data?.hpByLevel || "[]";
-  const hpByLevelArr = JSON.parse(hpByLevel);
+  let hpByLevelArr = JSON.parse(hpByLevel);
+
+  // Deduplicate the array - just use the cleaned version for calculation
+  const { deduplicated } = deduplicateHpByLevel(hpByLevelArr);
+  hpByLevelArr = deduplicated;
+
   let totalHp = 0;
   // Get all the HP we rolled or set for each level
   hpByLevelArr.forEach((hpLevel) => {
@@ -413,6 +445,15 @@ function setModifier(
 
   // Update hit points if this is constitution
   if (attribute === "constitution") {
+    // Deduplicate hpByLevel in case of re-rolls
+    const hpByLevel = record?.data?.hpByLevel || "[]";
+    let hpByLevelArr = JSON.parse(hpByLevel);
+    const { deduplicated, hasChanges } = deduplicateHpByLevel(hpByLevelArr);
+
+    if (hasChanges) {
+      valuesToSet["data.hpByLevel"] = JSON.stringify(deduplicated);
+    }
+
     const level = parseInt(record?.data?.level || "0", 10);
     let newHp = getHpForLevel(modVal);
     if (level > 0 && newHp < 1) {
