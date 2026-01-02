@@ -297,112 +297,118 @@
   }
 
   function addCurrency() {
-    // Requery the record to get the latest data
-    api.getRecord(record.recordType, record._id, (record2) => {
-      const addCp = parseInt(record2?.data?.addCp || "0") || 0;
-      const addSp = parseInt(record2?.data?.addSp || "0") || 0;
-      const addEp = parseInt(record2?.data?.addEp || "0") || 0;
-      const addGp = parseInt(record2?.data?.addGp || "0") || 0;
-      const addPp = parseInt(record2?.data?.addPp || "0") || 0;
+    // Delay to ensure field values are updated before processing
+    api.delay(() => {
+      // Requery the record to get the latest data
+      api.getRecord(record.recordType, record._id, (record2) => {
+        const addCp = parseInt(record2?.data?.addCp || "0") || 0;
+        const addSp = parseInt(record2?.data?.addSp || "0") || 0;
+        const addEp = parseInt(record2?.data?.addEp || "0") || 0;
+        const addGp = parseInt(record2?.data?.addGp || "0") || 0;
+        const addPp = parseInt(record2?.data?.addPp || "0") || 0;
 
-      const newCp = (record2?.data?.cp || 0) + addCp;
-      const newSp = (record2?.data?.sp || 0) + addSp;
-      const newEp = (record2?.data?.ep || 0) + addEp;
-      const newGp = (record2?.data?.gp || 0) + addGp;
-      const newPp = (record2?.data?.pp || 0) + addPp;
+        const newCp = (record2?.data?.cp || 0) + addCp;
+        const newSp = (record2?.data?.sp || 0) + addSp;
+        const newEp = (record2?.data?.ep || 0) + addEp;
+        const newGp = (record2?.data?.gp || 0) + addGp;
+        const newPp = (record2?.data?.pp || 0) + addPp;
 
-      api.setValues(
-        {
-          "data.cp": newCp,
-          "data.sp": newSp,
-          "data.ep": newEp,
-          "data.gp": newGp,
-          "data.pp": newPp,
-          "data.addCp": "",
-          "data.addSp": "",
-          "data.addEp": "",
-          "data.addGp": "",
-          "data.addPp": "",
-        },
-        updateCoinage
-      );
-    });
-    api.closeOpenedPopovers();
+        api.setValues(
+          {
+            "data.cp": newCp,
+            "data.sp": newSp,
+            "data.ep": newEp,
+            "data.gp": newGp,
+            "data.pp": newPp,
+            "data.addCp": "",
+            "data.addSp": "",
+            "data.addEp": "",
+            "data.addGp": "",
+            "data.addPp": "",
+          },
+          updateCoinage
+        );
+        api.closeOpenedPopovers();
+      });
+    }, 300);
   }
 
   function deductCurrency() {
-    api.getRecord(record.recordType, record._id, (record2) => {
-      const deductCp = parseInt(record2?.data?.deductCp || "0") || 0;
-      const deductSp = parseInt(record2?.data?.deductSp || "0") || 0;
-      const deductEp = parseInt(record2?.data?.deductEp || "0") || 0;
-      const deductGp = parseInt(record2?.data?.deductGp || "0") || 0;
-      const deductPp = parseInt(record2?.data?.deductPp || "0") || 0;
+    // Delay to ensure field values are updated before processing
+    api.delay(() => {
+      api.getRecord(record.recordType, record._id, (record2) => {
+        const deductCp = parseInt(record2?.data?.deductCp || "0") || 0;
+        const deductSp = parseInt(record2?.data?.deductSp || "0") || 0;
+        const deductEp = parseInt(record2?.data?.deductEp || "0") || 0;
+        const deductGp = parseInt(record2?.data?.deductGp || "0") || 0;
+        const deductPp = parseInt(record2?.data?.deductPp || "0") || 0;
 
-      // Convert everything to copper for easier calculation
-      // 1 pp = 1000 cp, 1 gp = 100 cp, 1 ep = 50 cp, 1 sp = 10 cp
-      let currentCp = record2?.data?.cp || 0;
-      let currentSp = record2?.data?.sp || 0;
-      let currentEp = record2?.data?.ep || 0;
-      let currentGp = record2?.data?.gp || 0;
-      let currentPp = record2?.data?.pp || 0;
+        // Convert everything to copper for easier calculation
+        // 1 pp = 1000 cp, 1 gp = 100 cp, 1 ep = 50 cp, 1 sp = 10 cp
+        let currentCp = record2?.data?.cp || 0;
+        let currentSp = record2?.data?.sp || 0;
+        let currentEp = record2?.data?.ep || 0;
+        let currentGp = record2?.data?.gp || 0;
+        let currentPp = record2?.data?.pp || 0;
 
-      const totalCurrentInCp =
-        currentCp +
-        currentSp * 10 +
-        currentEp * 50 +
-        currentGp * 100 +
-        currentPp * 1000;
-      const totalDeductInCp =
-        deductCp +
-        deductSp * 10 +
-        deductEp * 50 +
-        deductGp * 100 +
-        deductPp * 1000;
+        const totalCurrentInCp =
+          currentCp +
+          currentSp * 10 +
+          currentEp * 50 +
+          currentGp * 100 +
+          currentPp * 1000;
+        const totalDeductInCp =
+          deductCp +
+          deductSp * 10 +
+          deductEp * 50 +
+          deductGp * 100 +
+          deductPp * 1000;
 
-      if (totalDeductInCp > totalCurrentInCp) {
-        api.showNotification(
-          "Not enough currency!",
-          "red",
-          "Not Enough Currency"
+        if (totalDeductInCp > totalCurrentInCp) {
+          api.showNotification(
+            "Not enough currency!",
+            "red",
+            "Not Enough Currency"
+          );
+          return;
+        }
+
+        // Calculate remaining copper and convert back to denominations
+        let remainingCp = totalCurrentInCp - totalDeductInCp;
+
+        // Convert back to highest denominations first
+        const newPp = Math.floor(remainingCp / 1000);
+        remainingCp = remainingCp % 1000;
+
+        const newGp = Math.floor(remainingCp / 100);
+        remainingCp = remainingCp % 100;
+
+        const newEp = Math.floor(remainingCp / 50);
+        remainingCp = remainingCp % 50;
+
+        const newSp = Math.floor(remainingCp / 10);
+        remainingCp = remainingCp % 10;
+
+        const newCp = remainingCp;
+
+        api.setValues(
+          {
+            "data.cp": newCp,
+            "data.sp": newSp,
+            "data.ep": newEp,
+            "data.gp": newGp,
+            "data.pp": newPp,
+            "data.deductCp": "",
+            "data.deductSp": "",
+            "data.deductEp": "",
+            "data.deductGp": "",
+            "data.deductPp": "",
+          },
+          updateCoinage
         );
-        return;
-      }
-
-      // Calculate remaining copper and convert back to denominations
-      let remainingCp = totalCurrentInCp - totalDeductInCp;
-
-      // Convert back to highest denominations first
-      const newPp = Math.floor(remainingCp / 1000);
-      remainingCp = remainingCp % 1000;
-
-      const newGp = Math.floor(remainingCp / 100);
-      remainingCp = remainingCp % 100;
-
-      const newEp = Math.floor(remainingCp / 50);
-      remainingCp = remainingCp % 50;
-
-      const newSp = Math.floor(remainingCp / 10);
-      remainingCp = remainingCp % 10;
-
-      const newCp = remainingCp;
-
-      api.setValues(
-        {
-          "data.cp": newCp,
-          "data.sp": newSp,
-          "data.ep": newEp,
-          "data.gp": newGp,
-          "data.pp": newPp,
-          "data.deductCp": "",
-          "data.deductSp": "",
-          "data.deductEp": "",
-          "data.deductGp": "",
-          "data.deductPp": "",
-        },
-        updateCoinage
-      );
-      api.closeOpenedPopovers();
-    });
+        api.closeOpenedPopovers();
+      });
+    }, 300);
   }
 </script>
 
