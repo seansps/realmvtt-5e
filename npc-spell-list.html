@@ -727,21 +727,37 @@ ${effectButtons}
       );
       if (tokenForRecord) {
         const effectValue = spellName;
-        // Old spell name
-        let oldSpellName = "";
-        const oldValues = tokenForRecord?.effectValues || {};
-        if (oldValues[hasEffect?._id]) {
-          oldSpellName = oldValues[hasEffect?._id];
-        }
-        lostConcentrationOn = oldSpellName;
-        // Add concentration effect, which will replace any existing concentration effect
         const durationSeconds = getDurationInSeconds(duration);
-        api.addEffect(
-          "Concentration",
-          tokenForRecord,
-          durationSeconds,
-          effectValue
-        );
+
+        // If there's an existing concentration effect, remove it first
+        if (hasEffect) {
+          // Old spell name
+          const oldValues = tokenForRecord?.effectValues || {};
+          if (oldValues[hasEffect?._id]) {
+            lostConcentrationOn = oldValues[hasEffect?._id];
+          }
+
+          // Remove old concentration effect, then add new one in callback
+          api.removeEffectById(hasEffect._id, tokenForRecord, () => {
+            // Get fresh record after removal before adding new effect
+            api.getRecord(record.recordType, record._id, (updatedRecord) => {
+              api.addEffect(
+                "Concentration",
+                updatedRecord,
+                durationSeconds,
+                effectValue
+              );
+            });
+          });
+        } else {
+          // No existing concentration, just add the new one
+          api.addEffect(
+            "Concentration",
+            tokenForRecord,
+            durationSeconds,
+            effectValue
+          );
+        }
       }
     }
 
