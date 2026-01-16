@@ -1433,40 +1433,50 @@
             const subclassSelection = (values) => {
               if (values.length > 0) {
                 const subclass = values[0];
-                api.addValue("data.subclasses", {
-                  ...subclass,
-                  icon: "IconBadges",
-                });
-                // Add subclass features for level 3
-                const additionalFieldsToSet = addMissingClassFeatures(
-                  className,
-                  recordLink.value,
-                  subclass,
-                  newLevel,
-                  classLevels
-                );
-                // Get Spellcasting info for new subclass
-                const subclasses = [
-                  ...(record?.data?.subclasses || []),
-                  subclass,
-                ];
-                const spellSlotFieldsToSet = getSpellSlotFields(
-                  classes,
-                  subclasses,
-                  classLevels,
-                  classObj,
-                  level,
-                  newLevel
-                );
-                api.setValues(
+                api.addValue(
+                  "data.subclasses",
                   {
-                    ...additionalFieldsToSet,
-                    ...spellSlotFieldsToSet,
+                    ...subclass,
+                    icon: "IconBadges",
                   },
-                  (recordUpdated) => {
-                    if (nextPrompt) {
-                      nextPrompt(recordUpdated);
-                    }
+                  (recordAfterSubclass) => {
+                    // Add subclass features for level 3
+                    const additionalFieldsToSet = addMissingClassFeatures(
+                      className,
+                      recordLink.value,
+                      subclass,
+                      newLevel,
+                      classLevels
+                    );
+                    // Get Spellcasting info for new subclass
+                    const subclasses =
+                      recordAfterSubclass?.data?.subclasses || [];
+                    const spellSlotFieldsToSet = getSpellSlotFields(
+                      classes,
+                      subclasses,
+                      classLevels,
+                      classObj,
+                      level,
+                      newLevel
+                    );
+                    api.setValues(
+                      {
+                        ...additionalFieldsToSet,
+                        ...spellSlotFieldsToSet,
+                      },
+                      (recordUpdated) => {
+                        if (nextPrompt) {
+                          // Requery the record to ensure all async operations have completed
+                          api.getRecord(
+                            "characters",
+                            recordUpdated._id,
+                            (freshRecord) => {
+                              nextPrompt(freshRecord);
+                            }
+                          );
+                        }
+                      }
+                    );
                   }
                 );
               } else {
@@ -1502,48 +1512,51 @@
     api.setValues(valuesToSet, (updatedRecord) => {
       // After data is updated, update the proficiency modifiers
       updateProficiencies(bonus, updatedRecord);
-      // If not prompting skills or subclass, update hp
-      if (!promptSkillChoicesLater && !promptSubclass) {
+
+      // Add class features for added class at the new level, using the chosen subclass for it (if one)
+      // and if we're not prompting for one
+      if (!promptSubclass) {
+        const subclass = (updatedRecord?.data?.subclasses || []).find(
+          (subclass) => subclass.data.class === className
+        );
+        const additionalFieldsToSet = addMissingClassFeatures(
+          className,
+          recordLink.value,
+          subclass,
+          newLevel,
+          classLevels
+        );
+        api.setValues(additionalFieldsToSet);
+      }
+
+      // Prompt for skills first (level 1 multiclass), then HP, then subclass
+      // This order avoids race conditions with subclass features being added async
+      if (promptSkillChoicesLater) {
+        // Skills prompt -> HP prompt
+        promptSkillChoicesLater((recordAfterSkills) => {
+          updateHitPoints(
+            className,
+            newLevel,
+            level,
+            hitDie,
+            recordAfterSkills
+          );
+        });
+      } else if (promptSubclass) {
+        // HP prompt -> Subclass prompt (HP first to avoid race condition with subclass features)
+        updateHitPoints(
+          className,
+          newLevel,
+          level,
+          hitDie,
+          updatedRecord,
+          () => promptSubclass(null) // Subclass prompt after HP, no further callback needed
+        );
+      } else {
+        // Just HP prompt
         updateHitPoints(className, newLevel, level, hitDie, updatedRecord);
       }
     });
-
-    // Add class features for added class at the new level, using the chosen subclass for it (if one)
-    // and if we're not prompting for one
-    if (!promptSubclass) {
-      const subclass = (record?.data?.subclasses || []).find(
-        (subclass) => subclass.data.class === className
-      );
-      const additionalFieldsToSet = addMissingClassFeatures(
-        className,
-        recordLink.value,
-        subclass,
-        newLevel,
-        classLevels
-      );
-      api.setValues(additionalFieldsToSet);
-    }
-
-    const promptSubClassOrSkills =
-      promptSubclass || promptSkillChoicesLater
-        ? (nextPrompt) => {
-            // Subclasses are always level 3, so we don't need to do both
-            if (promptSkillChoicesLater) {
-              promptSkillChoicesLater(nextPrompt);
-            } else if (promptSubclass) {
-              promptSubclass(nextPrompt);
-            }
-          }
-        : null;
-    if (promptSubClassOrSkills) {
-      // If skills or subclass, prompt first before HP
-      promptSubClassOrSkills((recordOverride) => {
-        // Requery for the record
-        api.getRecord("characters", recordOverride?._id, (recordUpdated) => {
-          updateHitPoints(className, newLevel, level, hitDie, recordUpdated);
-        });
-      });
-    }
   }
 
   // Get the ability score increase from a feature (used for when Feats are added to a character
