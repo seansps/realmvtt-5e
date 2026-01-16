@@ -381,24 +381,27 @@ function deduplicateHpByLevel(hpByLevelArr) {
 
 function getHpForLevel(conMod, recordOverride = null) {
   let thisRecord = recordOverride || record;
-  // Get the max HP we should have at our current level
-  const hpByLevel = thisRecord?.data?.hpByLevel || "[]";
-  let hpByLevelArr = JSON.parse(hpByLevel);
-
-  // Deduplicate the array - just use the cleaned version for calculation
-  const { deduplicated } = deduplicateHpByLevel(hpByLevelArr);
-  hpByLevelArr = deduplicated;
 
   let totalHp = 0;
-  // Get all the HP we rolled or set for each level
-  hpByLevelArr.forEach((hpLevel) => {
-    let thisLevel = hpLevel.hp + conMod;
-    // Each time you level you roll or take average + CON MOD to a min of 1
-    if (thisLevel < 1) {
-      thisLevel = 1;
+
+  // Calculate HP from individual level fields (hpLevel1, hpLevel2, etc.)
+  // This ensures we account for all levels, including multiclass
+  const characterLevel = parseInt(thisRecord?.data?.level || "0", 10);
+
+  for (let level = 1; level <= characterLevel; level++) {
+    const hpForLevel = parseInt(
+      thisRecord?.data?.[`hpLevel${level}`] || "0",
+      10
+    );
+    if (hpForLevel > 0) {
+      let thisLevelHp = hpForLevel + conMod;
+      // Each time you level you roll or take average + CON MOD to a min of 1
+      if (thisLevelHp < 1) {
+        thisLevelHp = 1;
+      }
+      totalHp += thisLevelHp;
     }
-    totalHp += thisLevel;
-  });
+  }
 
   // Get HP Max modifier
   const hpMaxMods = getEffectsAndModifiersForToken(thisRecord, "hitpoints");
@@ -1904,45 +1907,55 @@ function setHpPerLevel(recordOverride = null, moreValuesToSet = undefined) {
   const hpByLevel =
     moreValuesToSet?.["data.hpByLevel"] || record?.data?.hpByLevel || "[]";
   const valuesToSet = {
-    "fields.noLevelsLabel.hidden": false,
-    "fields.hpLevel1.hidden": true,
-    "fields.hpLevel2.hidden": true,
-    "fields.hpLevel3.hidden": true,
-    "fields.hpLevel4.hidden": true,
-    "fields.hpLevel5.hidden": true,
-    "fields.hpLevel6.hidden": true,
-    "fields.hpLevel7.hidden": true,
-    "fields.hpLevel8.hidden": true,
-    "fields.hpLevel9.hidden": true,
-    "fields.hpLevel10.hidden": true,
-    "fields.hpLevel11.hidden": true,
-    "fields.hpLevel12.hidden": true,
-    "fields.hpLevel13.hidden": true,
-    "fields.hpLevel14.hidden": true,
-    "fields.hpLevel15.hidden": true,
-    "fields.hpLevel16.hidden": true,
-    "fields.hpLevel17.hidden": true,
-    "fields.hpLevel18.hidden": true,
-    "fields.hpLevel19.hidden": true,
-    "fields.hpLevel20.hidden": true,
+    "fields.hpLevel1.hidden": false,
+    "fields.hpLevel2.hidden": false,
+    "fields.hpLevel3.hidden": false,
+    "fields.hpLevel4.hidden": false,
+    "fields.hpLevel5.hidden": false,
+    "fields.hpLevel6.hidden": false,
+    "fields.hpLevel7.hidden": false,
+    "fields.hpLevel8.hidden": false,
+    "fields.hpLevel9.hidden": false,
+    "fields.hpLevel10.hidden": false,
+    "fields.hpLevel11.hidden": false,
+    "fields.hpLevel12.hidden": false,
+    "fields.hpLevel13.hidden": false,
+    "fields.hpLevel14.hidden": false,
+    "fields.hpLevel15.hidden": false,
+    "fields.hpLevel16.hidden": false,
+    "fields.hpLevel17.hidden": false,
+    "fields.hpLevel18.hidden": false,
+    "fields.hpLevel19.hidden": false,
+    "fields.hpLevel20.hidden": false,
   };
   let changesMade = false;
   try {
     const hpByLevelArr = JSON.parse(hpByLevel);
-    let level = 1;
+
+    // Create a map of level -> hp for easier lookup
+    const hpByLevelMap = new Map();
     hpByLevelArr.forEach((hpLevel) => {
-      if (
-        (moreValuesToSet?.["data.hpLevel" + level] &&
-          moreValuesToSet?.["data.hpLevel" + level] !== hpLevel.hp) ||
-        record?.data?.[`hpLevel${level}`] !== hpLevel.hp
-      ) {
-        valuesToSet[`data.hpLevel${level}`] = hpLevel.hp;
-        changesMade = true;
-      }
-      valuesToSet[`fields.noLevelsLabel.hidden`] = true;
-      valuesToSet[`fields.hpLevel${level}.hidden`] = false;
-      level += 1;
+      hpByLevelMap.set(hpLevel.level, hpLevel.hp);
     });
+
+    // Get the character's total level
+    const characterLevel = parseInt(record?.data?.level || "0", 10);
+
+    // Set HP for each level based on the map
+    for (let level = 1; level <= characterLevel && level <= 20; level++) {
+      const hpForLevel = hpByLevelMap.get(level);
+      if (hpForLevel !== undefined) {
+        if (
+          (moreValuesToSet?.["data.hpLevel" + level] &&
+            moreValuesToSet?.["data.hpLevel" + level] !== hpForLevel) ||
+          record?.data?.[`hpLevel${level}`] !== hpForLevel
+        ) {
+          valuesToSet[`data.hpLevel${level}`] = hpForLevel;
+          changesMade = true;
+        }
+      }
+    }
+
     if (changesMade) {
       if (moreValuesToSet) {
         Object.keys(valuesToSet).forEach((key) => {

@@ -42,7 +42,7 @@
           const addHp = parseInt(value.replace("value-", ""), 10);
           hpByLevelArr.push({
             className: newClass,
-            level: newLevel,
+            level: totalLevel,
             hitDie: newHitDie,
             hp: addHp,
           });
@@ -90,7 +90,6 @@
             newHitDie,
             {
               className: newClass,
-              newLevel: newLevel,
               totalLevel: totalLevel,
               newHitDie: newHitDie,
             },
@@ -1470,6 +1469,11 @@
                     }
                   }
                 );
+              } else {
+                // User cancelled or didn't select - still call the next prompt
+                if (nextPrompt) {
+                  nextPrompt(record);
+                }
               }
             };
 
@@ -3069,176 +3073,166 @@
               </iconbutton>
             </popover.target>
             <popover.dropdown>
-              <div style="max-height: 300px; overflow-y: auto">
+              <div style="max-height: 400px; overflow-y: auto">
                 <label
                   label="Hit Points Gained per Level"
                   field="hpPerLevelLabel"
                 ></label>
                 <label
-                  field="noLevelsLabel"
+                  label="(Excluding CON modifier)"
                   size="xs"
-                  hidden="false"
-                  label="No Levels"
+                  color="dimmed"
+                  style="margin-top: 2px; margin-bottom: 4px"
                 ></label>
-                <numberfield
-                  field="hpLevel1"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 1"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel2"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 2"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel3"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 3"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel4"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 4"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel5"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 5"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel6"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 6"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel7"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 7"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel8"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 8"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel9"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 9"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel10"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 10"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel11"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 11"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel12"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 12"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel13"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 13"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel14"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 14"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel15"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 15"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel16"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 16"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel17"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 17"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel18"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 18"
-                  updateonblur="true"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel19"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 19"
-                ></numberfield>
-                <numberfield
-                  field="hpLevel20"
-                  size="xs"
-                  hidden="true"
-                  width="100px"
-                  label="Level 20"
-                  updateonblur="true"
-                ></numberfield>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
+                    margin-top: 8px;
+                  "
+                >
+                  <numberfield
+                    field="hpLevel1"
+                    size="xs"
+                    width="100%"
+                    label="Level 1"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel2"
+                    size="xs"
+                    width="100%"
+                    label="Level 2"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel3"
+                    size="xs"
+                    width="100%"
+                    label="Level 3"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel4"
+                    size="xs"
+                    width="100%"
+                    label="Level 4"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel5"
+                    size="xs"
+                    width="100%"
+                    label="Level 5"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel6"
+                    size="xs"
+                    width="100%"
+                    label="Level 6"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel7"
+                    size="xs"
+                    width="100%"
+                    label="Level 7"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel8"
+                    size="xs"
+                    width="100%"
+                    label="Level 8"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel9"
+                    size="xs"
+                    width="100%"
+                    label="Level 9"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel10"
+                    size="xs"
+                    width="100%"
+                    label="Level 10"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel11"
+                    size="xs"
+                    width="100%"
+                    label="Level 11"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel12"
+                    size="xs"
+                    width="100%"
+                    label="Level 12"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel13"
+                    size="xs"
+                    width="100%"
+                    label="Level 13"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel14"
+                    size="xs"
+                    width="100%"
+                    label="Level 14"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel15"
+                    size="xs"
+                    width="100%"
+                    label="Level 15"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel16"
+                    size="xs"
+                    width="100%"
+                    label="Level 16"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel17"
+                    size="xs"
+                    width="100%"
+                    label="Level 17"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel18"
+                    size="xs"
+                    width="100%"
+                    label="Level 18"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel19"
+                    size="xs"
+                    width="100%"
+                    label="Level 19"
+                    updateonblur="true"
+                  ></numberfield>
+                  <numberfield
+                    field="hpLevel20"
+                    size="xs"
+                    width="100%"
+                    label="Level 20"
+                    updateonblur="true"
+                  ></numberfield>
+                </div>
                 <div style="margin-top: 8px">
                   <button
                     size="xs"
