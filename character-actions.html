@@ -12,21 +12,51 @@
       spellList = `spells${spellLevel}`;
     }
 
-    // Set the ability to the most likely relevant ability based on spell
-    // list and which classes the character has
-    const spellLists = spell?.data?.spellLists || ["Wizard"]; // Assume Wizard if not specified
-    // Get classes on the character
+    // Set the ability to the most likely relevant ability based on
+    // which classes the character has
+    const spellLists = spell?.data?.spellLists || [];
     const spellClasses = record?.data?.classes || [];
-    // Default abiltiy to Intelligence
-    let ability = "intelligence";
+    let ability = "intelligence"; // Default
 
-    // Find the first class that matches a class in the spell list
-    const matchingClass = spellClasses.find((c) =>
+    // First, try to find classes that match the spell's spell lists
+    const matchingClasses = spellClasses.filter((c) =>
       spellLists.includes(c?.name)
     );
 
-    if (matchingClass) {
-      ability = matchingClass?.data?.spellcastingAbility || "intelligence";
+    if (matchingClasses.length > 0) {
+      // If we have matching classes, pick the one with the highest ability modifier
+      let highestMod = -999;
+      let bestAbility = "intelligence";
+
+      for (const c of matchingClasses) {
+        const classAbility = c?.data?.spellcastingAbility;
+        if (classAbility) {
+          const abilityMod = parseInt(record?.data?.[`${classAbility}Mod`] || "0", 10);
+          if (abilityMod > highestMod) {
+            highestMod = abilityMod;
+            bestAbility = classAbility;
+          }
+        }
+      }
+
+      ability = bestAbility;
+    } else if (spellClasses.length > 0) {
+      // Fall back to the class with the highest spellcasting ability modifier
+      let highestMod = -999;
+      let bestAbility = "intelligence";
+
+      for (const c of spellClasses) {
+        const classAbility = c?.data?.spellcastingAbility;
+        if (classAbility) {
+          const abilityMod = parseInt(record?.data?.[`${classAbility}Mod`] || "0", 10);
+          if (abilityMod > highestMod) {
+            highestMod = abilityMod;
+            bestAbility = classAbility;
+          }
+        }
+      }
+
+      ability = bestAbility;
     }
 
     // Set the ability
