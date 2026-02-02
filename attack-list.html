@@ -57,7 +57,7 @@
     const strMod = parseInt(record?.data?.strengthMod || "0", 10);
     const proficiencyBonus = parseInt(
       record?.data?.proficiencyBonus || "2",
-      10
+      10,
     );
 
     let dexOrStr = "Strength";
@@ -79,7 +79,7 @@
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
 
     // If bloodied, look for bloodied modifiers
@@ -89,7 +89,7 @@
       const bloodiedMods = getEffectsAndModifiers(
         ["attackBonus", "attackPenalty"],
         "bloodied",
-        attack._id
+        attack._id,
       );
       bloodiedMods.forEach((mod) => {
         if (
@@ -97,7 +97,7 @@
             (m) =>
               m.name === mod.name &&
               m.type === mod.type &&
-              m.value === mod.value
+              m.value === mod.value,
           )
         ) {
           modifiers.push(mod);
@@ -116,7 +116,7 @@
       const specialModifiers = getEffectsAndModifiers(
         ["attackBonus", "attackPenalty"],
         type,
-        attack._id
+        attack._id,
       );
       specialModifiers.forEach((mod) => {
         // Don't add duplicate modifiers
@@ -125,7 +125,7 @@
             (m) =>
               m.name === mod.name &&
               m.value === mod.value &&
-              m.modifierType === mod.modifierType
+              m.modifierType === mod.modifierType,
           )
         ) {
           modifiers.push(mod);
@@ -148,7 +148,7 @@
     const attackCalculationMod = getEffectsAndModifiers(
       ["attackCalculation"],
       undefined,
-      attack._id
+      attack._id,
     );
     // If we have an attack calculation modifier, use the field defined instead
     // of the above
@@ -159,7 +159,7 @@
         dexOrStrMod = capitalize(attackCalculation);
         modToUse = parseInt(
           record?.data?.[`${attackCalculation.toLowerCase()}Mod`] || "0",
-          10
+          10,
         );
       }
     }
@@ -214,7 +214,7 @@
         ) {
           // Check if you have the Invisible condition
           const hasInvisible = (ourToken?.effects || []).some((eff) =>
-            eff.name.toLowerCase().includes("invisible")
+            eff.name.toLowerCase().includes("invisible"),
           );
           // Check if they have incapacitated condition or are blinded
           const hasIncapacitated = (token?.effects || []).some(
@@ -225,7 +225,7 @@
               eff.name.toLowerCase().includes("unconscious") ||
               eff.name.toLowerCase().includes("petrified") ||
               eff.name.toLowerCase().includes("dead") ||
-              eff.name.toLowerCase().includes("blinded")
+              eff.name.toLowerCase().includes("blinded"),
           );
           if (!hasIncapacitated && !hasInvisible) {
             // Check distance
@@ -251,7 +251,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
 
     // We also get modifiers that apply only to damage of a specific weapon type or property
@@ -265,7 +265,7 @@
       const specialModifiers = getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
         type,
-        attack._id
+        attack._id,
       );
       specialModifiers.forEach((mod) => {
         // Don't add duplicate modifiers
@@ -274,7 +274,7 @@
             (m) =>
               m.name === mod.name &&
               m.value === mod.value &&
-              m.modifierType === mod.modifierType
+              m.modifierType === mod.modifierType,
           )
         ) {
           damageModifiers.push(mod);
@@ -299,7 +299,7 @@
         (mod) =>
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
-          mod.value.trim().toLowerCase().includes("resistance")
+          mod.value.trim().toLowerCase().includes("resistance"),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
@@ -309,13 +309,13 @@
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
           (mod.value.trim().toLowerCase().includes("immunities") ||
-            mod.value.trim().toLowerCase().includes("immunity"))
+            mod.value.trim().toLowerCase().includes("immunity")),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
     // Filter these out of the modifiers array, we don't need them to be toggleable
     damageModifiers = damageModifiers.filter(
-      (m) => !m.value.toString().toLowerCase().includes("ignore")
+      (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
@@ -352,10 +352,10 @@
       const additionalMasteries = getEffectsAndModifiers(
         ["weaponMastery"],
         undefined,
-        attack._id
+        attack._id,
       );
       additionalMasteries.forEach((am) => {
-        if (am?.value) {
+        if (am?.value && !masteryProperties.includes(am.value)) {
           masteryProperties.push(am.value);
         }
       });
@@ -388,13 +388,13 @@
     }
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("critical")
+      (m) => !m.value.toString().startsWith("critical"),
     );
 
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     targets.forEach((target) => {
@@ -425,7 +425,7 @@
       // Get effects and modifiers for the target
       const targetEffects = getAttackModifiersForTarget(
         target?.token,
-        targetDistance
+        targetDistance,
       );
       targetEffects.forEach((r) => {
         if (r.value === "critical") {
@@ -438,7 +438,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -540,7 +540,7 @@
     const attackCalculationMod = getEffectsAndModifiers(
       ["attackCalculation"],
       undefined,
-      attack._id
+      attack._id,
     );
     // If we have an attack calculation modifier, use the field defined instead
     // of the above
@@ -551,7 +551,7 @@
         dexOrStrMod = capitalize(attackCalculation);
         modToUse = parseInt(
           record?.data?.[`${attackCalculation.toLowerCase()}Mod`] || "0",
-          10
+          10,
         );
       }
     }
@@ -573,7 +573,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
 
     // We also get modifiers that apply only to damage of a specific weapon type or property
@@ -587,7 +587,7 @@
       const specialModifiers = getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
         type,
-        attack._id
+        attack._id,
       );
       specialModifiers.forEach((mod) => {
         // Don't add duplicate modifiers
@@ -596,7 +596,7 @@
             (m) =>
               m.name === mod.name &&
               m.value === mod.value &&
-              m.modifierType === mod.modifierType
+              m.modifierType === mod.modifierType,
           )
         ) {
           damageModifiers.push(mod);
@@ -611,7 +611,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -637,7 +637,7 @@
         (mod) =>
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
-          mod.value.trim().toLowerCase().includes("resistance")
+          mod.value.trim().toLowerCase().includes("resistance"),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
@@ -647,13 +647,13 @@
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
           (mod.value.trim().toLowerCase().includes("immunities") ||
-            mod.value.trim().toLowerCase().includes("immunity"))
+            mod.value.trim().toLowerCase().includes("immunity")),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
     // Filter these out of the modifiers array, we don't need them to be toggleable
     damageModifiers = damageModifiers.filter(
-      (m) => !m.value.toString().toLowerCase().includes("ignore")
+      (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
     const damageMetadata = {
@@ -684,7 +684,7 @@
       damage,
       damageModifiers,
       damageMetadata,
-      "damage"
+      "damage",
     );
   }
 </script>
@@ -754,8 +754,8 @@
       field="rollBtn"
       variant="outline"
       options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]'
-      onchange="() => { }"
-      onclick="handleRoll();"
+      onchange="() => {}"
+      onclick="handleRoll()"
     >
     </iconbutton>
     <div>
@@ -766,7 +766,7 @@
         field="damageBtn"
         label="Damage"
         variant="light"
-        onclick="rollDamage(false);"
+        onclick="rollDamage(false)"
       ></button>
     </div>
     <!-- Roll Crit -->
@@ -778,7 +778,7 @@
         label="Critical"
         variant="light"
         color="red"
-        onclick="rollDamage(true);"
+        onclick="rollDamage(true)"
       ></button>
     </div>
   </div>

@@ -171,7 +171,7 @@
           (record) => {
             // Update total weight
             updateTotalWeight(record);
-          }
+          },
         );
       } else {
         // Add the item to the list
@@ -196,9 +196,9 @@
               api.removeValueFromRecord(
                 sourceRecord,
                 sourceInfo.dataPath,
-                sourceInfo.index
+                sourceInfo.index,
               );
-            }
+            },
           );
         } else if (sourceInfo?.type === "partysheet") {
           // Remove the item from party sheet
@@ -243,7 +243,7 @@
     // Filter out duplicates by creating a Set and converting back to array
     // Also filter out empty strings
     const uniqueLocations = [...new Set(locations)].filter(
-      (location) => location !== ""
+      (location) => location !== "",
     );
 
     // Always include the "All" option at the beginning
@@ -292,7 +292,7 @@
         "data.gp": gp,
         "data.pp": pp,
       },
-      updateCoinage
+      updateCoinage,
     );
   }
 
@@ -326,7 +326,7 @@
             "data.addGp": "",
             "data.addPp": "",
           },
-          updateCoinage
+          updateCoinage,
         );
         api.closeOpenedPopovers();
       });
@@ -342,70 +342,119 @@
         const deductEp = parseInt(record2?.data?.deductEp || "0") || 0;
         const deductGp = parseInt(record2?.data?.deductGp || "0") || 0;
         const deductPp = parseInt(record2?.data?.deductPp || "0") || 0;
+        const redistributeGold = record2?.data?.redistributeGold || false;
 
-        // Convert everything to copper for easier calculation
-        // 1 pp = 1000 cp, 1 gp = 100 cp, 1 ep = 50 cp, 1 sp = 10 cp
         let currentCp = record2?.data?.cp || 0;
         let currentSp = record2?.data?.sp || 0;
         let currentEp = record2?.data?.ep || 0;
         let currentGp = record2?.data?.gp || 0;
         let currentPp = record2?.data?.pp || 0;
 
-        const totalCurrentInCp =
-          currentCp +
-          currentSp * 10 +
-          currentEp * 50 +
-          currentGp * 100 +
-          currentPp * 1000;
-        const totalDeductInCp =
-          deductCp +
-          deductSp * 10 +
-          deductEp * 50 +
-          deductGp * 100 +
-          deductPp * 1000;
+        if (redistributeGold) {
+          // Convert everything to copper for easier calculation
+          // 1 pp = 1000 cp, 1 gp = 100 cp, 1 ep = 50 cp, 1 sp = 10 cp
+          const totalCurrentInCp =
+            currentCp +
+            currentSp * 10 +
+            currentEp * 50 +
+            currentGp * 100 +
+            currentPp * 1000;
+          const totalDeductInCp =
+            deductCp +
+            deductSp * 10 +
+            deductEp * 50 +
+            deductGp * 100 +
+            deductPp * 1000;
 
-        if (totalDeductInCp > totalCurrentInCp) {
-          api.showNotification(
-            "Not enough currency!",
-            "red",
-            "Not Enough Currency"
+          if (totalDeductInCp > totalCurrentInCp) {
+            api.showNotification(
+              "Not enough currency!",
+              "red",
+              "Not Enough Currency",
+            );
+            return;
+          }
+
+          // Calculate remaining copper and convert back to denominations
+          let remainingCp = totalCurrentInCp - totalDeductInCp;
+
+          // Convert back to highest denominations first
+          const newPp = Math.floor(remainingCp / 1000);
+          remainingCp = remainingCp % 1000;
+
+          const newGp = Math.floor(remainingCp / 100);
+          remainingCp = remainingCp % 100;
+
+          const newEp = Math.floor(remainingCp / 50);
+          remainingCp = remainingCp % 50;
+
+          const newSp = Math.floor(remainingCp / 10);
+          remainingCp = remainingCp % 10;
+
+          const newCp = remainingCp;
+
+          api.setValues(
+            {
+              "data.cp": newCp,
+              "data.sp": newSp,
+              "data.ep": newEp,
+              "data.gp": newGp,
+              "data.pp": newPp,
+              "data.deductCp": "",
+              "data.deductSp": "",
+              "data.deductEp": "",
+              "data.deductGp": "",
+              "data.deductPp": "",
+              "data.redistributeGold": false,
+            },
+            updateCoinage,
           );
-          return;
+        } else {
+          // Check if character has enough of each specific coin type
+          const shortages = [];
+          if (deductCp > currentCp) {
+            shortages.push(`${deductCp - currentCp} CP`);
+          }
+          if (deductSp > currentSp) {
+            shortages.push(`${deductSp - currentSp} SP`);
+          }
+          if (deductEp > currentEp) {
+            shortages.push(`${deductEp - currentEp} EP`);
+          }
+          if (deductGp > currentGp) {
+            shortages.push(`${deductGp - currentGp} GP`);
+          }
+          if (deductPp > currentPp) {
+            shortages.push(`${deductPp - currentPp} PP`);
+          }
+
+          if (shortages.length > 0) {
+            api.showNotification(
+              `Not enough coins! Short: ${shortages.join(", ")}. Enable "Redistribute" to convert currency.`,
+              "red",
+              "Not Enough Coins",
+            );
+            return;
+          }
+
+          // Subtract exact amounts
+          api.setValues(
+            {
+              "data.cp": currentCp - deductCp,
+              "data.sp": currentSp - deductSp,
+              "data.ep": currentEp - deductEp,
+              "data.gp": currentGp - deductGp,
+              "data.pp": currentPp - deductPp,
+              "data.deductCp": "",
+              "data.deductSp": "",
+              "data.deductEp": "",
+              "data.deductGp": "",
+              "data.deductPp": "",
+              "data.redistributeGold": false,
+            },
+            updateCoinage,
+          );
         }
-
-        // Calculate remaining copper and convert back to denominations
-        let remainingCp = totalCurrentInCp - totalDeductInCp;
-
-        // Convert back to highest denominations first
-        const newPp = Math.floor(remainingCp / 1000);
-        remainingCp = remainingCp % 1000;
-
-        const newGp = Math.floor(remainingCp / 100);
-        remainingCp = remainingCp % 100;
-
-        const newEp = Math.floor(remainingCp / 50);
-        remainingCp = remainingCp % 50;
-
-        const newSp = Math.floor(remainingCp / 10);
-        remainingCp = remainingCp % 10;
-
-        const newCp = remainingCp;
-
-        api.setValues(
-          {
-            "data.cp": newCp,
-            "data.sp": newSp,
-            "data.ep": newEp,
-            "data.gp": newGp,
-            "data.pp": newPp,
-            "data.deductCp": "",
-            "data.deductSp": "",
-            "data.deductEp": "",
-            "data.deductGp": "",
-            "data.deductPp": "",
-          },
-          updateCoinage
-        );
         api.closeOpenedPopovers();
       });
     }, 300);
@@ -478,8 +527,8 @@
     radius="none"
     variant="striped"
     field="inventory"
-    onchange="onItemDeleted();"
-    onload="updateTotalWeight(record);"
+    onchange="onItemDeleted()"
+    onload="updateTotalWeight(record)"
   >
   </list>
 </div>
@@ -538,7 +587,7 @@
       placeholder="0"
       field="cp"
       width="90px"
-      onchange="updateCoinage();"
+      onchange="updateCoinage()"
     ></numberfield>
   </div>
   <div
@@ -557,7 +606,7 @@
       placeholder="0"
       field="sp"
       width="90px"
-      onchange="updateCoinage();"
+      onchange="updateCoinage()"
     ></numberfield>
   </div>
   <div
@@ -576,7 +625,7 @@
       placeholder="0"
       field="ep"
       width="90px"
-      onchange="updateCoinage();"
+      onchange="updateCoinage()"
     ></numberfield>
   </div>
   <div
@@ -595,7 +644,7 @@
       placeholder="0"
       field="gp"
       width="90px"
-      onchange="updateCoinage();"
+      onchange="updateCoinage()"
     ></numberfield>
   </div>
   <div
@@ -614,7 +663,7 @@
       placeholder="0"
       field="pp"
       width="90px"
-      onchange="updateCoinage();"
+      onchange="updateCoinage()"
     ></numberfield>
   </div>
   <div
@@ -634,7 +683,7 @@
       hideonlocked="true"
       options='[{"icon": "IconArrowsExchange", "label": "Redistribute Currency", "value": "redistribute"}]'
       field="redistributeBtn"
-      onclick="redistributeCurrency();"
+      onclick="redistributeCurrency()"
     ></iconbutton>
     <popover position="bottom" offset="4" witharrow="true">
       <popover.target>
@@ -810,7 +859,7 @@
             size="xs"
             variant="outline"
             label="Add"
-            onclick="addCurrency();"
+            onclick="addCurrency()"
           ></button>
         </div>
       </popover.dropdown>
@@ -830,11 +879,6 @@
           style="display: flex; flex-direction: column; gap: 4px; width: 200px"
         >
           <label size="xs" variant="bold" label="Deduct Currency"></label>
-          <label
-            size="xxs"
-            color="dimmed"
-            label="Will subdivide currency as needed"
-          ></label>
           <div
             style="
               display: flex;
@@ -990,11 +1034,17 @@
               disablediflocked="false"
             ></numberfield>
           </div>
+          <checkbox
+            field="redistributeGold"
+            label="Redistribute currency as needed"
+            size="xs"
+            disablediflocked="false"
+          ></checkbox>
           <button
             size="xs"
             variant="outline"
             label="Deduct"
-            onclick="deductCurrency();"
+            onclick="deductCurrency()"
           ></button>
         </div>
       </popover.dropdown>
