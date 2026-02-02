@@ -370,7 +370,7 @@ function deduplicateHpByLevel(hpByLevelArr) {
 
   // Convert back to array, sorted by level
   const deduplicated = Array.from(levelMap.values()).sort(
-    (a, b) => a.level - b.level
+    (a, b) => a.level - b.level,
   );
 
   // Check if deduplication actually changed anything
@@ -391,7 +391,7 @@ function getHpForLevel(conMod, recordOverride = null) {
   for (let level = 1; level <= characterLevel; level++) {
     const hpForLevel = parseInt(
       thisRecord?.data?.[`hpLevel${level}`] || "0",
-      10
+      10,
     );
     if (hpForLevel > 0) {
       let thisLevelHp = hpForLevel + conMod;
@@ -415,7 +415,7 @@ function setModifier(
   value,
   attribute,
   skillProfOverrides = {},
-  moreValuesToSet = null
+  moreValuesToSet = null,
 ) {
   const modField = `${attribute}Mod`;
   const saveField = `${attribute}Save`;
@@ -436,7 +436,7 @@ function setModifier(
 
   let proficiencyBonus = parseInt(
     record?.data?.["proficiencyBonus"] || "2",
-    10
+    10,
   );
   if (isNaN(proficiencyBonus)) {
     proficiencyBonus = 0;
@@ -517,7 +517,7 @@ function setModifier(
         ) {
           acBonus = parseInt(
             moreValuesToSet[`data.${mod.field}Mod`] || "0",
-            10
+            10,
           );
         }
         if (acBonus > calcBonus) {
@@ -611,7 +611,7 @@ function setModifier(
       const totalUses = getTotalValueFromFields(
         record,
         abilityGroup?.data?.fieldsToAddToUses || [],
-        valuesToSet
+        valuesToSet,
       );
       if (totalUses > 0) {
         valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] =
@@ -708,12 +708,12 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
       // Class specific half level
       const characterClassLevel =
         (thisRecord?.data?.classLevels || "").match(
-          `${className} (\\d+)`
+          `${className} (\\d+)`,
         )?.[1] || 0;
       if (characterClassLevel) {
         value = value.replaceAll(
           matchLevel[0],
-          Math.floor(parseInt(characterClassLevel || "1", 10) / 2)
+          Math.floor(parseInt(characterClassLevel || "1", 10) / 2),
         );
       }
     }
@@ -729,12 +729,12 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
       // Class specific level
       const characterClassLevel =
         (thisRecord?.data?.classLevels || "").match(
-          `${className} (\\d+)`
+          `${className} (\\d+)`,
         )?.[1] || 0;
       if (characterClassLevel) {
         value = value.replaceAll(
           matchClassLevel[0],
-          parseInt(characterClassLevel || "1", 10)
+          parseInt(characterClassLevel || "1", 10),
         );
       }
     }
@@ -744,12 +744,12 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
   if (matchProficiencyBonus) {
     value = value.replaceAll(
       matchProficiencyBonus[0],
-      thisRecord?.data?.proficiencyBonus || 0
+      thisRecord?.data?.proficiencyBonus || 0,
     );
   }
   // Case for Strength|Dexterity|Constitution|Wisdom|Intelligence|Charisma Modifier
   const matchModifier = value.match(
-    /[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/
+    /[Ss]trength [Mm]odifier|[Dd]exterity [Mm]odifier|[Cc]onstitution [Mm]odifier|[Ww]isdom [Mm]odifier|[Ii]ntelligence [Mm]odifier|[Cc]harisma [Mm]odifier/,
   );
   if (matchModifier) {
     const attributeMod = parseInt(
@@ -759,7 +759,7 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
           .replace(" ", "")
           .replace("modifier", "")}Mod`
       ] || "0",
-      10
+      10,
     );
     value = value.replaceAll(matchModifier[0], attributeMod);
   }
@@ -804,7 +804,7 @@ function getClassLevel(recordContext, field, fieldValueOverrides) {
 function getTotalValueFromFields(
   recordContext,
   fieldsToAddToUses,
-  fieldValueOverrides
+  fieldValueOverrides,
 ) {
   let total = 0;
   let times5 = false;
@@ -863,7 +863,7 @@ function getEffectsAndModifiers(
   types = [],
   field = "",
   itemId = undefined,
-  appliedById = undefined
+  appliedById = undefined,
 ) {
   let results = [];
 
@@ -946,7 +946,7 @@ function getEffectsAndModifiers(
         stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`] = true;
         // The value is the number of times they have this effect
         let value = record?.effectIds?.filter(
-          (id) => id === effect?._id
+          (id) => id === effect?._id,
         ).length;
         if (isPenalty && value > 0) {
           value = -value;
@@ -980,7 +980,7 @@ function getEffectsAndModifiers(
   const equippedItems = items.filter(
     (item) =>
       item.data?.carried === "equipped" &&
-      (!item.data?.attunement || item.data?.attuned === "true")
+      (!item.data?.attunement || item.data?.attuned === "true"),
   );
   [...features, ...equippedItems].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
@@ -1055,13 +1055,13 @@ function getEffectsAndModifiers(
 
   if (field && field !== "") {
     results = results.filter(
-      (r) => r.field === field || r.field === "all" || !r.field
+      (r) => r.field === field || r.field === "all" || !r.field,
     );
   }
 
   // Filter by itemId if provided
   results = results.filter(
-    (r) => r.itemId === itemId || r.itemId === undefined
+    (r) => r.itemId === itemId || r.itemId === undefined,
   );
 
   // Filter by appliedById if provided
@@ -1090,7 +1090,7 @@ function getDamageEffectsForTarget(ourToken, target) {
     effectsToCheck, // that match damageTargetBonus
     "", // field is irrelevant
     undefined, // itemId is irrelevant
-    ourToken?._id // appliedById is the caller
+    ourToken?._id, // appliedById is the caller
   );
 
   damageEffects.forEach((r) => {
@@ -1123,7 +1123,7 @@ function getAttackModifiersForTarget(target, distance) {
   }
   const attackTargetingEffects = getEffectsAndModifiersForToken(
     target,
-    effectsToCheck
+    effectsToCheck,
   );
   attackTargetingEffects.forEach((r) => {
     results.push({
@@ -1141,7 +1141,7 @@ function getEffectsAndModifiersForToken(
   types = [],
   field = "",
   itemId = undefined,
-  appliedById = undefined
+  appliedById = undefined,
 ) {
   if (!target) {
     return [];
@@ -1227,7 +1227,7 @@ function getEffectsAndModifiersForToken(
         stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`] = true;
         // The value is the number of times they have this effect
         let value = target?.effectIds?.filter(
-          (id) => id === effect?._id
+          (id) => id === effect?._id,
         ).length;
         if (isPenalty && value > 0) {
           value = -value;
@@ -1268,7 +1268,7 @@ function getEffectsAndModifiersForToken(
   const equippedItems = items.filter(
     (item) =>
       item.data?.carried === "equipped" &&
-      (!item.data?.attunement || item.data?.attuned === "true")
+      (!item.data?.attunement || item.data?.attuned === "true"),
   );
   [...features, ...equippedItems].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
@@ -1343,13 +1343,13 @@ function getEffectsAndModifiersForToken(
 
   if (field && field !== "") {
     results = results.filter(
-      (r) => r.field === field || r.field === "all" || !r.field
+      (r) => r.field === field || r.field === "all" || !r.field,
     );
   }
 
   // Filter by itemId if provided
   results = results.filter(
-    (r) => r.itemId === itemId || r.itemId === undefined
+    (r) => r.itemId === itemId || r.itemId === undefined,
   );
 
   // Filter by appliedById if provided
@@ -1714,19 +1714,19 @@ function getRIV(target) {
     ...remainingResistString
       .split(/[,;]/) // Split by both comma and semicolon
       .map((r) => r.toLowerCase().trim())
-      .filter((r) => r)
+      .filter((r) => r),
   );
   immunities.push(
     ...remainingImmuneString
       .split(/[,;]/) // Split by both comma and semicolon
       .map((i) => i.toLowerCase().trim())
-      .filter((i) => i)
+      .filter((i) => i),
   );
   vulnerabilities.push(
     ...remainingVulnString
       .split(/[,;]/) // Split by both comma and semicolon
       .map((v) => v.toLowerCase().trim())
-      .filter((v) => v)
+      .filter((v) => v),
   );
 
   // Then add RIV from modifiers
@@ -1816,7 +1816,7 @@ function getAltSpellDamageButtons(
   altDamageAmount,
   saveDamageMetadata,
   levelCastAt,
-  npcSpellAction = null
+  npcSpellAction = null,
 ) {
   if (!altDamageAmount) return [];
 
@@ -1851,16 +1851,16 @@ function getAltSpellDamageButtons(
       spell?.data?.level?.toLowerCase() === "cantrip"
         ? getEffectsAndModifiers(
             ["cantripDamageBonus", "cantripDamagePenalty"],
-            spell?.data?.isAttack ? "attack" : "all"
+            spell?.data?.isAttack ? "attack" : "all",
           )
         : getEffectsAndModifiers(
             ["spellDamageBonus", "spellDamagePenalty"],
-            spell?.data?.isAttack ? "attack" : "all"
+            spell?.data?.isAttack ? "attack" : "all",
           );
     // Filter attack modifiers if not attack spell
     if (!spell?.data?.isAttack) {
       moreDamageModifiers = moreDamageModifiers.filter(
-        (mod) => (mod?.field || "") !== "attack"
+        (mod) => (mod?.field || "") !== "attack",
       );
     }
     moreDamageModifiers.forEach((modifier) => {
@@ -1876,14 +1876,14 @@ function getAltSpellDamageButtons(
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
-          levelCastAt
+          levelCastAt,
         );
       }
     });
 
     // Filter these out of the modifiers array, we don't need them to be toggleable
     altDamageModifiers = altDamageModifiers.filter(
-      (m) => !m.value.toString().toLowerCase().includes("ignore")
+      (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
     return `\`\`\`Roll_${
@@ -1892,7 +1892,7 @@ function getAltSpellDamageButtons(
 api.promptRoll(\`${
       altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
     } Damage\`, '${damageString}', ${JSON.stringify(
-      altDamageModifiers
+      altDamageModifiers,
     )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
 \`\`\``;
   });
@@ -2253,7 +2253,7 @@ function rollSavingThrow(save, dc) {
     const saveModifiers = getEffectsAndModifiersForToken(
       token,
       ["saveBonus", "savePenalty"],
-      save
+      save,
     );
     saveModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -2262,7 +2262,7 @@ function rollSavingThrow(save, dc) {
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     const metadata = {
@@ -2278,24 +2278,61 @@ function rollSavingThrow(save, dc) {
       "1d20",
       modifiers,
       metadata,
-      "save"
+      "save",
     );
   });
 }
 
+// Normalizes skill input to camelCase field name
+// Handles: "sleight of hand", "Sleight of Hand", "sleightOfHand", etc.
+function normalizeSkillName(skill) {
+  if (!skill) return skill;
+
+  // First, normalize the input by converting to lowercase and removing extra spaces
+  const normalized = skill.trim().toLowerCase().replace(/\s+/g, " ");
+
+  // Try to find a matching skill by comparing against both name and field
+  const skills = getSkills();
+  const matchedSkill = skills.find((s) => {
+    // Match against the display name (lowercase)
+    if (s.name.toLowerCase() === normalized) {
+      return true;
+    }
+    // Match against the field name (already camelCase)
+    if (s.field.toLowerCase() === normalized.replace(/\s+/g, "")) {
+      return true;
+    }
+    // Match camelCase input against field
+    if (skill.replace(/\s+/g, "").toLowerCase() === s.field.toLowerCase()) {
+      return true;
+    }
+    return false;
+  });
+
+  // Return the field name if found, otherwise return the original input
+  return matchedSkill ? matchedSkill.field : skill;
+}
+
 function rollSkillCheck(skill, dc) {
+  // Normalize the skill name to camelCase field format
+  skill = normalizeSkillName(skill);
+
+  // Get the display name for this skill (e.g., "Sleight of Hand" from "sleightOfHand")
+  const skillInfo = getSkills().find((s) => s.field === skill);
+  const skillDisplayName = skillInfo?.name || camelToNormal(skill);
+
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
     if (token.linked === false) {
       // This is an NPC
       // Parse the skill name to get the skill name and modifier
       let modValue = "0";
-      // Look for a skill in the list with this name
+      // Look for a skill in the list with this name (compare using display name)
       const npcSkills = token.data?.skills || [];
       const npcSkill = npcSkills.find((s) =>
-        s.name.trim().toLowerCase().startsWith(skill.trim().toLowerCase())
+        s.name.trim().toLowerCase().startsWith(skillDisplayName.toLowerCase()),
       );
-      let skillNameWithoutMod = npcSkill?.name || capitalize(skill);
+      let skillNameWithoutMod = npcSkill?.name || skillDisplayName;
       let skillName = npcSkill?.name || "";
       if (skillName) {
         skillNameWithoutMod = skillName;
@@ -2312,11 +2349,9 @@ function rollSkillCheck(skill, dc) {
           modValue = 0;
         }
       } else {
-        skillName = capitalize(skill);
+        skillName = skillDisplayName;
         // Look up the stat associated with the skill
-        const stat = getSkills().find(
-          (s) => s.name.trim().toLowerCase() === skill.trim().toLowerCase()
-        )?.ability;
+        const stat = skillInfo?.ability;
         if (stat) {
           modValue = token?.data?.[`${stat}Mod`] || 0;
         }
@@ -2338,12 +2373,12 @@ function rollSkillCheck(skill, dc) {
       // Get any bonus or penalties for abilities and skills
       // Try to guess the ability from the skill name
       const ability = getAbilityFromSkill(
-        skillNameWithoutMod.split(" ")[0].toLowerCase()
+        skillNameWithoutMod.split(" ")[0].toLowerCase(),
       );
       const checkModifiers = getEffectsAndModifiersForToken(
         token,
         ["abilityBonus", "abilityPenalty"],
-        ability
+        ability,
       );
       checkModifiers.forEach((modifier) => {
         modifiers.push(modifier);
@@ -2352,7 +2387,7 @@ function rollSkillCheck(skill, dc) {
       const skillModifiers = getEffectsAndModifiersForToken(
         token,
         ["skillBonus", "skillPenalty"],
-        skillNameWithoutMod.toLowerCase()
+        skillNameWithoutMod.toLowerCase(),
       );
       skillModifiers.forEach((modifier) => {
         modifiers.push(modifier);
@@ -2369,12 +2404,14 @@ function rollSkillCheck(skill, dc) {
         "1d20",
         modifiers,
         metadata,
-        "ability"
+        "ability",
       );
     } else {
+      // skill is already normalized to camelCase field format (e.g., "sleightOfHand")
       const ability =
-        token?.data?.[`${skill.trim().toLowerCase()}Ability`] ||
-        getAbilityFromSkill(skill.trim().toLowerCase());
+        token?.data?.[`${skill}Ability`] ||
+        skillInfo?.ability ||
+        getAbilityFromSkill(skill);
       const mod = `${ability}Mod`;
 
       let modifiers = [];
@@ -2385,10 +2422,9 @@ function rollSkillCheck(skill, dc) {
 
       const proficiencyBonus = parseInt(
         token?.data?.proficiencyBonus || "0",
-        10
+        10,
       );
-      const proficiency =
-        token?.data?.[`${skill.trim().toLowerCase()}Prof`] || "false";
+      const proficiency = token?.data?.[`${skill}Prof`] || "false";
       const isHalfProficient = proficiency === "half";
       const isExpertise = proficiency === "expertise";
       const isProficient = proficiency === "true";
@@ -2423,7 +2459,7 @@ function rollSkillCheck(skill, dc) {
       const checkModifiers = getEffectsAndModifiersForToken(
         token,
         ["abilityBonus", "abilityPenalty"],
-        ability
+        ability,
       );
       checkModifiers.forEach((modifier) => {
         modifiers.push(modifier);
@@ -2432,7 +2468,7 @@ function rollSkillCheck(skill, dc) {
       const skillModifiers = getEffectsAndModifiersForToken(
         token,
         ["skillBonus", "skillPenalty"],
-        skill
+        skill,
       );
       skillModifiers.forEach((modifier) => {
         modifiers.push(modifier);
@@ -2443,7 +2479,7 @@ function rollSkillCheck(skill, dc) {
         const proficientModifiers = getEffectsAndModifiersForToken(
           token,
           ["skillBonus"],
-          "proficient"
+          "proficient",
         );
         proficientModifiers.forEach((modifier) => {
           // Only add if not already in the array
@@ -2452,7 +2488,7 @@ function rollSkillCheck(skill, dc) {
               (m) =>
                 m.name === modifier.name &&
                 m.value === modifier.value &&
-                m.active === modifier.active
+                m.active === modifier.active,
             )
           ) {
             modifiers.push(modifier);
@@ -2463,13 +2499,13 @@ function rollSkillCheck(skill, dc) {
       const minRoll = getMinRollModifier(modifiers);
       // Filter these out of the modifiers array, we don't need them to be toggleable
       modifiers = modifiers.filter(
-        (m) => !m.value.toString().startsWith("minroll")
+        (m) => !m.value.toString().startsWith("minroll"),
       );
 
       const metadata = {
         rollName: `${camelToNormal(skill).trim()}`,
         tooltip: `${camelToNormal(ability)} (${camelToNormal(
-          skill
+          skill,
         ).trim()}) Check`,
         dc: dc,
         minRoll: minRoll,
@@ -2480,7 +2516,7 @@ function rollSkillCheck(skill, dc) {
         "1d20",
         modifiers,
         metadata,
-        "ability"
+        "ability",
       );
     }
   });
