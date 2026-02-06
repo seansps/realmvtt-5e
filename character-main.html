@@ -23,7 +23,7 @@
     totalLevel,
     newHitDie,
     recordOverride,
-    additionalPrompt
+    additionalPrompt,
   ) {
     // Here we update the characters HP and set a hidden value `hpByLevel` to track
     // the HP received at each level
@@ -73,7 +73,7 @@
           const hitDieField = `${newHitDie}HitDie`;
           const numHitDie = parseInt(
             thisRecord?.data?.[hitDieField] || "0",
-            10
+            10,
           );
           hpValuesToSet[`data.${hitDieField}`] = numHitDie + 1;
 
@@ -93,7 +93,7 @@
               totalLevel: totalLevel,
               newHitDie: newHitDie,
             },
-            "hitpoints"
+            "hitpoints",
           );
         }
       }
@@ -128,7 +128,7 @@
         text,
         options,
         null,
-        callback
+        callback,
       );
     } else {
       // Just call callback with max value
@@ -144,7 +144,7 @@
 
     let proficiencyBonus = parseInt(
       record?.data?.["proficiencyBonus"] || "0",
-      10
+      10,
     );
     if (isNaN(proficiencyBonus)) {
       proficiencyBonus = 0;
@@ -192,7 +192,7 @@
         thisRecord?.data?.[`${skill.field}Ability`] || skill.ability;
       const abilityMod = parseInt(
         thisRecord?.data?.[`${ability}Mod`] || "0",
-        10
+        10,
       );
       let totalVal = 0;
       if (isHalfProficient) {
@@ -221,7 +221,7 @@
       const ability = skill?.data?.ability || "strength";
       const abilityMod = parseInt(
         thisRecord?.data?.[`${ability}Mod`] || "0",
-        10
+        10,
       );
       // Skills can be also be half, proficient, or expertise
       const proficiency = skill?.data?.skillProf || "false";
@@ -251,7 +251,7 @@
       ) {
         const totalUses = getTotalValueFromFields(
           thisRecord,
-          abilityGroup?.data?.fieldsToAddToUses || []
+          abilityGroup?.data?.fieldsToAddToUses || [],
         );
         if (totalUses > 0) {
           valuesToSet[`data.abilityGroups.${index}.data.maxDailyUses`] =
@@ -507,7 +507,7 @@
         }
 
         api.setHidden(valuesToUnhide, false);
-      }
+      },
     );
   }
 
@@ -756,7 +756,7 @@
         if (values.length > 0) {
           const proficiencyBonus = parseInt(
             api.getValue("data.proficiencyBonus") || "2",
-            10
+            10,
           );
 
           const valuesToSet = {};
@@ -768,7 +768,7 @@
               getDefaultAbilityForSkillField(skill);
             const abilityMod = parseInt(
               api.getValue(`data.${ability}Mod`) || "0",
-              10
+              10,
             );
             // Basic proficiency, so add the whole bonus to the modifier
             valuesToSet[`data.${skill}Mod`] = abilityMod + proficiencyBonus;
@@ -809,7 +809,7 @@
         skillSelection,
         "OK",
         "Cancel",
-        skillChoices.numChoices
+        skillChoices.numChoices,
       );
     } else if (nextPrompt) {
       // No skills, just go to next prompt
@@ -826,7 +826,7 @@
     classString,
     classObj,
     level,
-    newClassLevel
+    newClassLevel,
   ) {
     // If we're multiclasses, we use the multiclass settings
     const isMulticlass =
@@ -845,13 +845,14 @@
     let meetsRequirements = true;
     if (requiredSubclass) {
       meetsRequirements = subclasses.some((s) =>
-        subclassOptions.includes(s?.name || "")
+        subclassOptions.includes(s?.name || ""),
       );
     }
 
     if (!isMulticlass && casterType === "Spellcasting" && meetsRequirements) {
       const spellSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(
-        (spellLevel) => classObj?.data?.[`level${level}spell${spellLevel}`] || 0
+        (spellLevel) =>
+          classObj?.data?.[`level${level}spell${spellLevel}`] || 0,
       );
       fieldsToSet[`data.numSpellSlots1`] = spellSlots[0];
       fieldsToSet[`data.numSpellSlots2`] = spellSlots[1];
@@ -881,7 +882,7 @@
         if (multiclassSetting !== "No") {
           const safeClassName = className.replace(
             /[-\/\\^$*+?.()|[\]{}]/g,
-            "\\$&"
+            "\\$&",
           );
           const regex = new RegExp(`(${safeClassName}\\s+(\\d+))`, "i");
           const classLevelMatch = classString.match(regex);
@@ -932,8 +933,8 @@
       const pactSlots = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((spellLevel) =>
         parseInt(
           classObj?.data?.[`level${newClassLevel}spell${spellLevel}`] || "0",
-          10
-        )
+          10,
+        ),
       );
       fieldsToSet[`data.numPactMagic1`] = pactSlots[0];
       fieldsToSet[`data.numPactMagic2`] = pactSlots[1];
@@ -1004,11 +1005,11 @@
     classObj,
     subclass,
     newLevel,
-    classLevels
+    classLevels,
   ) {
     const additionalFieldsToSet = {};
     const curFeatures = (record?.data?.features || []).map(
-      (feature) => `${feature?.data?.source}-${feature.name}`
+      (feature) => `${feature?.data?.source}-${feature.name}`,
     );
     const features = classObj?.data?.feature_list || [];
     const subClassFeatures = subclass?.data?.feature_list || [];
@@ -1068,7 +1069,7 @@
       if (featureAddedOrUpdated) {
         // Check for AC Calc mods
         const acCalculationMods = (feature?.data?.modifiers || []).filter(
-          (mod) => mod.data.type === "armorClassCalculation"
+          (mod) => mod.data.type === "armorClassCalculation",
         );
         if (acCalculationMods.length > 0) {
           // Get other mods
@@ -1093,7 +1094,7 @@
               if (mod.field && mod.field !== "dexterity") {
                 const acBonus = parseInt(
                   record?.data?.[`${mod.field}Mod`] || "0",
-                  10
+                  10,
                 );
                 if (acBonus > calcBonus) {
                   calcBonus = acBonus;
@@ -1142,7 +1143,7 @@
             .filter(
               (f) =>
                 (f?.data?.level || 0) === newLevel &&
-                f.data.abilityGroupName === abilityGroupName
+                f.data.abilityGroupName === abilityGroupName,
             )
             .map((f) => f?.data?.ability)
             .filter((ability) => ability !== undefined && ability !== "");
@@ -1154,21 +1155,21 @@
               feature?.data?.fieldsToAddToUses || [],
               {
                 "data.classLevels": classLevels,
-              }
+              },
             );
           }
           const abilityValue = feature?.data?.value || "";
           const abilityRestoresOn = feature?.data?.restoreOn || "";
           const savingThrowAbility = feature?.data?.savingThrowAbility || "";
           let abilityGroup = record?.data?.abilityGroups?.find(
-            (ag) => ag?.name === abilityGroupName
+            (ag) => ag?.name === abilityGroupName,
           );
           // When the group is added, or found, we add abilities to it or set data on it
           const recordDataPath = record?.dataPath || "";
 
           const abilityAddedCallback = (record) => {
             const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(
-              (ag) => ag?.name === abilityGroupName
+              (ag) => ag?.name === abilityGroupName,
             );
             const fieldsToSet = {};
             if (abilityGroupIndex !== -1) {
@@ -1182,9 +1183,9 @@
                     (abilityRecord) => {
                       api.addValue(
                         `data.abilityGroups.${abilityGroupIndex}.data.abilities`,
-                        abilityRecord
+                        abilityRecord,
                       );
-                    }
+                    },
                   );
                 }
               });
@@ -1237,7 +1238,7 @@
                   fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
                 },
               },
-              abilityAddedCallback
+              abilityAddedCallback,
             );
           } else {
             abilityAddedCallback(record);
@@ -1257,11 +1258,11 @@
         const toolAbility = guessAbility(tool);
         const abilityMod = parseInt(
           record?.data?.[`${toolAbility}Mod`] || "0",
-          10
+          10,
         );
         const proficiencyBonus = parseInt(
           record?.data?.proficiencyBonus || "2",
-          10
+          10,
         );
         api.addValue("data.otherSkills", {
           name: tool,
@@ -1418,7 +1419,7 @@
       classLevels,
       classObj,
       level,
-      newLevel
+      newLevel,
     );
     valuesToSet = { ...valuesToSet, ...spellSlotFieldsToSet };
 
@@ -1446,7 +1447,7 @@
                       recordLink.value,
                       subclass,
                       newLevel,
-                      classLevels
+                      classLevels,
                     );
                     // Get Spellcasting info for new subclass
                     const subclasses =
@@ -1457,7 +1458,7 @@
                       classLevels,
                       classObj,
                       level,
-                      newLevel
+                      newLevel,
                     );
                     api.setValues(
                       {
@@ -1472,12 +1473,12 @@
                             recordUpdated._id,
                             (freshRecord) => {
                               nextPrompt(freshRecord);
-                            }
+                            },
                           );
                         }
-                      }
+                      },
                     );
-                  }
+                  },
                 );
               } else {
                 // User cancelled or didn't select - still call the next prompt
@@ -1500,7 +1501,7 @@
               "Select a Subclass...",
               null,
               optionsQuery,
-              subclassSelection
+              subclassSelection,
             );
           }
         : null;
@@ -1517,14 +1518,14 @@
       // and if we're not prompting for one
       if (!promptSubclass) {
         const subclass = (updatedRecord?.data?.subclasses || []).find(
-          (subclass) => subclass.data.class === className
+          (subclass) => subclass.data.class === className,
         );
         const additionalFieldsToSet = addMissingClassFeatures(
           className,
           recordLink.value,
           subclass,
           newLevel,
-          classLevels
+          classLevels,
         );
         api.setValues(additionalFieldsToSet);
       }
@@ -1539,7 +1540,7 @@
             newLevel,
             level,
             hitDie,
-            recordAfterSkills
+            recordAfterSkills,
           );
         });
       } else if (promptSubclass) {
@@ -1550,7 +1551,7 @@
           level,
           hitDie,
           updatedRecord,
-          () => promptSubclass(null) // Subclass prompt after HP, no further callback needed
+          () => promptSubclass(null), // Subclass prompt after HP, no further callback needed
         );
       } else {
         // Just HP prompt
@@ -1615,20 +1616,20 @@
       if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
         abilityUsesPerDay = getTotalValueFromFields(
           record,
-          feature?.data?.fieldsToAddToUses || []
+          feature?.data?.fieldsToAddToUses || [],
         );
       }
       const abilityValue = feature?.data?.value || "";
       const abilityRestoresOn = feature?.data?.restoreOn || "";
       const savingThrowAbility = feature?.data?.savingThrowAbility || "";
       let abilityGroup = record?.data?.abilityGroups?.find(
-        (ag) => ag?.name === abilityGroupName
+        (ag) => ag?.name === abilityGroupName,
       );
       // When the group is added, or found, we add abilities to it or set data on it
       const recordDataPath = record?.dataPath || "";
       const abilityAddedCallback = (record) => {
         const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(
-          (ag) => ag?.name === abilityGroupName
+          (ag) => ag?.name === abilityGroupName,
         );
         const fieldsToSet = {};
         if (abilityGroupIndex !== -1) {
@@ -1639,7 +1640,7 @@
             api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
               api.addValue(
                 `data.abilityGroups.${abilityGroupIndex}.data.abilities`,
-                abilityRecord
+                abilityRecord,
               );
             });
           }
@@ -1690,7 +1691,7 @@
               fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
             },
           },
-          abilityAddedCallback
+          abilityAddedCallback,
         );
       } else {
         abilityAddedCallback(record);
@@ -1777,7 +1778,7 @@
         abilityScoreSelection,
         "OK",
         "Cancel",
-        abilityIncrease.count
+        abilityIncrease.count,
       );
     } else if (abilityIncrease.scores.length > 0) {
       // Add all ASIs
@@ -1865,7 +1866,7 @@
       const skillProficiencies = backgroundObj?.data?.skillProficiencies || [];
       const proficiencyBonus = parseInt(
         api.getValue("data.proficiencyBonus") || "2",
-        10
+        10,
       );
       skillProficiencies.forEach((skill) => {
         fieldsToSet[`data.${skill}Prof`] = "true";
@@ -1904,7 +1905,7 @@
       abilityScoreSelection,
       "OK",
       "Cancel",
-      3
+      3,
     );
 
     // Set the background name
@@ -1972,7 +1973,7 @@
       });
       // Check for AC calc mods
       const acCalculationMods = (feature?.data?.modifiers || []).filter(
-        (mod) => mod.data.type === "armorClassCalculation"
+        (mod) => mod.data.type === "armorClassCalculation",
       );
       if (acCalculationMods.length > 0) {
         // Get other mods
@@ -1997,7 +1998,7 @@
             if (mod.field && mod.field !== "dexterity") {
               const acBonus = parseInt(
                 record?.data?.[`${mod.field}Mod`] || "0",
-                10
+                10,
               );
               if (acBonus > calcBonus) {
                 calcBonus = acBonus;
@@ -2051,20 +2052,20 @@
         if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
           abilityUsesPerDay = getTotalValueFromFields(
             record,
-            feature?.data?.fieldsToAddToUses || []
+            feature?.data?.fieldsToAddToUses || [],
           );
         }
         const abilityValue = feature?.data?.value || "";
         const abilityRestoresOn = feature?.data?.restoreOn || "";
         const savingThrowAbility = feature?.data?.savingThrowAbility || "";
         let abilityGroup = record?.data?.abilityGroups?.find(
-          (ag) => ag?.name === abilityGroupName
+          (ag) => ag?.name === abilityGroupName,
         );
         // When the group is added, or found, we add abilities to it or set data on it
         const recordDataPath = record?.dataPath || "";
         const abilityAddedCallback = (record) => {
           const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(
-            (ag) => ag?.name === abilityGroupName
+            (ag) => ag?.name === abilityGroupName,
           );
           const fieldsToSet = {};
           if (abilityGroupIndex !== -1) {
@@ -2075,7 +2076,7 @@
                 api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
                   api.addValue(
                     `data.abilityGroups.${abilityGroupIndex}.data.abilities`,
-                    abilityRecord
+                    abilityRecord,
                   );
                 });
               }
@@ -2129,7 +2130,7 @@
                 fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
               },
             },
-            abilityAddedCallback
+            abilityAddedCallback,
           );
         } else {
           abilityAddedCallback(record);
@@ -2212,7 +2213,7 @@
       }
     });
     newSubclasses = newSubclasses.filter(
-      (subclass) => subclass._id !== "delete"
+      (subclass) => subclass._id !== "delete",
     );
     valuesToSet["data.subclasses"] = newSubclasses;
 
@@ -2245,7 +2246,7 @@
       }
     });
     newHpByLevel = newHpByLevel.filter(
-      (hpLevel) => hpLevel.className !== "delete"
+      (hpLevel) => hpLevel.className !== "delete",
     );
 
     // Set new hpByLevelArray
@@ -2369,7 +2370,7 @@
 
     const checkModifiers = getEffectsAndModifiers(
       ["abilityBonus", "abilityPenalty"],
-      ability
+      ability,
     );
     checkModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -2378,7 +2379,7 @@
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
     metadata.minRoll = minRoll;
 
@@ -2387,7 +2388,7 @@
       "1d20",
       modifiers,
       metadata,
-      "ability"
+      "ability",
     );
   }
 
@@ -2410,7 +2411,7 @@
     // Check effects for all save bonuses and penalties for saves
     const saveModifiers = getEffectsAndModifiers(
       ["saveBonus", "savePenalty"],
-      save
+      save,
     );
     saveModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -2419,7 +2420,7 @@
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     const metadata = {
@@ -2434,7 +2435,7 @@
       "1d20",
       modifiers,
       metadata,
-      "save"
+      "save",
     );
   }
 
@@ -2464,13 +2465,13 @@
         `${hitdie}`,
         modifiers,
         metadata,
-        "hitdie"
+        "hitdie",
       );
     } else {
       api.showNotification(
         `No ${hitdie} Hit Dice Remaining`,
         "red",
-        "No Hit Dice"
+        "No Hit Dice",
       );
     }
   }
@@ -2640,13 +2641,13 @@
 
     let saveModifiers = getEffectsAndModifiers(
       ["saveBonus", "savePenalty"],
-      "death"
+      "death",
     );
 
     const minRoll = getMinRollModifier(saveModifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     saveModifiers = saveModifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     if (minRoll) {
@@ -2677,7 +2678,7 @@
               // Update hp
               const conMod = parseInt(
                 updatedRecord?.data?.constitutionMod || "0",
-                10
+                10,
               );
               let newHpByLevel = getHpForLevel(conMod, updatedRecord);
               let curHp = updatedRecord?.data?.curhp || 0;
@@ -2688,7 +2689,7 @@
 
               api.setValues(valuesToSet);
             }
-          }
+          },
         );
       } catch (error) {
         // No-op
@@ -2728,7 +2729,7 @@
       "Select a Class to Add...",
       null,
       optionsQuery,
-      classSelection
+      classSelection,
     );
   }
 </script>
@@ -2763,7 +2764,7 @@
             field="strength"
             label="STR"
             onchange="setModifier(value, 'strength')"
-            onclick="rollCheck('strength');"
+            onclick="rollCheck('strength')"
           ></numberfield>
         </indicator>
       </div>
@@ -2775,7 +2776,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('strength');"
+          onclick="rollCheck('strength')"
         >
         </iconbutton>
       </div>
@@ -2797,7 +2798,7 @@
             field="dexterity"
             label="DEX"
             onchange="setModifier(value, 'dexterity')"
-            onclick="rollCheck('dexterity');"
+            onclick="rollCheck('dexterity')"
           ></numberfield>
         </indicator>
       </div>
@@ -2809,7 +2810,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('dexterity');"
+          onclick="rollCheck('dexterity')"
         >
         </iconbutton>
       </div>
@@ -2831,7 +2832,7 @@
             field="constitution"
             label="CON"
             onchange="setModifier(value, 'constitution')"
-            onclick="rollCheck('constitution');"
+            onclick="rollCheck('constitution')"
           ></numberfield>
         </indicator>
       </div>
@@ -2843,7 +2844,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('constitution');"
+          onclick="rollCheck('constitution')"
         >
         </iconbutton>
       </div>
@@ -2865,7 +2866,7 @@
             field="intelligence"
             label="INT"
             onchange="setModifier(value, 'intelligence')"
-            onclick="rollCheck('intelligence');"
+            onclick="rollCheck('intelligence')"
           ></numberfield>
         </indicator>
       </div>
@@ -2877,7 +2878,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('intelligence');"
+          onclick="rollCheck('intelligence')"
         >
         </iconbutton>
       </div>
@@ -2899,7 +2900,7 @@
             field="wisdom"
             label="WIS"
             onchange="setModifier(value, 'wisdom')"
-            onclick="rollCheck('wisdom');"
+            onclick="rollCheck('wisdom')"
           ></numberfield>
         </indicator>
       </div>
@@ -2911,7 +2912,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('wisdom');"
+          onclick="rollCheck('wisdom')"
         >
         </iconbutton>
       </div>
@@ -2933,7 +2934,7 @@
             field="charisma"
             label="CHA"
             onchange="setModifier(value, 'charisma')"
-            onclick="rollCheck('charisma');"
+            onclick="rollCheck('charisma')"
           ></numberfield>
         </indicator>
       </div>
@@ -2945,7 +2946,7 @@
           size="xl"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('charisma');"
+          onclick="rollCheck('charisma')"
         >
         </iconbutton>
       </div>
@@ -2968,7 +2969,7 @@
           variant="light"
           options='[{"icon": "d20", "label": "Roll Death Save", "value": "roll"}]'
           onchange=""
-          onclick="rollDeathSave();"
+          onclick="rollDeathSave()"
         ></iconbutton>
       </div>
       <div style="display: flex; flex-direction: column">
@@ -3073,14 +3074,14 @@
           >
           </numberfield>
           <!-- Panel to edit HP per level -->
-          <popover onclose="updateHpPerLevel();">
+          <popover onclose="updateHpPerLevel()">
             <popover.target>
               <iconbutton
                 field="Edit Hit Points per Level"
                 size="md"
                 variant="light"
                 color="red"
-                onload="onLoadCharacter();"
+                onload="onLoadCharacter()"
                 options='[{"icon": "IconHeart", "label": "Edit Hit Points per Level", "value": "hpPerLevel"}]'
               >
               </iconbutton>
@@ -3251,7 +3252,7 @@
                     size="xs"
                     label="Set HP per Level"
                     variant="outline"
-                    onclick="api.closeOpenedPopovers();"
+                    onclick="api.closeOpenedPopovers()"
                   ></button>
                 </div>
               </div>
@@ -3282,7 +3283,7 @@
                 variant="default"
                 options='[{"icon": "D6-6", "label": "Roll D6 Hit Die", "value": "roll"}]'
                 onchange=""
-                onclick="rollHitDie('d6');"
+                onclick="rollHitDie('d6')"
               ></iconbutton>
             </indicator>
             <indicator
@@ -3298,7 +3299,7 @@
                 variant="default"
                 options='[{"icon": "D8-8", "label": "Roll D8 Hit Die", "value": "roll"}]'
                 onchange=""
-                onclick="rollHitDie('d8');"
+                onclick="rollHitDie('d8')"
               ></iconbutton>
             </indicator>
             <indicator
@@ -3314,7 +3315,7 @@
                 variant="default"
                 options='[{"icon": "D10-10", "label": "Roll D10 Hit Die", "value": "roll"}]'
                 onchange=""
-                onclick="rollHitDie('d10');"
+                onclick="rollHitDie('d10')"
               ></iconbutton>
             </indicator>
             <indicator
@@ -3330,7 +3331,7 @@
                 variant="default"
                 options='[{"icon": "D12-12", "label": "Roll D12 Hit Die", "value": "roll"}]'
                 onchange=""
-                onclick="rollHitDie('d12');"
+                onclick="rollHitDie('d12')"
               ></iconbutton>
             </indicator>
           </div>
@@ -3343,7 +3344,7 @@
                 variant="default"
                 options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]'
                 onchange=""
-                onclick="shortRest();"
+                onclick="shortRest()"
               ></iconbutton>
               <iconbutton
                 field="Long Rest"
@@ -3351,7 +3352,7 @@
                 variant="default"
                 options='[{"icon": "IconBed", "label": "Long Rest", "value": "longrest"}]'
                 onchange=""
-                onclick="longRest();"
+                onclick="longRest()"
               ></iconbutton>
             </div>
           </div>
@@ -3363,7 +3364,7 @@
             size="xs"
             placeholder="0"
             field="xp"
-            onchange="showHideLevelUp();"
+            onchange="showHideLevelUp()"
             label="XP"
           ></numberfield>
           <numberfield
@@ -3372,7 +3373,7 @@
             placeholder="0"
             field="xpNext"
             label="Next Level"
-            onchange="showHideLevelUp();"
+            onchange="showHideLevelUp()"
           ></numberfield>
           <numberfield
             width="20%"
@@ -3380,7 +3381,7 @@
             placeholder="2"
             field="proficiencyBonus"
             label="P.B."
-            onchange="updateProficiencies(value);"
+            onchange="updateProficiencies(value)"
           ></numberfield>
         </div>
       </div>
@@ -3401,7 +3402,7 @@
         hidden="true"
         field="levelUpButton"
         variant="filled"
-        onclick="levelUp();"
+        onclick="levelUp()"
       ></button>
       <list
         width="fit-content"
@@ -3409,7 +3410,7 @@
         hidden="true"
         listtype="class_list"
         field="classes"
-        onchange="onDeleteClass();"
+        onchange="onDeleteClass()"
       >
       </list>
     </div>
@@ -3429,7 +3430,7 @@
         hidden="true"
         listtype="species_list"
         field="species"
-        onchange="onDeleteSpecies();"
+        onchange="onDeleteSpecies()"
       >
       </list>
     </div>
@@ -3448,7 +3449,7 @@
         hidden="true"
         listtype="background_list"
         field="backgrounds"
-        onchange="onDeleteBackground();"
+        onchange="onDeleteBackground()"
       >
       </list>
     </div>
@@ -3492,7 +3493,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'strength');"
+              onchange="setSave(value, 'strength')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3503,7 +3504,7 @@
             size="xs"
             field="strengthSave"
             label="Strengh"
-            onclick="rollSave('strength');"
+            onclick="rollSave('strength')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3512,7 +3513,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('strength');"
+              onclick="rollSave('strength')"
             >
             </iconbutton>
           </div>
@@ -3527,7 +3528,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'dexterity');"
+              onchange="setSave(value, 'dexterity')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3538,7 +3539,7 @@
             size="xs"
             field="dexteritySave"
             label="Dexterity"
-            onclick="rollSave('dexterity');"
+            onclick="rollSave('dexterity')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3547,7 +3548,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('dexterity');"
+              onclick="rollSave('dexterity')"
             >
             </iconbutton>
           </div>
@@ -3573,7 +3574,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'constitution');"
+              onchange="setSave(value, 'constitution')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3584,7 +3585,7 @@
             size="xs"
             field="constitutionSave"
             label="Constitution"
-            onclick="rollSave('constitution');"
+            onclick="rollSave('constitution')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3593,7 +3594,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('constitution');"
+              onclick="rollSave('constitution')"
             >
             </iconbutton>
           </div>
@@ -3608,7 +3609,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'intelligence');"
+              onchange="setSave(value, 'intelligence')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3619,7 +3620,7 @@
             size="xs"
             field="intelligenceSave"
             label="Intelligence"
-            onclick="rollSave('intelligence');"
+            onclick="rollSave('intelligence')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3628,7 +3629,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('intelligence');"
+              onclick="rollSave('intelligence')"
             >
             </iconbutton>
           </div>
@@ -3654,7 +3655,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'wisdom');"
+              onchange="setSave(value, 'wisdom')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3665,7 +3666,7 @@
             size="xs"
             field="wisdomSave"
             label="Wisdom"
-            onclick="rollSave('wisdom');"
+            onclick="rollSave('wisdom')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3674,7 +3675,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('wisdom');"
+              onclick="rollSave('wisdom')"
             >
             </iconbutton>
           </div>
@@ -3689,7 +3690,7 @@
               color="default"
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'charisma');"
+              onchange="setSave(value, 'charisma')"
               onclick=""
             ></iconbutton>
           </div>
@@ -3700,7 +3701,7 @@
             size="xs"
             field="charismaSave"
             label="Charisma"
-            onclick="rollSave('charisma');"
+            onclick="rollSave('charisma')"
           ></numberfield>
           <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
@@ -3709,7 +3710,7 @@
               color="default"
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('charisma');"
+              onclick="rollSave('charisma')"
             >
             </iconbutton>
           </div>
