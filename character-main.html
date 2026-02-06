@@ -64,6 +64,7 @@
             "data.curhp": curHp + hpToAdd,
             "data.hitpoints": curHpMax + hpToAdd,
             "data.hpByLevel": JSON.stringify(hpByLevelArr),
+            [`data.hpLevel${totalLevel}`]: addHp,
           };
 
           // Update hpByLevel fields
