@@ -262,8 +262,8 @@
       <dropdown
         multiselect="1"
         placeholder="Select Type"
-        onchange="showHideFields();"
-        onload="showHideFields();"
+        onchange="showHideFields()"
+        onload="showHideFields()"
         field="type"
         label="Type"
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
@@ -271,13 +271,38 @@
       {"label": "Tool", "value": "tool"}, {"label": "Magic Item", "value": "magic item"}, {"label": "Item Pack", "value": "pack"}]'
       >
       </dropdown>
-      <stringfield
-        width="100%"
+      <dropdown
+        placeholder="Select Subtype..."
+        onchange="showHideFields()"
         field="subtype"
         label="Subtype"
-        onchange="showHideFields();"
-        placeholder="Enter Subtype..."
-      ></stringfield>
+        combo="true"
+        hidewhenidentified="false"
+        options='[{"label": "Ammunition", "value": "Ammunition"},
+    {"label": "Art Object", "value": "Art Object"},
+    {"label": "Book", "value": "Book"},
+    {"label": "Clothing", "value": "Clothing"},
+    {"label": "General", "value": "General"},
+    {"label": "Heavy Armor", "value": "Heavy Armor"},
+    {"label": "Light Armor", "value": "Light Armor"},
+    {"label": "Medium Armor", "value": "Medium Armor"},
+    {"label": "Martial Melee Weapon", "value": "Martial Melee Weapon"},
+    {"label": "Martial Ranged Weapon", "value": "Martial Ranged Weapon"},
+    {"label": "Simple Melee Weapon", "value": "Simple Melee Weapon"},
+    {"label": "Simple Ranged Weapon", "value": "Simple Ranged Weapon"},
+    {"label": "Rare Melee Weapon", "value": "Rare Melee Weapon"},
+    {"label": "Rare Ranged Weapon", "value": "Rare Ranged Weapon"},
+    {"label": "Trade Goods", "value": "Trade Goods"},
+    {"label": "Tools", "value": "Tools"},
+    {"label": "Potion", "value": "Potion"},
+    {"label": "Ring", "value": "Ring"},
+    {"label": "Rod", "value": "Rod"},
+    {"label": "Scroll", "value": "Scroll"},
+    {"label": "Staff", "value": "Staff"},
+    {"label": "Wand", "value": "Wand"},
+    {"label": "Wondrous Item", "value": "Wondrous Item"},
+    {"label": "Treasure", "value": "Treasure"}]'
+      ></dropdown>
     </div>
   </div>
 
@@ -332,7 +357,7 @@
       textalign="left"
       size="sm"
       hidewhenidentified="false"
-      onchange="showHideFields();"
+      onchange="showHideFields()"
     ></checkbox>
     <checkbox
       hidden="true"
@@ -341,7 +366,7 @@
       textalign="left"
       size="sm"
       hidewhenidentified="false"
-      onchange="showHideFields();"
+      onchange="showHideFields()"
     ></checkbox>
   </div>
 
@@ -406,7 +431,7 @@
       hidden="true"
       field="weaponProperties"
       label="Weapon Properties"
-      onchange="showHideFields();"
+      onchange="showHideFields()"
       multiselect="10"
       placeholder="Select Weapon Properties"
       searchable="true"
