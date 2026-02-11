@@ -2441,40 +2441,60 @@
   }
 
   function rollHitDie(hitdie) {
-    const hitDieField = `${hitdie}HitDie`;
-    const hitDieRemaining = parseInt(record?.data?.[hitDieField] || "0", 10);
+    const recordId = record._id;
+    api.getRecord("characters", recordId, (record) => {
+      const hitDieField = `${hitdie}HitDie`;
+      const countField = `${hitdie}HitDieCount`;
+      const count = parseInt(record?.data?.[countField] || "1", 10);
+      const hitDieRemaining = parseInt(record?.data?.[hitDieField] || "0", 10);
 
-    if (hitDieRemaining > 0) {
-      // We add the constitution modifier to the roll
+      if (count > hitDieRemaining) {
+        const message =
+          hitDieRemaining === 0
+            ? `No ${hitdie} Hit Dice Remaining`
+            : `Only ${hitDieRemaining} ${hitdie} Hit Dice Remaining`;
+        api.showNotification(message, "red", "Insufficient Hit Dice");
+        return;
+      }
+
+      if (count <= 0) {
+        api.showNotification(
+          "Must roll at least 1 Hit Die",
+          "red",
+          "Invalid Count",
+        );
+        return;
+      }
+
+      // We add the constitution modifier to each die roll
       const conMod = parseInt(record?.data?.constitutionMod || "0", 10);
       const modifiers = [
         {
           name: "Constitution",
-          value: conMod,
+          value: conMod * count, // Multiply by count since we're rolling multiple dice
           active: true,
         },
       ];
       const metadata = {
         rollName: "Hit Die",
-        tooltip: `Recovering HP with a ${hitdie} Hit Die`,
+        tooltip: `Recovering HP with ${count} ${hitdie} Hit Die`,
         hitDieField: hitDieField,
-        hitDieRemaining: hitDieRemaining,
+        hitDieCount: count,
       };
 
       api.promptRoll(
-        `Roll ${hitdie} Hit Die`,
-        `${hitdie}`,
+        `Roll ${count} ${hitdie} Hit Die`,
+        `${count}${hitdie}`,
         modifiers,
         metadata,
         "hitdie",
       );
-    } else {
-      api.showNotification(
-        `No ${hitdie} Hit Dice Remaining`,
-        "red",
-        "No Hit Dice",
-      );
-    }
+
+      // Reset count field to 1 after rolling
+      const valuesToSet = {};
+      valuesToSet[`data.${countField}`] = 1;
+      api.setValues(valuesToSet);
+    });
   }
 
   function shortRest() {
@@ -3278,14 +3298,46 @@
               color="red"
               defaultvalue=""
             >
-              <iconbutton
-                field="Roll D6 Hit Die"
-                size="lg"
-                variant="default"
-                options='[{"icon": "D6-6", "label": "Roll D6 Hit Die", "value": "roll"}]'
-                onchange=""
-                onclick="rollHitDie('d6')"
-              ></iconbutton>
+              <popover>
+                <popover.target>
+                  <iconbutton
+                    field="Roll D6 Hit Die"
+                    size="lg"
+                    variant="default"
+                    options='[{"icon": "D6-6", "label": "Roll D6 Hit Die", "value": "roll"}]'
+                    onchange=""
+                  ></iconbutton>
+                </popover.target>
+                <popover.dropdown>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                      padding: 8px;
+                    "
+                  >
+                    <numberfield
+                      size="xs"
+                      field="d6HitDieCount"
+                      label="Number of Dice"
+                      placeholder="1"
+                      defaultvalue="1"
+                      min="1"
+                      updateonblur="true"
+                    ></numberfield>
+                    <button
+                      size="xs"
+                      label="Roll for HP"
+                      variant="filled"
+                      onclick="
+                        rollHitDie('d6');
+                        api.closeOpenedPopovers();
+                      "
+                    ></button>
+                  </div>
+                </popover.dropdown>
+              </popover>
             </indicator>
             <indicator
               position="top-center"
@@ -3294,14 +3346,46 @@
               color="red"
               defaultvalue=""
             >
-              <iconbutton
-                field="Roll D8 Hit Die"
-                size="lg"
-                variant="default"
-                options='[{"icon": "D8-8", "label": "Roll D8 Hit Die", "value": "roll"}]'
-                onchange=""
-                onclick="rollHitDie('d8')"
-              ></iconbutton>
+              <popover>
+                <popover.target>
+                  <iconbutton
+                    field="Roll D8 Hit Die"
+                    size="lg"
+                    variant="default"
+                    options='[{"icon": "D8-8", "label": "Roll D8 Hit Die", "value": "roll"}]'
+                    onchange=""
+                  ></iconbutton>
+                </popover.target>
+                <popover.dropdown>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                      padding: 8px;
+                    "
+                  >
+                    <numberfield
+                      size="xs"
+                      field="d8HitDieCount"
+                      label="Number of Dice"
+                      placeholder="1"
+                      defaultvalue="1"
+                      min="1"
+                      updateonblur="true"
+                    ></numberfield>
+                    <button
+                      size="xs"
+                      label="Roll for HP"
+                      variant="filled"
+                      onclick="
+                        rollHitDie('d8');
+                        api.closeOpenedPopovers();
+                      "
+                    ></button>
+                  </div>
+                </popover.dropdown>
+              </popover>
             </indicator>
             <indicator
               position="top-center"
@@ -3310,14 +3394,46 @@
               color="red"
               defaultvalue=""
             >
-              <iconbutton
-                field="Roll D10 Hit Die"
-                size="lg"
-                variant="default"
-                options='[{"icon": "D10-10", "label": "Roll D10 Hit Die", "value": "roll"}]'
-                onchange=""
-                onclick="rollHitDie('d10')"
-              ></iconbutton>
+              <popover>
+                <popover.target>
+                  <iconbutton
+                    field="Roll D10 Hit Die"
+                    size="lg"
+                    variant="default"
+                    options='[{"icon": "D10-10", "label": "Roll D10 Hit Die", "value": "roll"}]'
+                    onchange=""
+                  ></iconbutton>
+                </popover.target>
+                <popover.dropdown>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                      padding: 8px;
+                    "
+                  >
+                    <numberfield
+                      size="xs"
+                      field="d10HitDieCount"
+                      label="Number of Dice"
+                      placeholder="1"
+                      defaultvalue="1"
+                      min="1"
+                      updateonblur="true"
+                    ></numberfield>
+                    <button
+                      size="xs"
+                      label="Roll for HP"
+                      variant="filled"
+                      onclick="
+                        rollHitDie('d10');
+                        api.closeOpenedPopovers();
+                      "
+                    ></button>
+                  </div>
+                </popover.dropdown>
+              </popover>
             </indicator>
             <indicator
               position="top-center"
@@ -3326,14 +3442,46 @@
               color="red"
               defaultvalue=""
             >
-              <iconbutton
-                field="Roll D12 Hit Die"
-                size="lg"
-                variant="default"
-                options='[{"icon": "D12-12", "label": "Roll D12 Hit Die", "value": "roll"}]'
-                onchange=""
-                onclick="rollHitDie('d12')"
-              ></iconbutton>
+              <popover>
+                <popover.target>
+                  <iconbutton
+                    field="Roll D12 Hit Die"
+                    size="lg"
+                    variant="default"
+                    options='[{"icon": "D12-12", "label": "Roll D12 Hit Die", "value": "roll"}]'
+                    onchange=""
+                  ></iconbutton>
+                </popover.target>
+                <popover.dropdown>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 8px;
+                      padding: 8px;
+                    "
+                  >
+                    <numberfield
+                      size="xs"
+                      field="d12HitDieCount"
+                      label="Number of Dice"
+                      placeholder="1"
+                      defaultvalue="1"
+                      min="1"
+                      updateonblur="true"
+                    ></numberfield>
+                    <button
+                      size="xs"
+                      label="Roll for HP"
+                      variant="filled"
+                      onclick="
+                        rollHitDie('d12');
+                        api.closeOpenedPopovers();
+                      "
+                    ></button>
+                  </div>
+                </popover.dropdown>
+              </popover>
             </indicator>
           </div>
           <div style="margin-left: auto; display: flex; flex-direction: column">

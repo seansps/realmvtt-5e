@@ -13,7 +13,8 @@ api.getRecord('characters', recordId, (record) => {
 
     const valuesToSet = {};
     if (hitDieRemaining && hitDieField && recordId) {
-      valuesToSet[`data.${hitDieField}`] = hitDieRemaining - 1 <= 0 ? null : hitDieRemaining - 1;
+      const hitDieCount = parseInt(data?.roll?.metadata?.hitDieCount || "1", 10);
+      valuesToSet[`data.${hitDieField}`] = hitDieRemaining - hitDieCount <= 0 ? null : hitDieRemaining - hitDieCount;
     }
 
     // Add the amount rolled + con mod to the character's curhp
