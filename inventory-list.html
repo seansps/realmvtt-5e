@@ -54,9 +54,9 @@
     const effects = api.getValue(`${itemDataPath}.data.effects`) || [];
     const healing = api.getValue(`${itemDataPath}.data.healing`);
     const damage = api.getValue(`${itemDataPath}.data.useDamage`);
-    const portrait = encodeURI(api.getValue(`${itemDataPath}.portrait`));
-    const itemIcon = portrait
-      ? `![${itemName}](${assetUrl}${portrait}?width=40&height=40) `
+    const rawPortrait = api.getValue(`${itemDataPath}.portrait`);
+    const itemIcon = rawPortrait
+      ? `![${itemName}](${assetUrl}${encodeURI(rawPortrait)}?width=40&height=40) `
       : "";
     const itemDescription = api.richTextToMarkdown(description || "");
     let markdownDescription = `
@@ -136,7 +136,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
         (modifier) =>
           modifier.data.type === "hitpoints" ||
           modifier.data.type === "armorClassBonus" ||
-          modifier.data.type === "armorClassPenalty"
+          modifier.data.type === "armorClassPenalty",
       ).length > 0;
 
     if (!hasModifiers) {
@@ -276,7 +276,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       width="100%"
       field="count"
       placeholder="0"
-      onchange="setTotalWeight();"
+      onchange="setTotalWeight()"
     ></numberfield>
   </div>
   <div style="min-width: 50px; flex-grow: 1">
@@ -295,7 +295,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     field="attuned"
     variant="default"
     options='[{"icon": "IconDiamondOff", "label": "Not Attuned", "value": "false"}, {"icon": "IconDiamond", "label": "Attuned", "value": "true"}]'
-    onchange="onItemAttuned();"
+    onchange="onItemAttuned()"
     onclick=""
   ></iconbutton>
   <div style="max-width: 60px">
@@ -306,7 +306,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       width="60px"
       field="useBtn"
       variant="light"
-      onclick="useItem();"
+      onclick="useItem()"
       label="Use"
     ></button>
   </div>
@@ -331,7 +331,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       defaultvalue="carried"
       disablediflocked="false"
       options='[{"label": "Carried", "value": "carried"}, {"label": "Equipped", "value": "equipped"}, {"label": "Dropped", "value": "dropped"}]'
-      onchange="onItemEquipped();"
+      onchange="onItemEquipped()"
     ></dropdown>
   </div>
 </div>
