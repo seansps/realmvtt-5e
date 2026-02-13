@@ -143,15 +143,24 @@
       valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
     }
 
-    // Parse for a saving throw such as `Strength Saving Throw: DC 12`
+    // Parse for a saving throw — supports multiple formats:
+    // "Strength Saving Throw: DC 12"
+    // "DC 13 Strength saving throw"
+    // "makes a DC 15 Wisdom saving throw"
     const saveMatch = description.match(
       /([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/
+    ) || description.match(
+      /DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/
     );
     if (saveMatch) {
-      valuesToSet[`${actionDataPath}.data.saveDC`] = parseInt(saveMatch[2], 10);
+      // First format: ability is group 1, DC is group 2
+      // Second format: DC is group 1, ability is group 2
+      const ability = saveMatch[1].match(/^\d+$/) ? saveMatch[2] : saveMatch[1];
+      const dc = saveMatch[1].match(/^\d+$/) ? parseInt(saveMatch[1], 10) : parseInt(saveMatch[2], 10);
+      valuesToSet[`${actionDataPath}.data.saveDC`] = dc;
       valuesToSet[`${actionDataPath}.data.isSave`] = true;
       valuesToSet[`${actionDataPath}.data.savingThrows`] = [
-        saveMatch[1].toLowerCase(),
+        ability.toLowerCase(),
       ];
       valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
     }
@@ -731,14 +740,15 @@ ${effectButtons}
 <div style="width: 100%">
   <!-- Name and Buttons -->
   <div style="display: flex; flex-direction: row; gap: 4px">
-    <namefield
-      size="xs"
-      width="100%"
-      field="namefield"
-      placeholder="Enter Name..."
-      variant="unstyled"
-      onchange="updateName(value);"
-    ></namefield>
+    <div style="flex: 1">
+      <namefield
+        size="xs"
+        field="namefield"
+        placeholder="Enter Name..."
+        variant="unstyled"
+        onchange="updateName(value);"
+      ></namefield>
+    </div>
     <!-- Uses / Day  Counter -->
     <div style="min-width: 50px">
       <counter
@@ -752,17 +762,15 @@ ${effectButtons}
       </counter>
     </div>
     <!-- Use Button -->
-    <div>
-      <button
-        hidden="true"
-        size="xs"
-        radius="xs"
-        field="useBtn"
-        label="Use"
-        variant="light"
-        onclick="useAction();"
-      ></button>
-    </div>
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      field="useBtn"
+      label="Use"
+      variant="light"
+      onclick="useAction();"
+    ></button>
     <!-- Roll Attack -->
     <iconbutton
       hidden="true"
@@ -774,31 +782,27 @@ ${effectButtons}
       onclick="handleAttack();"
     >
     </iconbutton>
-    <div>
-      <!-- Roll Damage -->
-      <button
-        hidden="true"
-        size="xs"
-        radius="xs"
-        field="rollDamageBtn"
-        label="Damage"
-        variant="light"
-        onclick="rollDamage(false);"
-      ></button>
-    </div>
+    <!-- Roll Damage -->
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      field="rollDamageBtn"
+      label="Damage"
+      variant="light"
+      onclick="rollDamage(false);"
+    ></button>
     <!-- Roll Crit -->
-    <div>
-      <button
-        hidden="true"
-        size="xs"
-        radius="xs"
-        field="rollCriticalBtn"
-        label="Critical"
-        variant="light"
-        color="red"
-        onclick="rollDamage(true);"
-      ></button>
-    </div>
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      field="rollCriticalBtn"
+      label="Critical"
+      variant="light"
+      color="red"
+      onclick="rollDamage(true);"
+    ></button>
   </div>
 
   <!-- Description -->

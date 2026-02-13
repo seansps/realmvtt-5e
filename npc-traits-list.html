@@ -1,4 +1,47 @@
 <script>
+  // Convert 5e formatted damage strings to string Realm VTT needs such as 1d4 piercing + 3 piercing + 2d6 poison (converted from (1d4 + 3) piercing damage plus (2d6) poison damage)
+  function getDamage(description) {
+    // Handle both formats: "7 (1d8 + 3)" and "1d8 + 3"
+    const patterns = [
+      /(\d+) \((\d+d\d+)(?:\s*([-+])\s*(\d+))?\) (\w+) damage(?!\s+or)/gi, // Format: "7 (1d8 + 3) piercing" not followed by "or"
+      /(\d+d\d+)(?:\s*([-+])\s*(\d+))? (\w+) damage(?!\s+or)/gi, // Format: "1d8 + 3 piercing" not followed by "or"
+    ];
+
+    let damageString = "";
+
+    // Take only the part before "or" if it exists
+    const mainDescription = description.split(/,?\s+or\s+/)[0];
+
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(mainDescription)) !== null) {
+        if (match[0].includes("(")) {
+          // Format: "7 (1d8 + 3) piercing"
+          const [, , dice, math, bonus, type] = match;
+          const typeLower = type.toLowerCase();
+          if (math) {
+            damageString += `${dice} ${typeLower} ${math} ${bonus} ${typeLower} + `;
+          } else {
+            damageString += `${dice} ${typeLower} + `;
+          }
+        } else {
+          // Format: "1d8 + 3 piercing"
+          const [, dice, math, bonus, type] = match;
+          const typeLower = type.toLowerCase();
+          if (math) {
+            damageString += `${dice} ${typeLower} ${math} ${bonus} ${typeLower} + `;
+          } else {
+            damageString += `${dice} ${typeLower} + `;
+          }
+        }
+      }
+    }
+
+    // Remove trailing ' + ' if present
+    damageString = damageString.replace(/ \+ $/, "");
+    return damageString;
+  }
+
   function onTraitNameChange(name) {
     const traitDataPath = dataPath.replace(".name", "");
     const trait = api.getValue(traitDataPath);
@@ -63,6 +106,33 @@
     );
   }
 
+  function updateIsSave(isSave) {
+    const traitDataPath = dataPath.replace(".data.isSave", "");
+    api.setValue(`${traitDataPath}.fields.useBtn.hidden`, !isSave);
+  }
+
+  function updateDamage(damage) {
+    const traitDataPath = dataPath.replace(".data.damage", "");
+    api.setValue(
+      `${traitDataPath}.fields.rollDamageBtn.hidden`,
+      damage === "" || damage === undefined || damage === null,
+    );
+  }
+
+  function updateHealing(healing) {
+    const traitDataPath = dataPath.replace(".data.healing", "");
+    api.setValue(`${traitDataPath}.fields.useBtn.hidden`, !healing);
+  }
+
+  function rollDamage() {
+    const traitDataPath = dataPath.replace(".data.rollDamageBtn", "");
+    const trait = api.getValue(traitDataPath);
+    const name = trait?.name || "Trait";
+    const damage = trait?.data?.damage || "1";
+
+    api.promptRoll(`${name} Damage`, damage, [], {}, "damage");
+  }
+
   function showHideSpellcasting(isSpellcasting) {
     const traitDataPath = dataPath.replace(".data.isSpellcasting", "");
     api.setValue(`${traitDataPath}.fields.spells.hidden`, !isSpellcasting);
@@ -71,6 +141,35 @@
   function updateTraitDescription(description) {
     const traitDataPath = dataPath.replace(".data.description", "");
     const valuesToSet = {};
+
+    // Parse for a saving throw — supports multiple formats:
+    // "Strength Saving Throw: DC 12"
+    // "DC 13 Strength saving throw"
+    // "makes a DC 15 Wisdom saving throw"
+    const saveMatch = description.match(
+      /([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/,
+    ) || description.match(
+      /DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/,
+    );
+    if (saveMatch) {
+      // First format: ability is group 1, DC is group 2
+      // Second format: DC is group 1, ability is group 2
+      const ability = saveMatch[1].match(/^\d+$/) ? saveMatch[2] : saveMatch[1];
+      const dc = saveMatch[1].match(/^\d+$/) ? parseInt(saveMatch[1], 10) : parseInt(saveMatch[2], 10);
+      valuesToSet[`${traitDataPath}.data.saveDC`] = dc;
+      valuesToSet[`${traitDataPath}.data.isSave`] = true;
+      valuesToSet[`${traitDataPath}.data.savingThrows`] = [
+        ability.toLowerCase(),
+      ];
+      valuesToSet[`${traitDataPath}.fields.useBtn.hidden`] = false;
+    }
+
+    // Parse damage from description
+    const damageString = getDamage(description);
+    if (damageString) {
+      valuesToSet[`${traitDataPath}.data.damage`] = damageString;
+      valuesToSet[`${traitDataPath}.fields.rollDamageBtn.hidden`] = false;
+    }
 
     // Parse for spellcasting — supports two common formats:
     // "using Wisdom as the spellcasting ability (spell save DC 12)"
@@ -131,6 +230,54 @@
     }
 
     // We'll send a message with the description of the trait as well as macros as relevant
+    let savingThrowButtons = "";
+    if (trait?.data?.isSave) {
+      const savingThrows = trait?.data?.savingThrows || [];
+      const saveDc = trait?.data?.saveDC || 0;
+      savingThrows.forEach((savingThrow) => {
+        // Look up saves of selected tokens and prompt roll for each
+        const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
+const selectedTokens = api.getSelectedOrDroppedToken();
+selectedTokens.forEach(token => {
+	let saveModifiers = [];
+	const modifier = token?.data?.['${savingThrow}Save'] || 0;
+	saveModifiers.push({
+		name: '${capitalize(savingThrow)} Save',
+		value: modifier,
+		active: true,
+	});
+
+	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+	saveMods.forEach(mod => {
+		saveModifiers.push(mod);
+	});
+
+	const minRoll = getMinRollModifier(saveModifiers);
+  // Filter these out of the modifiers array, we don't need them to be toggleable
+  saveModifiers = saveModifiers.filter(m => !m.value.toString().startsWith('minroll'));
+
+	const metadata = {
+		"rollName": '${capitalize(savingThrow)} Save',
+		"tooltip": '${capitalize(savingThrow)} Saving Throw',
+		"dc": ${saveDc},
+		"minRoll": minRoll
+	}
+
+	api.promptRollForToken(token, '${capitalize(
+    savingThrow,
+  )} Save', '1d20', saveModifiers, metadata, 'save');
+});
+\`\`\``;
+        // Add the rollSaveButton to the savingThrowButtons
+        savingThrowButtons += rollSaveButton + "\n";
+      });
+    }
+
+    const healingButton = trait?.data?.healing
+      ? `\`\`\`Roll_Healing
+api.promptRoll('${name} Healing', '${trait?.data?.healing}', [], {}, 'healing')
+\`\`\``
+      : "";
 
     // Create macros for all effects that this trait can apply
     const effects = trait?.data?.effects || [];
@@ -140,10 +287,13 @@
 #### ${name}
 
 ---
+
 ${description}
 
 ---
 
+${savingThrowButtons}
+${healingButton}
 ${effectButtons}
 `;
 
@@ -154,14 +304,15 @@ ${effectButtons}
 <div style="width: 100%">
   <!-- Name and Buttons -->
   <div style="display: flex; flex-direction: row; gap: 4px">
-    <namefield
-      size="xs"
-      width="100%"
-      field="namefield"
-      placeholder="Enter Name..."
-      variant="unstyled"
-      onchange="onTraitNameChange(value)"
-    ></namefield>
+    <div style="flex: 1">
+      <namefield
+        size="xs"
+        field="namefield"
+        placeholder="Enter Name..."
+        variant="unstyled"
+        onchange="onTraitNameChange(value)"
+      ></namefield>
+    </div>
     <div style="align-self: center">
       <checkbox
         hidden="true"
@@ -183,17 +334,25 @@ ${effectButtons}
       ></counter>
     </div>
     <!-- Use Button -->
-    <div>
-      <button
-        hidden="true"
-        size="xs"
-        radius="xs"
-        field="useBtn"
-        label="Use"
-        variant="light"
-        onclick="useTrait()"
-      ></button>
-    </div>
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      field="useBtn"
+      label="Use"
+      variant="light"
+      onclick="useTrait()"
+    ></button>
+    <!-- Roll Damage -->
+    <button
+      hidden="true"
+      size="xs"
+      radius="xs"
+      field="rollDamageBtn"
+      label="Damage"
+      variant="light"
+      onclick="rollDamage()"
+    ></button>
   </div>
 
   <!-- Description -->
@@ -257,6 +416,32 @@ ${effectButtons}
       >
       </numberfield>
     </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: flex-end;
+      "
+    >
+      <stringfield
+        field="damage"
+        label="Damage"
+        size="xs"
+        width="50%"
+        placeholder="Enter Damage..."
+        onchange="updateDamage(value)"
+      ></stringfield>
+      <stringfield
+        field="healing"
+        label="Is Healing"
+        description="Healing roll, if applicable"
+        size="xs"
+        width="50%"
+        placeholder="Enter Healing..."
+        onchange="updateHealing(value)"
+      ></stringfield>
+    </div>
     <dropdown
       size="xs"
       width="100%"
@@ -270,6 +455,37 @@ ${effectButtons}
       onchange="updateEffects(value)"
     >
     </dropdown>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      "
+    >
+      <checkbox
+        field="isSave"
+        label="Is Save"
+        size="sm"
+        textalign="left"
+        onchange="updateIsSave(value)"
+      ></checkbox>
+      <numberfield
+        field="saveDC"
+        size="xs"
+        width="100px"
+        placeholder="Enter DC..."
+      ></numberfield>
+      <dropdown
+        size="xs"
+        width="250px"
+        field="savingThrows"
+        placeholder="Select up to 2 Saving Throws..."
+        multiselect="2"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+    </div>
     <div
       style="
         display: flex;
