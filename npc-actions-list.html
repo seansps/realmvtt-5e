@@ -49,7 +49,7 @@
     // Parse name for (x/Day)
     const usesPerDay = parseInt(
       name.match(/\(\s*(\d+)\s*\/Day\s*\)/)?.[1] || "0",
-      10
+      10,
     );
     if (usesPerDay > 0) {
       valuesToSet[`${actionDataPath}.data.usesPerDay`] = usesPerDay;
@@ -102,7 +102,7 @@
         description.match(/(?:Attack Roll|to hit):\s*([+-]?\d+)/)?.[1] ||
           description.match(/:\s*([+-]?\d+)\s+to hit/)?.[1] ||
           "0",
-        10
+        10,
       );
       valuesToSet[`${actionDataPath}.data.attackMod`] = attackMod;
 
@@ -120,11 +120,11 @@
         if (rangeMatch) {
           valuesToSet[`${actionDataPath}.data.normalRange`] = parseInt(
             rangeMatch[1],
-            10
+            10,
           );
           valuesToSet[`${actionDataPath}.data.maxRange`] = parseInt(
             rangeMatch[2],
-            10
+            10,
           );
         }
       }
@@ -147,16 +147,16 @@
     // "Strength Saving Throw: DC 12"
     // "DC 13 Strength saving throw"
     // "makes a DC 15 Wisdom saving throw"
-    const saveMatch = description.match(
-      /([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/
-    ) || description.match(
-      /DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/
-    );
+    const saveMatch =
+      description.match(/([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/) ||
+      description.match(/DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/);
     if (saveMatch) {
       // First format: ability is group 1, DC is group 2
       // Second format: DC is group 1, ability is group 2
       const ability = saveMatch[1].match(/^\d+$/) ? saveMatch[2] : saveMatch[1];
-      const dc = saveMatch[1].match(/^\d+$/) ? parseInt(saveMatch[1], 10) : parseInt(saveMatch[2], 10);
+      const dc = saveMatch[1].match(/^\d+$/)
+        ? parseInt(saveMatch[1], 10)
+        : parseInt(saveMatch[2], 10);
       valuesToSet[`${actionDataPath}.data.saveDC`] = dc;
       valuesToSet[`${actionDataPath}.data.isSave`] = true;
       valuesToSet[`${actionDataPath}.data.savingThrows`] = [
@@ -173,10 +173,14 @@
       /(?:using (\w+) as the spellcasting ability|spellcasting ability\s+is\s+(\w+))\s*\(spell save DC (\d+)[^)]*\)/i,
     );
     if (spellcastingMatch) {
-      const spellcastingAbility = (spellcastingMatch[1] || spellcastingMatch[2]).toLowerCase();
+      const spellcastingAbility = (
+        spellcastingMatch[1] || spellcastingMatch[2]
+      ).toLowerCase();
       const spellSaveDC = parseInt(spellcastingMatch[3] || "0", 10);
       // Check for explicit spell attack modifier like "+4 to hit"
-      const spellAttackMatch = description.match(/([+-]\d+)\s+to hit with spell/i);
+      const spellAttackMatch = description.match(
+        /([+-]\d+)\s+to hit with spell/i,
+      );
       let spellMod;
       if (spellAttackMatch) {
         spellMod = parseInt(spellAttackMatch[1], 10);
@@ -212,7 +216,7 @@
   function showHideSpellcasting(isSpellcasting) {
     const spellListDataPath = dataPath.replace(
       ".data.isSpellcasting",
-      ".fields.spells.hidden"
+      ".fields.spells.hidden",
     );
     api.setValue(spellListDataPath, !isSpellcasting);
   }
@@ -286,7 +290,7 @@
     const actionDataPath = dataPath.replace(".data.effects", "");
     api.setValue(
       `${actionDataPath}.fields.useBtn.hidden`,
-      (effects || []).length === 0
+      (effects || []).length === 0,
     );
   }
 
@@ -294,7 +298,7 @@
     const actionDataPath = dataPath.replace(".data.damage", "");
     api.setValue(
       `${actionDataPath}.fields.rollDamageBtn.hidden`,
-      damage === "" || damage === undefined || damage === null
+      damage === "" || damage === undefined || damage === null,
     );
   }
 
@@ -320,13 +324,13 @@
     const reachMatch = /(?:^|\s|,)reach\s+(\d+)\s*ft/i;
     const reach = parseInt(
       attack?.data?.description?.match(reachMatch)?.[1] || "5",
-      10
+      10,
     );
 
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
 
     // If bloodied, look for bloodied modifiers
@@ -336,7 +340,7 @@
       const bloodiedMods = getEffectsAndModifiers(
         ["attackBonus", "attackPenalty"],
         "bloodied",
-        attack._id
+        attack._id,
       );
       bloodiedMods.forEach((mod) => {
         if (
@@ -344,7 +348,7 @@
             (m) =>
               m.name === mod.name &&
               m.type === mod.type &&
-              m.value === mod.value
+              m.value === mod.value,
           )
         ) {
           modifiers.push(mod);
@@ -385,7 +389,7 @@
         ) {
           // Check if you have the Invisible condition
           const hasInvisible = (ourToken?.effects || []).some((eff) =>
-            eff.name.toLowerCase().includes("invisible")
+            eff.name.toLowerCase().includes("invisible"),
           );
           // Check if they have incapacitated condition or are blinded
           const hasIncapacitated = (token?.effects || []).some(
@@ -396,7 +400,7 @@
               eff.name.toLowerCase().includes("unconscious") ||
               eff.name.toLowerCase().includes("petrified") ||
               eff.name.toLowerCase().includes("dead") ||
-              eff.name.toLowerCase().includes("blinded")
+              eff.name.toLowerCase().includes("blinded"),
           );
           if (!hasIncapacitated && !hasInvisible) {
             // Check distance
@@ -414,7 +418,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
@@ -443,13 +447,13 @@
     }
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("critical")
+      (m) => !m.value.toString().startsWith("critical"),
     );
 
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     const targets = api.getTargets();
@@ -500,7 +504,7 @@
       // Get effects and modifiers for the target
       const targetEffects = getAttackModifiersForTarget(
         target?.token,
-        targetDistance
+        targetDistance,
       );
       targetEffects.forEach((r) => {
         if (r.value === "critical") {
@@ -513,7 +517,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -585,7 +589,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       ranged ? "ranged" : "melee",
-      attack._id
+      attack._id,
     );
 
     // Get damage effects for the target
@@ -595,7 +599,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -625,7 +629,7 @@
       damage,
       damageModifiers,
       damageMetadata,
-      "damage"
+      "damage",
     );
   }
 
@@ -655,7 +659,7 @@
         "Recharge",
         tokenForRecord,
         undefined,
-        `${actionName} [${action?.data?.recharge}]`
+        `${actionName} [${action?.data?.recharge}]`,
       );
     }
 
@@ -698,7 +702,7 @@ selectedTokens.forEach(token => {
 	}
 
 	api.promptRollForToken(token, '${capitalize(
-    savingThrow
+    savingThrow,
   )} Save', '1d20', saveModifiers, metadata, 'save');
 });
 \`\`\``;
@@ -739,15 +743,24 @@ ${effectButtons}
 
 <div style="width: 100%">
   <!-- Name and Buttons -->
-  <div style="display: flex; flex-direction: row; gap: 4px">
+  <div
+    style="display: flex; flex-direction: row; gap: 4px; align-items: center"
+  >
     <div style="flex: 1">
       <namefield
         size="xs"
         field="namefield"
+        hideonlocked="true"
         placeholder="Enter Name..."
         variant="unstyled"
-        onchange="updateName(value);"
+        onchange="updateName(value)"
       ></namefield>
+      <label
+        field="namefield"
+        size="xs"
+        variant="bold"
+        hideonlocked="false"
+      ></label>
     </div>
     <!-- Uses / Day  Counter -->
     <div style="min-width: 50px">
@@ -769,7 +782,7 @@ ${effectButtons}
       field="useBtn"
       label="Use"
       variant="light"
-      onclick="useAction();"
+      onclick="useAction()"
     ></button>
     <!-- Roll Attack -->
     <iconbutton
@@ -778,8 +791,8 @@ ${effectButtons}
       field="rollAttackBtn"
       variant="outline"
       options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]'
-      onchange="() => { }"
-      onclick="handleAttack();"
+      onchange="() => {}"
+      onclick="handleAttack()"
     >
     </iconbutton>
     <!-- Roll Damage -->
@@ -790,7 +803,7 @@ ${effectButtons}
       field="rollDamageBtn"
       label="Damage"
       variant="light"
-      onclick="rollDamage(false);"
+      onclick="rollDamage(false)"
     ></button>
     <!-- Roll Crit -->
     <button
@@ -801,7 +814,7 @@ ${effectButtons}
       label="Critical"
       variant="light"
       color="red"
-      onclick="rollDamage(true);"
+      onclick="rollDamage(true)"
     ></button>
   </div>
 
@@ -812,7 +825,7 @@ ${effectButtons}
       width="100%"
       field="description"
       placeholder="Enter Description..."
-      onchange="updateSettings(value);"
+      onchange="updateSettings(value)"
       multiline="true"
     ></stringfield>
   </div>
@@ -831,7 +844,7 @@ ${effectButtons}
           label="Is Attack"
           size="sm"
           textalign="left"
-          onchange="onAttackChange(value);"
+          onchange="onAttackChange(value)"
         >
         </checkbox>
         <checkbox
@@ -882,7 +895,7 @@ ${effectButtons}
         size="xs"
         width="50%"
         placeholder="Enter Damage..."
-        onchange="updateDamage(value);"
+        onchange="updateDamage(value)"
       ></stringfield>
     </div>
     <div
@@ -900,7 +913,7 @@ ${effectButtons}
         size="xs"
         width="50%"
         placeholder="0"
-        onchange="updateUsesPerDay(value);"
+        onchange="updateUsesPerDay(value)"
       >
       </numberfield>
       <stringfield
@@ -910,7 +923,7 @@ ${effectButtons}
         size="xs"
         width="50%"
         placeholder="Enter Healing..."
-        onchange="updateHealing(value);"
+        onchange="updateHealing(value)"
       >
       </stringfield>
     </div>
@@ -924,7 +937,7 @@ ${effectButtons}
       description="Effects that this Action can apply"
       optionsquery='{"type": "effects", "query": {}}'
       placeholder="Select Effects..."
-      onchange="updateEffects(value);"
+      onchange="updateEffects(value)"
     >
     </dropdown>
     <div
@@ -941,7 +954,7 @@ ${effectButtons}
         label="Is Save"
         size="sm"
         textalign="left"
-        onchange="updateIsSave(value);"
+        onchange="updateIsSave(value)"
       ></checkbox>
       <numberfield
         field="saveDC"
@@ -974,7 +987,7 @@ ${effectButtons}
         label="Is Recharge"
         size="sm"
         textalign="left"
-        onchange="updateRecharge(value);"
+        onchange="updateRecharge(value)"
       >
       </checkbox>
       <stringfield
@@ -998,7 +1011,7 @@ ${effectButtons}
         label="Is Spellcasting"
         size="sm"
         textalign="left"
-        onchange="showHideSpellcasting(value);"
+        onchange="showHideSpellcasting(value)"
       ></checkbox>
       <dropdown
         field="spellcastingAbility"

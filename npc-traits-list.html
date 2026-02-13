@@ -146,16 +146,16 @@
     // "Strength Saving Throw: DC 12"
     // "DC 13 Strength saving throw"
     // "makes a DC 15 Wisdom saving throw"
-    const saveMatch = description.match(
-      /([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/,
-    ) || description.match(
-      /DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/,
-    );
+    const saveMatch =
+      description.match(/([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow:\s+DC\s+(\d+)/) ||
+      description.match(/DC\s+(\d+)\s+([A-Za-z]+)\s+[Ss]aving\s+[Tt]hrow/);
     if (saveMatch) {
       // First format: ability is group 1, DC is group 2
       // Second format: DC is group 1, ability is group 2
       const ability = saveMatch[1].match(/^\d+$/) ? saveMatch[2] : saveMatch[1];
-      const dc = saveMatch[1].match(/^\d+$/) ? parseInt(saveMatch[1], 10) : parseInt(saveMatch[2], 10);
+      const dc = saveMatch[1].match(/^\d+$/)
+        ? parseInt(saveMatch[1], 10)
+        : parseInt(saveMatch[2], 10);
       valuesToSet[`${traitDataPath}.data.saveDC`] = dc;
       valuesToSet[`${traitDataPath}.data.isSave`] = true;
       valuesToSet[`${traitDataPath}.data.savingThrows`] = [
@@ -303,15 +303,24 @@ ${effectButtons}
 
 <div style="width: 100%">
   <!-- Name and Buttons -->
-  <div style="display: flex; flex-direction: row; gap: 4px">
+  <div
+    style="display: flex; flex-direction: row; gap: 4px; align-items: center"
+  >
     <div style="flex: 1">
       <namefield
         size="xs"
         field="namefield"
+        hideonlocked="true"
         placeholder="Enter Name..."
         variant="unstyled"
-        onchange="onTraitNameChange(value)"
+        onchange="updateName(value)"
       ></namefield>
+      <label
+        field="namefield"
+        size="xs"
+        variant="bold"
+        hideonlocked="false"
+      ></label>
     </div>
     <div style="align-self: center">
       <checkbox
