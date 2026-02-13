@@ -131,7 +131,7 @@
 
     const dexterityCheckModifiers = getEffectsAndModifiers(
       ["abilityBonus", "abilityPenalty"],
-      "dexterity"
+      "dexterity",
     );
     dexterityCheckModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -146,7 +146,7 @@
         tooltip: "Initiative Roll",
         dc: 0,
       },
-      "initiative"
+      "initiative",
     );
   }
 
@@ -171,7 +171,7 @@
 
     const checkModifiers = getEffectsAndModifiers(
       ["abilityBonus", "abilityPenalty"],
-      ability
+      ability,
     );
     checkModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -182,7 +182,7 @@
       "1d20",
       modifiers,
       metadata,
-      "ability"
+      "ability",
     );
   }
 
@@ -205,7 +205,7 @@
     // Check effects for all save bonuses and penalties for saves
     const saveModifiers = getEffectsAndModifiers(
       ["saveBonus", "savePenalty"],
-      save
+      save,
     );
     saveModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -222,7 +222,7 @@
       "1d20",
       modifiers,
       metadata,
-      "save"
+      "save",
     );
   }
 
@@ -240,7 +240,7 @@
     // Toggle the visibility of the bonus actions accordion
     api.setHidden(
       ["bonusActionsDivider", "bonusActions"],
-      !record.data.hasBonusActions
+      !record.data.hasBonusActions,
     );
   }
 
@@ -322,21 +322,23 @@
     // Toggle the visibility of the lair actions accordion
     api.setHidden(
       ["lairActionsDivider", "lairActions", "lairActionsDescription"],
-      !record.data.hasLairActions
+      !record.data.hasLairActions,
     );
   }
 
   // On load of an NPC unhide any fields that may have been set by the Generator
   // or otheriwse
   function onLoadNPC() {
-    const unHideFields = [];
+    const valuesToSet = {};
+
     // Toggle the visibility of the traits accordion
     if (
       record.data?.hasTraits &&
       (record?.fields?.features?.hidden !== false ||
         record?.fields?.featuresDivider?.hidden !== false)
     ) {
-      unHideFields.push("featuresDivider", "features");
+      valuesToSet["fields.featuresDivider.hidden"] = false;
+      valuesToSet["fields.features.hidden"] = false;
     }
 
     // Toggle the visibility of the actions accordion
@@ -345,16 +347,20 @@
       (record?.fields?.actions?.hidden !== false ||
         record?.fields?.actionsDivider?.hidden !== false)
     ) {
-      unHideFields.push("actionsDivider", "actions");
+      valuesToSet["fields.actionsDivider.hidden"] = false;
+      valuesToSet["fields.actions.hidden"] = false;
     }
+
     // Toggle the visibility of the bonus actions accordion
     if (
       record.data?.hasBonusActions &&
       (record?.fields?.bonusActions?.hidden !== false ||
         record?.fields?.bonusActionsDivider?.hidden !== false)
     ) {
-      unHideFields.push("bonusActionsDivider", "bonusActions");
+      valuesToSet["fields.bonusActionsDivider.hidden"] = false;
+      valuesToSet["fields.bonusActions.hidden"] = false;
     }
+
     // Toggle the visibility of the legendary actions accordion
     if (
       record.data?.hasLegendaryActions &&
@@ -364,13 +370,11 @@
         record?.fields?.usedLegendaryActions?.hidden !== false ||
         record?.fields?.legendaryActionsDescription?.hidden !== false)
     ) {
-      unHideFields.push(
-        "legendaryActionsDivider",
-        "legendaryActions",
-        "legendaryActionsLabel",
-        "legendaryActionsDescription",
-        "usedLegendaryActions"
-      );
+      valuesToSet["fields.legendaryActionsDivider.hidden"] = false;
+      valuesToSet["fields.legendaryActions.hidden"] = false;
+      valuesToSet["fields.legendaryActionsLabel.hidden"] = false;
+      valuesToSet["fields.legendaryActionsDescription.hidden"] = false;
+      valuesToSet["fields.usedLegendaryActions.hidden"] = false;
     }
 
     // Toggle the visibility of the lair actions accordion
@@ -380,11 +384,9 @@
         record?.fields?.lairActionsDivider?.hidden !== false ||
         record?.fields?.lairActionsDescription?.hidden !== false)
     ) {
-      unHideFields.push(
-        "lairActionsDivider",
-        "lairActions",
-        "lairActionsDescription"
-      );
+      valuesToSet["fields.lairActionsDivider.hidden"] = false;
+      valuesToSet["fields.lairActions.hidden"] = false;
+      valuesToSet["fields.lairActionsDescription.hidden"] = false;
     }
 
     // Toggle the visibility of the reactions accordion
@@ -395,23 +397,17 @@
         record?.fields?.reactionsLabel?.hidden !== false ||
         record?.fields?.usedReactions?.hidden !== false)
     ) {
-      unHideFields.push(
-        "reactionsDivider",
-        "reactions",
-        "reactionsLabel",
-        "usedReactions"
-      );
+      valuesToSet["fields.reactionsDivider.hidden"] = false;
+      valuesToSet["fields.reactions.hidden"] = false;
+      valuesToSet["fields.reactionsLabel.hidden"] = false;
+      valuesToSet["fields.usedReactions.hidden"] = false;
     }
 
     if (
       record.data?.type === "pack" &&
       record.fields?.packProperties?.hidden !== false
     ) {
-      unHideFields.push("packProperties");
-    }
-
-    if (unHideFields.length > 0) {
-      api.setHidden(unHideFields, false);
+      valuesToSet["fields.packProperties.hidden"] = false;
     }
 
     // Set maxReactions 1 if it is undefined and hasReactions is true
@@ -419,7 +415,24 @@
       record?.data?.maxReactions === undefined &&
       record?.data?.hasReactions
     ) {
-      api.setValues({ "data.maxReactions": 1 });
+      valuesToSet["data.maxReactions"] = 1;
+    }
+
+    // Merge conditionImmunities (from Level Up A5e NPCs) into immunities
+    // since 5e uses a single immunities field with semicolon separator
+    const conditionImmunities = record?.data?.conditionImmunities || "";
+    if (conditionImmunities) {
+      const immunities = record?.data?.immunities || "";
+      const merged = immunities
+        ? `${immunities}; ${conditionImmunities}`
+        : conditionImmunities;
+      if (merged !== immunities) {
+        valuesToSet["data.immunities"] = merged;
+      }
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
     }
   }
 </script>
@@ -557,7 +570,7 @@
             field="rollInitiativeBtn"
             variant="outline"
             options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]'
-            onclick="rollInitiative();"
+            onclick="rollInitiative()"
           >
           </iconbutton>
         </div>
@@ -681,7 +694,7 @@
                   field="Strength Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Strength Check", "value": "roll"}]'
-                  onclick='rollCheck("strength");'
+                  onclick="rollCheck('strength')"
                 >
                 </iconbutton>
               </div>
@@ -707,7 +720,7 @@
                   field="Strength Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Strength Save", "value": "roll"}]'
-                  onclick='rollSave("strength");'
+                  onclick="rollSave('strength')"
                 >
                 </iconbutton>
               </div>
@@ -747,7 +760,7 @@
                   field="Dexterity Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Dexterity Check", "value": "roll"}]'
-                  onclick='rollCheck("dexterity");'
+                  onclick="rollCheck('dexterity')"
                 >
                 </iconbutton>
               </div>
@@ -774,7 +787,7 @@
                   field="Dexterity Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Dexterity Save", "value": "roll"}]'
-                  onclick='rollSave("dexterity");'
+                  onclick="rollSave('dexterity')"
                 >
                 </iconbutton>
               </div>
@@ -815,7 +828,7 @@
                   field="Constitution Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Constitution Check", "value": "roll"}]'
-                  onclick='rollCheck("constitution");'
+                  onclick="rollCheck('constitution')"
                 >
                 </iconbutton>
               </div>
@@ -842,7 +855,7 @@
                   field="Constitution Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Constitution Save", "value": "roll"}]'
-                  onclick='rollSave("constitution");'
+                  onclick="rollSave('constitution')"
                 >
                 </iconbutton>
               </div>
@@ -896,7 +909,7 @@
                   field="Intelligence Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Intelligence Check", "value": "roll"}]'
-                  onclick='rollCheck("intelligence");'
+                  onclick="rollCheck('intelligence')"
                 >
                 </iconbutton>
               </div>
@@ -923,7 +936,7 @@
                   field="Intelligence Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Intelligence Save", "value": "roll"}]'
-                  onclick='rollSave("intelligence");'
+                  onclick="rollSave('intelligence')"
                 >
                 </iconbutton>
               </div>
@@ -963,7 +976,7 @@
                   field="Wisdom Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Wisdom Check", "value": "roll"}]'
-                  onclick='rollCheck("wisdom");'
+                  onclick="rollCheck('wisdom')"
                 >
                 </iconbutton>
               </div>
@@ -989,7 +1002,7 @@
                   field="Wisdom Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Wisdom Save", "value": "roll"}]'
-                  onclick='rollSave("wisdom");'
+                  onclick="rollSave('wisdom')"
                 >
                 </iconbutton>
               </div>
@@ -1029,7 +1042,7 @@
                   field="Charisma Check"
                   variant="light"
                   options='[{"icon": "D20", "label": "Roll Charisma Check", "value": "roll"}]'
-                  onclick='rollCheck("charisma");'
+                  onclick="rollCheck('charisma')"
                 >
                 </iconbutton>
               </div>
@@ -1055,7 +1068,7 @@
                   field="Charisma Save"
                   variant="default"
                   options='[{"icon": "D20", "label": "Roll Charisma Save", "value": "roll"}]'
-                  onclick='rollSave("charisma");'
+                  onclick="rollSave('charisma')"
                 >
                 </iconbutton>
               </div>
@@ -1178,7 +1191,7 @@
         field="challengeRating"
         label="CR"
         placeholder="Enter Challenge Rating..."
-        onchange="updateCR(value);"
+        onchange="updateCR(value)"
       >
       </stringfield>
       <stringfield

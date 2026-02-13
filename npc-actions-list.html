@@ -156,22 +156,31 @@
       valuesToSet[`${actionDataPath}.fields.useBtn.hidden`] = false;
     }
 
-    // Parse for spellcasting from the description, such as 'casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12):'
+    // Parse for spellcasting — supports two common formats:
+    // "using Wisdom as the spellcasting ability (spell save DC 12)"
+    // "spellcasting ability is Charisma (spell save DC 20)"
+    // Also handles extra content in parens like "(spell save DC 12, +4 to hit with spell attacks)"
     const spellcastingMatch = description.match(
-      /using (\w+) as the spellcasting ability \(spell save DC (\d+)\)/i
+      /(?:using (\w+) as the spellcasting ability|spellcasting ability\s+is\s+(\w+))\s*\(spell save DC (\d+)[^)]*\)/i,
     );
     if (spellcastingMatch) {
-      const spellcastingAbility = spellcastingMatch[1].toLowerCase();
-      const spellSaveDC = parseInt(spellcastingMatch[2] || "0", 10);
-      // Determine spell casting modifier
-      const spellcastingAbilityMod =
-        api.getValue(`data.${spellcastingAbility}Mod`) || 0;
-      const proficiencyBonus = api.getValue("data.proficiencyBonus") || 2;
+      const spellcastingAbility = (spellcastingMatch[1] || spellcastingMatch[2]).toLowerCase();
+      const spellSaveDC = parseInt(spellcastingMatch[3] || "0", 10);
+      // Check for explicit spell attack modifier like "+4 to hit"
+      const spellAttackMatch = description.match(/([+-]\d+)\s+to hit with spell/i);
+      let spellMod;
+      if (spellAttackMatch) {
+        spellMod = parseInt(spellAttackMatch[1], 10);
+      } else {
+        const spellcastingAbilityMod =
+          api.getValue(`data.${spellcastingAbility}Mod`) || 0;
+        const proficiencyBonus = api.getValue("data.proficiencyBonus") || 2;
+        spellMod = spellcastingAbilityMod + proficiencyBonus;
+      }
       valuesToSet[`${actionDataPath}.data.isSpellcasting`] = true;
       valuesToSet[`${actionDataPath}.data.spellcastingAbility`] =
         spellcastingAbility;
-      valuesToSet[`${actionDataPath}.data.spellMod`] =
-        spellcastingAbilityMod + proficiencyBonus;
+      valuesToSet[`${actionDataPath}.data.spellMod`] = spellMod;
       valuesToSet[`${actionDataPath}.data.spellDC`] = spellSaveDC;
       valuesToSet[`${actionDataPath}.fields.spells.hidden`] = false;
     }

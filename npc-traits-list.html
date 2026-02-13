@@ -8,11 +8,11 @@
     // Parse name for (x/Day or y/Day in Lair)
     const usesPerDay = parseInt(
       name.match(/\(\s*(\d+)\s*\/day\s*/i)?.[1] || "0",
-      10
+      10,
     );
     const usesPerDayInLair = parseInt(
       name.match(/(\d+)\s*\/day in lair/i)?.[1] || "0",
-      10
+      10,
     );
     if (!isNaN(usesPerDay) && usesPerDay > 0) {
       if (trait.data.uses === undefined) {
@@ -59,8 +59,54 @@
     const traitDataPath = dataPath.replace(".data.effects", "");
     api.setValue(
       `${traitDataPath}.fields.useBtn.hidden`,
-      (effects || []).length === 0
+      (effects || []).length === 0,
     );
+  }
+
+  function showHideSpellcasting(isSpellcasting) {
+    const traitDataPath = dataPath.replace(".data.isSpellcasting", "");
+    api.setValue(`${traitDataPath}.fields.spells.hidden`, !isSpellcasting);
+  }
+
+  function updateTraitDescription(description) {
+    const traitDataPath = dataPath.replace(".data.description", "");
+    const valuesToSet = {};
+
+    // Parse for spellcasting — supports two common formats:
+    // "using Wisdom as the spellcasting ability (spell save DC 12)"
+    // "spellcasting ability is Charisma (spell save DC 20)"
+    const spellcastingMatch = description.match(
+      /(?:using (\w+) as the spellcasting ability|spellcasting ability\s+is\s+(\w+))\s*\(spell save DC (\d+)[^)]*\)/i,
+    );
+    if (spellcastingMatch) {
+      const spellcastingAbility = (
+        spellcastingMatch[1] || spellcastingMatch[2]
+      ).toLowerCase();
+      const spellSaveDC = parseInt(spellcastingMatch[3] || "0", 10);
+      // Check for explicit spell attack modifier like "+4 to hit"
+      const spellAttackMatch = description.match(
+        /([+-]\d+)\s+to hit with spell/i,
+      );
+      let spellMod;
+      if (spellAttackMatch) {
+        spellMod = parseInt(spellAttackMatch[1], 10);
+      } else {
+        const spellcastingAbilityMod =
+          api.getValue(`data.${spellcastingAbility}Mod`) || 0;
+        const proficiencyBonus = api.getValue("data.proficiencyBonus") || 2;
+        spellMod = spellcastingAbilityMod + proficiencyBonus;
+      }
+      valuesToSet[`${traitDataPath}.data.isSpellcasting`] = true;
+      valuesToSet[`${traitDataPath}.data.spellcastingAbility`] =
+        spellcastingAbility;
+      valuesToSet[`${traitDataPath}.data.spellMod`] = spellMod;
+      valuesToSet[`${traitDataPath}.data.spellDC`] = spellSaveDC;
+      valuesToSet[`${traitDataPath}.fields.spells.hidden`] = false;
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
   }
 
   function useTrait() {
@@ -145,7 +191,7 @@ ${effectButtons}
         field="useBtn"
         label="Use"
         variant="light"
-        onclick="useTrait();"
+        onclick="useTrait()"
       ></button>
     </div>
   </div>
@@ -158,6 +204,7 @@ ${effectButtons}
       field="description"
       placeholder="Enter Description..."
       multiline="true"
+      onchange="updateTraitDescription(value)"
     ></stringfield>
   </div>
 
@@ -197,7 +244,7 @@ ${effectButtons}
         size="xs"
         width="50%"
         placeholder="0"
-        onchange="updateUsesPerDay(value);"
+        onchange="updateUsesPerDay(value)"
       >
       </numberfield>
       <numberfield
@@ -220,10 +267,58 @@ ${effectButtons}
       description="Effects that this Trait can apply"
       optionsquery='{"type": "effects", "query": {}}'
       placeholder="Select Effects..."
-      onchange="updateEffects(value);"
+      onchange="updateEffects(value)"
     >
     </dropdown>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      "
+    >
+      <checkbox
+        field="isSpellcasting"
+        label="Is Spellcasting"
+        size="sm"
+        textalign="left"
+        onchange="showHideSpellcasting(value)"
+      ></checkbox>
+      <dropdown
+        field="spellcastingAbility"
+        size="xs"
+        label="Spellcasting Ability"
+        placeholder="Select Spellcasting Ability..."
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+    </div>
+    <div style="display: flex; flex-direction: row; gap: 8px; margin-top: 8px">
+      <numberfield
+        width="150px"
+        field="spellDC"
+        label="Spellcasting DC"
+        placeholder="N/A"
+        size="xs"
+        description="The DC used for Saves against this NPC's Spells"
+      ></numberfield>
+      <numberfield
+        width="150px"
+        field="spellMod"
+        label="Spell Casting Modifier"
+        placeholder="N/A"
+        showsign="true"
+        size="xs"
+        description="The modifier used for this NPC's Spell Attack Rolls"
+      ></numberfield>
+    </div>
   </accordion>
 
   <numberfield field="maxUsesOutsideLair" hidden="true"></numberfield>
+
+  <!-- Spellcasting -->
+  <div style="width: 100%">
+    <list hidden="true" listtype="npc_spell_list" field="spells"></list>
+  </div>
 </div>
