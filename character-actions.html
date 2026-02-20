@@ -20,7 +20,7 @@
 
     // First, try to find classes that match the spell's spell lists
     const matchingClasses = spellClasses.filter((c) =>
-      spellLists.includes(c?.name)
+      spellLists.includes(c?.name),
     );
 
     if (matchingClasses.length > 0) {
@@ -31,7 +31,10 @@
       for (const c of matchingClasses) {
         const classAbility = c?.data?.spellcastingAbility;
         if (classAbility) {
-          const abilityMod = parseInt(record?.data?.[`${classAbility}Mod`] || "0", 10);
+          const abilityMod = parseInt(
+            record?.data?.[`${classAbility}Mod`] || "0",
+            10,
+          );
           if (abilityMod > highestMod) {
             highestMod = abilityMod;
             bestAbility = classAbility;
@@ -48,7 +51,10 @@
       for (const c of spellClasses) {
         const classAbility = c?.data?.spellcastingAbility;
         if (classAbility) {
-          const abilityMod = parseInt(record?.data?.[`${classAbility}Mod`] || "0", 10);
+          const abilityMod = parseInt(
+            record?.data?.[`${classAbility}Mod`] || "0",
+            10,
+          );
           if (abilityMod > highestMod) {
             highestMod = abilityMod;
             bestAbility = classAbility;
@@ -76,7 +82,7 @@
       if (spellLevel === "0" || spellLevel === "Cantrip") {
         api.setValue(
           `data.${spellList}.${curLength}.fields.upcastLevel.hidden`,
-          true
+          true,
         );
       }
     });
@@ -143,7 +149,7 @@
         }
 
         api.setHidden(valuesToUnhide, false);
-      }
+      },
     );
   }
 
@@ -151,6 +157,8 @@
     // Determine if we should hide/unhide spell slots and labels
     const valuesToHide = [];
     const valuesToUnhide = [];
+
+    // Spell Slots (individual visibility inside spellSlotsBox)
     if (
       record?.data?.numSpellSlots1 > 0 ||
       record?.data?.numSpellSlots2 > 0 ||
@@ -163,8 +171,10 @@
       record?.data?.numSpellSlots9 > 0
     ) {
       valuesToUnhide.push("spellSlotsLabel");
+      valuesToUnhide.push("spellSlotsBox");
     } else {
       valuesToHide.push("spellSlotsLabel");
+      valuesToHide.push("spellSlotsBox");
     }
     if (record?.data?.numSpellSlots1 > 0) {
       valuesToUnhide.push("spellSlots1");
@@ -212,6 +222,7 @@
       valuesToHide.push("spellSlots9");
     }
 
+    // Pact Magic
     if (
       record?.data?.numPactMagic1 > 0 ||
       record?.data?.numPactMagic2 > 0 ||
@@ -278,6 +289,43 @@
     });
   }
 
+  function onUseSpellPointsChanged(checked) {
+    if (checked) {
+      // Hide spell slots, show spell points + 6th-9th checkboxes based on max spell level
+      const maxSpellLevel = parseInt(record?.data?.maxSpellLevel || "0", 10);
+      const spToShow = ["spellPointsLabel", "spellPointsCounter"];
+      const spToHide = [];
+      for (let lvl = 6; lvl <= 9; lvl++) {
+        if (maxSpellLevel >= lvl) {
+          spToShow.push(`spellPointSlot${lvl}Box`);
+        } else {
+          spToHide.push(`spellPointSlot${lvl}Box`);
+        }
+      }
+      api.setHidden(["spellSlotsBox", ...spToHide], true, () => {
+        api.setHidden(spToShow, false);
+      });
+    } else {
+      // Hide spell points, show spell slots (updateSpellSlots handles individual slot visibility)
+      api.setHidden(
+        [
+          "spellPointsLabel",
+          "spellPointsCounter",
+          "spellPointSlot6Box",
+          "spellPointSlot7Box",
+          "spellPointSlot8Box",
+          "spellPointSlot9Box",
+        ],
+        true,
+        () => {
+          api.setHidden(["spellSlotsBox"], false, () => {
+            updateSpellSlots();
+          });
+        },
+      );
+    }
+  }
+
   function canAddSpell(spellLevel) {
     // Return true if the given spell being added can be added to the given spell list
     let levelOfSpell = value?.data?.level || "Cantrip";
@@ -326,7 +374,7 @@
 
     const dextertyCheckModifiers = getEffectsAndModifiers(
       ["abilityBonus", "abilityPenalty"],
-      "dexterity"
+      "dexterity",
     );
     dextertyCheckModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -342,7 +390,7 @@
         isCharacter: true,
         dc: 0,
       },
-      "initiative"
+      "initiative",
     );
   }
 </script>
@@ -364,7 +412,7 @@
     icon="D20"
     label="Initiative"
     variant="outline"
-    onclick="rollInitiative();"
+    onclick="rollInitiative()"
   ></button>
 </div>
 
@@ -405,121 +453,123 @@
   ></list>
 </div>
 
-<div style="margin-top: 8px">
-  <label
-    hidden="true"
-    variant="bold"
-    field="spellSlotsLabel"
-    label="Spell Slots"
-    size="md"
-    textalign="center"
-  ></label>
-</div>
-
-<div style="margin-bottom: 4px">
-  <!-- Spell Slots -->
-  <div
-    style="
-      display: flex;
-      flex-direction: row;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
-      justify-content: center;
-    "
-  >
-    <counter
-      field="spellSlots1"
+<box field="spellSlotsBox" hidden="true">
+  <div style="margin-top: 8px">
+    <label
+      variant="bold"
       hidden="true"
-      maxvaluefield="numSpellSlots1"
-      label="Level 1"
-      size="xs"
+      field="spellSlotsLabel"
+      label="Spell Slots"
+      size="md"
       textalign="center"
-      color="violet"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots2"
-      hidden="true"
-      maxvaluefield="numSpellSlots2"
-      label="Level 2"
-      size="xs"
-      textalign="center"
-      color="blue"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots3"
-      hidden="true"
-      maxvaluefield="numSpellSlots3"
-      label="Level 3"
-      size="xs"
-      textalign="center"
-      color="cyan"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots4"
-      hidden="true"
-      maxvaluefield="numSpellSlots4"
-      label="Level 4"
-      size="xs"
-      textalign="center"
-      color="teal"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots5"
-      hidden="true"
-      maxvaluefield="numSpellSlots5"
-      label="Level 5"
-      size="xs"
-      textalign="center"
-      color="green"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots6"
-      hidden="true"
-      maxvaluefield="numSpellSlots6"
-      label="Level 6"
-      size="xs"
-      textalign="center"
-      color="lime"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots7"
-      hidden="true"
-      maxvaluefield="numSpellSlots7"
-      label="Level 7"
-      size="xs"
-      textalign="center"
-      color="yellow"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots8"
-      hidden="true"
-      maxvaluefield="numSpellSlots8"
-      label="Level 8"
-      size="xs"
-      textalign="center"
-      color="orange"
-      editable="true"
-    ></counter>
-    <counter
-      field="spellSlots9"
-      hidden="true"
-      maxvaluefield="numSpellSlots9"
-      label="Level 9"
-      size="xs"
-      textalign="center"
-      color="red"
-      editable="true"
-    ></counter>
+    ></label>
   </div>
-</div>
+
+  <div style="margin-bottom: 4px">
+    <!-- Spell Slots -->
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+        justify-content: center;
+      "
+    >
+      <counter
+        field="spellSlots1"
+        hidden="true"
+        maxvaluefield="numSpellSlots1"
+        label="Level 1"
+        size="xs"
+        textalign="center"
+        color="violet"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots2"
+        hidden="true"
+        maxvaluefield="numSpellSlots2"
+        label="Level 2"
+        size="xs"
+        textalign="center"
+        color="blue"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots3"
+        hidden="true"
+        maxvaluefield="numSpellSlots3"
+        label="Level 3"
+        size="xs"
+        textalign="center"
+        color="cyan"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots4"
+        hidden="true"
+        maxvaluefield="numSpellSlots4"
+        label="Level 4"
+        size="xs"
+        textalign="center"
+        color="teal"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots5"
+        hidden="true"
+        maxvaluefield="numSpellSlots5"
+        label="Level 5"
+        size="xs"
+        textalign="center"
+        color="green"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots6"
+        hidden="true"
+        maxvaluefield="numSpellSlots6"
+        label="Level 6"
+        size="xs"
+        textalign="center"
+        color="lime"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots7"
+        hidden="true"
+        maxvaluefield="numSpellSlots7"
+        label="Level 7"
+        size="xs"
+        textalign="center"
+        color="yellow"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots8"
+        hidden="true"
+        maxvaluefield="numSpellSlots8"
+        label="Level 8"
+        size="xs"
+        textalign="center"
+        color="orange"
+        editable="true"
+      ></counter>
+      <counter
+        field="spellSlots9"
+        hidden="true"
+        maxvaluefield="numSpellSlots9"
+        label="Level 9"
+        size="xs"
+        textalign="center"
+        color="red"
+        editable="true"
+      ></counter>
+    </div>
+  </div>
+</box>
 
 <div>
   <label
@@ -637,6 +687,119 @@
   </div>
 </div>
 
+<div style="margin-top: 8px">
+  <label
+    hidden="true"
+    variant="bold"
+    field="spellPointsLabel"
+    label="Spell Points"
+    size="md"
+    textalign="center"
+  ></label>
+</div>
+
+<box field="spellPointsCounter" hidden="true">
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 4px;
+      justify-content: center;
+      align-items: flex-end;
+    "
+  >
+    <numberfield
+      field="spellPoints"
+      size="xs"
+      width="50px"
+      label="Current"
+      textalign="center"
+    ></numberfield>
+    <div style="width: 150px">
+      <progressbar
+        field="spellPoints"
+        currentvaluefield="spellPoints"
+        maxvaluefield="numSpellPoints"
+        color="violet"
+        width="100%"
+        height="100%"
+        size="xl"
+      ></progressbar>
+    </div>
+    <numberfield
+      field="numSpellPoints"
+      size="xs"
+      width="50px"
+      label="Max"
+      textalign="center"
+    ></numberfield>
+  </div>
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    "
+  >
+    <box field="spellPointSlot6Box" hidden="true">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 2px;
+          align-items: center;
+        "
+      >
+        <checkbox field="spellPointSlot6Used" size="xs"></checkbox>
+        <label label="6th" size="xs"></label>
+      </div>
+    </box>
+    <box field="spellPointSlot7Box" hidden="true">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 2px;
+          align-items: center;
+        "
+      >
+        <checkbox field="spellPointSlot7Used" size="xs"></checkbox>
+        <label label="7th" size="xs"></label>
+      </div>
+    </box>
+    <box field="spellPointSlot8Box" hidden="true">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 2px;
+          align-items: center;
+        "
+      >
+        <checkbox field="spellPointSlot8Used" size="xs"></checkbox>
+        <label label="8th" size="xs"></label>
+      </div>
+    </box>
+    <box field="spellPointSlot9Box" hidden="true">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 2px;
+          align-items: center;
+        "
+      >
+        <checkbox field="spellPointSlot9Used" size="xs"></checkbox>
+        <label label="9th" size="xs"></label>
+      </div>
+    </box>
+  </div>
+</box>
+
 <!-- Settings Accordion -->
 <div style="margin-bottom: 4px">
   <accordion
@@ -656,7 +819,7 @@
           field="maxSpellLevel"
           label="Max Spell Level"
           placeholder="Select Max Spell Level..."
-          onchange="updateSpellLevels();"
+          onchange="updateSpellLevels()"
           size="xs"
           options='[{"label": "Cantrip", "value": "Cantrip"}, {"label": "1", "value": "1"}, {"label": "2", "value": "2"}, {"label": "3", "value": "3"}, {"label": "4", "value": "4"}, {"label": "5", "value": "5"}, {"label": "6", "value": "6"}, {"label": "7", "value": "7"}, {"label": "8", "value": "8"}, {"label": "9", "value": "9"}]'
         >
@@ -705,7 +868,7 @@
           label="Level 1"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots2"
@@ -713,7 +876,7 @@
           label="Level 2"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots3"
@@ -721,7 +884,7 @@
           label="Level 3"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots4"
@@ -729,7 +892,7 @@
           label="Level 4"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots5"
@@ -737,7 +900,7 @@
           label="Level 5"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots6"
@@ -745,7 +908,7 @@
           label="Level 6"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots7"
@@ -753,7 +916,7 @@
           label="Level 7"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots8"
@@ -761,7 +924,7 @@
           label="Level 8"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numSpellSlots9"
@@ -769,7 +932,7 @@
           label="Level 9"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
       </div>
 
@@ -783,7 +946,7 @@
           label="Level 1"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic2"
@@ -791,7 +954,7 @@
           label="Level 2"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic3"
@@ -799,7 +962,7 @@
           label="Level 3"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic4"
@@ -807,7 +970,7 @@
           label="Level 4"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic5"
@@ -815,7 +978,7 @@
           label="Level 5"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic6"
@@ -823,7 +986,7 @@
           label="Level 6"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic7"
@@ -831,7 +994,7 @@
           label="Level 7"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic8"
@@ -839,7 +1002,7 @@
           label="Level 8"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
         <numberfield
           field="numPactMagic9"
@@ -847,9 +1010,33 @@
           label="Level 9"
           size="xs"
           width="50px"
-          onchange="updateSpellSlots();"
+          onchange="updateSpellSlots()"
         ></numberfield>
       </div>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      "
+    >
+      <checkbox
+        field="useSpellPoints"
+        label="Use Spell Points (2014 Variant Rule)"
+        size="sm"
+        onchange="onUseSpellPointsChanged(value)"
+      ></checkbox>
+      <numberfield
+        field="numSpellPoints"
+        placeholder="--"
+        label="Max Spell Points"
+        size="xs"
+        width="120px"
+        onchange="updateSpellSlots()"
+      ></numberfield>
     </div>
   </accordion>
 </div>

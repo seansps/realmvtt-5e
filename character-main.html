@@ -535,7 +535,9 @@
     // Determine if we should hide/unhide spell slots and labels
     const valuesToHide = [];
     const valuesToUnhide = [];
-    if (
+    const useSpellPointsChecked = record?.data?.useSpellPoints;
+    const numSpellPointsVal = parseInt(record?.data?.numSpellPoints || "0", 10);
+    const hasAnySpellSlots =
       numSpellSlots1 > 0 ||
       numSpellSlots2 > 0 ||
       numSpellSlots3 > 0 ||
@@ -544,8 +546,9 @@
       numSpellSlots6 > 0 ||
       numSpellSlots7 > 0 ||
       numSpellSlots8 > 0 ||
-      numSpellSlots9 > 0
-    ) {
+      numSpellSlots9 > 0;
+    if (hasAnySpellSlots && !(useSpellPointsChecked && numSpellPointsVal > 0)) {
+      valuesToUnhide.push("spellSlotsBox");
       valuesToUnhide.push("spellSlotsLabel");
     } else if (
       numSpellSlots1 === 0 &&
@@ -558,7 +561,11 @@
       numSpellSlots8 === 0 &&
       numSpellSlots9 === 0
     ) {
+      valuesToHide.push("spellSlotsBox");
       valuesToHide.push("spellSlotsLabel");
+    } else {
+      // Has slots but spell points are active — hide the box
+      valuesToHide.push("spellSlotsBox");
     }
     if (numSpellSlots1 > 0) {
       valuesToUnhide.push("spellSlots1");
@@ -675,6 +682,28 @@
       valuesToUnhide.push("pactMagic9");
     } else if (numPactMagic9 === 0) {
       valuesToHide.push("pactMagic9");
+    }
+
+    // Spell Points — show/hide based on checkbox + pool, and hide spell slots box if active
+    if (useSpellPointsChecked && numSpellPointsVal > 0) {
+      valuesToHide.push("spellSlotsBox");
+      valuesToUnhide.push("spellPointsLabel");
+      valuesToUnhide.push("spellPointsCounter");
+
+      const maxSpellLevel = parseInt(record?.data?.maxSpellLevel || "0", 10);
+      for (let lvl = 6; lvl <= 9; lvl++) {
+        if (maxSpellLevel >= lvl) {
+          valuesToUnhide.push(`spellPointSlot${lvl}Box`);
+        } else {
+          valuesToHide.push(`spellPointSlot${lvl}Box`);
+        }
+      }
+    } else {
+      valuesToHide.push("spellPointsLabel");
+      valuesToHide.push("spellPointsCounter");
+      for (let lvl = 6; lvl <= 9; lvl++) {
+        valuesToHide.push(`spellPointSlot${lvl}Box`);
+      }
     }
 
     api.setHidden(valuesToHide, true, () => {
@@ -953,6 +982,101 @@
       }, 0);
       if (highestPactLevel > (highestSpellLevel || 0)) {
         highestSpellLevel = highestPactLevel;
+      }
+    }
+
+    // If using spell points variant, calculate the spell point pool
+    // based on the effective spellcaster level (same multiclass rules as spell slots)
+    if (record?.data?.useSpellPoints && casterType !== "Pact Magic") {
+      // Spell Points by Level table (2014 variant rule)
+      const SPELL_POINTS_BY_LEVEL = [
+        0, // Level 0
+        4, // Level 1
+        6, // Level 2
+        14, // Level 3
+        17, // Level 4
+        27, // Level 5
+        32, // Level 6
+        38, // Level 7
+        44, // Level 8
+        57, // Level 9
+        64, // Level 10
+        73, // Level 11
+        73, // Level 12
+        83, // Level 13
+        83, // Level 14
+        94, // Level 15
+        94, // Level 16
+        107, // Level 17
+        114, // Level 18
+        123, // Level 19
+        133, // Level 20
+      ];
+
+      // Calculate effective spellcaster level for spell points
+      let spellPointCasterLevel = 0;
+      if (!isMulticlass) {
+        // Single class: use class level directly, applying half/third caster rules
+        const multiclassSetting = classObj?.data?.multiclassSpellcaster || "No";
+        if (
+          multiclassSetting.toLowerCase().includes("each") ||
+          multiclassSetting === "No"
+        ) {
+          // Full caster (or casterType is "Spellcasting" which implies full)
+          spellPointCasterLevel = newClassLevel;
+        } else if (multiclassSetting.toLowerCase().includes("half")) {
+          spellPointCasterLevel = Math.ceil(newClassLevel / 2);
+        } else if (multiclassSetting.toLowerCase().includes("third")) {
+          spellPointCasterLevel = Math.floor(newClassLevel / 3);
+        }
+      } else {
+        // Multiclass: same combined level used for spell slot calculation
+        let combinedLevel = 0;
+        let allClasses = [...classes];
+        if (!allClasses.find((c) => c.name === classObj.name)) {
+          allClasses.push(classObj);
+        }
+        allClasses.forEach((c) => {
+          const className = c?.name;
+          const multiclassSetting = c?.data?.multiclassSpellcaster || "No";
+          const cType = c?.data?.casterType || "None";
+          if (multiclassSetting !== "No" && cType !== "Pact Magic") {
+            const safeClassName = className.replace(
+              /[-\/\\^$*+?.()|[\]{}]/g,
+              "\\$&",
+            );
+            const regex = new RegExp(`(${safeClassName}\\s+(\\d+))`, "i");
+            const classLevelMatch = classString.match(regex);
+            if (classLevelMatch && classLevelMatch[2]) {
+              const classLevel = parseInt(classLevelMatch[2], 10);
+              if (multiclassSetting.toLowerCase().includes("each")) {
+                combinedLevel += classLevel;
+              } else if (multiclassSetting.toLowerCase().includes("half")) {
+                combinedLevel += Math.ceil(classLevel / 2);
+              } else if (multiclassSetting.toLowerCase().includes("third")) {
+                const subclasesToCheck = (
+                  c?.data?.multiclassSpellcasterSubclass || ""
+                )
+                  .split(",")
+                  .map((s) => s.trim());
+                if (
+                  subclasses.find((s) =>
+                    subclasesToCheck.includes(s?.name || ""),
+                  )
+                ) {
+                  combinedLevel += Math.floor(classLevel / 3);
+                }
+              }
+            }
+          }
+        });
+        spellPointCasterLevel = combinedLevel;
+      }
+
+      if (spellPointCasterLevel > 0 && spellPointCasterLevel <= 20) {
+        const spellPoints = SPELL_POINTS_BY_LEVEL[spellPointCasterLevel];
+        fieldsToSet["data.numSpellPoints"] = spellPoints;
+        fieldsToSet["data.spellPoints"] = spellPoints;
       }
     }
 
@@ -2610,6 +2734,16 @@
     valuesToSet["data.pactMagic7"] = 0;
     valuesToSet["data.pactMagic8"] = 0;
     valuesToSet["data.pactMagic9"] = 0;
+
+    // Restore spell points to max and reset 6th+ level once-per-long-rest tracking
+    const numSpellPoints = parseInt(record?.data?.numSpellPoints || "0", 10);
+    if (numSpellPoints > 0) {
+      valuesToSet["data.spellPoints"] = numSpellPoints;
+      valuesToSet["data.spellPointSlot6Used"] = false;
+      valuesToSet["data.spellPointSlot7Used"] = false;
+      valuesToSet["data.spellPointSlot8Used"] = false;
+      valuesToSet["data.spellPointSlot9Used"] = false;
+    }
 
     // Restore any Spells that have Daily Uses
     const spellLists = [

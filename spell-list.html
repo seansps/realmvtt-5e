@@ -7,14 +7,14 @@
 
     const spellModBonus = parseInt(
       api.getValue("data.spellModBonus") || "0",
-      10
+      10,
     );
 
     if (spell?.data?.isAttack) {
       const attackAbility = spell?.data?.ability || "strength";
       const attackAbilityMod = parseInt(
         api.getValue(`data.${attackAbility}Mod`) || "0",
-        10
+        10,
       );
       // Add proficiency bonus to attack modifier
       const proficiencyBonus =
@@ -61,11 +61,11 @@
 
     const spellName = spell?.name || "Unknown Spell";
     const spellDescription = api.richTextToMarkdown(
-      spell?.data?.description || ""
+      spell?.data?.description || "",
     );
     const spellIcon = spell?.portrait
       ? `![${spellName}](${assetUrl}${encodeURI(
-          spell?.portrait
+          spell?.portrait,
         )}?width=40&height=40) `
       : "";
 
@@ -115,16 +115,16 @@
         spell?.data?.level?.toLowerCase() === "cantrip"
           ? getEffectsAndModifiers(
               ["cantripDamageBonus", "cantripDamagePenalty"],
-              spell?.data?.isAttack ? "attack" : "all"
+              spell?.data?.isAttack ? "attack" : "all",
             )
           : getEffectsAndModifiers(
               ["spellDamageBonus", "spellDamagePenalty"],
-              spell?.data?.isAttack ? "attack" : "all"
+              spell?.data?.isAttack ? "attack" : "all",
             );
       // Filter attack modifiers if not attack spell
       if (!spell?.data?.isAttack) {
         moreDamageModifiers = moreDamageModifiers.filter(
-          (mod) => (mod?.field || "") !== "attack"
+          (mod) => (mod?.field || "") !== "attack",
         );
       }
       moreDamageModifiers.forEach((modifier) => {
@@ -156,7 +156,7 @@
         (mod) =>
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
-          mod.value.trim().toLowerCase().includes("resistance")
+          mod.value.trim().toLowerCase().includes("resistance"),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
@@ -166,13 +166,13 @@
           mod.valueType === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
           (mod.value.trim().toLowerCase().includes("immunities") ||
-            mod.value.trim().toLowerCase().includes("immunity"))
+            mod.value.trim().toLowerCase().includes("immunity")),
       )
       ?.map((mod) => mod.value.split(" ")[1])
       .join(",");
     // Filter these out of the modifiers array, we don't need them to be toggleable
     damageModifiers = damageModifiers.filter(
-      (m) => !m.value.toString().toLowerCase().includes("ignore")
+      (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
     // Spell Attack Modifiers
@@ -193,11 +193,49 @@
       actualSpellLevel = "0";
     }
     actualSpellLevel = parseInt(actualSpellLevel, 10);
+    // If spell has no level set, default to the level of the list it's in (e.g. data.spells3 → 3)
+    if (actualSpellLevel === 0) {
+      const listLevelMatch = spellDataPath.match(/spells(\d)/);
+      if (listLevelMatch) {
+        actualSpellLevel = parseInt(listLevelMatch[1], 10);
+      }
+    }
     if (spellPrepared === "prepared" && actualSpellLevel > 0) {
       let spellSlot =
         parseInt(spell?.data?.upcastLevel || `${actualSpellLevel}`, 10) || 1;
 
-      // Determine if we are using a spell slot of a pact magic slot
+      // Spell Point costs by level (2014 variant rule)
+      const SPELL_POINT_COSTS = {
+        1: 2,
+        2: 3,
+        3: 5,
+        4: 6,
+        5: 7,
+        6: 9,
+        7: 10,
+        8: 11,
+        9: 13,
+      };
+
+      // Check if using spell points variant
+      const useSpellPointsSetting = record?.data?.useSpellPoints;
+      const spellPointsCurrent = parseInt(record?.data?.spellPoints || "0", 10);
+      const numSpellPoints = parseInt(record?.data?.numSpellPoints || "0", 10);
+      const spellPointsCost = SPELL_POINT_COSTS[spellSlot] || 0;
+      const hasSpellPointsPool = numSpellPoints > 0;
+
+      // For 6th+ level spell points, check once-per-long-rest tracking
+      let canUseSpellPointsForLevel = true;
+      if (spellSlot >= 6 && hasSpellPointsPool) {
+        const slotUsed = record?.data?.[`spellPointSlot${spellSlot}Used`];
+        if (slotUsed) {
+          canUseSpellPointsForLevel = false;
+        }
+      }
+
+      let useSpellPoints = false;
+
+      // Determine if we are using a spell slot or a pact magic slot
       let fieldToUse = "";
       let maxField = "";
 
@@ -259,6 +297,19 @@
         parseInt(record?.data?.numSpellSlots9 || "0", 10) -
         parseInt(record?.data?.spellSlots9 || "0", 10);
 
+      const slotAvailByLevel = [
+        0, // index 0 unused
+        numSpellSlots1Avail,
+        numSpellSlots2Avail,
+        numSpellSlots3Avail,
+        numSpellSlots4Avail,
+        numSpellSlots5Avail,
+        numSpellSlots6Avail,
+        numSpellSlots7Avail,
+        numSpellSlots8Avail,
+        numSpellSlots9Avail,
+      ];
+
       const hasPactAvailable =
         numPactMagicAvail1 > 0 ||
         numPactMagicAvail2 > 0 ||
@@ -270,22 +321,30 @@
         numPactMagicAvail8 > 0 ||
         numPactMagicAvail9 > 0;
 
-      const hasSpellSlotsAvailable =
-        numSpellSlots1Avail > 0 ||
-        numSpellSlots2Avail > 0 ||
-        numSpellSlots3Avail > 0 ||
-        numSpellSlots4Avail > 0 ||
-        numSpellSlots5Avail > 0 ||
-        numSpellSlots6Avail > 0 ||
-        numSpellSlots7Avail > 0 ||
-        numSpellSlots8Avail > 0 ||
-        numSpellSlots9Avail > 0;
+      // Check if there's a spell slot available at the casting level or higher
+      let hasSlotAtLevel = false;
+      for (let i = spellSlot; i <= 9; i++) {
+        if (slotAvailByLevel[i] > 0) {
+          hasSlotAtLevel = true;
+          break;
+        }
+      }
 
-      //  Use a pact magic slot if we have any available and we're using pact magic, or if we don't have any spell slots available
+      // Determine resource to use: spell points > pact magic > spell slots (based on toggles)
       if (
-        hasPactAvailable &&
-        (record?.data?.usePactMagic || !hasSpellSlotsAvailable)
+        useSpellPointsSetting &&
+        hasSpellPointsPool &&
+        spellPointsCurrent >= spellPointsCost &&
+        canUseSpellPointsForLevel
       ) {
+        // Spell Points toggle is ON and we can afford it
+        useSpellPoints = true;
+      } else if (
+        hasPactAvailable &&
+        (record?.data?.usePactMagic ||
+          (!hasSlotAtLevel && !useSpellPointsSetting))
+      ) {
+        // Pact Magic: use if toggle ON, or if no spell slots and not using spell points
         const availablePactSlots = [
           numPactMagicAvail1,
           numPactMagicAvail2,
@@ -299,39 +358,108 @@
         ];
 
         const lowestPactMagicIndex = availablePactSlots.findIndex(
-          (pactMagic) => pactMagic > 0
+          (pactMagic) => pactMagic > 0,
         );
         const lowestPactMagic = lowestPactMagicIndex + 1;
 
-        if (lowestPactMagic > 0) {
-          // Ensure that there is at least one available slot
-          if (actualSpellLevel <= lowestPactMagic) {
-            // For pact magic, we always upcast to the lowest available slot
-            // (Generally never above level 5 but we allow it just in case)
-            spellSlot = lowestPactMagic;
-            fieldToUse = `pactMagic${lowestPactMagic}`;
-            maxField = `numPactMagic${lowestPactMagic}`;
+        if (lowestPactMagic > 0 && actualSpellLevel <= lowestPactMagic) {
+          spellSlot = lowestPactMagic;
+          fieldToUse = `pactMagic${lowestPactMagic}`;
+          maxField = `numPactMagic${lowestPactMagic}`;
+        }
+      } else if (hasSlotAtLevel && !useSpellPointsSetting) {
+        // Use spell slots — find lowest available slot at or above the casting level
+        for (let i = spellSlot; i <= 9; i++) {
+          if (slotAvailByLevel[i] > 0) {
+            spellSlot = i;
+            break;
           }
         }
-      } else {
-        // Otherwise we use the spell slot for the level being cast at
         fieldToUse = `spellSlots${spellSlot}`;
         maxField = `numSpellSlots${spellSlot}`;
+      } else if (hasPactAvailable) {
+        // Fall back to pact magic
+        const availablePactSlots = [
+          numPactMagicAvail1,
+          numPactMagicAvail2,
+          numPactMagicAvail3,
+          numPactMagicAvail4,
+          numPactMagicAvail5,
+          numPactMagicAvail6,
+          numPactMagicAvail7,
+          numPactMagicAvail8,
+          numPactMagicAvail9,
+        ];
+
+        const lowestPactMagicIndex = availablePactSlots.findIndex(
+          (pactMagic) => pactMagic > 0,
+        );
+        const lowestPactMagic = lowestPactMagicIndex + 1;
+
+        if (lowestPactMagic > 0 && actualSpellLevel <= lowestPactMagic) {
+          spellSlot = lowestPactMagic;
+          fieldToUse = `pactMagic${lowestPactMagic}`;
+          maxField = `numPactMagic${lowestPactMagic}`;
+        }
+      }
+
+      // Bail out if we have no resources at all
+      if (!useSpellPoints && !fieldToUse) {
+        let reason = "";
+        if (
+          useSpellPointsSetting &&
+          hasSpellPointsPool &&
+          !canUseSpellPointsForLevel
+        ) {
+          reason = `Already used a level ${spellSlot} spell via spell points this long rest`;
+        } else if (
+          useSpellPointsSetting &&
+          hasSpellPointsPool &&
+          spellPointsCurrent < spellPointsCost
+        ) {
+          reason = `Not enough spell points (need ${spellPointsCost}, have ${spellPointsCurrent})`;
+        } else if (useSpellPointsSetting && hasSpellPointsPool) {
+          reason = `No spell points available`;
+        } else if (hasPactAvailable) {
+          reason = `No pact magic slots of high enough level`;
+        } else {
+          const resources = [];
+          if (useSpellPointsSetting) resources.push("spell points");
+          if (!useSpellPointsSetting) resources.push("spell slots");
+          if (hasPactAvailable) resources.push("pact magic");
+          reason = `No ${resources.join(" or ")} available`;
+        }
+        api.showNotification(
+          `${reason} to cast ${spellName}.`,
+          "red",
+          "Cannot Cast Spell",
+        );
+        return;
       }
 
       spellLevel = spellSlot;
 
-      let numSpellSlots = parseInt(
-        api.getValue(`data.${fieldToUse}`) || "0",
-        10
-      );
-      let numMaxSpellSlots = parseInt(
-        api.getValue(`data.${maxField}`) || "0",
-        10
-      );
+      if (useSpellPoints) {
+        // Deduct spell points
+        api.setValue("data.spellPoints", spellPointsCurrent - spellPointsCost);
+        // For 6th+ level, mark the slot as used for this long rest
+        if (spellSlot >= 6) {
+          api.setValue(`data.spellPointSlot${spellSlot}Used`, true);
+        }
+      } else {
+        // Use the spell slot or pact magic slot
+        let numSpellSlots = parseInt(
+          api.getValue(`data.${fieldToUse}`) || "0",
+          10,
+        );
+        let numMaxSpellSlots = parseInt(
+          api.getValue(`data.${maxField}`) || "0",
+          10,
+        );
 
-      if (numSpellSlots < numMaxSpellSlots) {
-        api.setValue(`data.${fieldToUse}`, numSpellSlots + 1);
+        if (numSpellSlots < numMaxSpellSlots) {
+          api.setValue(`data.${fieldToUse}`, numSpellSlots + 1);
+        }
       }
     } else if (spell?.data?.prepared === "daily") {
       let dailyUses = parseInt(spell?.data?.dailyUses, 10) || 0;
@@ -339,7 +467,7 @@
       if (dailyUses < maxDailyUses) {
         const dataPathToDaily = dataPath.replace(
           ".data.castBtn",
-          ".data.dailyUses"
+          ".data.dailyUses",
         );
         api.setValue(dataPathToDaily, dailyUses + 1);
       }
@@ -394,7 +522,7 @@
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
-          levelToReplace
+          levelToReplace,
         );
       }
     });
@@ -402,7 +530,7 @@
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
-          levelToReplace
+          levelToReplace,
         );
       }
     });
@@ -410,7 +538,7 @@
       if (modifier?.valueType?.toLowerCase() === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
-          levelToReplace
+          levelToReplace,
         );
       }
     });
@@ -461,7 +589,7 @@
     const spellDcModifiers = getEffectsAndModifiers(["spellDCBonus"]);
     saveDc += spellDcModifiers.reduce(
       (acc, mod) => acc + parseInt(mod?.value || "0", 10),
-      0
+      0,
     );
 
     // Damage Button if this is a Saving Throw Spell (Attacks have it on Attack Output)
@@ -482,12 +610,10 @@
               : "Spell"
           }_Damage
   api.promptRoll(\`${spellName} ${
-            primaryDamageType !== "untyped"
-              ? capitalize(primaryDamageType)
-              : "Spell"
-          } Damage\`, '${spellDamage}', ${JSON.stringify(
-            damageModifiers
-          )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+    primaryDamageType !== "untyped" ? capitalize(primaryDamageType) : "Spell"
+  } Damage\`, '${spellDamage}', ${JSON.stringify(
+    damageModifiers,
+  )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
   \`\`\``
         : "";
 
@@ -497,15 +623,15 @@
         spell,
         spellAltDamage,
         saveDamageMetadata,
-        spellLevel
+        spellLevel,
       );
     }
 
     const healingButton = spell?.data?.healing
       ? `\`\`\`Roll_Healing
   api.promptRoll(\`${spellName} Healing\`, '${spellHealing}', ${JSON.stringify(
-          healingModifiers
-        )}, {}, 'healing')
+    healingModifiers,
+  )}, {}, 'healing')
   \`\`\``
       : "";
 
@@ -603,7 +729,7 @@
 
     // Get damage effects for the target
     const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
-      damageModifiers
+      damageModifiers,
     )}));
     const targetDamageEffects = getDamageEffectsForTarget(
       ourToken,
@@ -724,7 +850,7 @@
     }
 
     api.promptRollForToken(token, '${capitalize(
-      savingThrow
+      savingThrow,
     )} Save', '1d20', saveModifiers, metadata, 'save');
   });
   \`\`\``;
@@ -842,7 +968,7 @@
       const tokenForRecord = api.getToken();
       const effects = tokenForRecord?.effects || [];
       const hasEffect = effects.find(
-        (effect) => effect?.name?.toLowerCase() === "concentration"
+        (effect) => effect?.name?.toLowerCase() === "concentration",
       );
       if (tokenForRecord) {
         const effectValue = spellName;
@@ -864,7 +990,7 @@
                 "Concentration",
                 updatedRecord,
                 durationSeconds,
-                effectValue
+                effectValue,
               );
             });
           });
@@ -874,7 +1000,7 @@
             "Concentration",
             tokenForRecord,
             durationSeconds,
-            effectValue
+            effectValue,
           );
         }
       }
@@ -887,7 +1013,7 @@
         `Lost concentration on ${lostConcentrationOn}.`,
         undefined,
         [],
-        []
+        [],
       );
     }
 
@@ -945,23 +1071,23 @@
     // We're in a list, so we need to use the data path to the fields metadata
     const dataPathToHideDaily = dataPath.replace(
       ".data.prepared",
-      ".fields.maxDailyUses.hidden"
+      ".fields.maxDailyUses.hidden",
     );
     const dataPathToHideCounter = dataPath.replace(
       ".data.prepared",
-      ".fields.dailyUses.hidden"
+      ".fields.dailyUses.hidden",
     );
     const dataPathToHideRestore = dataPath.replace(
       ".data.prepared",
-      ".fields.restoreOnRest.hidden"
+      ".fields.restoreOnRest.hidden",
     );
     const dataPathToHideSaveDc = dataPath.replace(
       ".data.prepared",
-      ".fields.saveDc.hidden"
+      ".fields.saveDc.hidden",
     );
     const dataPathToHideAttackMod = dataPath.replace(
       ".data.prepared",
-      ".fields.attackMod.hidden"
+      ".fields.attackMod.hidden",
     );
     const valuesToSet = {};
     if (prepared === "daily") {
@@ -998,7 +1124,7 @@
           size="sm"
           field="prepared"
           variant="default"
-          onchange="toggleDaily();"
+          onchange="toggleDaily()"
           options='[{"icon": "IconWand", "label": "Prepared", "value": "prepared"}, {"icon": "IconBook", "label": "Unprepared", "value": "unprepared"}, {"icon": "IconCircleLetterD", "label": "Daily", "value": "daily"}, {"icon": "IconCircleLetterA", "label": "At Will", "value": "atwill"}]'
         >
         </iconbutton>
@@ -1047,7 +1173,7 @@
           field="castBtn"
           label="Cast"
           variant="light"
-          onclick="castSpell();"
+          onclick="castSpell()"
         ></button>
       </div>
     </div>
