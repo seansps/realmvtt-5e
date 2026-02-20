@@ -547,7 +547,7 @@
       numSpellSlots7 > 0 ||
       numSpellSlots8 > 0 ||
       numSpellSlots9 > 0;
-    if (hasAnySpellSlots && !(useSpellPointsChecked && numSpellPointsVal > 0)) {
+    if (hasAnySpellSlots && !useSpellPointsChecked) {
       valuesToUnhide.push("spellSlotsBox");
       valuesToUnhide.push("spellSlotsLabel");
     } else if (
@@ -684,8 +684,8 @@
       valuesToHide.push("pactMagic9");
     }
 
-    // Spell Points — show/hide based on checkbox + pool, and hide spell slots box if active
-    if (useSpellPointsChecked && numSpellPointsVal > 0) {
+    // Spell Points — show/hide based on checkbox, and hide spell slots box if active
+    if (useSpellPointsChecked) {
       valuesToHide.push("spellSlotsBox");
       valuesToUnhide.push("spellPointsLabel");
       valuesToUnhide.push("spellPointsCounter");
