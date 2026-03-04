@@ -882,6 +882,7 @@ ${effectButtons}
   size="xs"
   field="descriptionOpen"
   label="Description"
+  variant="minimal"
   chevronposition="left"
 >
   <accordion.control>
@@ -927,18 +928,15 @@ ${effectButtons}
             size="sm"
             field="upcastLevel"
             color="pink"
-            variant="light"
             getoptions="return getLevelOptions();"
           >
           </iconbutton>
         </div>
-        <div style="margin-left: auto">
+        <div style="margin-left: auto; margin-top: auto; margin-bottom: auto">
           <button
-            size="xs"
-            radius="xs"
+            size="xxs"
             field="castBtn"
             label="Cast"
-            variant="light"
             onclick="castSpell();"
           ></button>
         </div>

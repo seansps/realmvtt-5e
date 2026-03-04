@@ -1113,7 +1113,7 @@
   }
 </script>
 
-<accordion size="xs" field="descriptionOpen" chevronposition="left">
+<accordion size="xs" field="descriptionOpen" variant="minimal" chevronposition="left">
   <accordion.control>
     <div style="display: flex; gap: 2px; width: 100%">
       <div style="width: 30px; height: 30px; min-width: 30px; min-height: 30px">
@@ -1161,18 +1161,15 @@
           size="sm"
           field="upcastLevel"
           color="pink"
-          variant="light"
           getoptions="return getLevelOptions();"
         >
         </iconbutton>
       </div>
-      <div style="margin-left: auto; margin-right: 4px">
+      <div style="margin-left: auto; margin-right: 4px; margin-top: auto; margin-bottom: auto">
         <button
-          size="xs"
-          radius="xs"
+          size="xxs"
           field="castBtn"
           label="Cast"
-          variant="light"
           onclick="castSpell()"
         ></button>
       </div>

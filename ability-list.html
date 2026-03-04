@@ -140,11 +140,12 @@ ${savingThrowButtons}
   size="xs"
   field="descriptionOpen"
   label="Description"
+  variant="minimal"
   chevronposition="left"
 >
   <accordion.control>
     <div style="display: column; gap: 2px; width: 100%">
-      <div style="display: flex; gap: 2px; width: 100%">
+      <div style="display: flex; gap: 2px; width: 100%; align-items: center;">
         <div
           style="width: 30px; height: 30px; min-width: 30px; min-height: 30px"
         >
@@ -159,11 +160,9 @@ ${savingThrowButtons}
         ></namefield>
         <div style="margin-left: auto">
           <button
-            size="xs"
-            radius="xs"
+            size="xxs"
             field="useBtn"
             label="Use"
-            variant="light"
             onclick="useAbility();"
           ></button>
         </div>
