@@ -14,6 +14,15 @@
             <portrait width="30px" height="30px" field="portrait"></portrait>
           </div>
           <label size="xs" variant="bold" field="namefield"></label>
+          <div style="margin-left: auto">
+            <iconbutton
+              size="sm"
+              variant="filled"
+              color="primary"
+              onclick="sendFeatureToChat()"
+              options='[{"label": "Send to Chat", "icon": "IconSend", "value": "send"}]'
+            ></iconbutton>
+          </div>
         </div>
       </div>
     </accordion.control>

@@ -2387,6 +2387,33 @@ api.addEffectById('${effectID}', target, undefined, ourToken);
   return effectButtons;
 }
 
+function sendFeatureToChat() {
+  const featureDataPath = getNearestParentDataPath(dataPath);
+  const feature = api.getValue(featureDataPath);
+  const featureName = feature?.name || "Unknown Feature";
+  const featureDescription = api.richTextToMarkdown(
+    feature?.data?.description || ""
+  );
+  const portrait = feature?.portrait
+    ? `![${featureName}](${assetUrl}${encodeURI(
+        feature?.portrait
+      )}?width=40&height=40) `
+    : "";
+
+  const effects = feature?.data?.effects || [];
+  const effectButtons = getEffectMacrosFor(effects);
+
+  const message = `
+#### ${portrait}${featureName}
+
+---
+${featureDescription}
+${effectButtons}
+`;
+
+  api.sendMessage(message, undefined, [], []);
+}
+
 function rollSavingThrow(save, dc) {
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
