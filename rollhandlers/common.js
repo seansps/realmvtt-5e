@@ -93,7 +93,8 @@ function processDeferredAbilityGroups(groups, rec, done) {
           if (Object.keys(groupFields).length > 0) {
             api.setValues(groupFields, (r) => processNext(r));
           } else {
-            processNext(latestRec);
+            // Async trampoline to unwind callback stack and avoid platform nesting limit
+            api.getRecord(latestRec.recordType || "characters", latestRec._id, (r) => processNext(r));
           }
           return;
         }
@@ -110,11 +111,15 @@ function processDeferredAbilityGroups(groups, rec, done) {
             return;
           }
           api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
+            if (!abilityRecord) {
+              addNextAbility(latestRec);
+              return;
+            }
             safeAddValue(
               `data.abilityGroups.${groupIdx}.data.abilities`,
               abilityRecord,
               (r) => addNextAbility(r),
-              rec,
+              latestRec,
             );
           });
         } else {
@@ -139,7 +144,7 @@ function processDeferredAbilityGroups(groups, rec, done) {
           },
         },
         afterGroupExists,
-        rec,
+        currentRec,
       );
     } else {
       afterGroupExists(currentRec);
