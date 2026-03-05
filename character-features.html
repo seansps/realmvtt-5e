@@ -67,95 +67,40 @@
   }
 
   function updateAbilitiesFromFeature(feature) {
-    // If the feature has an ability, add it to the character
-    // For each feature, we need to check for ability groups and add them if not there
     const abilityGroupName = feature?.data?.abilityGroupName || "";
-    if (abilityGroupName !== "") {
-      let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
-      if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
-        abilityUsesPerDay = getTotalValueFromFields(
-          record,
-          feature?.data?.fieldsToAddToUses || []
-        );
-      }
-      const abilityValue = feature?.data?.value || "";
-      const abilityRestoresOn = feature?.data?.restoreOn || "";
-      const savingThrowAbility = feature?.data?.savingThrowAbility || "";
-      let abilityGroup = record?.data?.abilityGroups?.find(
-        (ag) => ag?.name === abilityGroupName
+    if (abilityGroupName === "") return;
+
+    let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
+    if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
+      abilityUsesPerDay = getTotalValueFromFields(
+        record,
+        feature?.data?.fieldsToAddToUses || []
       );
-      // When the group is added, or found, we add abilities to it or set data on it
-      const recordDataPath = record?.dataPath || "";
-      const abilityAddedCallback = (record) => {
-        const abilityGroupIndex = record?.data?.abilityGroups?.findIndex(
-          (ag) => ag?.name === abilityGroupName
-        );
-        const fieldsToSet = {};
-        if (abilityGroupIndex !== -1) {
-          // Get the Ability to add if any
-          const abilityIdToAdd =
-            JSON.parse(feature?.data?.ability || "{}")?._id || "";
-          if (abilityIdToAdd !== "") {
-            api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
-              api.addValue(
-                `data.abilityGroups.${abilityGroupIndex}.data.abilities`,
-                abilityRecord
-              );
-            });
-          }
-          // If abilityUsesPerDay > 0, un hide the counter
-          if (abilityUsesPerDay > 0) {
-            // Update the record's number of uses if lower
-            const curDailyUses =
-              record.data?.abilityGroups?.[abilityGroupIndex]?.data
-                .maxDailyUses || 0;
-            if (curDailyUses < abilityUsesPerDay) {
-              // If ability uses per day went up, update it
-              fieldsToSet[
-                `data.abilityGroups.${abilityGroupIndex}.data.maxDailyUses`
-              ] = abilityUsesPerDay;
-            }
-            const curValue =
-              record.data?.abilityGroups?.[abilityGroupIndex]?.data.value || "";
-            if (abilityValue) {
-              // Update the ability value if it was previously set, as this might be a higher value now
-              fieldsToSet[
-                `data.abilityGroups.${abilityGroupIndex}.data.value`
-              ] = abilityValue;
-            }
-            // If restoreOn is set, update it
-            if (abilityRestoresOn !== "") {
-              fieldsToSet[
-                `data.abilityGroups.${abilityGroupIndex}.data.restore`
-              ] = abilityRestoresOn;
-            }
-            fieldsToSet[
-              `data.abilityGroups.${abilityGroupIndex}.fields.dailyUses.hidden`
-            ] = false;
-          }
-        }
-        api.setValues(fieldsToSet);
-      };
-      if (!abilityGroup) {
-        api.addValue(
-          "data.abilityGroups",
-          {
-            name: abilityGroupName,
-            data: {
-              abilities: [],
-              maxDailyUses: abilityUsesPerDay,
-              value: abilityValue,
-              restore: abilityRestoresOn,
-              savingThrowAbility: savingThrowAbility,
-              fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
-            },
-          },
-          abilityAddedCallback
-        );
-      } else {
-        abilityAddedCallback(record);
-      }
     }
+    const abilityValue = feature?.data?.value || "";
+    const abilityRestoresOn = feature?.data?.restoreOn || "";
+    const savingThrowAbility = feature?.data?.savingThrowAbility || "";
+
+    // Use processDeferredAbilityGroups to safely add group + abilities
+    const abilityIdToAdd =
+      JSON.parse(feature?.data?.ability || "{}")?._id || "";
+    const allAbilities = abilityIdToAdd
+      ? [feature?.data?.ability]
+      : [];
+
+    processDeferredAbilityGroups(
+      [{
+        abilityGroupName,
+        allAbilities,
+        abilityUsesPerDay,
+        abilityValue,
+        abilityRestoresOn,
+        savingThrowAbility,
+        fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
+      }],
+      record,
+      () => {},
+    );
   }
 
   function onDropFeat(recordLink) {
@@ -173,7 +118,7 @@
       },
     };
 
-    api.addValue(`data.features`, featToAdd, (updatedRecord) => {
+    safeAddValue(`data.features`, featToAdd, (updatedRecord) => {
       // After adding the feat, we need to update abilities if one was attached to it
       updateAbilitiesFromFeature(featToAdd);
       // Also update HP and AC just in case feature had a modifier on them

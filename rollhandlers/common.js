@@ -1,3 +1,155 @@
+// ─── Safe Add Value ─────────────────────────────────────────────────────────
+
+// Generate a UUID for new array items (normally done server-side by api.addValue).
+function generateId() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+// Replacement for api.addValue that avoids the stale client-cache bug.
+// Fetches the latest record, reads the current array, appends the new item,
+// then writes the full array back via api.setValues.
+function safeAddValue(path, item, callback, recOverride) {
+  const rec = recOverride || record;
+  if (!item._id) {
+    item._id = generateId();
+  }
+  if (item.unidentifiedName === undefined && item.name !== undefined) {
+    item.unidentifiedName = item.name;
+  }
+  api.getRecord(rec.recordType || "characters", rec._id, (freshRec) => {
+    const parts = path.split(".");
+    let current = freshRec;
+    for (let i = 0; i < parts.length; i++) {
+      if (current == null) break;
+      current = current[parts[i]];
+    }
+    const currentArray = Array.isArray(current) ? [...current] : [];
+    currentArray.push(item);
+    const fieldsToSet = {};
+    fieldsToSet[path] = currentArray;
+    api.setValues(fieldsToSet, (updatedRecord) => {
+      if (callback) callback(updatedRecord);
+    });
+  });
+}
+
+// Process deferred ability groups sequentially to avoid race conditions.
+// Each group is created if it doesn't exist, then abilities are added one by one,
+// then group fields (uses, value, restore) are set.
+function processDeferredAbilityGroups(groups, rec, done) {
+  if (!groups || groups.length === 0) {
+    done(rec);
+    return;
+  }
+  let idx = 0;
+  const processNext = (currentRec) => {
+    if (idx >= groups.length) {
+      done(currentRec);
+      return;
+    }
+    const ag = groups[idx++];
+    const existingGroup = currentRec?.data?.abilityGroups?.find(
+      (g) => g?.name === ag.abilityGroupName,
+    );
+
+    const afterGroupExists = (recWithGroup) => {
+      const groupIdx = recWithGroup?.data?.abilityGroups?.findIndex(
+        (g) => g?.name === ag.abilityGroupName,
+      );
+      if (groupIdx === -1) {
+        processNext(recWithGroup);
+        return;
+      }
+      // Add abilities to the group sequentially
+      let abilityIdx = 0;
+      const addNextAbility = (latestRec) => {
+        if (abilityIdx >= ag.allAbilities.length) {
+          // Set group fields (uses, value, restore)
+          const groupFields = {};
+          if (ag.abilityUsesPerDay > 0) {
+            const curDailyUses =
+              latestRec.data?.abilityGroups?.[groupIdx]?.data?.maxDailyUses ||
+              0;
+            if (curDailyUses < ag.abilityUsesPerDay) {
+              groupFields[`data.abilityGroups.${groupIdx}.data.maxDailyUses`] =
+                ag.abilityUsesPerDay;
+            }
+            if (ag.abilityValue) {
+              groupFields[`data.abilityGroups.${groupIdx}.data.value`] =
+                ag.abilityValue;
+            }
+            if (ag.abilityRestoresOn !== "") {
+              groupFields[`data.abilityGroups.${groupIdx}.data.restore`] =
+                ag.abilityRestoresOn;
+            }
+            groupFields[
+              `data.abilityGroups.${groupIdx}.fields.dailyUses.hidden`
+            ] = false;
+          }
+          if (Object.keys(groupFields).length > 0) {
+            api.setValues(groupFields, (r) => processNext(r));
+          } else {
+            processNext(latestRec);
+          }
+          return;
+        }
+        const ability = ag.allAbilities[abilityIdx++];
+        const abilityIdToAdd = JSON.parse(ability || "{}")?._id || "";
+        if (abilityIdToAdd !== "") {
+          const existingAbilities =
+            latestRec?.data?.abilityGroups?.[groupIdx]?.data?.abilities || [];
+          const alreadyExists = existingAbilities.some(
+            (a) => a?._id === abilityIdToAdd,
+          );
+          if (alreadyExists) {
+            addNextAbility(latestRec);
+            return;
+          }
+          api.getRecord("abilities", abilityIdToAdd, (abilityRecord) => {
+            safeAddValue(
+              `data.abilityGroups.${groupIdx}.data.abilities`,
+              abilityRecord,
+              (r) => addNextAbility(r),
+              rec,
+            );
+          });
+        } else {
+          addNextAbility(latestRec);
+        }
+      };
+      addNextAbility(recWithGroup);
+    };
+
+    if (!existingGroup) {
+      safeAddValue(
+        "data.abilityGroups",
+        {
+          name: ag.abilityGroupName,
+          data: {
+            abilities: [],
+            maxDailyUses: ag.abilityUsesPerDay,
+            value: ag.abilityValue,
+            restore: ag.abilityRestoresOn,
+            savingThrowAbility: ag.savingThrowAbility,
+            fieldsToAddToUses: ag.fieldsToAddToUses,
+          },
+        },
+        afterGroupExists,
+        rec,
+      );
+    } else {
+      afterGroupExists(currentRec);
+    }
+  };
+  processNext(rec);
+}
+
+// ─── Skill & Ability Helpers ────────────────────────────────────────────────
+
 function getAbilityFromSkill(skill) {
   switch (skill) {
     case "acrobatics":
