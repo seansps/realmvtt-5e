@@ -1,32 +1,36 @@
-<accordion
-  size="xs"
-  variant="default"
-  field="descriptionAcc"
-  label="Description"
-  icon="IconFlare"
->
-  <accordion.control>
-    <div
-      style="min-height: 30px; display: flex; flex-direction: column; gap: 4px"
-    >
-      <div style="display: flex; gap: 4px">
-        <namefield
-          width="100%"
-          size="xs"
-          variant="unstyled"
-          field="namefield"
-        ></namefield>
-        <div style="margin-left: auto">
-          <stringfield field="source" size="xs"></stringfield>
-        </div>
-        <numberfield size="xs" field="level" width="80px"></numberfield>
-      </div>
-    </div>
-  </accordion.control>
-  <richtextfield
-    disablecontrols="true"
-    field="description"
-    placeholder="Enter Feature description..."
+<div style="border-bottom: 1px solid var(--mantine-color-default-border)">
+  <accordion
+    size="xs"
+    variant="minimal"
+    field="descriptionAcc"
+    label="Description"
   >
-  </richtextfield>
-</accordion>
+    <accordion.control>
+      <div
+        style="
+          min-height: 30px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        "
+      >
+        <div style="display: flex; gap: 4px; align-items: center">
+          <div style="width: 30px; min-width: 30px">
+            <portrait width="30px" height="30px" field="portrait"></portrait>
+          </div>
+          <label size="xs" variant="bold" field="namefield"></label>
+          <div style="margin-left: auto">
+            <stringfield field="source" size="xs"></stringfield>
+          </div>
+          <numberfield size="xs" field="level" width="80px"></numberfield>
+        </div>
+      </div>
+    </accordion.control>
+    <richtextfield
+      disablecontrols="true"
+      field="description"
+      placeholder="Enter Feature description..."
+    >
+    </richtextfield>
+  </accordion>
+</div>

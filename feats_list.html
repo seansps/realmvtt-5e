@@ -1,25 +1,26 @@
-<accordion size="xs" field="descriptionOpen" label="Description">
-  <accordion.control>
-    <div style="display: column; gap: 2px; width: 100%">
-      <div style="display: flex; gap: 2px; width: 100%">
-        <div
-          style="width: 30px; height: 30px; min-width: 30px; min-height: 30px"
-        >
-          <portrait width="30px" height="30px" field="portrait"></portrait>
+<div style="border-bottom: 1px solid var(--mantine-color-default-border)">
+  <accordion
+    size="xs"
+    field="descriptionOpen"
+    label="Description"
+    variant="minimal"
+  >
+    <accordion.control>
+      <div style="display: column; gap: 2px; width: 100%">
+        <div style="display: flex; gap: 2px; width: 100%; align-items: center">
+          <div
+            style="width: 30px; height: 30px; min-width: 30px; min-height: 30px"
+          >
+            <portrait width="30px" height="30px" field="portrait"></portrait>
+          </div>
+          <label size="xs" variant="bold" field="namefield"></label>
         </div>
-        <namefield
-          size="xs"
-          width="100%"
-          variant="unstyled"
-          field="namefield"
-          placeholder="Feat Name..."
-        ></namefield>
       </div>
-    </div>
-  </accordion.control>
-  <richtextfield
-    disablecontrols="true"
-    field="description"
-    placeholder="Enter description..."
-  ></richtextfield>
-</accordion>
+    </accordion.control>
+    <richtextfield
+      disablecontrols="true"
+      field="description"
+      placeholder="Enter description..."
+    ></richtextfield>
+  </accordion>
+</div>
