@@ -94,7 +94,11 @@ function processDeferredAbilityGroups(groups, rec, done) {
             api.setValues(groupFields, (r) => processNext(r));
           } else {
             // Async trampoline to unwind callback stack and avoid platform nesting limit
-            api.getRecord(latestRec.recordType || "characters", latestRec._id, (r) => processNext(r));
+            api.getRecord(
+              latestRec.recordType || "characters",
+              latestRec._id,
+              (r) => processNext(r),
+            );
           }
           return;
         }
@@ -2392,11 +2396,11 @@ function sendFeatureToChat() {
   const feature = api.getValue(featureDataPath);
   const featureName = feature?.name || "Unknown Feature";
   const featureDescription = api.richTextToMarkdown(
-    feature?.data?.description || ""
+    feature?.data?.description || "",
   );
   const portrait = feature?.portrait
     ? `![${featureName}](${assetUrl}${encodeURI(
-        feature?.portrait
+        feature?.portrait,
       )}?width=40&height=40) `
     : "";
 
@@ -2495,6 +2499,63 @@ function normalizeSkillName(skill) {
 
   // Return the field name if found, otherwise return the original input
   return matchedSkill ? matchedSkill.field : skill;
+}
+
+function rollAbilityCheck(ability, dc) {
+  ability = ability.toLowerCase();
+  const abilityNames = [
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ];
+  if (!abilityNames.includes(ability)) {
+    api.showNotification(
+      `Unknown ability: ${ability}`,
+      "yellow",
+      "Ability Check",
+    );
+    return;
+  }
+
+  const selectedTokens = api.getSelectedOrDroppedToken();
+  selectedTokens.forEach((token) => {
+    const mod = parseInt(token?.data?.[`${ability}Mod`] || "0", 10) || 0;
+    const modifiers = [{ name: capitalize(ability), value: mod, active: true }];
+
+    // Ability bonuses/penalties
+    const abilityMods = getEffectsAndModifiersForToken(
+      token,
+      ["abilityBonus", "abilityPenalty"],
+      ability,
+    );
+    abilityMods.forEach((m) => modifiers.push(m));
+
+    // All bonuses/penalties
+    const allMods = getEffectsAndModifiersForToken(
+      token,
+      ["allBonus", "allPenalty"],
+      ability,
+    );
+    allMods.forEach((m) => modifiers.push(m));
+
+    const metadata = {
+      rollName: `${capitalize(ability)}`,
+      tooltip: `${capitalize(ability)} Check`,
+      dc: dc,
+    };
+
+    api.promptRollForToken(
+      token,
+      `${capitalize(ability)} Check`,
+      "1d20",
+      modifiers,
+      metadata,
+      "ability",
+    );
+  });
 }
 
 function rollSkillCheck(skill, dc) {
