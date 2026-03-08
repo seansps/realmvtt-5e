@@ -117,9 +117,19 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     if (isConsumable) {
       const count = parseFloat(itemCount || "0");
       if (count - 1 > 0) {
-        api.setValue(`${itemDataPath}.data.count`, count - 1);
+        api.setValue(`${itemDataPath}.data.count`, count - 1, function () {
+          api.getRecord(record.recordType, record._id, function (rec) {
+            record = rec;
+            setTotalWeight();
+          });
+        });
       } else if (!isNaN(indexValue)) {
-        api.removeValue(`data.inventory`, indexValue);
+        api.removeValue(`data.inventory`, indexValue, function () {
+          api.getRecord(record.recordType, record._id, function (rec) {
+            record = rec;
+            setTotalWeight();
+          });
+        });
       }
     }
   }
