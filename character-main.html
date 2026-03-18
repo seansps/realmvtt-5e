@@ -1396,9 +1396,10 @@
     const level = getTotalLevel(classLevels);
     valuesToSet["data.level"] = level;
 
-    // Set Next Level XP
+    // Set Next Level XP and min XP for this level
     const nextLevelXp = getNextLevelXp(level);
     valuesToSet["data.xpNext"] = nextLevelXp;
+    valuesToSet["data.xpMinForLevel"] = getNextLevelXp(level - 1);
 
     // Update the level up button
     valuesToSet["fields.levelUpButton.hidden"] =
@@ -1748,20 +1749,20 @@
     // Use processDeferredAbilityGroups to safely add group + abilities
     const abilityIdToAdd =
       JSON.parse(feature?.data?.ability || "{}")?._id || "";
-    const allAbilities = abilityIdToAdd
-      ? [feature?.data?.ability]
-      : [];
+    const allAbilities = abilityIdToAdd ? [feature?.data?.ability] : [];
 
     processDeferredAbilityGroups(
-      [{
-        abilityGroupName,
-        allAbilities,
-        abilityUsesPerDay,
-        abilityValue,
-        abilityRestoresOn,
-        savingThrowAbility,
-        fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
-      }],
+      [
+        {
+          abilityGroupName,
+          allAbilities,
+          abilityUsesPerDay,
+          abilityValue,
+          abilityRestoresOn,
+          savingThrowAbility,
+          fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
+        },
+      ],
       record,
       () => {},
     );
@@ -2234,9 +2235,10 @@
     const level = getTotalLevel(classLevels);
     valuesToSet["data.level"] = level;
 
-    // Reset XP to next level
+    // Reset XP to next level and min XP for this level
     const nextLevelXp = getNextLevelXp(level);
     valuesToSet["data.xpNext"] = nextLevelXp;
+    valuesToSet["data.xpMinForLevel"] = getNextLevelXp(level - 1);
 
     // Update the level up button
     valuesToSet["fields.levelUpButton.hidden"] =
@@ -2743,6 +2745,14 @@
   function onLoadCharacter() {
     setHpPerLevel(record);
     showHideLevelUpButton(record);
+    // Set xpMinForLevel if not already set (backfill for existing characters)
+    if (
+      record?.data?.xpMinForLevel === undefined ||
+      record?.data?.xpMinForLevel === null
+    ) {
+      const curLevel = parseInt(record?.data?.level || "1", 10);
+      api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
+    }
   }
 
   function showHideLevelUp() {
