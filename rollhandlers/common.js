@@ -1036,6 +1036,9 @@ function getEffectsAndModifiers(
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
+      // Check for extra data on the rule (e.g. active: false)
+      const ruleActive = rule.data && rule.data.active === false ? false : true;
+
       const ruleType = rule?.type || "";
       const isPenalty = ruleType.toLowerCase().includes("penalty");
       let value = rule.value || "";
@@ -1073,7 +1076,7 @@ function getEffectsAndModifiers(
           results.push({
             name: i > 0 ? `${name} (x${i + 1})` : name,
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
@@ -1091,7 +1094,7 @@ function getEffectsAndModifiers(
           results.push({
             name: effect.name || "Effect",
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
@@ -1121,7 +1124,7 @@ function getEffectsAndModifiers(
           results.push({
             name: effect.name || "Effect",
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
@@ -1317,6 +1320,9 @@ function getEffectsAndModifiersForToken(
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
+      // Check for extra data on the rule (e.g. active: false)
+      const ruleActive = rule.data && rule.data.active === false ? false : true;
+
       const ruleType = rule?.type || "";
       const isPenalty = ruleType.toLowerCase().includes("penalty");
       let value = rule.value || "";
@@ -1354,7 +1360,7 @@ function getEffectsAndModifiersForToken(
           results.push({
             name: i > 0 ? `${name} (x${i + 1})` : name,
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
@@ -1372,7 +1378,7 @@ function getEffectsAndModifiersForToken(
           results.push({
             name: effect.name || "Effect",
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
@@ -1405,7 +1411,7 @@ function getEffectsAndModifiersForToken(
           results.push({
             name: effect.name || "Effect",
             value: value,
-            active: true,
+            active: ruleActive,
             modifierType: ruleType,
             field: rule?.field || "",
             valueType: rule.valueType,
