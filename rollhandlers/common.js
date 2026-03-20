@@ -792,6 +792,70 @@ function setModifier(
   }
 }
 
+function evaluateTernary(expression) {
+  const expr = expression.trim();
+  // Find the first top-level ? (not nested)
+  const qIdx = expr.indexOf("?");
+  if (qIdx === -1) return expr;
+  const condition = expr.substring(0, qIdx).trim();
+  const rest = expr.substring(qIdx + 1).trim();
+  // Find the matching : for this ? (handle nested ternaries by counting ? and :)
+  let depth = 0;
+  let colonIdx = -1;
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === "?") depth++;
+    if (rest[i] === ":") {
+      if (depth === 0) {
+        colonIdx = i;
+        break;
+      }
+      depth--;
+    }
+  }
+  if (colonIdx === -1) return expr;
+  const trueValue = rest.substring(0, colonIdx).trim();
+  const falseValue = rest.substring(colonIdx + 1).trim();
+  // Evaluate condition
+  const condResult = evaluateCondition(condition);
+  if (condResult) {
+    // True branch may itself be a ternary
+    return trueValue.includes("?") ? evaluateTernary(trueValue) : trueValue;
+  } else {
+    return falseValue.includes("?") ? evaluateTernary(falseValue) : falseValue;
+  }
+}
+
+// Evaluate a simple comparison condition: "A op B"
+// Supports: >=, <=, >, <, ==, !=
+function evaluateCondition(condition) {
+  const operators = [">=", "<=", "!=", "==", ">", "<"];
+  for (const op of operators) {
+    const idx = condition.indexOf(op);
+    if (idx !== -1) {
+      const left = parseFloat(condition.substring(0, idx).trim());
+      const right = parseFloat(condition.substring(idx + op.length).trim());
+      if (isNaN(left) || isNaN(right)) return false;
+      switch (op) {
+        case ">=":
+          return left >= right;
+        case "<=":
+          return left <= right;
+        case "!=":
+          return left !== right;
+        case "==":
+          return left === right;
+        case ">":
+          return left > right;
+        case "<":
+          return left < right;
+      }
+    }
+  }
+  // No operator found — treat as truthy if non-zero number
+  const val = parseFloat(condition);
+  return !isNaN(val) && val !== 0;
+}
+
 function evaluateMath(stringValue) {
   // Return 0 if no value provided
   if (!stringValue) return 0;
@@ -924,12 +988,38 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
     );
     value = value.replaceAll(matchModifier[0], attributeMod);
   }
+  // Replace @record.data.X with the value at that path on the character
+  const recordDataMatches = [...value.matchAll(/@record\.data\.([\w.]+)/g)];
+  for (const match of recordDataMatches) {
+    const path = match[1];
+    let resolved = thisRecord?.data;
+    for (const segment of path.split(".")) {
+      resolved = resolved?.[segment];
+    }
+    if (resolved !== undefined && resolved !== null) {
+      value = value.replaceAll(match[0], String(resolved));
+    }
+  }
+
   // Check for replacements in the replacements object
   if (replacements && Object.keys(replacements).length > 0) {
     Object.keys(replacements).forEach((key) => {
       value = value.replaceAll(key, replacements[key]);
     });
   }
+
+  // Evaluate expressions in curly braces — supports math and ternaries.
+  // Math example: {floor(Character Level / 2)} or {max(1, Charisma Modifier)}
+  // Ternary example: {Character Level >= 16 ? 1d10 : Character Level >= 11 ? 1d8 : 1d4}
+  value = value.replace(/\{([^}]+)\}/g, (_match, expression) => {
+    // Check for ternary syntax (contains ? and :)
+    if (expression.includes("?")) {
+      return evaluateTernary(expression);
+    }
+    const result = evaluateMath(expression);
+    return String(result);
+  });
+
   return value;
 }
 
