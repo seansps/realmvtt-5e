@@ -3127,7 +3127,7 @@
           >
           </numberfield>
           <!-- Panel to edit HP per level -->
-          <popover onclose="updateHpPerLevel()">
+          <popover>
             <popover.target>
               <iconbutton
                 field="Edit Hit Points per Level"
@@ -3165,6 +3165,7 @@
                     width="100%"
                     label="Level 1"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel2"
@@ -3172,6 +3173,7 @@
                     width="100%"
                     label="Level 2"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel3"
@@ -3179,6 +3181,7 @@
                     width="100%"
                     label="Level 3"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel4"
@@ -3186,6 +3189,7 @@
                     width="100%"
                     label="Level 4"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel5"
@@ -3193,6 +3197,7 @@
                     width="100%"
                     label="Level 5"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel6"
@@ -3200,6 +3205,7 @@
                     width="100%"
                     label="Level 6"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel7"
@@ -3207,6 +3213,7 @@
                     width="100%"
                     label="Level 7"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel8"
@@ -3214,6 +3221,7 @@
                     width="100%"
                     label="Level 8"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel9"
@@ -3221,6 +3229,7 @@
                     width="100%"
                     label="Level 9"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel10"
@@ -3228,6 +3237,7 @@
                     width="100%"
                     label="Level 10"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel11"
@@ -3235,6 +3245,7 @@
                     width="100%"
                     label="Level 11"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel12"
@@ -3242,6 +3253,7 @@
                     width="100%"
                     label="Level 12"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel13"
@@ -3249,6 +3261,7 @@
                     width="100%"
                     label="Level 13"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel14"
@@ -3256,6 +3269,7 @@
                     width="100%"
                     label="Level 14"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel15"
@@ -3263,6 +3277,7 @@
                     width="100%"
                     label="Level 15"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel16"
@@ -3270,6 +3285,7 @@
                     width="100%"
                     label="Level 16"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel17"
@@ -3277,6 +3293,7 @@
                     width="100%"
                     label="Level 17"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel18"
@@ -3284,6 +3301,7 @@
                     width="100%"
                     label="Level 18"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel19"
@@ -3291,6 +3309,7 @@
                     width="100%"
                     label="Level 19"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                   <numberfield
                     field="hpLevel20"
@@ -3298,12 +3317,13 @@
                     width="100%"
                     label="Level 20"
                     updateonblur="true"
+                    onchange="updateHpPerLevel()"
                   ></numberfield>
                 </div>
                 <div style="margin-top: 8px">
                   <button
                     size="xs"
-                    label="Set HP per Level"
+                    label="Close"
                     variant="outline"
                     onclick="api.closeOpenedPopovers()"
                   ></button>
