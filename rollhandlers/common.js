@@ -2228,23 +2228,15 @@ function setHpPerLevel(recordOverride = null, moreValuesToSet = undefined) {
 }
 
 function showHideLevelUpButton(record) {
-  const valuesToSet = {
-    "fields.levelUpButton.hidden": true,
-  };
-
   const curLevel = record?.data?.level || 0;
   const curXp = record?.data?.xp || 0;
   const nextLevelXp = record?.data?.xpNext || 0;
-  if (curLevel <= 19 && curXp >= nextLevelXp) {
-    if (
-      record?.fields?.levelUpButton?.hidden ||
-      record?.fields?.levelUpButton?.hidden === undefined
-    ) {
-      valuesToSet["fields.levelUpButton.hidden"] = false;
-      api.setValues(valuesToSet);
-    }
-  } else if (!record?.fields?.levelUpButton?.hidden) {
-    api.setValues(valuesToSet);
+  const shouldShow = curLevel <= 19 && curXp >= nextLevelXp;
+  const hidden = !shouldShow;
+  const currentHidden = record?.fields?.levelUpButton?.hidden;
+
+  if (currentHidden !== hidden) {
+    api.setValues({ "fields.levelUpButton.hidden": hidden });
   }
 }
 
