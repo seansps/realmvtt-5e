@@ -2801,262 +2801,146 @@
       <portrait width="130px" height="130px"></portrait>
     </div>
 
-    <div style="display: flex; flex-direction: row; gap: 6px; margin-top: 4px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="strengthMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="strength"
-            label="STR"
-            onchange="setModifier(value, 'strength')"
-            onclick="rollCheck('strength')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Strength Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('strength')"
-        >
-        </iconbutton>
-      </div>
+    <div style="margin-top: 8px">
+      <attribute
+        field="strength"
+        modifierfield="strengthMod"
+        label="STR"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('strength')"
+        onchange="setModifier(value, 'strength')"
+      ></attribute>
+    </div>
+    <div style="margin-top: 16px">
+      <attribute
+        field="dexterity"
+        modifierfield="dexterityMod"
+        label="DEX"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('dexterity')"
+        onchange="setModifier(value, 'dexterity')"
+      ></attribute>
     </div>
 
-    <div style="margin-top: 4px; display: flex; flex-direction: row; gap: 6px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="dexterityMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="dexterity"
-            label="DEX"
-            onchange="setModifier(value, 'dexterity')"
-            onclick="rollCheck('dexterity')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Dexterity Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('dexterity')"
-        >
-        </iconbutton>
-      </div>
+    <div style="margin-top: 16px">
+      <attribute
+        field="constitution"
+        modifierfield="constitutionMod"
+        label="CON"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('constitution')"
+        onchange="setModifier(value, 'constitution')"
+      ></attribute>
     </div>
 
-    <div style="margin-top: 4px; display: flex; flex-direction: row; gap: 6px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="constitutionMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="constitution"
-            label="CON"
-            onchange="setModifier(value, 'constitution')"
-            onclick="rollCheck('constitution')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Constitution Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('constitution')"
-        >
-        </iconbutton>
-      </div>
+    <div style="margin-top: 16px">
+      <attribute
+        field="intelligence"
+        modifierfield="intelligenceMod"
+        label="INT"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('intelligence')"
+        onchange="setModifier(value, 'intelligence')"
+      ></attribute>
     </div>
 
-    <div style="margin-top: 4px; display: flex; flex-direction: row; gap: 6px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="intelligenceMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="intelligence"
-            label="INT"
-            onchange="setModifier(value, 'intelligence')"
-            onclick="rollCheck('intelligence')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Intelligence Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('intelligence')"
-        >
-        </iconbutton>
-      </div>
+    <div style="margin-top: 16px">
+      <attribute
+        field="wisdom"
+        modifierfield="wisdomMod"
+        label="WIS"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('wisdom')"
+        onchange="setModifier(value, 'wisdom')"
+      ></attribute>
     </div>
 
-    <div style="margin-top: 4px; display: flex; flex-direction: row; gap: 6px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="wisdomMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="wisdom"
-            label="WIS"
-            onchange="setModifier(value, 'wisdom')"
-            onclick="rollCheck('wisdom')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Wisdom Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('wisdom')"
-        >
-        </iconbutton>
-      </div>
-    </div>
-
-    <div style="margin-top: 4px; display: flex; flex-direction: row; gap: 6px">
-      <div style="display: flex; flex-direction: column">
-        <indicator
-          variant="outline"
-          size="24"
-          defaultvalue="+0"
-          field="charismaMod"
-          position="bottom-center"
-        >
-          <numberfield
-            placeholder="0"
-            size="md"
-            width="100px"
-            field="charisma"
-            label="CHA"
-            onchange="setModifier(value, 'charisma')"
-            onclick="rollCheck('charisma')"
-          ></numberfield>
-        </indicator>
-      </div>
-      <div
-        style="display: flex; flex-direction: column; justify-content: flex-end"
-      >
-        <iconbutton
-          field="Charisma Check"
-          size="xl"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
-          onclick="rollCheck('charisma')"
-        >
-        </iconbutton>
-      </div>
-    </div>
-
-    <div style="margin-top: 12px; display: flex; flex-direction: row">
-      <div
-        style="
-          align-items: center;
-          display: flex;
-          flex-direction: column;
-          margin-right: 8px;
-        "
-      >
-        <label variant="bold" size="xs" label="Death"></label>
-        <iconbutton
-          field="Death Save"
-          size="md"
-          color="red"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Death Save", "value": "roll"}]'
-          onchange=""
-          onclick="rollDeathSave()"
-        ></iconbutton>
-      </div>
-      <div style="display: flex; flex-direction: column">
-        <div style="display: flex; flex-direction: row; gap: 4px">
-          <label
-            variant="bold"
-            label="Failure&nbsp;&nbsp;&nbsp;"
-            size="xs"
-          ></label>
-          <counter
-            color="red"
-            field="deathSaveFailures"
-            maxvalue="3"
-            size="xs"
-          ></counter>
-        </div>
-
-        <div
-          style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px"
-        >
-          <label variant="bold" label="Success" size="xs"></label>
-          <counter
-            color="green"
-            field="deathSaveSuccesses"
-            maxvalue="3"
-            size="xs"
-          ></counter>
-        </div>
-      </div>
+    <div style="margin-top: 16px">
+      <attribute
+        field="charisma"
+        modifierfield="charismaMod"
+        label="CHA"
+        size="sm"
+        width="130px"
+        placeholder="0"
+        modifierdefaultvalue="+0"
+        modifierposition="bottom-center"
+        containervariant="fancy"
+        textalign="center"
+        showbutton
+        bold="true"
+        buttonicon="d20"
+        buttonsize="lg"
+        buttonvariant="filled"
+        buttonposition="right"
+        onclick="rollCheck('charisma')"
+        onchange="setModifier(value, 'charisma')"
+      ></attribute>
     </div>
   </div>
 
   <div
-    style="display: flex; flex-direction: column; margin-left: 4px; width: 100%"
+    style="display: flex; flex-direction: column; margin-left: 8px; width: 100%"
   >
     <div style="display: flex; flex-direction: row; width: 100%">
       <div style="display: flex; flex-direction: column; width: 100%">
@@ -3664,7 +3548,7 @@
           placeholder="None"
         ></stringfield>
       </div>
-      <div style="width: 30%; margin-left: 4px">
+      <div style="width: 50%; margin-left: 4px">
         <dropdown
           size="xs"
           field="size"
@@ -3674,20 +3558,46 @@
         >
         </dropdown>
       </div>
-      <div style="width: 20%; margin-left: 4px">
-        <stringfield
-          size="xs"
-          field="speed"
-          placeholder="0 ft"
-          label="Speed"
-        ></stringfield>
-      </div>
     </div>
 
-    <div style="display: flex; flex-direction: row; gap: 4px; width: 100%">
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
+    <div style="width: 100%">
+      <stringfield
+        size="xs"
+        field="speed"
+        placeholder="0 ft"
+        label="Speed"
+      ></stringfield>
+    </div>
+
+    <!-- Saving Throws + Death Saves -->
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 2px;
+        width: 100%;
+        align-items: flex-start;
+        margin-top: 8px;
+      "
+    >
+      <!-- Saving Throws: 2 columns vertical (STR/DEX/CON | INT/WIS/CHA) -->
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+        <label
+          variant="bold"
+          size="xs"
+          label="Saving Throws"
+          style="margin-bottom: 2px"
+        ></label>
+        <div style="display: flex; gap: 6px">
+          <!-- Col 1: STR, DEX, CON -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: auto auto 45px auto;
+              gap: 1px 3px;
+              align-items: center;
+            "
+          >
             <iconbutton
               field="strengthProf"
               size="md"
@@ -3695,19 +3605,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'strength')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="strengthSave"
-            label="Strengh"
-            onclick="rollSave('strength')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="STR"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="strengthSave"
+              onclick="rollSave('strength')"
+            ></numberfield>
             <iconbutton
               field="Strength Save"
               size="md"
@@ -3715,14 +3623,8 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('strength')"
-            >
-            </iconbutton>
-          </div>
-        </div>
-      </div>
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
+            ></iconbutton>
+
             <iconbutton
               field="dexterityProf"
               size="md"
@@ -3730,19 +3632,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'dexterity')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="dexteritySave"
-            label="Dexterity"
-            onclick="rollSave('dexterity')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="DEX"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="dexteritySave"
+              onclick="rollSave('dexterity')"
+            ></numberfield>
             <iconbutton
               field="Dexterity Save"
               size="md"
@@ -3750,25 +3650,8 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('dexterity')"
-            >
-            </iconbutton>
-          </div>
-        </div>
-      </div>
-    </div>
+            ></iconbutton>
 
-    <div
-      style="
-        margin-top: 4px;
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        width: 100%;
-      "
-    >
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
               field="constitutionProf"
               size="md"
@@ -3776,19 +3659,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'constitution')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="constitutionSave"
-            label="Constitution"
-            onclick="rollSave('constitution')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="CON"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="constitutionSave"
+              onclick="rollSave('constitution')"
+            ></numberfield>
             <iconbutton
               field="Constitution Save"
               size="md"
@@ -3796,14 +3677,17 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('constitution')"
-            >
-            </iconbutton>
+            ></iconbutton>
           </div>
-        </div>
-      </div>
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
+          <!-- Col 2: INT, WIS, CHA -->
+          <div
+            style="
+              display: grid;
+              grid-template-columns: auto auto 45px auto;
+              gap: 1px 3px;
+              align-items: center;
+            "
+          >
             <iconbutton
               field="intelligenceProf"
               size="md"
@@ -3811,19 +3695,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'intelligence')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="intelligenceSave"
-            label="Intelligence"
-            onclick="rollSave('intelligence')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="INT"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="intelligenceSave"
+              onclick="rollSave('intelligence')"
+            ></numberfield>
             <iconbutton
               field="Intelligence Save"
               size="md"
@@ -3831,25 +3713,8 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('intelligence')"
-            >
-            </iconbutton>
-          </div>
-        </div>
-      </div>
-    </div>
+            ></iconbutton>
 
-    <div
-      style="
-        margin-top: 4px;
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        width: 100%;
-      "
-    >
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
             <iconbutton
               field="wisdomProf"
               size="md"
@@ -3857,19 +3722,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'wisdom')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="wisdomSave"
-            label="Wisdom"
-            onclick="rollSave('wisdom')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="WIS"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="wisdomSave"
+              onclick="rollSave('wisdom')"
+            ></numberfield>
             <iconbutton
               field="Wisdom Save"
               size="md"
@@ -3877,14 +3740,8 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('wisdom')"
-            >
-            </iconbutton>
-          </div>
-        </div>
-      </div>
-      <div style="display: flex; flex-direction: column; width: 50%">
-        <div style="display: flex; gap: 4px">
-          <div style="margin-top: auto; margin-bottom: 2px">
+            ></iconbutton>
+
             <iconbutton
               field="charismaProf"
               size="md"
@@ -3892,19 +3749,17 @@
               variant="default"
               options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
               onchange="setSave(value, 'charisma')"
-              onclick=""
             ></iconbutton>
-          </div>
-          <numberfield
-            placeholder="+0"
-            showsign="true"
-            width="100%"
-            size="xs"
-            field="charismaSave"
-            label="Charisma"
-            onclick="rollSave('charisma')"
-          ></numberfield>
-          <div style="margin-top: auto; margin-bottom: 2px">
+            <label size="xs" variant="bold" label="CHA"></label>
+            <numberfield
+              placeholder="+0"
+              showsign="true"
+              width="45px"
+              size="xs"
+              hidecontrols="true"
+              field="charismaSave"
+              onclick="rollSave('charisma')"
+            ></numberfield>
             <iconbutton
               field="Charisma Save"
               size="md"
@@ -3912,9 +3767,54 @@
               variant="default"
               options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
               onclick="rollSave('charisma')"
-            >
-            </iconbutton>
+            ></iconbutton>
           </div>
+        </div>
+      </div>
+
+      <!-- Death Saves -->
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          min-width: 80px;
+        "
+      >
+        <label variant="bold" size="xs" label="Death Saves"></label>
+        <button
+          field="deathSaveBtn"
+          size="xs"
+          color="red"
+          variant="light"
+          label="Roll Save"
+          width="100%"
+          onclick="rollDeathSave()"
+        ></button>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1px 4px;
+            align-items: center;
+            width: 100%;
+          "
+        >
+          <label variant="bold" label="Fail" size="xs" color="red"></label>
+          <counter
+            color="red"
+            field="deathSaveFailures"
+            maxvalue="3"
+            size="xs"
+          ></counter>
+          <label variant="bold" label="Pass" size="xs" color="green"></label>
+          <counter
+            color="green"
+            field="deathSaveSuccesses"
+            maxvalue="3"
+            size="xs"
+          ></counter>
         </div>
       </div>
     </div>
