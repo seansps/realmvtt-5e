@@ -1437,8 +1437,10 @@
       const toolProficiencies = classObj?.data?.toolProficiencies || "";
       addToolProficiency(toolProficiencies);
 
-      // Prompt Skill choices
-      promptSkillChoices(classObj, false);
+      // Defer skill prompt so it chains after subclass if needed
+      promptSkillChoicesLater = (nextPrompt) => {
+        promptSkillChoices(classObj, false, nextPrompt);
+      };
     } else if (addingNewClass) {
       // Multiclass do not get save proficiencies
       // Weapon Proficiencies / Armor Training for the multiclass class
@@ -1496,9 +1498,12 @@
     const bonus = getProficiencyBonus(level);
     valuesToSet["data.proficiencyBonus"] = bonus;
 
-    // Prompt for subclass (If level 3 in THIS class) - pass as additional prompt to updateHitPoints
+    // Prompt for subclass (if at the subclass level in THIS class and no subclass already chosen)
+    const hasSubclassForClass = subclasses.some(
+      (s) => s?.data?.class === className,
+    );
     let promptSubclass =
-      newLevel === 3
+      newLevel === (classObj?.data?.archetypeLevel || 3) && !hasSubclassForClass
         ? (nextPrompt) => {
             const subclassSelection = (values) => {
               if (values.length > 0) {
@@ -1510,7 +1515,7 @@
                     icon: "IconBadges",
                   },
                   (recordAfterSubclass) => {
-                    // Add subclass features for level 3
+                    // Add subclass features for this level
                     const result = addMissingClassFeatures(
                       className,
                       recordLink.value,
@@ -1612,28 +1617,23 @@
       // Chain feature adds sequentially via safeAddValue, then process ability groups,
       // to avoid the stale client-cache bug when multiple features are added at the same level.
       const proceedToPrompts = () => {
-        // Prompt for skills first (level 1 multiclass), then HP, then subclass
+        // Prompt for skills first, then HP, then subclass
+        const hpStep = (rec) => {
+          if (promptSubclass) {
+            updateHitPoints(className, newLevel, level, hitDie, rec, () =>
+              promptSubclass(null),
+            );
+          } else {
+            updateHitPoints(className, newLevel, level, hitDie, rec);
+          }
+        };
+
         if (promptSkillChoicesLater) {
           promptSkillChoicesLater((recordAfterSkills) => {
-            updateHitPoints(
-              className,
-              newLevel,
-              level,
-              hitDie,
-              recordAfterSkills,
-            );
+            hpStep(recordAfterSkills);
           });
-        } else if (promptSubclass) {
-          updateHitPoints(
-            className,
-            newLevel,
-            level,
-            hitDie,
-            updatedRecord,
-            () => promptSubclass(null),
-          );
         } else {
-          updateHitPoints(className, newLevel, level, hitDie, updatedRecord);
+          hpStep(updatedRecord);
         }
       };
 
@@ -2164,6 +2164,132 @@
     });
   }
 
+  function onDropSubclass(type, recordLink) {
+    const subclass = { ...recordLink.value };
+    const subclassClassName = subclass?.data?.class || "";
+
+    if (!subclassClassName) {
+      api.showNotification(
+        "This subclass does not have a class set.",
+        "red",
+        "Missing Class",
+      );
+      return;
+    }
+
+    // Find the matching class on this character
+    const classes = record?.data?.classes || [];
+    const classLevels = record?.data?.classLevels || "";
+    const classEntry = classes.find((c) => c.name === subclassClassName);
+    if (!classEntry) {
+      api.showNotification(
+        `Character does not have the ${subclassClassName} class.`,
+        "red",
+        "Class Not Found",
+      );
+      return;
+    }
+
+    // Check if character already has a subclass for this class
+    const existingSubclasses = record?.data?.subclasses || [];
+    const existingSubclass = existingSubclasses.find(
+      (s) => s?.data?.class === subclassClassName,
+    );
+    if (existingSubclass) {
+      api.showNotification(
+        `Character already has a subclass for ${subclassClassName}.`,
+        "red",
+        "Subclass Exists",
+      );
+      return;
+    }
+
+    // Parse current class level from classLevels string
+    const safeClassName = subclassClassName.replace(
+      /[-\/\\^$*+?.()|[\]{}]/g,
+      "\\$&",
+    );
+    const regex = new RegExp(`${safeClassName}\\s+(\\d+)`, "i");
+    const match = classLevels.match(regex);
+    const currentClassLevel = match ? parseInt(match[1], 10) : 1;
+    const totalLevel = getTotalLevel(classLevels);
+    const archetypeLevel = classEntry?.data?.archetypeLevel || 3;
+
+    // Add the subclass to data.subclasses
+    api.addValue(
+      "data.subclasses",
+      {
+        ...subclass,
+        icon: "IconBadges",
+      },
+      (recordAfterSubclass) => {
+        // Add subclass features for all levels from archetypeLevel up to current class level
+        const allFieldsToSet = {};
+        const allFeaturesToAdd = [];
+        const allDeferredAbilityGroups = [];
+
+        for (let lvl = archetypeLevel; lvl <= currentClassLevel; lvl++) {
+          const result = addMissingClassFeatures(
+            subclassClassName,
+            classEntry,
+            subclass,
+            lvl,
+            classLevels,
+          );
+          Object.assign(allFieldsToSet, result.fieldsToSet);
+          allFeaturesToAdd.push(...result.featuresToAdd);
+          allDeferredAbilityGroups.push(...result.deferredAbilityGroups);
+        }
+
+        // Recalculate spell slots with new subclass
+        const subclasses = recordAfterSubclass?.data?.subclasses || [];
+        const spellSlotFieldsToSet = getSpellSlotFields(
+          classes,
+          subclasses,
+          classLevels,
+          classEntry,
+          totalLevel,
+          currentClassLevel,
+        );
+        Object.assign(allFieldsToSet, spellSlotFieldsToSet);
+
+        const afterFieldsSet = (rec) => {
+          // Chain feature adds sequentially via safeAddValue
+          let fIdx = 0;
+          const addNextFeature = () => {
+            if (fIdx >= allFeaturesToAdd.length) {
+              processDeferredAbilityGroups(
+                allDeferredAbilityGroups,
+                rec,
+                () => {
+                  api.showNotification(
+                    `Added ${recordLink.tooltip} subclass to ${subclassClassName}.`,
+                    "green",
+                    "Subclass Added",
+                  );
+                },
+              );
+              return;
+            }
+            safeAddValue(
+              "data.features",
+              allFeaturesToAdd[fIdx++],
+              addNextFeature,
+              rec,
+            );
+          };
+          addNextFeature();
+        };
+
+        if (Object.keys(allFieldsToSet).length > 0) {
+          api.setValues(allFieldsToSet, afterFieldsSet);
+        } else {
+          afterFieldsSet(recordAfterSubclass);
+        }
+      },
+    );
+  }
+
   function onDrop(type, recordLink) {
     if (type === "class") {
       onDropClass(type, recordLink);
@@ -2171,6 +2297,8 @@
       onDropBackground(type, recordLink);
     } else if (type === "species") {
       onDropSpecies(type, recordLink);
+    } else if (type === "subclass") {
+      onDropSubclass(type, recordLink);
     }
   }
 
