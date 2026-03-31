@@ -40,15 +40,31 @@
       }
     }
 
-    // Get effects
-    const effectModifiers = getEffectsAndModifiers([
-      "attackBonus",
-      "attackPenalty",
-      "spellAttackBonus",
-      "spellAttackPenalty",
-    ]);
+    // Determine if the spell is ranged or melee for modifier filtering
+    const spellRange = parseInt(spell?.data?.range || "0", 10);
+    let isRangedSpell = spellRange > 0;
+    if (isRangedSpell && (spell?.data?.description || "").match(/melee spell attack/i)) {
+      isRangedSpell = false;
+    }
+    const spellAttackField = isRangedSpell ? "ranged" : "melee";
+
+    // Get general attack modifiers filtered to "spell" field
+    const effectModifiers = getEffectsAndModifiers(
+      ["attackBonus", "attackPenalty"],
+      "spell",
+    );
+    // Get spell-specific attack modifiers filtered to ranged/melee
+    const spellAttackEffectModifiers = getEffectsAndModifiers(
+      ["spellAttackBonus", "spellAttackPenalty"],
+      spellAttackField,
+    );
     effectModifiers.forEach((modifier) => {
       attackModifiers.push(modifier);
+    });
+    spellAttackEffectModifiers.forEach((modifier) => {
+      if (!attackModifiers.some((m) => m.name === modifier.name && m.value === modifier.value)) {
+        attackModifiers.push(modifier);
+      }
     });
 
     return attackModifiers;
