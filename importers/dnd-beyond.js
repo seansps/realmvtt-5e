@@ -685,11 +685,11 @@ var WEAPON_PROPERTY_MAP = {
     },
   });
 
-  // Subclass -> data.archetypes (if the character has chosen a subclass)
+  // Subclass -> data.subclasses (if the character has chosen a subclass)
   if (cls.subclassDefinition && cls.subclassDefinition.name) {
     _pendingRecords.push({
       recordType: "subclass",
-      targetPath: "data.archetypes",
+      targetPath: "data.subclasses",
       name: cls.subclassDefinition.name,
       extraData: {
         level: cls.level || 1,
@@ -699,26 +699,135 @@ var WEAPON_PROPERTY_MAP = {
 });
 
 // Species -> data.species
+// Populate extraData from DDB so if the species isn't in the compendium,
+// the bare record still has all the fields from species-main.html
 if (ddb.race && ddb.race.fullName) {
-  _pendingRecords.push({
+  var speciesExtraData = {};
+
+  // Size (dropdown value: tiny, small, medium, large, huge, gargantuan)
+  var speciesSizeId = ddb.race.sizeId;
+  if (speciesSizeId && SIZE_MAP[speciesSizeId]) {
+    speciesExtraData.size = SIZE_MAP[speciesSizeId];
+  }
+
+  // Speed
+  var raceWalk =
+    ddb.race.weightSpeeds &&
+    ddb.race.weightSpeeds.normal &&
+    ddb.race.weightSpeeds.normal.walk;
+  if (raceWalk) {
+    speciesExtraData.speed = raceWalk + " feet";
+    // Include other movement modes if present
+    var otherSpeeds = [];
+    var normal = ddb.race.weightSpeeds.normal;
+    if (normal.fly) otherSpeeds.push("fly " + normal.fly + " ft.");
+    if (normal.swim) otherSpeeds.push("swim " + normal.swim + " ft.");
+    if (normal.climb) otherSpeeds.push("climb " + normal.climb + " ft.");
+    if (normal.burrow) otherSpeeds.push("burrow " + normal.burrow + " ft.");
+    if (otherSpeeds.length > 0) {
+      speciesExtraData.speed += ", " + otherSpeeds.join(", ");
+    }
+  }
+
+  // Creature Type — DDB stores as a number (type field), default to Humanoid
+  speciesExtraData.creatureType = "Humanoid";
+
+  // Senses — extract racial senses from modifiers (darkvision, etc.)
+  var racialSenses = [];
+  (ddb.modifiers && ddb.modifiers.race ? ddb.modifiers.race : []).forEach(
+    function (mod) {
+      if (mod.type === "sense" && mod.subType && mod.value) {
+        var sName = mod.friendlySubtypeName || mod.subType;
+        sName = sName.charAt(0).toUpperCase() + sName.slice(1);
+        racialSenses.push(sName + " " + mod.value + " ft.");
+      }
+    },
+  );
+  if (racialSenses.length > 0) {
+    speciesExtraData.senses = racialSenses.join(", ");
+  }
+
+  // Description
+  if (ddb.race.description) {
+    speciesExtraData.description = ddb.race.description;
+  }
+
+  // Build alternate name formats for fuzzy matching.
+  // DDB uses "Stout Halfling" but Realm uses "Halfling, Stout".
+  // Try: "BaseName, SubRace", "BaseName", and the DDB fullName.
+  var speciesAlternates = [];
+  if (ddb.race.isSubRace && ddb.race.baseName && ddb.race.subRaceShortName) {
+    // Realm format: "Halfling, Stout" or "Elf, High"
+    speciesAlternates.push(
+      ddb.race.baseName + ", " + ddb.race.subRaceShortName,
+    );
+    // Also try just the base name as fallback
+    speciesAlternates.push(ddb.race.baseName);
+  }
+
+  var speciesPending = {
     recordType: "species",
     targetPath: "data.species",
     name: ddb.race.fullName,
-    extraData: {},
-  });
+    extraData: speciesExtraData,
+  };
+  if (speciesAlternates.length > 0) {
+    speciesPending.alternateNames = speciesAlternates;
+  }
+  _pendingRecords.push(speciesPending);
 }
 
 // Background -> data.backgrounds
+// Populate extraData from DDB so if the background isn't in the compendium,
+// the bare record still has all the fields from backgrounds-main.html
 if (
   ddb.background &&
   ddb.background.definition &&
   ddb.background.definition.name
 ) {
+  var bgDef = ddb.background.definition;
+  var bgExtraData = {};
+
+  // Skill proficiencies — extract from background modifiers that match known skills
+  var bgSkills = [];
+  var bgTools = [];
+  (ddb.modifiers && ddb.modifiers.background
+    ? ddb.modifiers.background
+    : []
+  ).forEach(function (mod) {
+    if (mod.type === "proficiency" && mod.subType) {
+      // Check if it's a skill
+      if (SKILL_MAP[mod.subType]) {
+        bgSkills.push(SKILL_MAP[mod.subType]);
+      }
+      // Otherwise it's likely a tool proficiency
+      else if (
+        mod.subType.indexOf("weapon") === -1 &&
+        mod.subType.indexOf("armor") === -1 &&
+        mod.subType.indexOf("shield") === -1 &&
+        mod.subType.indexOf("saving-throws") === -1
+      ) {
+        bgTools.push(mod.friendlySubtypeName || mod.subType);
+      }
+    }
+  });
+  if (bgSkills.length > 0) {
+    bgExtraData.skillProficiencies = bgSkills;
+  }
+  if (bgTools.length > 0) {
+    bgExtraData.toolProficiencies = bgTools.join(", ");
+  }
+
+  // Description (note: field name is capitalized "Description" in backgrounds-main.html)
+  if (bgDef.description) {
+    bgExtraData.Description = bgDef.description;
+  }
+
   _pendingRecords.push({
     recordType: "backgrounds",
     targetPath: "data.backgrounds",
-    name: ddb.background.definition.name,
-    extraData: {},
+    name: bgDef.name,
+    extraData: bgExtraData,
   });
 }
 
@@ -1169,8 +1278,21 @@ for (var i = 8; i >= 0; i--) {
 }
 charData.maxSpellLevel = maxSpellLevel > 0 ? "" + maxSpellLevel : "0";
 
-// Build fields visibility for spell lists and accordions
+// Build fields visibility
 var fieldsToSet = {};
+
+// Show class/species/background lists and hide the "no levels" placeholder
+fieldsToSet["classes"] = { hidden: false };
+fieldsToSet["species"] = { hidden: false };
+fieldsToSet["backgrounds"] = { hidden: false };
+fieldsToSet["noLevelsLabel"] = { hidden: true };
+
+// Show HP-per-level fields for each level the character has
+for (var hpLvl = 1; hpLvl <= totalLevel; hpLvl++) {
+  fieldsToSet["hpLevel" + hpLvl] = { hidden: false };
+}
+
+// Spell lists and accordions
 var hasAnySpells =
   maxSpellLevel > 0 ||
   allSpells.some(function (s) {
