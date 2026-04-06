@@ -284,6 +284,7 @@
     valuesToSet["fields.shapeshiftingNpc.hidden"] = false;
     valuesToSet["fields.shapeshiftingNameNone.hidden"] = true;
     valuesToSet["fields.Remove Shape-shift.hidden"] = false;
+    valuesToSet["data.shapeshiftingType"] = selectedValue;
 
     // If wildshape, we only set physical stats, polymorph sets all stats
     let hasCircleForms = false; // True if we're wild shaping and have Circle Forms
@@ -401,6 +402,30 @@
 
         api.setValues(moreValuesToSet);
 
+        // Send chat message
+        const charName = record?.name || "Unknown";
+        const beastName = npc?.name || "Unknown";
+        const beastImage = npc?.token?.imageUrl
+          ? `[center]![${beastName}](${assetUrl}${encodeURI(npc.token.imageUrl)}?width=80&height=80)[/center]\n`
+          : "";
+        const finalAc = moreValuesToSet["data.ac"] || npc?.data?.ac;
+        const tempHp = valuesToSet["data.tempHp"] || 0;
+        const shapeLabel =
+          selectedValue === "polymorph"
+            ? "Polymorph"
+            : selectedValue === "wildshape"
+              ? "Wild Shape"
+              : "Animal Shapes";
+        const tempHpLabel =
+          selectedValue === "polymorph" || selectedValue === "animalShapes"
+            ? `${npc?.data?.hitpoints} (creature HP)`
+            : hasCircleForms
+              ? `${tempHp} (Druid Level × 3)`
+              : `${tempHp} (Druid Level)`;
+        api.sendMessage(
+          `${beastImage}\n\n[center]**${shapeLabel}**: ${charName} transforms into a ${beastName}[/center]\n\n[center]Temp HP: **${tempHpLabel}**[/center]\n\n[center]AC: **${finalAc}**[/center]`,
+        );
+
         // Remove old token change effect (if any) then apply new one
         const tokenForRecord = api.getToken();
         if (tokenForRecord) {
@@ -477,6 +502,7 @@
     api.setValues(
       {
         "data.shapeshiftingNpc": null,
+        "data.shapeshiftingType": null,
         "fields.shapeshiftingNpc.hidden": true,
         "fields.shapeshiftingNameNone.hidden": false,
         "fields.Remove Shape-shift.hidden": true,
