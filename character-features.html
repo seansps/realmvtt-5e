@@ -74,7 +74,7 @@
     if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
       abilityUsesPerDay = getTotalValueFromFields(
         record,
-        feature?.data?.fieldsToAddToUses || []
+        feature?.data?.fieldsToAddToUses || [],
       );
     }
     const abilityValue = feature?.data?.value || "";
@@ -84,20 +84,20 @@
     // Use processDeferredAbilityGroups to safely add group + abilities
     const abilityIdToAdd =
       JSON.parse(feature?.data?.ability || "{}")?._id || "";
-    const allAbilities = abilityIdToAdd
-      ? [feature?.data?.ability]
-      : [];
+    const allAbilities = abilityIdToAdd ? [feature?.data?.ability] : [];
 
     processDeferredAbilityGroups(
-      [{
-        abilityGroupName,
-        allAbilities,
-        abilityUsesPerDay,
-        abilityValue,
-        abilityRestoresOn,
-        savingThrowAbility,
-        fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
-      }],
+      [
+        {
+          abilityGroupName,
+          allAbilities,
+          abilityUsesPerDay,
+          abilityValue,
+          abilityRestoresOn,
+          savingThrowAbility,
+          fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
+        },
+      ],
       record,
       () => {},
     );
@@ -181,7 +181,7 @@
         abilityScoreSelection,
         "OK",
         "Cancel",
-        abilityIncrease.count
+        abilityIncrease.count,
       );
     } else if (abilityIncrease.scores.length > 0) {
       // Add all ASIs
@@ -197,18 +197,18 @@
       (feature?.data?.modifiers || []).filter(
         (mod) =>
           mod.data.type === "armorClassCalculation" ||
-          mod.data.type === "armorClassBonus"
+          mod.data.type === "armorClassBonus",
       ).length > 0;
 
     const acCalculationMods = (feature?.data?.modifiers || []).filter(
-      (mod) => mod.data.type === "armorClassCalculation"
+      (mod) => mod.data.type === "armorClassCalculation",
     );
 
     if (hasAcMods) {
       // Get other mods
       const allAcCalculationMods = getEffectsAndModifiersForToken(
         updatedRecord,
-        ["armorClassCalculation"]
+        ["armorClassCalculation"],
       );
       acCalculationMods.forEach((mod) => {
         allAcCalculationMods.push({
@@ -228,7 +228,7 @@
           if (mod.field && mod.field !== "dexterity") {
             const acBonus = parseInt(
               updatedRecord?.data?.[`${mod.field}Mod`] || "0",
-              10
+              10,
             );
             if (acBonus > calcBonus) {
               calcBonus = acBonus;
@@ -304,7 +304,7 @@
           const druidLevel = Math.floor(parseInt(matchDruidLevel || "1", 10));
           // Check for 'Cicle Forms' feature, which inceases this by *3 -- we'll hard code this for now
           const circleFormsFeature = record?.data?.features?.find(
-            (feature) => feature?.name === "Circle Forms"
+            (feature) => feature?.name === "Circle Forms",
           );
           if (circleFormsFeature) {
             valuesToSet["data.tempHp"] = druidLevel * 3;
@@ -323,7 +323,7 @@
     // NPC had that were not spellcasting
     const polymorphActions = [
       ...(npc?.data?.actions || []).filter(
-        (action) => action?.data?.isSpellcasting !== true
+        (action) => action?.data?.isSpellcasting !== true,
       ),
     ];
     // Set the portrait on each action to be the NPC's portrait, and icon to be IconSwords (in case not set)
@@ -332,20 +332,25 @@
       action.icon = "IconSwords";
     });
 
-    // These values are updated in both
-    valuesToSet["data.oldHitpoints"] = record?.data?.hitpoints;
-    valuesToSet["data.oldStrength"] = record?.data?.strength;
-    valuesToSet["data.oldDexterity"] = record?.data?.dexterity;
-    valuesToSet["data.oldConstitution"] = record?.data?.constitution;
-    valuesToSet["data.oldIntelligence"] = record?.data?.intelligence;
-    valuesToSet["data.oldWisdom"] = record?.data?.wisdom;
-    valuesToSet["data.oldCharisma"] = record?.data?.charisma;
-    valuesToSet["data.oldAc"] = record?.data?.ac;
-    valuesToSet["data.oldSenses"] = record?.data?.senses;
-    valuesToSet["data.oldSpeed"] = record?.data?.speed;
-    valuesToSet["data.oldResistances"] = record?.data?.resistances;
-    valuesToSet["data.oldImmunities"] = record?.data?.immunities;
-    valuesToSet["data.oldVulnerabilities"] = record?.data?.vulnerabilities;
+    // Store old values only if not already shapeshifted,
+    // otherwise the "old" values already hold the original character stats
+    const alreadyShapeshifted = !!record?.data?.shapeshiftingType;
+    if (!alreadyShapeshifted) {
+      valuesToSet["data.oldHitpoints"] = record?.data?.hitpoints;
+      valuesToSet["data.oldStrength"] = record?.data?.strength;
+      valuesToSet["data.oldDexterity"] = record?.data?.dexterity;
+      valuesToSet["data.oldConstitution"] = record?.data?.constitution;
+      valuesToSet["data.oldIntelligence"] = record?.data?.intelligence;
+      valuesToSet["data.oldWisdom"] = record?.data?.wisdom;
+      valuesToSet["data.oldCharisma"] = record?.data?.charisma;
+      valuesToSet["data.oldAc"] = record?.data?.ac;
+      valuesToSet["data.oldSenses"] = record?.data?.senses;
+      valuesToSet["data.oldSpeed"] = record?.data?.speed;
+      valuesToSet["data.oldResistances"] = record?.data?.resistances;
+      valuesToSet["data.oldImmunities"] = record?.data?.immunities;
+      valuesToSet["data.oldVulnerabilities"] = record?.data?.vulnerabilities;
+      valuesToSet["data.oldSize"] = record?.data?.size;
+    }
     // We always unhide the polymorph attack list when we're polymorphing
     valuesToSet["fields.polymorphActions.hidden"] = false;
     valuesToSet["data.polymorphActions"] = polymorphActions;
@@ -360,6 +365,7 @@
     valuesToSet["data.resistances"] = npc?.data?.resistances;
     valuesToSet["data.immunities"] = npc?.data?.immunities;
     valuesToSet["data.vulnerabilities"] = npc?.data?.vulnerabilities;
+    valuesToSet["data.size"] = npc?.data?.size;
 
     // First set the recordLink
     const linkField = "data.shapeshiftingNpc";
@@ -395,15 +401,24 @@
 
         api.setValues(moreValuesToSet);
 
-        // Then we apply a token change effect
+        // Remove old token change effect (if any) then apply new one
         const tokenForRecord = api.getToken();
         if (tokenForRecord) {
-          api.addTokenChangeEffect(npc._id, tokenForRecord);
+          const oldEffect = record?.effectIds?.find((id) =>
+            id.startsWith("token-"),
+          );
+          const addNewEffect = () =>
+            api.addTokenChangeEffect(npc._id, tokenForRecord);
+          if (oldEffect) {
+            api.removeEffectById(oldEffect, tokenForRecord, addNewEffect);
+          } else {
+            addNewEffect();
+          }
         } else {
           api.showNotification(
             `No token found for Token Change Effect.`,
             "yellow",
-            "No Token"
+            "No Token",
           );
         }
       });
@@ -427,7 +442,7 @@
       (value) => onSelectShapeshifting(value, recordLink),
       "OK",
       "Cancel",
-      1
+      1,
     );
   }
 
@@ -444,7 +459,7 @@
     const tokenForRecord = api.getToken();
     if (tokenForRecord) {
       const effectToRemove = record?.effectIds?.find((effectId) =>
-        effectId.startsWith("token-")
+        effectId.startsWith("token-"),
       );
       if (effectToRemove) {
         api.removeEffectById(effectToRemove, tokenForRecord);
@@ -453,7 +468,7 @@
       api.showNotification(
         `No token found for Token Change Effect.`,
         "yellow",
-        "No Token"
+        "No Token",
       );
     }
   }
@@ -478,6 +493,7 @@
         "data.resistances": record?.data?.oldResistances,
         "data.immunities": record?.data?.oldImmunities,
         "data.vulnerabilities": record?.data?.oldVulnerabilities,
+        "data.size": record?.data?.oldSize || "medium",
       },
       () => {
         // Then update the modifiers
@@ -500,7 +516,7 @@
         api.setValues(moreValuesToSet);
         // Then remove the effect
         removeShapeshiftingEffect();
-      }
+      },
     );
   }
 </script>
@@ -658,7 +674,7 @@
     <recordlink
       field="shapeshiftingNpc"
       hidden="true"
-      onchange="removeShapeshifting();"
+      onchange="removeShapeshifting()"
     ></recordlink>
     <label
       size="sm"
@@ -672,7 +688,7 @@
       hidden="true"
       variant="default"
       options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
-      onclick="removeShapeshifting();"
+      onclick="removeShapeshifting()"
     >
     </iconbutton>
   </div>
