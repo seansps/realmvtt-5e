@@ -38,7 +38,7 @@
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       undefined,
-      attack._id
+      attack._id,
     );
 
     let ranged = attack?.data?.isRanged || false;
@@ -52,7 +52,7 @@
     const reachMatch = /(?:^|\s|,)reach\s+(\d+)\s*ft/i;
     const reach = parseInt(
       attack?.data?.description?.match(reachMatch)?.[1] || "5",
-      10
+      10,
     );
 
     // Add the modifier to the modifiers array
@@ -88,7 +88,7 @@
         ) {
           // Check if you have the Invisible condition
           const hasInvisible = (ourToken?.effects || []).some((eff) =>
-            eff.name.toLowerCase().includes("invisible")
+            eff.name.toLowerCase().includes("invisible"),
           );
           // Check if they have incapacitated condition or are blinded
           const hasIncapacitated = (token?.effects || []).some(
@@ -99,7 +99,7 @@
               eff.name.toLowerCase().includes("unconscious") ||
               eff.name.toLowerCase().includes("petrified") ||
               eff.name.toLowerCase().includes("dead") ||
-              eff.name.toLowerCase().includes("blinded")
+              eff.name.toLowerCase().includes("blinded"),
           );
           if (!hasIncapacitated && !hasInvisible) {
             // Check distance
@@ -117,7 +117,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       undefined,
-      attack._id
+      attack._id,
     );
     // Get the default damage type of the attack and apply that to damage modifiers that have no type
     const damageType = getDamageType(damage);
@@ -146,7 +146,7 @@
     }
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("critical")
+      (m) => !m.value.toString().startsWith("critical"),
     );
 
     const targets = api.getTargets();
@@ -196,7 +196,7 @@
       // Get effects and modifiers for the target
       const targetEffects = getAttackModifiersForTarget(
         target?.token,
-        targetDistance
+        targetDistance,
       );
       targetEffects.forEach((r) => {
         if (r.value === "critical") {
@@ -209,7 +209,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -270,7 +270,7 @@
     let damageModifiers = getEffectsAndModifiers(
       ["damageBonus", "damagePenalty"],
       undefined,
-      attack._id
+      attack._id,
     );
 
     // Get damage effects for the target
@@ -280,7 +280,7 @@
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,
-        target?.token
+        target?.token,
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
@@ -310,7 +310,7 @@
       damage,
       damageModifiers,
       damageMetadata,
-      "damage"
+      "damage",
     );
   }
 
@@ -340,7 +340,7 @@
         "Recharge",
         tokenForRecord,
         undefined,
-        `${actionName} [${action?.data?.recharge}]`
+        `${actionName} [${action?.data?.recharge}]`,
       );
     }
 
@@ -383,7 +383,7 @@
     }
 
     api.promptRollForToken(token, '${capitalize(
-      savingThrow
+      savingThrow,
     )} Save', '1d20', saveModifiers, metadata, 'save');
   });
 \`\`\``;
@@ -457,12 +457,10 @@ ${effectButtons}
     <div>
       <button
         hidden="true"
-        size="xs"
-        radius="xs"
+        size="xxs"
         field="useBtn"
         label="Use"
-        variant="light"
-        onclick="useAction();"
+        onclick="useAction()"
       ></button>
     </div>
     <!-- Roll Attack -->
@@ -472,33 +470,29 @@ ${effectButtons}
       field="rollAttackBtn"
       variant="outline"
       options='[{"icon": "D20", "label": "Roll Attack", "value": "roll"}]'
-      onchange="() => { }"
-      onclick="handleAttack();"
+      onchange="() => {}"
+      onclick="handleAttack()"
     >
     </iconbutton>
     <div>
       <!-- Roll Damage -->
       <button
         hidden="true"
-        size="xs"
-        radius="xs"
+        size="xxs"
         field="rollDamageBtn"
         label="Damage"
-        variant="light"
-        onclick="rollDamage(false);"
+        onclick="rollDamage(false)"
       ></button>
     </div>
     <!-- Roll Crit -->
     <div>
       <button
         hidden="true"
-        size="xs"
-        radius="xs"
+        size="xxs"
         field="rollCriticalBtn"
         label="Critical"
-        variant="light"
         color="red"
-        onclick="rollDamage(true);"
+        onclick="rollDamage(true)"
       ></button>
     </div>
   </div>
