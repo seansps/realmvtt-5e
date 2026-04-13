@@ -45,10 +45,18 @@
       const savingThrows = ability?.data?.savingThrows || [];
       // Save DC ability is set in the ability group list settings
       const saveDcAbility = abilityGroupList?.data?.savingThrowAbility || "";
-      const abilityModifier = parseInt(
+      const altSaveDcAbility = abilityGroupList?.data?.altSavingThrowAbility || "";
+      let abilityModifier = parseInt(
         record?.data?.[`${saveDcAbility}Mod`] || "0",
         10
       );
+      if (altSaveDcAbility) {
+        const altModifier = parseInt(
+          record?.data?.[`${altSaveDcAbility}Mod`] || "0",
+          10
+        );
+        abilityModifier = Math.max(abilityModifier, altModifier);
+      }
       const proficiencyBonus = parseInt(
         record?.data?.proficiencyBonus || "0",
         10

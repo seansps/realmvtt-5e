@@ -1291,6 +1291,7 @@
             abilityValue: feature?.data?.value || "",
             abilityRestoresOn: feature?.data?.restoreOn || "",
             savingThrowAbility: feature?.data?.savingThrowAbility || "",
+            altSavingThrowAbility: feature?.data?.altSavingThrowAbility || "",
             fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
           });
         }
@@ -1745,6 +1746,7 @@
     const abilityValue = feature?.data?.value || "";
     const abilityRestoresOn = feature?.data?.restoreOn || "";
     const savingThrowAbility = feature?.data?.savingThrowAbility || "";
+    const altSavingThrowAbility = feature?.data?.altSavingThrowAbility || "";
 
     // Use processDeferredAbilityGroups to safely add group + abilities
     const abilityIdToAdd =
@@ -1760,6 +1762,7 @@
           abilityValue,
           abilityRestoresOn,
           savingThrowAbility,
+          altSavingThrowAbility,
           fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
         },
       ],
@@ -2124,6 +2127,7 @@
           abilityValue: feature?.data?.value || "",
           abilityRestoresOn: feature?.data?.restoreOn || "",
           savingThrowAbility: feature?.data?.savingThrowAbility || "",
+          altSavingThrowAbility: feature?.data?.altSavingThrowAbility || "",
           fieldsToAddToUses: feature?.data?.fieldsToAddToUses || [],
         });
       }

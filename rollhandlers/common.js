@@ -144,6 +144,7 @@ function processDeferredAbilityGroups(groups, rec, done) {
             value: ag.abilityValue,
             restore: ag.abilityRestoresOn,
             savingThrowAbility: ag.savingThrowAbility,
+            altSavingThrowAbility: ag.altSavingThrowAbility,
             fieldsToAddToUses: ag.fieldsToAddToUses,
           },
         },

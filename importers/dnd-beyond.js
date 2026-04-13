@@ -337,8 +337,55 @@ charData.passiveInvestigation = 10 + (charData.investigationMod || 0);
 
 // ===== 4. Armor/weapon proficiencies =====
 
+// Individual weapon subTypes from DDB (lowercase, hyphenated)
+var WEAPON_SUBTYPES = [
+  "club",
+  "dagger",
+  "greatclub",
+  "handaxe",
+  "javelin",
+  "light-hammer",
+  "mace",
+  "quarterstaff",
+  "sickle",
+  "spear",
+  "dart",
+  "light-crossbow",
+  "shortbow",
+  "sling",
+  "battleaxe",
+  "flail",
+  "glaive",
+  "greataxe",
+  "greatsword",
+  "halberd",
+  "lance",
+  "longsword",
+  "maul",
+  "morningstar",
+  "pike",
+  "rapier",
+  "scimitar",
+  "shortsword",
+  "trident",
+  "warhammer",
+  "war-pick",
+  "whip",
+  "blowgun",
+  "crossbow-hand",
+  "crossbow-heavy",
+  "hand-crossbow",
+  "heavy-crossbow",
+  "longbow",
+  "musket",
+  "pistol",
+  "net",
+  "firearms",
+];
+
 var armorProfs = [];
 var weaponProfs = [];
+var weaponProfsSeen = {};
 allModifiers.forEach(function (mod) {
   if (mod.type === "proficiency" && mod.subType) {
     if (
@@ -349,12 +396,15 @@ allModifiers.forEach(function (mod) {
       if (armorProfs.indexOf(name) === -1) armorProfs.push(name);
     } else if (
       mod.subType.indexOf("weapon") !== -1 ||
-      mod.subType.indexOf("sword") !== -1 ||
       mod.subType.indexOf("martial") !== -1 ||
-      mod.subType.indexOf("simple") !== -1
+      mod.subType.indexOf("simple") !== -1 ||
+      WEAPON_SUBTYPES.indexOf(mod.subType) !== -1
     ) {
       var wName = mod.friendlySubtypeName || mod.subType;
-      if (weaponProfs.indexOf(wName) === -1) weaponProfs.push(wName);
+      if (!weaponProfsSeen[wName]) {
+        weaponProfsSeen[wName] = true;
+        weaponProfs.push(wName);
+      }
     }
   }
 });
@@ -433,20 +483,105 @@ if (languages.length > 0) {
 }
 
 // ===== 6. Build hpByLevel =====
+// DDB doesn't store per-level HP rolls, only the total baseHitPoints.
+// We reconstruct per-level values:
+//   Level 1 (starting class) = max hit die
+//   Other levels = fixed average (die/2 + 1)
+// If that doesn't add up to baseHitPoints, distribute the remainder.
+
+// Order: starting class levels first, then other classes
+var startingClass = null;
+var otherClasses = [];
+(ddb.classes || []).forEach(function (cls) {
+  if (cls.isStartingClass) {
+    startingClass = cls;
+  } else {
+    otherClasses.push(cls);
+  }
+});
+// Fallback if no class is marked as starting
+if (!startingClass && (ddb.classes || []).length > 0) {
+  startingClass = (ddb.classes || [])[0];
+  otherClasses = (ddb.classes || []).slice(1);
+}
 
 var hpByLevel = [];
-(ddb.classes || []).forEach(function (cls) {
-  var className = (cls.definition && cls.definition.name) || "Unknown";
-  for (var i = 1; i <= (cls.level || 0); i++) {
+// Starting class levels
+if (startingClass) {
+  var scDef = startingClass.definition || {};
+  var scDie = scDef.hitDice || 8;
+  var scName = scDef.name || "Unknown";
+  for (var scLvl = 1; scLvl <= (startingClass.level || 0); scLvl++) {
+    var scHp = scLvl === 1 ? scDie : Math.floor(scDie / 2) + 1;
     hpByLevel.push({
-      className: className,
+      className: scName,
       level: hpByLevel.length + 1,
-      hitDie: "d" + ((cls.definition && cls.definition.hitDie) || 8),
-      hp: 0, // Will be recalculated by the ruleset engine
+      hitDie: "d" + scDie,
+      hp: scHp,
+    });
+  }
+}
+// Other class levels
+otherClasses.forEach(function (cls) {
+  var ocDef = cls.definition || {};
+  var ocDie = ocDef.hitDice || 8;
+  var ocName = ocDef.name || "Unknown";
+  for (var ocLvl = 1; ocLvl <= (cls.level || 0); ocLvl++) {
+    hpByLevel.push({
+      className: ocName,
+      level: hpByLevel.length + 1,
+      hitDie: "d" + ocDie,
+      hp: Math.floor(ocDie / 2) + 1,
     });
   }
 });
+
+// Check if our estimates add up to DDB's baseHitPoints (minus CON and feat contributions)
+// Realm's hp values are die-only; the engine adds CON mod per level and feat bonuses separately.
+var estimatedDieTotal = 0;
+for (var hpIdx = 0; hpIdx < hpByLevel.length; hpIdx++) {
+  estimatedDieTotal += hpByLevel[hpIdx].hp;
+}
+// Subtract per-level HP bonuses from feats like Tough (Realm calculates these itself)
+var hpPerLevelBonus = 0;
+allModifiers.forEach(function (mod) {
+  if (
+    mod.type === "bonus" &&
+    mod.subType === "hit-points-per-level" &&
+    mod.value
+  ) {
+    hpPerLevelBonus += mod.value;
+  }
+});
+var actualDieTotal =
+  (ddb.baseHitPoints || 0) -
+  statModNum(abilityScores.constitution || 10) * totalLevel -
+  hpPerLevelBonus * totalLevel;
+var remainder = actualDieTotal - estimatedDieTotal;
+// Distribute remainder across non-first levels (player may have rolled higher/lower)
+if (remainder !== 0 && hpByLevel.length > 1) {
+  var remaining = remainder;
+  var step = remainder > 0 ? 1 : -1;
+  var rIdx = 1;
+  while (remaining !== 0) {
+    hpByLevel[rIdx].hp += step;
+    // Clamp to minimum 1
+    if (hpByLevel[rIdx].hp < 1) {
+      hpByLevel[rIdx].hp = 1;
+    } else {
+      remaining -= step;
+    }
+    rIdx++;
+    if (rIdx >= hpByLevel.length) rIdx = 1; // wrap around
+  }
+}
+
 charData.hpByLevel = JSON.stringify(hpByLevel);
+
+// Also set hpLevel1, hpLevel2, etc. for field display
+for (var hpLvlIdx = 0; hpLvlIdx < hpByLevel.length; hpLvlIdx++) {
+  charData["hpLevel" + (hpLvlIdx + 1)] = hpByLevel[hpLvlIdx].hp;
+}
 
 // Hit Dice — each class grants hit dice equal to its level
 // Realm stores as d6HitDie, d8HitDie, d10HitDie, d12HitDie (total per die type)
@@ -922,20 +1057,20 @@ allModifiers.forEach(function (mod) {
   var name = mod.friendlySubtypeName || "";
   if (!name) return;
   // Tool proficiencies have subtypes like "calligraphers-supplies", "thieves-tools", etc.
-  // Skip weapon/armor/save/skill proficiencies
+  // Skip weapon/armor/save/skill proficiencies and individual weapon types
   if (
     mod.subType.indexOf("weapon") !== -1 ||
     mod.subType.indexOf("armor") !== -1 ||
     mod.subType.indexOf("shield") !== -1 ||
-    mod.subType.indexOf("saving-throws") !== -1
+    mod.subType.indexOf("saving-throws") !== -1 ||
+    mod.subType.indexOf("martial") !== -1 ||
+    mod.subType.indexOf("simple") !== -1 ||
+    WEAPON_SUBTYPES.indexOf(mod.subType) !== -1
   )
     return;
   if (SKILL_MAP[mod.subType] || SAVE_MAP[mod.subType]) return;
   // Skip if it's a generic "choose" option
   if (mod.subType.indexOf("choose") !== -1) return;
-  // Skip simple/martial weapon groups
-  if (mod.subType === "simple-weapons" || mod.subType === "martial-weapons")
-    return;
 
   if (toolsSeen[name]) return;
   toolsSeen[name] = true;

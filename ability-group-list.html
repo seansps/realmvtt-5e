@@ -73,15 +73,17 @@
     field="namefield"
     size="md"
   ></namefield>
-  <dropdown
-    field="restore"
-    label="Restore Uses On"
-    placeholder="N/A"
-    size="xs"
-    options='[{"label": "Long Rest", "value": "longrest"}, {"label": "Short Rest", "value": "shortrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'
-  >
-  </dropdown>
   <div style="display: flex; gap: 4px">
+    <dropdown
+      width="50%"
+      field="restore"
+      label="Restore Uses On"
+      description="How uses are restored"
+      placeholder="N/A"
+      size="xs"
+      options='[{"label": "Long Rest", "value": "longrest"}, {"label": "Short Rest", "value": "shortrest"}, {"label": "Once on Short Rest", "value": "shortrestonce"}]'
+    >
+    </dropdown>
     <numberfield
       width="50%"
       field="maxDailyUses"
@@ -91,6 +93,8 @@
       description="Max number of times abilities can be used"
       onchange="showHideCounter();"
     ></numberfield>
+  </div>
+  <div style="display: flex; gap: 4px">
     <stringfield
       width="50%"
       field="value"
@@ -99,8 +103,6 @@
       description="Dice string or number value for the ability group"
       size="xs"
     ></stringfield>
-  </div>
-  <div style="display: flex; gap: 8px">
     <dropdown
       width="50%"
       label="Max Daily Uses Fields"
@@ -110,8 +112,8 @@
       placeholder="Select Fields"
       multiselect="10"
       onchange="updateUses(value);"
-      options='[{"label": "Strength Modifier", "value": "strengthMod"}, 
-      {"label": "Dexterity Modifier", "value": "dexterityMod"}, 
+      options='[{"label": "Strength Modifier", "value": "strengthMod"},
+      {"label": "Dexterity Modifier", "value": "dexterityMod"},
       {"label": "Constitution Modifier", "value": "constitutionMod"},
       {"label": "Intelligence Modifier", "value": "intelligenceMod"},
       {"label": "Wisdom Modifier", "value": "wisdomMod"},
@@ -122,7 +124,7 @@
       {"label": "Bard Level", "value": "bardLevel"},
       {"label": "Cleric Level", "value": "clericLevel"},
       {"label": "Druid Level", "value": "druidLevel"},
-      {"label": "Fighter Level", "value": "fighterLevel"}, 
+      {"label": "Fighter Level", "value": "fighterLevel"},
       {"label": "Monk Level", "value": "monkLevel"},
       {"label": "Paladin Level", "value": "paladinLevel"},
       {"label": "Ranger Level", "value": "rangerLevel"},
@@ -134,6 +136,8 @@
       {"label": "Total of Values Plus 1", "value": "plus1"}]'
     >
     </dropdown>
+  </div>
+  <div style="display: flex; gap: 8px">
     <dropdown
       width="50%"
       field="savingThrowAbility"
@@ -141,6 +145,16 @@
       placeholder="N/A"
       size="xs"
       description="How to calculate the DC in this Group, if any saves"
+      options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+    >
+    </dropdown>
+    <dropdown
+      width="50%"
+      field="altSavingThrowAbility"
+      label="Alt. Saving Throw Ability"
+      placeholder="N/A"
+      size="xs"
+      description="If set, uses the higher of the two abilities"
       options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
     >
     </dropdown>
