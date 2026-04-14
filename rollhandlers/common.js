@@ -2389,6 +2389,11 @@ function getAnimationFor({
   ) {
     animation.animationName = "slash_1";
     animation.sound = "slash_2";
+  } else if (/^(claws?|rend)$/i.test(abilityName.trim())) {
+    animation.animationName = "claws_1";
+    animation.scale = 0.5;
+    animation.opacity = 0.66;
+    animation.sound = "slash_1";
   } else if (abilityName.toLowerCase().includes("whip")) {
     animation.animationName = "slash_1";
     animation.sound = "whip_1";
