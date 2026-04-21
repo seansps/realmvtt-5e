@@ -825,6 +825,23 @@ var WEAPON_PROPERTY_MAP = {
   });
 });
 
+// Custom items (user-created entries like "Contact: Guide", "Drone Blueprint").
+// These have no definition — just a name, quantity, weight, cost, and description.
+(ddb.customItems || []).forEach(function (item) {
+  _pendingRecords.push({
+    recordType: "items",
+    targetPath: "data.inventory",
+    name: item.name || "Custom Item",
+    extraData: {
+      count: item.quantity || 1,
+      weight: item.weight || 0,
+      cost: (item.cost || 0) + " gp",
+      description: item.description || item.notes || "",
+      type: "gear",
+    },
+  });
+});
+
 // Classes -> data.classes
 (ddb.classes || []).forEach(function (cls) {
   var def = cls.definition || {};
@@ -1110,6 +1127,52 @@ allModifiers.forEach(function (mod) {
     },
   });
 });
+
+// Custom proficiencies — user-created skills like "Cybertech (Technology)",
+// "Aura Manipulation", plus custom tool/instrument profs. DDB's proficiencyLevel:
+//   1 = not proficient (listed only), 2 = half-proficient, 3 = proficient, 4 = expertise
+// statId maps to the ability via STAT_MAP (same ids as stats array).
+(ddb.customProficiencies || []).forEach(function (prof) {
+  var name = prof.name || "";
+  if (!name) return;
+  if (toolsSeen[name]) return;
+  toolsSeen[name] = true;
+
+  var ability = STAT_MAP[prof.statId] || "strength";
+  var abilityMod = statModNum(abilityScores[ability] || 10);
+
+  var profValue = "";
+  var profMultiplier = 0;
+  if (prof.proficiencyLevel === 4) {
+    profValue = "expertise";
+    profMultiplier = 2;
+  } else if (prof.proficiencyLevel === 3) {
+    profValue = "true";
+    profMultiplier = 1;
+  } else if (prof.proficiencyLevel === 2) {
+    profValue = "half";
+    profMultiplier = 0.5;
+  }
+
+  var bonus = Math.floor(profBonus * profMultiplier);
+  var magicBonus = prof.magicBonus || 0;
+  var miscBonus = prof.miscBonus || 0;
+  var skillMod = abilityMod + bonus + magicBonus + miscBonus;
+  if (prof.override != null) skillMod = prof.override;
+
+  otherSkills.push({
+    _id: "import-custom-prof-" + prof.id,
+    name: name,
+    unidentifiedName: name,
+    recordType: "records",
+    data: {
+      skillProf: profValue,
+      ability: ability,
+      skillMod: skillMod,
+    },
+  });
+});
+
 if (otherSkills.length > 0) {
   charData.otherSkills = otherSkills;
 }
