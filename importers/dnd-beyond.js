@@ -154,8 +154,15 @@ charData.speed =
     ddb.race.weightSpeeds.normal.walk) ||
     30) + " feet";
 
-// HP
-charData.hitpoints = (ddb.baseHitPoints || 0) + (ddb.bonusHitPoints || 0);
+// HP — Realm stores hpLevelN as die-only; `hitpoints` is the final total for display.
+// DDB's baseHitPoints already includes per-level feat bonuses (like Tough), so we only
+// add con mod × level. The feat record carries the feat modifiers separately so Realm
+// can re-apply them when con changes.
+var conModForHp = statModNum(abilityScores.constitution || 10);
+charData.hitpoints =
+  (ddb.baseHitPoints || 0) +
+  conModForHp * totalLevel +
+  (ddb.bonusHitPoints || 0);
 charData.curhp = charData.hitpoints - (ddb.removedHitPoints || 0);
 
 // AC — calculate from equipped armor/modifiers, fallback to unarmored
@@ -553,22 +560,32 @@ allModifiers.forEach(function (mod) {
     hpPerLevelBonus += mod.value;
   }
 });
-var actualDieTotal =
-  (ddb.baseHitPoints || 0) -
-  statModNum(abilityScores.constitution || 10) * totalLevel -
-  hpPerLevelBonus * totalLevel;
+// DDB's baseHitPoints is die-rolls only — con mod is added separately by DDB's client
+// (same convention as Realm). So we only strip the feat bonuses, not con.
+var actualDieTotal = (ddb.baseHitPoints || 0) - hpPerLevelBonus * totalLevel;
 var remainder = actualDieTotal - estimatedDieTotal;
 // Distribute remainder across non-first levels (player may have rolled higher/lower)
 if (remainder !== 0 && hpByLevel.length > 1) {
   var remaining = remainder;
   var step = remainder > 0 ? 1 : -1;
   var rIdx = 1;
+  var consecutiveClamps = 0;
   while (remaining !== 0) {
+    var before = hpByLevel[rIdx].hp;
     hpByLevel[rIdx].hp += step;
     // Clamp to minimum 1
     if (hpByLevel[rIdx].hp < 1) {
       hpByLevel[rIdx].hp = 1;
+    }
+    if (hpByLevel[rIdx].hp === before) {
+      // No progress made on this entry
+      consecutiveClamps++;
+      if (consecutiveClamps >= hpByLevel.length - 1) {
+        // Every non-first entry is saturated — can't distribute more, bail
+        break;
+      }
     } else {
+      consecutiveClamps = 0;
       remaining -= step;
     }
     rIdx++;
@@ -811,12 +828,14 @@ var WEAPON_PROPERTY_MAP = {
 // Classes -> data.classes
 (ddb.classes || []).forEach(function (cls) {
   var def = cls.definition || {};
+  var clsHitDie = def.hitDice || 8;
   _pendingRecords.push({
     recordType: "class",
     targetPath: "data.classes",
     name: def.name || "Unknown Class",
     extraData: {
       level: cls.level || 1,
+      hitDie: "d" + clsHitDie,
     },
   });
 
@@ -1096,6 +1115,47 @@ if (otherSkills.length > 0) {
 }
 
 // ===== 8b. Feats =====
+// Translate a DDB feat modifier into Realm modifier records (data.modifiers on the feat).
+// Returns an array of Realm modifier records — one DDB modifier may expand to many
+// (e.g. Tough's "+2 HP per level" becomes TWO modifiers of +level each).
+function translateFeatModifier(ddbMod, featName, idx) {
+  var out = [];
+  if (!ddbMod || !ddbMod.type) return out;
+
+  function makeModifier(data, suffix) {
+    return {
+      _id: "import-feat-" + featName + "-" + idx + "-" + suffix,
+      name: "New Modifier",
+      unidentifiedName: "Modifier",
+      recordType: "records",
+      identified: true,
+      data: data,
+    };
+  }
+
+  // HP per level (Tough, etc.) — each point = one "+level" hitpoints modifier
+  if (
+    ddbMod.type === "bonus" &&
+    ddbMod.subType === "hit-points-per-level" &&
+    ddbMod.value
+  ) {
+    for (var i = 0; i < ddbMod.value; i++) {
+      out.push(
+        makeModifier(
+          {
+            type: "hitpoints",
+            valueType: "field",
+            value: "level",
+            active: true,
+          },
+          "hppl-" + i,
+        ),
+      );
+    }
+  }
+  return out;
+}
+
 // Add real feats (skip hidden system entries like ASI and disguised feats)
 (ddb.feats || []).forEach(function (feat) {
   var def = feat.definition || {};
@@ -1106,14 +1166,61 @@ if (otherSkills.length > 0) {
   if (cats.indexOf("__INITIAL_ASI") !== -1) return;
   if (cats.indexOf("__DISGUISE_FEAT") !== -1) return;
 
+  // Translate feat modifiers into Realm's modifier record format.
+  // If a feat isn't in the Realm compendium, the framework creates a bare record
+  // — these modifiers ensure its mechanical effects (like Tough's +2/level HP) apply.
+  var featName = (def.name || "feat").toLowerCase().replace(/\s+/g, "-");
+  var realmModifiers = [];
+  (def.modifiers || []).forEach(function (mod, mIdx) {
+    var translated = translateFeatModifier(mod, featName, mIdx);
+    for (var t = 0; t < translated.length; t++) realmModifiers.push(translated[t]);
+  });
+
+  // Fallback: detect Tough by name if DDB didn't expose the modifier
+  if (realmModifiers.length === 0 && def.name === "Tough") {
+    realmModifiers.push(
+      {
+        _id: "import-feat-tough-hppl-0",
+        name: "New Modifier",
+        unidentifiedName: "Modifier",
+        recordType: "records",
+        identified: true,
+        data: {
+          type: "hitpoints",
+          valueType: "field",
+          value: "level",
+          active: true,
+        },
+      },
+      {
+        _id: "import-feat-tough-hppl-1",
+        name: "New Modifier",
+        unidentifiedName: "Modifier",
+        recordType: "records",
+        identified: true,
+        data: {
+          type: "hitpoints",
+          valueType: "field",
+          value: "level",
+          active: true,
+        },
+      },
+    );
+  }
+
+  var featExtra = {
+    description: def.description || "",
+    featureType: "feat",
+  };
+  if (realmModifiers.length > 0) {
+    featExtra.modifiers = realmModifiers;
+  }
+
   _pendingRecords.push({
     recordType: "feats",
     targetPath: "data.features",
     name: def.name || "Unknown Feat",
-    extraData: {
-      description: def.description || "",
-      featureType: "feat",
-    },
+    extraData: featExtra,
   });
 });
 
