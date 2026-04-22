@@ -42,7 +42,6 @@ function stripHtml(html) {
 
 function nonEmpty(v) {
   return v !== undefined && v !== null && String(v).trim() !== "";
-  x;
 }
 
 function val(v, fallback) {
@@ -81,6 +80,95 @@ function truncate(text, max) {
 }
 
 const DESC_MAX = 180;
+
+// Determine proficiency with a weapon, mirroring getIsProficient() in
+// attack-list.html — supports "simple"/"martial" buckets, by-name match,
+// and the "... that have the X property" phrasing.
+function isProficientWithWeapon(item) {
+  const id = item?.data || {};
+  const subtype = String(id.subtype || "simple").toLowerCase();
+  const weaponName = String(item?.name || "")
+    .trim()
+    .toLowerCase();
+  const props = (Array.isArray(id.weaponProperties) ? id.weaponProperties : [])
+    .map((p) => String(p).trim().toLowerCase())
+    .filter(Boolean);
+
+  const profsRaw = String(d.weaponProficiencies || "");
+  const profs = profsRaw
+    .split(/,| and /)
+    .map((p) => p.trim().toLowerCase())
+    .filter(Boolean);
+
+  const bucket = subtype.includes("martial") ? "martial" : "simple";
+  return profs.some((p) => {
+    if (p.includes("that have the") && p.includes(bucket)) {
+      return props.some((wp) => p.includes(wp));
+    }
+    if (p.includes(bucket)) return true;
+    if (weaponName && p.includes(weaponName)) return true;
+    return false;
+  });
+}
+
+// Compute the to-hit bonus for a weapon: ability mod + proficiency (if proficient)
+// + numeric attackBonus modifiers on the weapon item itself. Conditional bonuses
+// from other features/effects (e.g. "+1 while raging") are intentionally ignored.
+// Returns a number, or null if the item doesn't look like a weapon.
+function computeWeaponToHit(item) {
+  const id = item?.data || {};
+  const looksLikeWeapon =
+    nonEmpty(id.damage) ||
+    String(id.type || "")
+      .toLowerCase()
+      .includes("melee") ||
+    String(id.type || "")
+      .toLowerCase()
+      .includes("ranged") ||
+    id.filterType === "Weapon" ||
+    id.itemType === "weapon" ||
+    id.type === "weapon";
+  if (!looksLikeWeapon) return null;
+
+  const props = (Array.isArray(id.weaponProperties) ? id.weaponProperties : [])
+    .map((p) => String(p).trim().toLowerCase())
+    .filter(Boolean);
+  const isRanged = String(id.type || "")
+    .toLowerCase()
+    .includes("ranged");
+
+  const strMod = parseInt(d.strengthMod || "0", 10);
+  const dexMod = parseInt(d.dexterityMod || "0", 10);
+  const profBonus = parseInt(d.proficiencyBonus || "2", 10);
+
+  let ability = isRanged ? "dex" : "str";
+  if (!isRanged && props.includes("finesse")) {
+    ability = strMod > dexMod ? "str" : "dex";
+  }
+  // Thrown melee fired as ranged: use the higher of str/dex
+  if (
+    isRanged &&
+    props.includes("thrown") &&
+    String(id.type || "")
+      .toLowerCase()
+      .includes("melee")
+  ) {
+    ability = dexMod > strMod ? "dex" : "str";
+  }
+  const abilityMod = ability === "dex" ? dexMod : strMod;
+
+  let magicBonus = 0;
+  (id.modifiers || []).forEach((m) => {
+    if (m?.data?.type === "attackBonus" && m?.data?.active !== false) {
+      const raw = String(m?.data?.value || "").trim();
+      const v = parseInt(raw, 10);
+      if (!isNaN(v) && String(v) === raw.replace(/^\+/, "")) magicBonus += v;
+    }
+  });
+
+  const prof = isProficientWithWeapon(item) ? profBonus : 0;
+  return abilityMod + prof + magicBonus;
+}
 
 // ===== Portrait =====
 
@@ -343,13 +431,19 @@ if (attackItems.length > 0) {
         ],
         ...attackItems.map((it) => {
           const id = it.data || {};
-          const hit = id.attackBonus !== undefined ? id.attackBonus : id.toHit;
-          const notes = [id.properties, id.weaponProperties, id.range]
+          const computed = computeWeaponToHit(it);
+          const props = Array.isArray(id.weaponProperties)
+            ? id.weaponProperties.join(", ")
+            : id.weaponProperties;
+          const notes = [id.properties, props, id.range]
             .filter(nonEmpty)
             .join(" \u2022 ");
           return [
             { text: it.name || "" },
-            { text: hit !== undefined ? signed(hit) : "", alignment: "center" },
+            {
+              text: computed !== null ? signed(computed) : "",
+              alignment: "center",
+            },
             { text: val(id.damage, ""), alignment: "center" },
             { text: notes, style: "tiny" },
           ];
@@ -578,11 +672,7 @@ if (inventory.length === 0) {
               alignment: "center",
             },
             {
-              text: isAttuned
-                ? "\u25CF"
-                : requiresAttunement
-                  ? "\u25CB"
-                  : "",
+              text: isAttuned ? "\u25CF" : requiresAttunement ? "\u25CB" : "",
               alignment: "center",
             },
           ];
