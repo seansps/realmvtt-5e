@@ -8,7 +8,7 @@
     const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || "0", 10);
     const proficiencyBonus = parseInt(
       record?.data?.proficiencyBonus || "0",
-      10
+      10,
     );
     let proficiencyMod = 0;
 
@@ -16,33 +16,47 @@
 
     if (isHalfProficient) {
       proficiencyMod = abilityMod + Math.floor(proficiencyBonus / 2);
-      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
     } else if (isExpertise) {
       proficiencyMod = abilityMod + proficiencyBonus * 2;
-      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
     } else if (isProficient) {
       proficiencyMod = abilityMod + proficiencyBonus;
-      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
     } else {
       proficiencyMod = abilityMod;
-      valuesToSet[`data.${skill}Mod`] = proficiencyMod;
     }
 
-    // Set a hidden field for passivePerception if this is for perception
-    if (skill === "perception") {
-      valuesToSet["data.passivePerception"] = 10 + proficiencyMod;
-    }
+    setSkillModAndPassive(valuesToSet, record, skill, proficiencyMod);
 
     api.setValues(valuesToSet);
   }
 
-  function onPerceptionChange(value) {
-    // Set a hidden field for passivePerception
-    let perceptionValue = parseInt(value, 10);
-    if (perceptionValue === undefined || isNaN(perceptionValue)) {
-      perceptionValue = 0;
+  function backfillPassiveSkills() {
+    const skills = ["perception", "investigation", "insight"];
+    const valuesToSet = {};
+    skills.forEach((skill) => {
+      const passiveKey = `data.passive${skill.charAt(0).toUpperCase() + skill.slice(1)}`;
+      const current =
+        record?.data?.[
+          `passive${skill.charAt(0).toUpperCase() + skill.slice(1)}`
+        ];
+      if (current === undefined || current === null) {
+        const mod = parseInt(record?.data?.[`${skill}Mod`] || "0", 10) || 0;
+        valuesToSet[passiveKey] = calcPassiveSkillFromMod(record, skill, mod);
+      }
+    });
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
     }
-    api.setValue("data.passivePerception", perceptionValue + 10);
+  }
+
+  function onSkillModChange(value, skill) {
+    let mod = parseInt(value, 10);
+    if (mod === undefined || isNaN(mod)) {
+      mod = 0;
+    }
+    api.setValue(
+      `data.passive${skill.charAt(0).toUpperCase() + skill.slice(1)}`,
+      calcPassiveSkillFromMod(record, skill, mod),
+    );
   }
 
   function setProficiency(value, skill) {
@@ -69,7 +83,7 @@
 
     const proficiencyBonus = parseInt(
       record?.data?.proficiencyBonus || "0",
-      10
+      10,
     );
     const proficiency = record?.data?.[`${skill}Prof`] || "false";
     const isHalfProficient = proficiency === "half";
@@ -105,7 +119,7 @@
     // Get any bonus or penalties for abilities and skills
     const checkModifiers = getEffectsAndModifiers(
       ["abilityBonus", "abilityPenalty"],
-      ability
+      ability,
     );
     checkModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -113,7 +127,7 @@
 
     const skillModifiers = getEffectsAndModifiers(
       ["skillBonus", "skillPenalty"],
-      skill
+      skill,
     );
     skillModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -123,7 +137,7 @@
     if (isProficient) {
       const proficientModifiers = getEffectsAndModifiers(
         ["skillBonus"],
-        "proficient"
+        "proficient",
       );
       proficientModifiers.forEach((modifier) => {
         // Only add if not already in the array
@@ -132,7 +146,7 @@
             (m) =>
               m.name === modifier.name &&
               m.value === modifier.value &&
-              m.active === modifier.active
+              m.active === modifier.active,
           )
         ) {
           modifiers.push(modifier);
@@ -143,7 +157,7 @@
     const minRoll = getMinRollModifier(modifiers);
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
-      (m) => !m.value.toString().startsWith("minroll")
+      (m) => !m.value.toString().startsWith("minroll"),
     );
 
     const metadata = {
@@ -157,12 +171,60 @@
       "1d20",
       modifiers,
       metadata,
-      "ability"
+      "ability",
     );
   }
 </script>
 
-<label label="Skills" size="md" textalign="center" variant="bold"></label>
+<div
+  style="display: flex; align-items: center; justify-content: center; gap: 4px"
+>
+  <label label="Skills" size="md" textalign="center" variant="bold"></label>
+  <popover>
+    <popover.target>
+      <iconbutton
+        field="passiveSkillsBtn"
+        size="sm"
+        variant="subtle"
+        options='[{"icon": "IconEye", "label": "Passive Skills", "value": "passive"}]'
+        onchange=""
+      ></iconbutton>
+    </popover.target>
+    <popover.dropdown>
+      <div style="padding: 8px; min-width: 220px">
+        <label variant="bold" textalign="center" label="Passive Skills"></label>
+        <div
+          style="
+            margin-top: 4px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2px;
+          "
+        >
+          <numberfield
+            size="xs"
+            field="passivePerception"
+            label="Perception"
+            disabled
+            onload="backfillPassiveSkills()"
+          ></numberfield>
+          <numberfield
+            size="xs"
+            field="passiveInvestigation"
+            label="Investigation"
+            disabled
+          ></numberfield>
+          <numberfield
+            size="xs"
+            field="passiveInsight"
+            label="Insight"
+            disabled
+          ></numberfield>
+        </div>
+      </div>
+    </popover.dropdown>
+  </popover>
+</div>
 <table style="width: 100%">
   <tbody>
     <tr>
@@ -174,7 +236,7 @@
           defaultvalue="dexterity"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'acrobatics');"
+          onchange="onAbilityChange(value, 'acrobatics')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -194,7 +256,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'acrobatics');"
+          onchange="setProficiency(value, 'acrobatics')"
           onclick=""
         ></iconbutton>
       </td>
@@ -204,7 +266,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Acrobatics Check", "value": "roll"}]'
-          onclick="rollCheck('acrobatics');"
+          onclick="rollCheck('acrobatics')"
         >
         </iconbutton>
       </td>
@@ -217,7 +279,7 @@
           defaultvalue="wisdom"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'medicine');"
+          onchange="onAbilityChange(value, 'medicine')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -237,7 +299,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'medicine');"
+          onchange="setProficiency(value, 'medicine')"
           onclick=""
         ></iconbutton>
       </td>
@@ -247,7 +309,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Medicine Check", "value": "roll"}]'
-          onclick="rollCheck('medicine');"
+          onclick="rollCheck('medicine')"
         >
         </iconbutton>
       </td>
@@ -262,7 +324,7 @@
           defaultvalue="wisdom"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'animalHandling');"
+          onchange="onAbilityChange(value, 'animalHandling')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -282,7 +344,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'animalHandling');"
+          onchange="setProficiency(value, 'animalHandling')"
           onclick=""
         ></iconbutton>
       </td>
@@ -292,7 +354,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Animal Handling Check", "value": "roll"}]'
-          onclick="rollCheck('animalHandling');"
+          onclick="rollCheck('animalHandling')"
         >
         </iconbutton>
       </td>
@@ -305,7 +367,7 @@
           defaultvalue="intelligence"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'nature');"
+          onchange="onAbilityChange(value, 'nature')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -325,7 +387,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'nature');"
+          onchange="setProficiency(value, 'nature')"
           onclick=""
         ></iconbutton>
       </td>
@@ -335,7 +397,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Nature Check", "value": "roll"}]'
-          onclick="rollCheck('nature');"
+          onclick="rollCheck('nature')"
         >
         </iconbutton>
       </td>
@@ -350,7 +412,7 @@
           defaultvalue="intelligence"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'arcana');"
+          onchange="onAbilityChange(value, 'arcana')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -370,7 +432,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'arcana');"
+          onchange="setProficiency(value, 'arcana')"
           onclick=""
         ></iconbutton>
       </td>
@@ -380,7 +442,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Arcana Check", "value": "roll"}]'
-          onclick="rollCheck('arcana');"
+          onclick="rollCheck('arcana')"
         >
         </iconbutton>
       </td>
@@ -393,14 +455,14 @@
           defaultvalue="wisdom"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'perception');"
+          onchange="onAbilityChange(value, 'perception')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
       </td>
       <td style="vertical-align: bottom; width: 70px">
         <numberfield
-          onchange="onPerceptionChange(value);"
+          onchange="onSkillModChange(value, 'perception')"
           width="100%"
           size="xs"
           placeholder="+0"
@@ -414,7 +476,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'perception');"
+          onchange="setProficiency(value, 'perception')"
           onclick=""
         ></iconbutton>
       </td>
@@ -424,7 +486,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Perception Check", "value": "roll"}]'
-          onclick="rollCheck('perception');"
+          onclick="rollCheck('perception')"
         >
         </iconbutton>
       </td>
@@ -439,7 +501,7 @@
           defaultvalue="strength"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'athletics');"
+          onchange="onAbilityChange(value, 'athletics')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -459,7 +521,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'athletics');"
+          onchange="setProficiency(value, 'athletics')"
           onclick=""
         ></iconbutton>
       </td>
@@ -469,7 +531,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Athletics Check", "value": "roll"}]'
-          onclick="rollCheck('athletics');"
+          onclick="rollCheck('athletics')"
         >
         </iconbutton>
       </td>
@@ -482,7 +544,7 @@
           defaultvalue="charisma"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'performance');"
+          onchange="onAbilityChange(value, 'performance')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -502,7 +564,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'performance');"
+          onchange="setProficiency(value, 'performance')"
           onclick=""
         ></iconbutton>
       </td>
@@ -512,7 +574,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Performance Check", "value": "roll"}]'
-          onclick="rollCheck('performance');"
+          onclick="rollCheck('performance')"
         >
         </iconbutton>
       </td>
@@ -527,7 +589,7 @@
           defaultvalue="charisma"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'deception');"
+          onchange="onAbilityChange(value, 'deception')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -547,7 +609,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'deception');"
+          onchange="setProficiency(value, 'deception')"
           onclick=""
         ></iconbutton>
       </td>
@@ -557,7 +619,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Deception Check", "value": "roll"}]'
-          onclick="rollCheck('deception');"
+          onclick="rollCheck('deception')"
         >
         </iconbutton>
       </td>
@@ -570,7 +632,7 @@
           defaultvalue="charisma"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'persuasion');"
+          onchange="onAbilityChange(value, 'persuasion')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -590,7 +652,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'persuasion');"
+          onchange="setProficiency(value, 'persuasion')"
           onclick=""
         ></iconbutton>
       </td>
@@ -600,7 +662,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Persuasion Check", "value": "roll"}]'
-          onclick="rollCheck('persuasion');"
+          onclick="rollCheck('persuasion')"
         >
         </iconbutton>
       </td>
@@ -615,7 +677,7 @@
           defaultvalue="intelligence"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'history');"
+          onchange="onAbilityChange(value, 'history')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -635,7 +697,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'history');"
+          onchange="setProficiency(value, 'history')"
           onclick=""
         ></iconbutton>
       </td>
@@ -645,7 +707,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll History Check", "value": "roll"}]'
-          onclick="rollCheck('history');"
+          onclick="rollCheck('history')"
         >
         </iconbutton>
       </td>
@@ -658,7 +720,7 @@
           defaultvalue="intelligence"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'religion');"
+          onchange="onAbilityChange(value, 'religion')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -678,7 +740,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'religion');"
+          onchange="setProficiency(value, 'religion')"
           onclick=""
         ></iconbutton>
       </td>
@@ -688,7 +750,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Religion Check", "value": "roll"}]'
-          onclick="rollCheck('religion');"
+          onclick="rollCheck('religion')"
         >
         </iconbutton>
       </td>
@@ -703,13 +765,14 @@
           defaultvalue="wisdom"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'insight');"
+          onchange="onAbilityChange(value, 'insight')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
       </td>
       <td style="vertical-align: bottom; width: 70px">
         <numberfield
+          onchange="onSkillModChange(value, 'insight')"
           width="100%"
           size="xs"
           placeholder="+0"
@@ -723,7 +786,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'insight');"
+          onchange="setProficiency(value, 'insight')"
           onclick=""
         ></iconbutton>
       </td>
@@ -733,7 +796,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Insight Check", "value": "roll"}]'
-          onclick="rollCheck('insight');"
+          onclick="rollCheck('insight')"
         >
         </iconbutton>
       </td>
@@ -746,7 +809,7 @@
           defaultvalue="dexterity"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'sleightOfHand');"
+          onchange="onAbilityChange(value, 'sleightOfHand')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -766,7 +829,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'sleightOfHand');"
+          onchange="setProficiency(value, 'sleightOfHand')"
           onclick=""
         ></iconbutton>
       </td>
@@ -776,7 +839,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Sleight of Hand Check", "value": "roll"}]'
-          onclick="rollCheck('sleightOfHand');"
+          onclick="rollCheck('sleightOfHand')"
         >
         </iconbutton>
       </td>
@@ -791,7 +854,7 @@
           defaultvalue="charisma"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'intimidation');"
+          onchange="onAbilityChange(value, 'intimidation')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -811,7 +874,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'intimidation');"
+          onchange="setProficiency(value, 'intimidation')"
           onclick=""
         ></iconbutton>
       </td>
@@ -821,7 +884,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Intimidation Check", "value": "roll"}]'
-          onclick="rollCheck('intimidation');"
+          onclick="rollCheck('intimidation')"
         >
         </iconbutton>
       </td>
@@ -834,7 +897,7 @@
           defaultvalue="dexterity"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'stealth');"
+          onchange="onAbilityChange(value, 'stealth')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -854,7 +917,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'stealth');"
+          onchange="setProficiency(value, 'stealth')"
           onclick=""
         ></iconbutton>
       </td>
@@ -864,7 +927,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Stealth Check", "value": "roll"}]'
-          onclick="rollCheck('stealth');"
+          onclick="rollCheck('stealth')"
         >
         </iconbutton>
       </td>
@@ -879,13 +942,14 @@
           defaultvalue="intelligence"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'investigation');"
+          onchange="onAbilityChange(value, 'investigation')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
       </td>
       <td style="vertical-align: bottom; width: 70px">
         <numberfield
+          onchange="onSkillModChange(value, 'investigation')"
           width="100%"
           size="xs"
           placeholder="+0"
@@ -899,7 +963,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'investigation');"
+          onchange="setProficiency(value, 'investigation')"
           onclick=""
         ></iconbutton>
       </td>
@@ -909,7 +973,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Investigation Check", "value": "roll"}]'
-          onclick="rollCheck('investigation');"
+          onclick="rollCheck('investigation')"
         >
         </iconbutton>
       </td>
@@ -922,7 +986,7 @@
           defaultvalue="wisdom"
           size="xs"
           width="100%"
-          onchange="onAbilityChange(value, 'survival');"
+          onchange="onAbilityChange(value, 'survival')"
           options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
         >
         </dropdown>
@@ -942,7 +1006,7 @@
           size="md"
           variant="outline"
           options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'survival');"
+          onchange="setProficiency(value, 'survival')"
           onclick=""
         ></iconbutton>
       </td>
@@ -952,7 +1016,7 @@
           size="md"
           variant="light"
           options='[{"icon": "d20", "label": "Roll Survival Check", "value": "roll"}]'
-          onclick="rollCheck('survival');"
+          onclick="rollCheck('survival')"
         >
         </iconbutton>
       </td>

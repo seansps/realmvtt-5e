@@ -198,22 +198,15 @@
       let totalVal = 0;
       if (isHalfProficient) {
         totalVal = abilityMod + Math.floor(value / 2);
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else if (isExpertise) {
         totalVal = abilityMod + value * 2;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else if (isProficient) {
         totalVal = abilityMod + value;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else {
         totalVal = abilityMod;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
 
-      if (skill.field === "perception") {
-        // Set a hidden field for passivePerception
-        valuesToSet["data.passivePerception"] = 10 + totalVal;
-      }
+      setSkillModAndPassive(valuesToSet, thisRecord, skill.field, totalVal);
     });
 
     // Also update otherSkills
@@ -801,12 +794,12 @@
               10,
             );
             // Basic proficiency, so add the whole bonus to the modifier
-            valuesToSet[`data.${skill}Mod`] = abilityMod + proficiencyBonus;
-            if (skill === "perception") {
-              // Set a hidden field for passivePerception
-              valuesToSet["data.passivePerception"] =
-                10 + abilityMod + proficiencyBonus;
-            }
+            setSkillModAndPassive(
+              valuesToSet,
+              record,
+              skill,
+              abilityMod + proficiencyBonus,
+            );
           });
 
           api.setValues(valuesToSet, (recordUpdated) => {

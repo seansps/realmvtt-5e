@@ -208,6 +208,21 @@ function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+// Calculate the passive value for a skill given its computed modifier.
+// 5e: passive = 10 + skillMod.
+function calcPassiveSkillFromMod(rec, skillField, skillMod) {
+  return 10 + skillMod;
+}
+
+// Write both the skill mod and its passive into a valuesToSet map.
+// The passive is calculated for every skill; only three are currently
+// surfaced in the UI (perception, investigation, insight).
+function setSkillModAndPassive(valuesToSet, rec, skillField, skillMod) {
+  valuesToSet[`data.${skillField}Mod`] = skillMod;
+  const passiveKey = `data.passive${capitalize(skillField)}`;
+  valuesToSet[passiveKey] = calcPassiveSkillFromMod(rec, skillField, skillMod);
+}
+
 function normalToCamelCase(str) {
   return str
     .toLowerCase()
@@ -721,21 +736,15 @@ function setModifier(
       let totalVal = modVal;
       if (isHalfProficient) {
         totalVal = modVal + Math.floor(proficiencyBonus / 2);
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else if (isExpertise) {
         totalVal = modVal + proficiencyBonus * 2;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else if (isProficient) {
         totalVal = modVal + proficiencyBonus;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       } else {
         totalVal = modVal;
-        valuesToSet[`data.${skill.field}Mod`] = totalVal;
       }
 
-      if (skill.field === "perception") {
-        valuesToSet["data.passivePerception"] = 10 + totalVal;
-      }
+      setSkillModAndPassive(valuesToSet, record, skill.field, totalVal);
     }
   });
 
