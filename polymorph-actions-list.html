@@ -219,7 +219,8 @@
       const metadata = {
         rollName: "Attack",
         attack: `${name}`,
-        icon: icon,
+        icon: attack?.data?.isAttack ? icon : undefined,
+        portrait: attack?.data?.isAttack ? attack?.portrait : undefined,
         targetName: targetName,
         tooltip: `Attack Roll for ${name}`,
         dc: targetAc,
@@ -239,7 +240,8 @@
       const metadata = {
         rollName: "Attack",
         attack: `${name}`,
-        icon: icon,
+        icon: attack?.data?.isAttack ? icon : undefined,
+        portrait: attack?.data?.isAttack ? attack?.portrait : undefined,
         tooltip: `Attack Roll for ${name}`,
         dc: 0,
         damage: damage,
@@ -303,6 +305,14 @@
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
       critical: isCritical,
+      // Header info for the damage chat message — only show for actual attacks
+      attack: name,
+      icon: attack?.data?.isAttack
+        ? ranged
+          ? "IconBow"
+          : "IconSword"
+        : undefined,
+      portrait: attack?.data?.isAttack ? attack?.portrait : undefined,
     };
 
     api.promptRoll(

@@ -1,5 +1,20 @@
 const isCritical = data.roll?.metadata?.critical === true;
 
+// Optional header — when the damage roll came from an attack, render the
+// attack's portrait (or icon) + name above the damage breakdown.
+const damageAttackName = data.roll?.metadata?.attack || "";
+const damageIcon = data.roll?.metadata?.icon;
+const damagePortrait = data.roll?.metadata?.portrait;
+const damageIconStr = damagePortrait
+  ? `![](${assetUrl}${encodeURI(damagePortrait)}?width=30&height=30)`
+  : damageIcon
+    ? `:${damageIcon}:`
+    : "";
+const damageHeader =
+  damageAttackName || damageIconStr
+    ? `[center]${damageIconStr} ${damageAttackName}[/center]`
+    : "";
+
 // Get any ignore resistances or immunities from the metadata
 const damageIgnoresResistances = (
   data.roll?.metadata?.damageIgnoresResistances || ""
@@ -373,6 +388,7 @@ targets.forEach(target => {
   : "";
 
 const message = `
+${damageHeader}
 ${damageMacro}
 ${halfDamageMacro}
 `;

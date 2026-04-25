@@ -167,7 +167,7 @@ selectedTokens.forEach(token => {
   }
 
   api.promptRollForToken(token, '${capitalize(
-    savingThrow
+    savingThrow,
   )} Save', '1d20', saveModifiers, metadata, 'save');
 });
   \`\`\`
@@ -179,7 +179,7 @@ selectedTokens.forEach(token => {
 const getMasteryProperties = (
   masterProperty,
   damageModifiers,
-  proficiencyBonus
+  proficiencyBonus,
 ) => {
   // For Graze, determine the ability mod of the attack roll
   const abilityMod = damageModifiers.find((dm) =>
@@ -190,7 +190,7 @@ const getMasteryProperties = (
       "intelligence",
       "wisdom",
       "charisma",
-    ].includes(dm.name.toLowerCase().trim())
+    ].includes(dm.name.toLowerCase().trim()),
   );
 
   switch (masterProperty) {
@@ -288,6 +288,13 @@ const damageIgnoresResistances =
 const damageIgnoresImmunities =
   data?.roll?.metadata?.damageIgnoresImmunities || "";
 const icon = data?.roll?.metadata?.icon;
+const portrait = data?.roll?.metadata?.portrait;
+// Prefer portrait at 30x30 if set, fall back to the icon glyph.
+const iconStr = portrait
+  ? `![](${assetUrl}${encodeURI(portrait)}?width=30&height=30)`
+  : icon
+    ? `:${icon}:`
+    : "";
 const masteryProperties = data?.roll?.metadata?.masteryProperties || [];
 const proficiencyBonus = data?.roll?.metadata?.attackerProficiencyBonus || 2;
 let damage = data?.roll?.metadata?.damage;
@@ -330,7 +337,7 @@ if (roll.dice) {
 
 // If the d20 was a 20, it's a critical hit
 const d20 = (roll?.dice || []).find(
-  (d) => d.type === 20 && d.reason !== "dropped"
+  (d) => d.type === 20 && d.reason !== "dropped",
 );
 let isCritical = d20 && d20.value >= critOn;
 // If the d20 was a 1, it's a miss
@@ -357,7 +364,7 @@ if (isHit && autoCritical && !isCritical) {
 
 if (isCritical) {
   const automatic = autoCritical ? "AUTOMATIC " : "";
-  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+  message = `[center]${iconStr} ${attack} ${
     targetName ? ` :IconTargetArrow: ${targetName}` : ""
   }[/center]\n\n**[center][color=green]${automatic}CRITICAL HIT[/color] [gm]${
     dc > 0 ? `(vs AC ${dc})` : ""
@@ -376,21 +383,21 @@ if (isCritical) {
     };
   });
 } else if (isMiss) {
-  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+  message = `[center]${iconStr} ${attack} ${
     targetName ? ` :IconTargetArrow: ${targetName}` : ""
   }[/center]\n\n**[center][color=red]AUTOMATIC MISS[/color] [gm]${
     dc > 0 ? `(vs AC ${dc})` : ""
   }[/gm][/center]**`;
 } else if (isHit) {
-  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+  message = `[center]${iconStr} ${attack} ${
     targetName ? ` :IconTargetArrow: ${targetName}` : ""
   }[/center]\n\n**[center][color=green]HIT[/color] [gm](vs AC ${dc})[/gm][/center]**`;
 } else if (dc > 0) {
-  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+  message = `[center]${iconStr} ${attack} ${
     targetName ? ` :IconTargetArrow: ${targetName}` : ""
   }[/center]\n\n**[center][color=red]MISS[/color] [gm](vs AC ${dc})[/gm][/center]**`;
 } else {
-  message = `[center]${icon ? `:${icon}:` : ""} ${attack} ${
+  message = `[center]${iconStr} ${attack} ${
     targetName ? ` :IconTargetArrow: ${targetName}` : ""
   }[/center]`;
 }
@@ -405,6 +412,10 @@ const tags = [
 const damageMetadata = {
   // This is so that our damage handler script can tell if it was from a critical hit
   critical: isCritical,
+  // Carry the attack identity through so the damage message can show a header
+  attack: attack,
+  icon: icon,
+  portrait: portrait,
   // So we can tell the damage handler script if it was a spell-related damage
   isSpell: isSpell,
   damageIgnoresResistances: damageIgnoresResistances,
@@ -417,7 +428,7 @@ const damageButton =
   damage && damage !== ""
     ? `\`\`\`${dmgRollName}
 api.promptRoll(\`${attack} Damage\`, '${damage}', ${JSON.stringify(
-        damageModifiers
+        damageModifiers,
       )}, ${JSON.stringify(damageMetadata)}, 'damage')
 \`\`\``
     : "";
@@ -429,7 +440,7 @@ masteryProperties.forEach((mp) => {
   const masteryPropertyMetadata = getMasteryProperties(
     mp,
     damageModifiers,
-    proficiencyBonus
+    proficiencyBonus,
   );
   tags.push({
     name: masteryPropertyMetadata.name,
@@ -458,7 +469,7 @@ const macros = masteryProperties
     const masteryPropertyMetadata = getMasteryProperties(
       mp,
       damageModifiers,
-      proficiencyBonus
+      proficiencyBonus,
     );
     return masteryPropertyMetadata?.macro;
   })

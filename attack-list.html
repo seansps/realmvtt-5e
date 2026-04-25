@@ -449,6 +449,7 @@
         rollName: "Attack",
         attack: `${name}`,
         icon: icon,
+        portrait: attack?.portrait,
         targetName: targetName,
         tokenId: ourToken?._id,
         targetId: target?.token?._id,
@@ -477,6 +478,7 @@
         rollName: "Attack",
         attack: `${name}`,
         icon: icon,
+        portrait: attack?.portrait,
         tooltip: `Attack Roll for ${name}`,
         dc: 0,
         damage: damage,
@@ -660,6 +662,10 @@
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
       critical: isCritical,
+      // Header info for the damage chat message
+      attack: name,
+      icon: ranged ? "IconBow" : "IconSword",
+      portrait: attack?.portrait,
       damageIgnoresResistances: damageIgnoresResistances,
       damageIgnoresImmunities: damageIgnoresImmunities,
     };

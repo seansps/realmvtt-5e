@@ -616,8 +616,18 @@
           isSpell: true,
           damageIgnoresResistances,
           damageIgnoresImmunities,
+          attack: spellName,
+          icon: "IconWand",
+          portrait: spell?.portrait,
         }
-      : { isSpell: true, damageIgnoresResistances, damageIgnoresImmunities };
+      : {
+          isSpell: true,
+          damageIgnoresResistances,
+          damageIgnoresImmunities,
+          attack: spellName,
+          icon: "IconWand",
+          portrait: spell?.portrait,
+        };
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
         ? `\`\`\`Roll_${
@@ -759,6 +769,7 @@
       "rollName": 'Attack',
       "attack": \`${spellName}\`,
       "icon": "IconWand",
+      "portrait": ${JSON.stringify(spell?.portrait || "")},
       "targetName": targetName,
       "tooltip": \`Attack Roll for ${spellName}\`,
       "dc": targetAc,
@@ -783,6 +794,7 @@
       "rollName": 'Attack',
       "attack": \`${spellName}\`,
       "icon": "IconWand",
+      "portrait": ${JSON.stringify(spell?.portrait || "")},
       "tooltip": \`Attack Roll for ${spellName}\`,
       "dc": 0,
       "damage": "${spellDamage}",
