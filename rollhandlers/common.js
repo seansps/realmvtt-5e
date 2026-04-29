@@ -2661,6 +2661,98 @@ function rollAbilityCheck(ability, dc) {
   });
 }
 
+function rollOtherSkillCheckForToken(token, otherSkill, dc) {
+  const skillName = (otherSkill?.name || "New Skill").toString();
+  const ability = otherSkill?.data?.ability || "strength";
+  const proficiency = otherSkill?.data?.skillProf || "false";
+  const isHalfProficient = proficiency === "half";
+  const isExpertise = proficiency === "expertise";
+  const isProficient = proficiency === "true";
+
+  let abilityMod = parseInt(token?.data?.[`${ability}Mod`] || "0", 10);
+  if (isNaN(abilityMod)) abilityMod = 0;
+  const proficiencyBonus = parseInt(
+    token?.data?.proficiencyBonus || "0",
+    10,
+  );
+
+  let modifiers = [{ name: ability, value: abilityMod, active: true }];
+
+  if (isHalfProficient) {
+    modifiers.push({
+      name: "Half Proficiency",
+      value: Math.floor(proficiencyBonus / 2),
+      active: true,
+    });
+  } else if (isExpertise) {
+    modifiers.push({
+      name: "Expertise",
+      value: proficiencyBonus * 2,
+      active: true,
+    });
+  } else if (isProficient) {
+    modifiers.push({
+      name: "Proficient",
+      value: proficiencyBonus,
+      active: true,
+    });
+  }
+
+  const checkModifiers = getEffectsAndModifiersForToken(
+    token,
+    ["abilityBonus", "abilityPenalty"],
+    ability,
+  );
+  checkModifiers.forEach((m) => modifiers.push(m));
+
+  const skillModifiers = getEffectsAndModifiersForToken(
+    token,
+    ["skillBonus", "skillPenalty"],
+    skillName.toLowerCase(),
+  );
+  skillModifiers.forEach((m) => modifiers.push(m));
+
+  if (isProficient) {
+    const proficientModifiers = getEffectsAndModifiersForToken(
+      token,
+      ["skillBonus"],
+      "proficient",
+    );
+    proficientModifiers.forEach((modifier) => {
+      if (
+        !modifiers.some(
+          (m) =>
+            m.name === modifier.name &&
+            m.value === modifier.value &&
+            m.active === modifier.active,
+        )
+      ) {
+        modifiers.push(modifier);
+      }
+    });
+  }
+
+  const minRoll = getMinRollModifier(modifiers);
+  modifiers = modifiers.filter(
+    (m) => !m.value.toString().startsWith("minroll"),
+  );
+
+  const metadata = {
+    rollName: `${capitalize(skillName)}`,
+    tooltip: `${capitalize(ability)} (${capitalize(skillName)}) Check`,
+    dc: dc,
+    minRoll: minRoll,
+  };
+  api.promptRollForToken(
+    token,
+    `${capitalize(ability)} (${capitalize(skillName)}) Check`,
+    "1d20",
+    modifiers,
+    metadata,
+    "ability",
+  );
+}
+
 function rollSkillCheck(skill, dc) {
   // Normalize the skill name to camelCase field format
   skill = normalizeSkillName(skill);
@@ -2755,6 +2847,18 @@ function rollSkillCheck(skill, dc) {
         "ability",
       );
     } else {
+      // PC: if not a standard skill, check the character's otherSkills list
+      if (!skillInfo) {
+        const otherSkills = token?.data?.otherSkills || [];
+        const lookupName = (skill || "").trim().toLowerCase();
+        const otherSkill = otherSkills.find(
+          (s) => (s?.name || "").trim().toLowerCase() === lookupName,
+        );
+        if (otherSkill) {
+          rollOtherSkillCheckForToken(token, otherSkill, dc);
+          return;
+        }
+      }
       // skill is already normalized to camelCase field format (e.g., "sleightOfHand")
       const ability =
         token?.data?.[`${skill}Ability`] ||
