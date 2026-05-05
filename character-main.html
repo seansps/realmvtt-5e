@@ -2912,446 +2912,783 @@
   }
 </script>
 
-<div style="display: flex; margin-top: 4px; flex-direction: row">
-  <div style="display: flex; flex-direction: column">
-    <div
-      style="
-        width: 130px;
-        min-width: 130px;
-        max-width: 130px;
-        min-height: 130px;
-        max-height: 130px;
-      "
-    >
-      <portrait width="130px" height="130px"></portrait>
-    </div>
+<!-- Container query on the host collapses to single column under ~640px.
+     Theme tokens come from src/index.css (--accent, --bg, --surface, ...). -->
+<div class="rvtt-sheet-spread-host sheet--spread" style="margin-top: 4px">
+  <div class="rvtt-sheet-spread">
+    <!-- ===== LEFT PAGE ===== -->
+    <div class="rvtt-sheet-page rvtt-sheet-corners">
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
 
-    <div style="margin-top: 8px">
-      <attribute
-        field="strength"
-        modifierfield="strengthMod"
-        label="STR"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('strength')"
-        onchange="setModifier(value, 'strength')"
-      ></attribute>
-    </div>
-    <div style="margin-top: 16px">
-      <attribute
-        field="dexterity"
-        modifierfield="dexterityMod"
-        label="DEX"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('dexterity')"
-        onchange="setModifier(value, 'dexterity')"
-      ></attribute>
-    </div>
-
-    <div style="margin-top: 16px">
-      <attribute
-        field="constitution"
-        modifierfield="constitutionMod"
-        label="CON"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('constitution')"
-        onchange="setModifier(value, 'constitution')"
-      ></attribute>
-    </div>
-
-    <div style="margin-top: 16px">
-      <attribute
-        field="intelligence"
-        modifierfield="intelligenceMod"
-        label="INT"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('intelligence')"
-        onchange="setModifier(value, 'intelligence')"
-      ></attribute>
-    </div>
-
-    <div style="margin-top: 16px">
-      <attribute
-        field="wisdom"
-        modifierfield="wisdomMod"
-        label="WIS"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('wisdom')"
-        onchange="setModifier(value, 'wisdom')"
-      ></attribute>
-    </div>
-
-    <div style="margin-top: 16px">
-      <attribute
-        field="charisma"
-        modifierfield="charismaMod"
-        label="CHA"
-        size="sm"
-        width="130px"
-        placeholder="0"
-        modifierdefaultvalue="+0"
-        modifierposition="bottom-center"
-        containervariant="fancy"
-        textalign="center"
-        showbutton
-        bold="true"
-        buttonicon="d20"
-        buttonsize="lg"
-        buttonvariant="filled"
-        buttonposition="right"
-        onclick="rollCheck('charisma')"
-        onchange="setModifier(value, 'charisma')"
-      ></attribute>
-    </div>
-  </div>
-
-  <div
-    style="display: flex; flex-direction: column; margin-left: 8px; width: 100%"
-  >
-    <div style="display: flex; flex-direction: row; width: 100%">
-      <div style="display: flex; flex-direction: column; width: 100%">
-        <div style="width: 100%; display: flex; gap: 4px">
-          <numberfield
-            icon="IconHeart"
-            width="50%"
-            placeholder="0"
-            field="curhp"
-            label="Hit Points"
-            color="pink"
-          >
-          </numberfield>
-          <numberfield
-            icon="IconHeartFilled"
-            width="50%"
-            placeholder="0"
-            field="hitpoints"
-            label="Max Hit Points"
-            color="green"
-          ></numberfield>
+      <!-- Header: portrait + identity stack (name, class line, XP/PB) -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+        "
+      >
+        <portrait variant="fancy" width="120px" height="120px"></portrait>
+        <div
+          style="
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          "
+        >
+          <label field="namefield" class="rvtt-sheet-display-name"></label>
+          <div style="display: flex; gap: 4px; align-items: center">
+            <stringfield
+              field="className"
+              placeholder="Class & Level"
+              class="rvtt-sheet-class-line"
+              width="100%"
+            ></stringfield>
+            <list
+              width="fit-content"
+              height="30px"
+              hidden="true"
+              listtype="class_list"
+              field="classes"
+              onchange="onDeleteClass()"
+            ></list>
+          </div>
           <div
             style="
-              justify-content: center;
-              align-items: center;
-              margin-top: auto;
               display: flex;
-              flex-direction: column;
-              gap: 2px;
+              gap: 10px;
+              align-items: center;
+              margin-top: 2px;
             "
           >
-            <label
-              variant="bold"
-              textalign="center"
-              label="Heroic Inspiration"
+            <span class="rvtt-sheet-mono-dim">XP</span>
+            <numberfield
+              field="xp"
               size="xs"
-            ></label>
+              hidecontrols="true"
+              width="64px"
+              placeholder="0"
+              onchange="showHideLevelUp()"
+            ></numberfield>
+            <span class="rvtt-sheet-mono-dim">/</span>
+            <numberfield
+              field="xpNext"
+              size="xs"
+              hidecontrols="true"
+              width="64px"
+              placeholder="300"
+            ></numberfield>
+            <span class="rvtt-sheet-mono-dim">PB</span>
+            <numberfield
+              field="proficiencyBonus"
+              size="xs"
+              hidecontrols="true"
+              width="44px"
+              placeholder="2"
+              showsign="true"
+              onchange="updateProficiencies(value)"
+            ></numberfield>
+            <button
+              size="xs"
+              label="Level Up"
+              width="105px"
+              hidden="true"
+              field="levelUpButton"
+              variant="filled"
+              onclick="levelUp()"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Abilities -->
+      <div class="rvtt-sheet-divider">
+        <span class="rvtt-sheet-divider__label"
+          >&#10022; Abilities &#10022;</span
+        >
+      </div>
+      <div class="rvtt-sheet-abilities-grid">
+        <attribute
+          field="strength"
+          modifierfield="strengthMod"
+          label="STR"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('strength')"
+          onchange="setModifier(value, 'strength')"
+        ></attribute>
+        <attribute
+          field="dexterity"
+          modifierfield="dexterityMod"
+          label="DEX"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('dexterity')"
+          onchange="setModifier(value, 'dexterity')"
+        ></attribute>
+        <attribute
+          field="constitution"
+          modifierfield="constitutionMod"
+          label="CON"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('constitution')"
+          onchange="setModifier(value, 'constitution')"
+        ></attribute>
+        <attribute
+          field="intelligence"
+          modifierfield="intelligenceMod"
+          label="INT"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('intelligence')"
+          onchange="setModifier(value, 'intelligence')"
+        ></attribute>
+        <attribute
+          field="wisdom"
+          modifierfield="wisdomMod"
+          label="WIS"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('wisdom')"
+          onchange="setModifier(value, 'wisdom')"
+        ></attribute>
+        <attribute
+          field="charisma"
+          modifierfield="charismaMod"
+          label="CHA"
+          size="sm"
+          width="100%"
+          placeholder="0"
+          modifierdefaultvalue="+0"
+          modifierposition="bottom-center"
+          containervariant="fancy"
+          textalign="center"
+          showbutton
+          bold="true"
+          buttonicon="d20"
+          buttonsize="lg"
+          buttonvariant="subtle"
+          buttonposition="right"
+          onclick="rollCheck('charisma')"
+          onchange="setModifier(value, 'charisma')"
+        ></attribute>
+      </div>
+
+      <div style="height: 8px"></div>
+      <div class="rvtt-sheet-divider">
+        <span class="rvtt-sheet-divider__label"
+          >&#10022; Saving Throws &#10022;</span
+        >
+      </div>
+
+      <!-- Saving Throws: 2 cols (STR/DEX/CON | INT/WIS/CHA). Each row:
+           prof star | key label | dotted leader + bonus | d20 roll. -->
+      <div class="rvtt-sheet-saves-grid">
+        <div class="rvtt-sheet-saves-col">
+          <div class="rvtt-sheet-save-row">
             <iconbutton
-              field="inspiration"
-              size="sm"
-              color="yellow"
-              variant="light"
-              options='[{"icon": "IconCrownOff", "label": "Heroic Inspiration: No", "value": "false"},{"icon": "IconCrown", "label": "Heroic Inspiration: Yes", "value": "true"}]'
-              onchange=""
-              onclick=""
+              field="strengthProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'strength')"
+            ></iconbutton>
+            <label
+              class="rvtt-sheet-label"
+              size="xs"
+              variant="bold"
+              label="STR"
+            ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="strengthSave"
+              onclick="rollSave('strength')"
+            ></numberfield>
+            <iconbutton
+              field="Strength Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('strength')"
+            ></iconbutton>
+          </div>
+          <div class="rvtt-sheet-save-row">
+            <iconbutton
+              field="dexterityProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'dexterity')"
+            ></iconbutton>
+            <label
+              class="rvtt-sheet-label"
+              size="xs"
+              variant="bold"
+              label="DEX"
+            ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="dexteritySave"
+              onclick="rollSave('dexterity')"
+            ></numberfield>
+            <iconbutton
+              field="Dexterity Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('dexterity')"
+            ></iconbutton>
+          </div>
+          <div class="rvtt-sheet-save-row">
+            <iconbutton
+              field="constitutionProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'constitution')"
+            ></iconbutton>
+            <label
+              class="rvtt-sheet-label"
+              size="xs"
+              variant="bold"
+              label="CON"
+            ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="constitutionSave"
+              onclick="rollSave('constitution')"
+            ></numberfield>
+            <iconbutton
+              field="Constitution Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('constitution')"
             ></iconbutton>
           </div>
         </div>
 
-        <div
-          style="width: 100%; display: flex; gap: 4px; align-items: flex-end"
-        >
-          <numberfield
-            width="50%"
-            placeholder="0"
-            field="tempHp"
-            label="Temporary Hit Points"
-            color="blue"
-          >
-          </numberfield>
-          <numberfield
-            icon="IconShield"
-            width="50%"
-            placeholder="0"
-            field="ac"
-            label="Armor Class"
-            color="blue"
-          >
-          </numberfield>
-          <!-- Panel to edit HP per level -->
-          <popover>
-            <popover.target>
-              <iconbutton
-                field="Edit Hit Points per Level"
-                size="md"
-                variant="light"
-                color="red"
-                onload="onLoadCharacter()"
-                options='[{"icon": "IconHeart", "label": "Edit Hit Points per Level", "value": "hpPerLevel"}]'
-              >
-              </iconbutton>
-            </popover.target>
-            <popover.dropdown>
-              <div style="max-height: 400px; overflow-y: auto">
-                <label
-                  label="Hit Points Gained per Level"
-                  field="hpPerLevelLabel"
-                ></label>
-                <label
-                  label="(Excluding CON modifier)"
-                  size="xs"
-                  color="dimmed"
-                  style="margin-top: 2px; margin-bottom: 4px"
-                ></label>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 8px;
-                    margin-top: 8px;
-                  "
-                >
-                  <numberfield
-                    field="hpLevel1"
-                    size="xs"
-                    width="100%"
-                    label="Level 1"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel2"
-                    size="xs"
-                    width="100%"
-                    label="Level 2"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel3"
-                    size="xs"
-                    width="100%"
-                    label="Level 3"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel4"
-                    size="xs"
-                    width="100%"
-                    label="Level 4"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel5"
-                    size="xs"
-                    width="100%"
-                    label="Level 5"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel6"
-                    size="xs"
-                    width="100%"
-                    label="Level 6"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel7"
-                    size="xs"
-                    width="100%"
-                    label="Level 7"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel8"
-                    size="xs"
-                    width="100%"
-                    label="Level 8"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel9"
-                    size="xs"
-                    width="100%"
-                    label="Level 9"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel10"
-                    size="xs"
-                    width="100%"
-                    label="Level 10"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel11"
-                    size="xs"
-                    width="100%"
-                    label="Level 11"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel12"
-                    size="xs"
-                    width="100%"
-                    label="Level 12"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel13"
-                    size="xs"
-                    width="100%"
-                    label="Level 13"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel14"
-                    size="xs"
-                    width="100%"
-                    label="Level 14"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel15"
-                    size="xs"
-                    width="100%"
-                    label="Level 15"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel16"
-                    size="xs"
-                    width="100%"
-                    label="Level 16"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel17"
-                    size="xs"
-                    width="100%"
-                    label="Level 17"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel18"
-                    size="xs"
-                    width="100%"
-                    label="Level 18"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel19"
-                    size="xs"
-                    width="100%"
-                    label="Level 19"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                  <numberfield
-                    field="hpLevel20"
-                    size="xs"
-                    width="100%"
-                    label="Level 20"
-                    updateonblur="true"
-                    onchange="updateHpPerLevel()"
-                  ></numberfield>
-                </div>
-                <div style="margin-top: 8px">
-                  <button
-                    size="xs"
-                    label="Close"
-                    variant="outline"
-                    onclick="api.closeOpenedPopovers()"
-                  ></button>
-                </div>
-              </div>
-            </popover.dropdown>
-          </popover>
-        </div>
-
-        <div style="width: 100%; display: flex; gap: 4px; margin-top: 16px">
-          <div style="display: flex; gap: 4px; align-items: center">
+        <div class="rvtt-sheet-saves-col">
+          <div class="rvtt-sheet-save-row">
+            <iconbutton
+              field="intelligenceProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'intelligence')"
+            ></iconbutton>
             <label
-              variant="bold"
+              class="rvtt-sheet-label"
               size="xs"
-              label="Hit Dice"
-              color="red"
+              variant="bold"
+              label="INT"
             ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="intelligenceSave"
+              onclick="rollSave('intelligence')"
+            ></numberfield>
+            <iconbutton
+              field="Intelligence Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('intelligence')"
+            ></iconbutton>
           </div>
-          <div style="display: flex; gap: 4px; align-items: flex-end">
+          <div class="rvtt-sheet-save-row">
+            <iconbutton
+              field="wisdomProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'wisdom')"
+            ></iconbutton>
+            <label
+              class="rvtt-sheet-label"
+              size="xs"
+              variant="bold"
+              label="WIS"
+            ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="wisdomSave"
+              onclick="rollSave('wisdom')"
+            ></numberfield>
+            <iconbutton
+              field="Wisdom Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('wisdom')"
+            ></iconbutton>
+          </div>
+          <div class="rvtt-sheet-save-row">
+            <iconbutton
+              field="charismaProf"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
+              onchange="setSave(value, 'charisma')"
+            ></iconbutton>
+            <label
+              class="rvtt-sheet-label"
+              size="xs"
+              variant="bold"
+              label="CHA"
+            ></label>
+            <numberfield
+              class="rvtt-sheet-save-mod"
+              placeholder="+0"
+              showsign="true"
+              size="xs"
+              hidecontrols="true"
+              field="charismaSave"
+              onclick="rollSave('charisma')"
+            ></numberfield>
+            <iconbutton
+              field="Charisma Save"
+              size="md"
+              color="default"
+              variant="subtle"
+              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
+              onclick="rollSave('charisma')"
+            ></iconbutton>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT PAGE ===== -->
+    <div class="rvtt-sheet-page rvtt-sheet-corners">
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+      <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+      <!-- Vitals -->
+      <div class="rvtt-sheet-divider">
+        <span class="rvtt-sheet-divider__label">&#10022; Vitals &#10022;</span>
+      </div>
+
+      <!-- Vitals row: HP card (1.6fr) | AC (1fr) | Heroic (0.8fr) -->
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1.6fr 1fr 0.8fr;
+          gap: 8px;
+          margin-bottom: 8px;
+        "
+      >
+        <!-- HP card: Hit Points label, big curhp / max, temp badge,
+             progress bar at bottom (red -> accent gradient). -->
+        <div class="rvtt-sheet-hp-card">
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent"
+            label="Hit Points"
+          ></label>
+          <div class="rvtt-sheet-hp-row">
+            <numberfield
+              class="rvtt-sheet-hp-current"
+              field="curhp"
+              size="xs"
+              hidecontrols="true"
+              width="48px"
+              placeholder="0"
+              inputcolor="red"
+            ></numberfield>
+            <span class="rvtt-sheet-hp-divider">/</span>
+            <numberfield
+              class="rvtt-sheet-hp-max"
+              field="hitpoints"
+              size="xs"
+              hidecontrols="true"
+              width="36px"
+              placeholder="0"
+              inputcolor="green"
+            ></numberfield>
+            <span class="rvtt-sheet-hp-temp-label">TMP</span>
+            <numberfield
+              class="rvtt-sheet-hp-temp"
+              field="tempHp"
+              size="xs"
+              hidecontrols="true"
+              width="32px"
+              placeholder="0"
+              inputcolor="blue"
+            ></numberfield>
+            <popover>
+              <popover.target>
+                <iconbutton
+                  field="Edit Hit Points per Level"
+                  size="md"
+                  variant="light"
+                  color="red"
+                  onload="onLoadCharacter()"
+                  options='[{"icon": "IconHeart", "label": "Edit Hit Points per Level", "value": "hpPerLevel"}]'
+                >
+                </iconbutton>
+              </popover.target>
+              <popover.dropdown>
+                <div style="max-height: 400px; overflow-y: auto">
+                  <label
+                    label="Hit Points Gained per Level"
+                    field="hpPerLevelLabel"
+                  ></label>
+                  <label
+                    label="(Excluding CON modifier)"
+                    size="xs"
+                    color="dimmed"
+                    style="margin-top: 2px; margin-bottom: 4px"
+                  ></label>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 8px;
+                      margin-top: 8px;
+                    "
+                  >
+                    <numberfield
+                      field="hpLevel1"
+                      size="xs"
+                      width="100%"
+                      label="Level 1"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel2"
+                      size="xs"
+                      width="100%"
+                      label="Level 2"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel3"
+                      size="xs"
+                      width="100%"
+                      label="Level 3"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel4"
+                      size="xs"
+                      width="100%"
+                      label="Level 4"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel5"
+                      size="xs"
+                      width="100%"
+                      label="Level 5"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel6"
+                      size="xs"
+                      width="100%"
+                      label="Level 6"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel7"
+                      size="xs"
+                      width="100%"
+                      label="Level 7"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel8"
+                      size="xs"
+                      width="100%"
+                      label="Level 8"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel9"
+                      size="xs"
+                      width="100%"
+                      label="Level 9"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel10"
+                      size="xs"
+                      width="100%"
+                      label="Level 10"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel11"
+                      size="xs"
+                      width="100%"
+                      label="Level 11"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel12"
+                      size="xs"
+                      width="100%"
+                      label="Level 12"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel13"
+                      size="xs"
+                      width="100%"
+                      label="Level 13"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel14"
+                      size="xs"
+                      width="100%"
+                      label="Level 14"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel15"
+                      size="xs"
+                      width="100%"
+                      label="Level 15"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel16"
+                      size="xs"
+                      width="100%"
+                      label="Level 16"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel17"
+                      size="xs"
+                      width="100%"
+                      label="Level 17"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel18"
+                      size="xs"
+                      width="100%"
+                      label="Level 18"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel19"
+                      size="xs"
+                      width="100%"
+                      label="Level 19"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                    <numberfield
+                      field="hpLevel20"
+                      size="xs"
+                      width="100%"
+                      label="Level 20"
+                      updateonblur="true"
+                      onchange="updateHpPerLevel()"
+                    ></numberfield>
+                  </div>
+                  <div style="margin-top: 8px">
+                    <button
+                      size="xs"
+                      label="Close"
+                      variant="outline"
+                      onclick="api.closeOpenedPopovers()"
+                    ></button>
+                  </div>
+                </div>
+              </popover.dropdown>
+            </popover>
+          </div>
+          <progressbar
+            class="rvtt-sheet-hp-bar"
+            field="curhp"
+            currentvaluefield="curhp"
+            maxvaluefield="hitpoints"
+            color="health"
+            size="xs"
+          ></progressbar>
+        </div>
+        <!-- AC card: shield SVG behind the AC number. -->
+        <div class="rvtt-sheet-ac-card">
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent rvtt-sheet-label--wrap"
+            label="Armor Class"
+          ></label>
+          <div class="rvtt-sheet-ac-shield">
+            <numberfield
+              class="rvtt-sheet-ac-value"
+              field="ac"
+              size="xs"
+              variant="unstyled"
+              hidecontrols="true"
+              placeholder="10"
+            ></numberfield>
+          </div>
+        </div>
+        <!-- Heroic Inspiration card -->
+        <div
+          style="
+            padding: 6px 8px;
+            border: 1px dashed
+              var(--border-strong, var(--mantine-color-default-border));
+            background: var(--surface, transparent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+          "
+        >
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent rvtt-sheet-label--wrap"
+            label="Heroic Inspiration"
+          ></label>
+          <iconbutton
+            field="inspiration"
+            size="lg"
+            color="yellow"
+            variant="subtle"
+            options='[{"icon": "IconCrownOff", "label": "Heroic Inspiration: No", "value": "false"},{"icon": "IconCrown", "label": "Heroic Inspiration: Yes", "value": "true"}]'
+            onchange=""
+            onclick=""
+          ></iconbutton>
+        </div>
+      </div>
+
+      <!-- Hit Dice + Rest strip -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border: 1px solid var(--border, var(--mantine-color-default-border));
+          background: var(--surface, transparent);
+          margin-bottom: 8px;
+        "
+      >
+        <div style="display: flex; gap: 6px; align-items: center; min-width: 0">
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent"
+            label="Hit Dice"
+          ></label>
+          <div style="display: flex; gap: 4px; align-items: center">
             <indicator
               position="top-center"
               size="sm"
@@ -3545,398 +3882,179 @@
               </popover>
             </indicator>
           </div>
-          <div style="margin-left: auto; display: flex; flex-direction: column">
-            <div style="display: flex; gap: 4px; align-items: center">
-              <label variant="bold" size="xs" label="Rest"></label>
-              <iconbutton
-                field="Short Rest"
-                size="lg"
-                variant="default"
-                options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]'
-                onchange=""
-                onclick="shortRest()"
-              ></iconbutton>
-              <iconbutton
-                field="Long Rest"
-                size="lg"
-                variant="default"
-                options='[{"icon": "IconBed", "label": "Long Rest", "value": "longrest"}]'
-                onchange=""
-                onclick="longRest()"
-              ></iconbutton>
-            </div>
-          </div>
         </div>
-
-        <div style="width: 100%; display: flex; gap: 4px">
-          <numberfield
-            width="40%"
-            size="xs"
-            placeholder="0"
-            field="xp"
-            onchange="showHideLevelUp()"
-            label="XP"
-          ></numberfield>
-          <numberfield
-            width="40%"
-            size="xs"
-            placeholder="0"
-            field="xpNext"
-            label="Next Level"
-            onchange="showHideLevelUp()"
-          ></numberfield>
-          <numberfield
-            width="20%"
-            size="xs"
-            placeholder="2"
-            field="proficiencyBonus"
-            label="P.B."
-            onchange="updateProficiencies(value)"
-          ></numberfield>
-        </div>
-      </div>
-    </div>
-
-    <div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
-      <stringfield
-        width="100%"
-        size="xs"
-        field="className"
-        placeholder="Drag and drop a Class to add a Level"
-        label="Class & Level"
-      ></stringfield>
-      <button
-        size="xs"
-        label="Level Up"
-        width="105px"
-        hidden="true"
-        field="levelUpButton"
-        variant="filled"
-        onclick="levelUp()"
-      ></button>
-      <list
-        width="fit-content"
-        height="30px"
-        hidden="true"
-        listtype="class_list"
-        field="classes"
-        onchange="onDeleteClass()"
-      >
-      </list>
-    </div>
-
-    <div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
-      <stringfield
-        width="100%"
-        size="xs"
-        field="speciesName"
-        placeholder="Drag and drop your chosen Species"
-        label="Species"
-      >
-      </stringfield>
-      <list
-        width="fit-content"
-        height="30px"
-        hidden="true"
-        listtype="species_list"
-        field="species"
-        onchange="onDeleteSpecies()"
-      >
-      </list>
-    </div>
-
-    <div style="width: 100%; display: flex; gap: 4px; align-items: flex-end">
-      <stringfield
-        width="100%"
-        size="xs"
-        field="backgroundName"
-        placeholder="Drag and drop your chosen Background"
-        label="Background"
-      ></stringfield>
-      <list
-        width="fit-content"
-        height="30px"
-        hidden="true"
-        listtype="background_list"
-        field="backgrounds"
-        onchange="onDeleteBackground()"
-      >
-      </list>
-    </div>
-
-    <div style="display: flex; flex-direction: row">
-      <div style="width: 50%">
-        <stringfield
-          size="xs"
-          field="senses"
-          label="Senses"
-          placeholder="None"
-        ></stringfield>
-      </div>
-      <div style="width: 50%; margin-left: 4px">
-        <dropdown
-          size="xs"
-          field="size"
-          label="Size"
-          placeholder="Medium"
-          options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'
+        <div
+          style="
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-left: auto;
+          "
         >
-        </dropdown>
-      </div>
-    </div>
-
-    <div style="width: 100%">
-      <stringfield
-        size="xs"
-        field="speed"
-        placeholder="0 ft"
-        label="Speed"
-      ></stringfield>
-    </div>
-
-    <!-- Saving Throws + Death Saves -->
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 2px;
-        width: 100%;
-        align-items: flex-start;
-        margin-top: 8px;
-      "
-    >
-      <!-- Saving Throws: 2 columns vertical (STR/DEX/CON | INT/WIS/CHA) -->
-      <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
-        <label
-          variant="bold"
-          size="xs"
-          label="Saving Throws"
-          style="margin-bottom: 2px"
-        ></label>
-        <div style="display: flex; gap: 6px">
-          <!-- Col 1: STR, DEX, CON -->
-          <div
-            style="
-              display: grid;
-              grid-template-columns: auto auto 45px auto;
-              gap: 1px 3px;
-              align-items: center;
-            "
-          >
-            <iconbutton
-              field="strengthProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'strength')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="STR"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="strengthSave"
-              onclick="rollSave('strength')"
-            ></numberfield>
-            <iconbutton
-              field="Strength Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('strength')"
-            ></iconbutton>
-
-            <iconbutton
-              field="dexterityProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'dexterity')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="DEX"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="dexteritySave"
-              onclick="rollSave('dexterity')"
-            ></numberfield>
-            <iconbutton
-              field="Dexterity Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('dexterity')"
-            ></iconbutton>
-
-            <iconbutton
-              field="constitutionProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'constitution')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="CON"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="constitutionSave"
-              onclick="rollSave('constitution')"
-            ></numberfield>
-            <iconbutton
-              field="Constitution Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('constitution')"
-            ></iconbutton>
-          </div>
-          <!-- Col 2: INT, WIS, CHA -->
-          <div
-            style="
-              display: grid;
-              grid-template-columns: auto auto 45px auto;
-              gap: 1px 3px;
-              align-items: center;
-            "
-          >
-            <iconbutton
-              field="intelligenceProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'intelligence')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="INT"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="intelligenceSave"
-              onclick="rollSave('intelligence')"
-            ></numberfield>
-            <iconbutton
-              field="Intelligence Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('intelligence')"
-            ></iconbutton>
-
-            <iconbutton
-              field="wisdomProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'wisdom')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="WIS"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="wisdomSave"
-              onclick="rollSave('wisdom')"
-            ></numberfield>
-            <iconbutton
-              field="Wisdom Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('wisdom')"
-            ></iconbutton>
-
-            <iconbutton
-              field="charismaProf"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"}]'
-              onchange="setSave(value, 'charisma')"
-            ></iconbutton>
-            <label size="xs" variant="bold" label="CHA"></label>
-            <numberfield
-              placeholder="+0"
-              showsign="true"
-              width="45px"
-              size="xs"
-              hidecontrols="true"
-              field="charismaSave"
-              onclick="rollSave('charisma')"
-            ></numberfield>
-            <iconbutton
-              field="Charisma Save"
-              size="md"
-              color="default"
-              variant="default"
-              options='[{"icon": "d20", "label": "Roll Save", "value": "roll"}]'
-              onclick="rollSave('charisma')"
-            ></iconbutton>
-          </div>
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent"
+            label="Rest"
+          ></label>
+          <iconbutton
+            field="Short Rest"
+            size="lg"
+            variant="subtle"
+            options='[{"icon": "IconCampfire", "label": "Short Rest", "value": "shortrest"}]'
+            onchange=""
+            onclick="shortRest()"
+          ></iconbutton>
+          <iconbutton
+            field="Long Rest"
+            size="lg"
+            variant="subtle"
+            options='[{"icon": "IconBed", "label": "Long Rest", "value": "longrest"}]'
+            onchange=""
+            onclick="longRest()"
+          ></iconbutton>
         </div>
       </div>
 
-      <!-- Death Saves -->
-      <div
-        style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-          min-width: 80px;
-        "
-      >
-        <label variant="bold" size="xs" label="Death Saves"></label>
-        <button
-          field="deathSaveBtn"
-          size="xs"
-          color="red"
-          variant="light"
-          label="Roll Save"
-          width="100%"
-          onclick="rollDeathSave()"
-        ></button>
+      <div class="rvtt-sheet-divider">
+        <span class="rvtt-sheet-divider__label"
+          >&#10022; Identity &#10022;</span
+        >
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; gap: 4px; align-items: flex-end">
+          <stringfield
+            width="100%"
+            size="xs"
+            field="className"
+            placeholder="Drag and drop a Class to add a Level"
+            label="Class & Level"
+          ></stringfield>
+          <list
+            width="fit-content"
+            height="30px"
+            hidden="true"
+            listtype="class_list"
+            field="classes"
+            onchange="onDeleteClass()"
+          ></list>
+        </div>
+
         <div
           style="
             display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 1px 4px;
-            align-items: center;
-            width: 100%;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            align-items: flex-end;
           "
         >
-          <label variant="bold" label="Fail" size="xs" color="red"></label>
-          <counter
-            color="red"
-            field="deathSaveFailures"
-            maxvalue="3"
+          <div style="display: flex; gap: 4px; align-items: flex-end">
+            <stringfield
+              width="100%"
+              size="xs"
+              field="speciesName"
+              placeholder="Drag a Species&#8230;"
+              label="Species"
+            ></stringfield>
+            <list
+              width="fit-content"
+              height="30px"
+              hidden="true"
+              listtype="species_list"
+              field="species"
+              onchange="onDeleteSpecies()"
+            ></list>
+          </div>
+          <div style="display: flex; gap: 4px; align-items: flex-end">
+            <stringfield
+              width="100%"
+              size="xs"
+              field="backgroundName"
+              placeholder="Drag a Background&#8230;"
+              label="Background"
+            ></stringfield>
+            <list
+              width="fit-content"
+              height="30px"
+              hidden="true"
+              listtype="background_list"
+              field="backgrounds"
+              onchange="onDeleteBackground()"
+            ></list>
+          </div>
+        </div>
+
+        <div
+          style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px"
+        >
+          <stringfield
             size="xs"
-          ></counter>
-          <label variant="bold" label="Pass" size="xs" color="green"></label>
+            field="senses"
+            label="Senses"
+            placeholder="None"
+          ></stringfield>
+          <dropdown
+            size="xs"
+            field="size"
+            label="Size"
+            placeholder="Medium"
+            options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'
+          ></dropdown>
+          <stringfield
+            size="xs"
+            field="speed"
+            placeholder="0 ft"
+            label="Speed"
+          ></stringfield>
+        </div>
+      </div>
+
+      <!-- Death Saves footer -->
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 10px;
+          border: 1px solid
+            var(--border-strong, var(--mantine-color-default-border));
+          background: var(--surface, transparent);
+          margin-top: 8px;
+        "
+      >
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+          <label
+            class="rvtt-sheet-label rvtt-sheet-label--accent"
+            label="Death Saves"
+          ></label>
+          <button
+            field="deathSaveBtn"
+            size="xs"
+            color="red"
+            variant="light"
+            label="Roll Save"
+            onclick="rollDeathSave()"
+          ></button>
+        </div>
+        <div
+          class="rvtt-sheet-deathsave-pips"
+          style="
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 2px 4px;
+            align-items: center;
+          "
+        >
+          <label class="rvtt-sheet-label" label="Pass" color="green"></label>
           <counter
             color="green"
             field="deathSaveSuccesses"
+            maxvalue="3"
+            size="xs"
+          ></counter>
+          <label class="rvtt-sheet-label" label="Fail" color="red"></label>
+          <counter
+            color="red"
+            field="deathSaveFailures"
             maxvalue="3"
             size="xs"
           ></counter>
@@ -3944,8 +4062,8 @@
       </div>
     </div>
   </div>
-</div>
 
-<stringfield field="hpByLevel" hidden="true"></stringfield>
-<stringfield field="classLevels" hidden="true"></stringfield>
-<numberfield field="level" hidden="true"></numberfield>
+  <stringfield field="hpByLevel" hidden="true"></stringfield>
+  <stringfield field="classLevels" hidden="true"></stringfield>
+  <numberfield field="level" hidden="true"></numberfield>
+</div>

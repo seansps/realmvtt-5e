@@ -549,175 +549,211 @@
   }
 </script>
 
-<div>
-  <label variant="bold" textalign="center" label="Feats"></label>
-</div>
-
-<div style="width: 100%">
-  <list listtype="feats_list" field="features"></list>
-</div>
-
-<div style="margin-top: 8px">
-  <label variant="bold" textalign="center" label="Features"></label>
-</div>
-
-<table>
-  <tbody>
-    <tr>
-      <td><label label="Classes:"></label></td>
-      <td>
-        <list listtype="class_list_no_delete" field="classes"></list>
-      </td>
-    </tr>
-    <tr>
-      <td><label label="Subclasses:"></label></td>
-      <td>
-        <list listtype="class_list_no_delete" field="subclasses"></list>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<div style="width: 100%">
-  <list
-    listtype="character_feature_list"
-    field="features"
-    variant="striped"
-    recordtype="features"
-    icon="IconFlare"
-  ></list>
-</div>
-
-<div style="margin-top: 8px">
-  <dropdown
-    field="weaponMasteries"
-    label="Weapon Masteries"
-    placeholder="Select Weapon Masteries if Applicable"
-    multiselect="6"
-    textalign="center"
-    searchable="true"
-    options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"}, 
-    {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"}, 
-    {"label": "Javelin", "value": "Javelin"}, {"label": "Light Hammer", "value": "Light Hammer"}, 
-    {"label": "Mace", "value": "Mace"}, {"label": "Quarterstaff", "value": "Quarterstaff"},
-    {"label": "Sickle", "value": "Sickle"}, {"label": "Spear", "value": "Spear"},
-    {"label": "Dart", "value": "Dart"}, {"label": "Light Crossbow", "value": "Light Crossbow"}, 
-    {"label": "Shortbow", "value": "Shortbow"},
-    {"label": "Sling", "value": "Sling"}, {"label": "Battleaxe", "value": "Battleaxe"}, 
-    {"label": "Flail", "value": "Flail"}, {"label": "Glaive", "value": "Glaive"}, 
-    {"label": "Greataxe", "value": "Greataxe"}, {"label": "Greatsword", "value": "Greatsword"},
-    {"label": "Halberd", "value": "Halberd"}, {"label": "Lance", "value": "Lance"},
-    {"label": "Longsword", "value": "Longsword"}, {"label": "Maul", "value": "Maul"},
-    {"label": "Morningstar", "value": "Morningstar"}, {"label": "Pike", "value": "Pike"},
-    {"label": "Rapier", "value": "Rapier"}, {"label": "Scimitar", "value": "Scimitar"},
-    {"label": "Shortsword", "value": "Shortsword"}, {"label": "Trident", "value": "Trident"},
-    {"label": "Warhammer", "value": "Warhammer"}, {"label": "War Pick", "value": "War Pick"},
-    {"label": "Whip", "value": "Whip"}, {"label": "Blowgun", "value": "Blowgun"},
-    {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
-    {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
-    {"label": "Pistol", "value": "Pistol"}]'
+<!-- Features tab. sheet--spread enables Cinzel labels; tokens come from
+     src/index.css. Sections are split by HybridDividers but field
+     bindings, list types, and on* handlers are unchanged. -->
+<div class="sheet--spread">
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
   >
-  </dropdown>
-</div>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
 
-<div style="margin-top: 8px">
-  <label
-    variant="bold"
-    textalign="center"
-    label="Resistances, Immunities, & Vulnerabilities"
-  ></label>
-</div>
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label">&#10022; Feats &#10022;</span>
+    </div>
+    <div style="width: 100%">
+      <list listtype="feats_list" field="features"></list>
+    </div>
+  </div>
 
-<div
-  style="
-    width: 100%;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-  "
->
-  <stringfield
-    width="33%"
-    multiline="true"
-    maxrows="2"
-    field="resistances"
-    label="Resistances"
-    placeholder="None"
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
   >
-  </stringfield>
-  <stringfield
-    width="33%"
-    multiline="true"
-    maxrows="2"
-    field="immunities"
-    label="Immunities"
-    placeholder="None"
-  >
-  </stringfield>
-  <stringfield
-    width="33%"
-    multiline="true"
-    maxrows="2"
-    field="vulnerabilities"
-    label="Vulnerabilities"
-    placeholder="None"
-  >
-  </stringfield>
-</div>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
 
-<div style="margin-top: 8px">
-  <label
-    variant="bold"
-    textalign="center"
-    label="Polymorph, Wild Shape, and Shape-shifting"
-  ></label>
-</div>
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label">&#10022; Features &#10022;</span>
+    </div>
 
-<div style="margin-top: 4px">
-  <label
-    textalign="center"
-    size="sm"
-    label="Drag an NPC to this Tab to use Shape-shifting"
-  ></label>
-</div>
-
-<div
-  style="
-    justify-content: center;
-    margin-top: 4px;
-    display: flex;
-    flex-direction: row;
-    gap: 16px;
-  "
->
-  <div style="display: flex; flex-direction: row; gap: 4px; margin-top: 4px">
-    <label
-      variant="bold"
-      size="sm"
-      textalign="left"
-      label="Shape-shifting: "
-    ></label>
-    <recordlink
-      field="shapeshiftingNpc"
-      hidden="true"
-      onchange="removeShapeshifting()"
-    ></recordlink>
-    <label
-      size="sm"
-      textalign="left"
-      field="shapeshiftingNameNone"
-      label="None"
-    ></label>
-    <iconbutton
-      field="Remove Shape-shift"
-      size="sm"
-      hidden="true"
-      variant="default"
-      options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
-      onclick="removeShapeshifting()"
+    <div
+      style="
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      "
     >
-    </iconbutton>
+      <label class="rvtt-sheet-label" label="Classes"></label>
+      <list listtype="class_list_no_delete" field="classes"></list>
+      <label class="rvtt-sheet-label" label="Subclasses"></label>
+      <list listtype="class_list_no_delete" field="subclasses"></list>
+    </div>
+
+    <div style="width: 100%">
+      <list
+        listtype="character_feature_list"
+        field="features"
+        variant="striped"
+        recordtype="features"
+        icon="IconFlare"
+      ></list>
+    </div>
+
+    <div style="margin-top: 8px">
+      <dropdown
+        field="weaponMasteries"
+        label="Weapon Masteries"
+        placeholder="Select Weapon Masteries if Applicable"
+        multiselect="6"
+        textalign="center"
+        searchable="true"
+        options='[{"label": "Club", "value": "Club"}, {"label": "Dagger", "value": "Dagger"},
+      {"label": "Greatclub", "value": "Greatclub"}, {"label": "Handaxe", "value": "Handaxe"},
+      {"label": "Javelin", "value": "Javelin"}, {"label": "Light Hammer", "value": "Light Hammer"},
+      {"label": "Mace", "value": "Mace"}, {"label": "Quarterstaff", "value": "Quarterstaff"},
+      {"label": "Sickle", "value": "Sickle"}, {"label": "Spear", "value": "Spear"},
+      {"label": "Dart", "value": "Dart"}, {"label": "Light Crossbow", "value": "Light Crossbow"},
+      {"label": "Shortbow", "value": "Shortbow"},
+      {"label": "Sling", "value": "Sling"}, {"label": "Battleaxe", "value": "Battleaxe"},
+      {"label": "Flail", "value": "Flail"}, {"label": "Glaive", "value": "Glaive"},
+      {"label": "Greataxe", "value": "Greataxe"}, {"label": "Greatsword", "value": "Greatsword"},
+      {"label": "Halberd", "value": "Halberd"}, {"label": "Lance", "value": "Lance"},
+      {"label": "Longsword", "value": "Longsword"}, {"label": "Maul", "value": "Maul"},
+      {"label": "Morningstar", "value": "Morningstar"}, {"label": "Pike", "value": "Pike"},
+      {"label": "Rapier", "value": "Rapier"}, {"label": "Scimitar", "value": "Scimitar"},
+      {"label": "Shortsword", "value": "Shortsword"}, {"label": "Trident", "value": "Trident"},
+      {"label": "Warhammer", "value": "Warhammer"}, {"label": "War Pick", "value": "War Pick"},
+      {"label": "Whip", "value": "Whip"}, {"label": "Blowgun", "value": "Blowgun"},
+      {"label": "Hand Crossbow", "value": "Hand Crossbow"}, {"label": "Heavy Crossbow", "value": "Heavy Crossbow"},
+      {"label": "Longbow", "value": "Longbow"}, {"label": "Musket", "value": "Musket"},
+      {"label": "Pistol", "value": "Pistol"}]'
+      ></dropdown>
+    </div>
+  </div>
+
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label"
+        >&#10022; Resistances, Immunities &amp; Vulnerabilities &#10022;</span
+      >
+    </div>
+
+    <div
+      style="
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+      "
+    >
+      <stringfield
+        width="33%"
+        multiline="true"
+        maxrows="2"
+        field="resistances"
+        label="Resistances"
+        placeholder="None"
+      ></stringfield>
+      <stringfield
+        width="33%"
+        multiline="true"
+        maxrows="2"
+        field="immunities"
+        label="Immunities"
+        placeholder="None"
+      ></stringfield>
+      <stringfield
+        width="33%"
+        multiline="true"
+        maxrows="2"
+        field="vulnerabilities"
+        label="Vulnerabilities"
+        placeholder="None"
+      ></stringfield>
+    </div>
+  </div>
+
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label"
+        >&#10022; Shape-shifting &#10022;</span
+      >
+    </div>
+
+    <div style="margin-top: 4px; display: flex; justify-content: center">
+      <label
+        class="rvtt-sheet-label"
+        label="Drag an NPC to this Tab to use Polymorph, Wild Shape, or Animal Shapes"
+      ></label>
+    </div>
+
+    <div
+      style="
+        justify-content: center;
+        margin-top: 4px;
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+      "
+    >
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 4px;
+          margin-top: 4px;
+          align-items: center;
+        "
+      >
+        <label
+          class="rvtt-sheet-label rvtt-sheet-label--accent"
+          label="Shape-shifting: "
+        ></label>
+        <recordlink
+          field="shapeshiftingNpc"
+          hidden="true"
+          onchange="removeShapeshifting()"
+        ></recordlink>
+        <label
+          size="sm"
+          textalign="left"
+          field="shapeshiftingNameNone"
+          label="None"
+        ></label>
+        <iconbutton
+          field="Remove Shape-shift"
+          size="sm"
+          hidden="true"
+          variant="default"
+          options='[{"icon": "IconTrash", "label": "Remove", "value": "remove"}]'
+          onclick="removeShapeshifting()"
+        ></iconbutton>
+      </div>
+    </div>
   </div>
 </div>

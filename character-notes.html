@@ -1,32 +1,102 @@
-<div>
-  <label variant="bold" textalign='center' label='Notes and Backstory'></label>
-</div>
+<!-- Notes tab. sheet--spread enables Cinzel labels + per-theme accent on
+     the dividers; tokens come from src/index.css. -->
+<div class="sheet--spread">
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
 
-<div style="display: flex; flex-direction: row; gap: 4px;">
-  <dropdown width="50%" field="alignment" label="Alignment" placeholder="Select your Alignment..." options='[{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"}, 
-  {"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"}, 
-  {"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
-  {"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
-  {"value": "chaotic evil", "label": "Chaotic Evil"}]'></dropdown>
-  <stringfield width="50%" field="deity" label="Deity or Patron" placeholder="None"></stringfield>
-</div>
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label"
+        >&#10022; Identity &amp; Backstory &#10022;</span
+      >
+    </div>
 
-<div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px;">
-  <stringfield width="100%" field="languages" label="Languages" placeholder="Enter Languages..."></stringfield>
-</div>
+    <div style="display: flex; flex-direction: row; gap: 4px">
+      <dropdown
+        width="50%"
+        field="alignment"
+        label="Alignment"
+        placeholder="Select your Alignment..."
+        options='[{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"},
+          {"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"},
+          {"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"},
+          {"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"},
+          {"value": "chaotic evil", "label": "Chaotic Evil"}]'
+      ></dropdown>
+      <stringfield
+        width="50%"
+        field="deity"
+        label="Deity or Patron"
+        placeholder="None"
+      ></stringfield>
+    </div>
 
-<div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px;">
-  <stringfield width="33%" field="age" label="Age" placeholder="Enter your Age..."></stringfield>
-  <stringfield width="33%" field="height" label="Height" placeholder="Enter your Height..."></stringfield>
-  <stringfield width="33%" field="weight" label="Weight" placeholder="Enter your Weight..."></stringfield>
-</div>
+    <div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px">
+      <stringfield
+        width="100%"
+        field="languages"
+        label="Languages"
+        placeholder="Enter Languages..."
+      ></stringfield>
+    </div>
 
-<div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px;">
-  <stringfield width="50%" field="gender" label="Gender" placeholder="Enter your Gender..."></stringfield>
-  <stringfield width="50%" field="pronouns" label="Pronouns" placeholder="Enter your Pronouns..."></stringfield>
-</div>
+    <div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px">
+      <stringfield
+        width="33%"
+        field="age"
+        label="Age"
+        placeholder="Enter your Age..."
+      ></stringfield>
+      <stringfield
+        width="33%"
+        field="height"
+        label="Height"
+        placeholder="Enter your Height..."
+      ></stringfield>
+      <stringfield
+        width="33%"
+        field="weight"
+        label="Weight"
+        placeholder="Enter your Weight..."
+      ></stringfield>
+    </div>
 
-<div style="margin-top: 8px;">
-  <label textalign="center" label="Notes" variant="bold"></label>
-  <richtextfield field="notes" placeholder="Enter additional details..."></richtextfield>
+    <div style="margin-top: 8px; display: flex; flex-direction: row; gap: 4px">
+      <stringfield
+        width="50%"
+        field="gender"
+        label="Gender"
+        placeholder="Enter your Gender..."
+      ></stringfield>
+      <stringfield
+        width="50%"
+        field="pronouns"
+        label="Pronouns"
+        placeholder="Enter your Pronouns..."
+      ></stringfield>
+    </div>
+  </div>
+
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label">&#10022; Notes &#10022;</span>
+    </div>
+    <richtextfield
+      field="notes"
+      placeholder="Enter additional details..."
+    ></richtextfield>
+  </div>
 </div>

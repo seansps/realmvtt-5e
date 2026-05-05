@@ -176,893 +176,810 @@
   }
 </script>
 
-<div
-  style="display: flex; align-items: center; justify-content: center; gap: 4px"
->
-  <label label="Skills" size="md" textalign="center" variant="bold"></label>
-  <popover>
-    <popover.target>
-      <iconbutton
-        field="passiveSkillsBtn"
-        size="sm"
-        variant="subtle"
-        options='[{"icon": "IconEye", "label": "Passive Skills", "value": "passive"}]'
-        onchange=""
-      ></iconbutton>
-    </popover.target>
-    <popover.dropdown>
-      <div style="padding: 8px; min-width: 220px">
-        <label variant="bold" textalign="center" label="Passive Skills"></label>
-        <div
-          style="
-            margin-top: 4px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2px;
-          "
-        >
-          <numberfield
-            size="xs"
-            field="passivePerception"
-            label="Perception"
-            disabled
-            onload="backfillPassiveSkills()"
-          ></numberfield>
-          <numberfield
-            size="xs"
-            field="passiveInvestigation"
-            label="Investigation"
-            disabled
-          ></numberfield>
-          <numberfield
-            size="xs"
-            field="passiveInsight"
-            label="Insight"
-            disabled
-          ></numberfield>
-        </div>
-      </div>
-    </popover.dropdown>
-  </popover>
-</div>
-<table style="width: 100%">
-  <tbody>
-    <tr>
-      <td>
-        <dropdown
-          label="Acrobatics"
-          field="acrobaticsAbility"
-          placeholder="Select ability..."
-          defaultvalue="dexterity"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'acrobatics')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="acrobaticsMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="acrobaticsProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'acrobatics')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Acrobatics Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Acrobatics Check", "value": "roll"}]'
-          onclick="rollCheck('acrobatics')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Medicine"
-          field="medicineAbility"
-          placeholder="Select ability..."
-          defaultvalue="wisdom"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'medicine')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="medicineMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="medicineProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'medicine')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Medicine Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Medicine Check", "value": "roll"}]'
-          onclick="rollCheck('medicine')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Animal Handling"
-          field="animalHandlingAbility"
-          placeholder="Select ability..."
-          defaultvalue="wisdom"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'animalHandling')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="animalHandlingMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="animalHandlingProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'animalHandling')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Animal Handling Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Animal Handling Check", "value": "roll"}]'
-          onclick="rollCheck('animalHandling')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Nature"
-          field="natureAbility"
-          placeholder="Select ability..."
-          defaultvalue="intelligence"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'nature')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="natureMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="natureProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'nature')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Nature Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Nature Check", "value": "roll"}]'
-          onclick="rollCheck('nature')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Arcana"
-          field="arcanaAbility"
-          placeholder="Select ability..."
-          defaultvalue="intelligence"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'arcana')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="arcanaMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="arcanaProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'arcana')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Arcana Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Arcana Check", "value": "roll"}]'
-          onclick="rollCheck('arcana')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Perception"
-          field="perceptionAbility"
-          placeholder="Select ability..."
-          defaultvalue="wisdom"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'perception')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          onchange="onSkillModChange(value, 'perception')"
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="perceptionMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="perceptionProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'perception')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Perception Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Perception Check", "value": "roll"}]'
-          onclick="rollCheck('perception')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Athletics"
-          field="athleticsAbility"
-          placeholder="Select ability..."
-          defaultvalue="strength"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'athletics')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="athleticsMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="athleticsProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'athletics')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Athletics Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Athletics Check", "value": "roll"}]'
-          onclick="rollCheck('athletics')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Performance"
-          field="performanceAbility"
-          placeholder="Select ability..."
-          defaultvalue="charisma"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'performance')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="performanceMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="performanceProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'performance')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Performance Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Performance Check", "value": "roll"}]'
-          onclick="rollCheck('performance')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Deception"
-          field="deceptionAbility"
-          placeholder="Select ability..."
-          defaultvalue="charisma"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'deception')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="deceptionMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="deceptionProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'deception')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Deception Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Deception Check", "value": "roll"}]'
-          onclick="rollCheck('deception')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Persuasion"
-          field="persuasionAbility"
-          placeholder="Select ability..."
-          defaultvalue="charisma"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'persuasion')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="persuasionMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="persuasionProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'persuasion')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Persuasion Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Persuasion Check", "value": "roll"}]'
-          onclick="rollCheck('persuasion')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="History"
-          field="historyAbility"
-          placeholder="Select ability..."
-          defaultvalue="intelligence"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'history')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="historyMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="historyProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'history')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="History Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll History Check", "value": "roll"}]'
-          onclick="rollCheck('history')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Religion"
-          field="religionAbility"
-          placeholder="Select ability..."
-          defaultvalue="intelligence"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'religion')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="religionMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="religionProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'religion')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Religion Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Religion Check", "value": "roll"}]'
-          onclick="rollCheck('religion')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Insight"
-          field="insightAbility"
-          placeholder="Select ability..."
-          defaultvalue="wisdom"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'insight')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          onchange="onSkillModChange(value, 'insight')"
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="insightMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="insightProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'insight')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Insight Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Insight Check", "value": "roll"}]'
-          onclick="rollCheck('insight')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Sleight of Hand"
-          field="sleightOfHandAbility"
-          placeholder="Select ability..."
-          defaultvalue="dexterity"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'sleightOfHand')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="sleightOfHandMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="sleightOfHandProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'sleightOfHand')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Sleight of Hand Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Sleight of Hand Check", "value": "roll"}]'
-          onclick="rollCheck('sleightOfHand')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Intimidation"
-          field="intimidationAbility"
-          placeholder="Select ability..."
-          defaultvalue="charisma"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'intimidation')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="intimidationMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="intimidationProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'intimidation')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Intimidation Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Intimidation Check", "value": "roll"}]'
-          onclick="rollCheck('intimidation')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Stealth"
-          field="stealthAbility"
-          placeholder="Select ability..."
-          defaultvalue="dexterity"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'stealth')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="stealthMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="stealthProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'stealth')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Stealth Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Stealth Check", "value": "roll"}]'
-          onclick="rollCheck('stealth')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        <dropdown
-          label="Investigation"
-          field="investigationAbility"
-          placeholder="Select ability..."
-          defaultvalue="intelligence"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'investigation')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          onchange="onSkillModChange(value, 'investigation')"
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="investigationMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="investigationProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'investigation')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Investigation Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Investigation Check", "value": "roll"}]'
-          onclick="rollCheck('investigation')"
-        >
-        </iconbutton>
-      </td>
-
-      <td style="vertical-align: bottom">
-        <dropdown
-          label="Survival"
-          field="stealthAbility"
-          placeholder="Select ability..."
-          defaultvalue="wisdom"
-          size="xs"
-          width="100%"
-          onchange="onAbilityChange(value, 'survival')"
-          options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-        >
-        </dropdown>
-      </td>
-      <td style="vertical-align: bottom; width: 70px">
-        <numberfield
-          width="100%"
-          size="xs"
-          placeholder="+0"
-          field="survivalMod"
-          showsign="true"
-        ></numberfield>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="survivalProf"
-          size="md"
-          variant="outline"
-          options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-          onchange="setProficiency(value, 'survival')"
-          onclick=""
-        ></iconbutton>
-      </td>
-      <td style="vertical-align: bottom">
-        <iconbutton
-          field="Survival Check"
-          size="md"
-          variant="light"
-          options='[{"icon": "d20", "label": "Roll Survival Check", "value": "roll"}]'
-          onclick="rollCheck('survival')"
-        >
-        </iconbutton>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<div style="margin-top: 8px">
-  <label
-    label="Tool Proficiencies and Other Skills"
-    size="md"
-    textalign="center"
-    variant="bold"
-  ></label>
-</div>
-
-<div style="width: 100%">
-  <list listtype="other_skills_list" field="otherSkills" allowadd=""></list>
-</div>
-
-<div style="margin-top: 8px">
-  <label variant="bold" textalign="center" label="Proficiencies"></label>
-</div>
-
-<div
-  style="
-    margin-top: 4px;
-    margin-bottom: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  "
->
-  <stringfield
-    multiline
-    maxRows="2"
-    field="weaponProficiencies"
-    label="Weapon Proficiencies"
-    placeholder="None"
+<!-- Skills tab. Container query on the host collapses the 2-col grid to
+     1 column under ~720px so the sheet works on mobile. Theme tokens
+     come from src/index.css; the sheet--spread class enables Cinzel
+     labels + dividers per the beautified theme. -->
+<div class="rvtt-skills-tab sheet--spread">
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
   >
-  </stringfield>
-  <stringfield
-    multiline
-    maxRows="2"
-    field="armorTraining"
-    label="Armor Training"
-    placeholder="None"
-  ></stringfield>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label">&#10022; Skills &#10022;</span>
+      <popover>
+        <popover.target>
+          <iconbutton
+            field="passiveSkillsBtn"
+            size="sm"
+            variant="subtle"
+            options='[{"icon": "IconEye", "label": "Passive Skills", "value": "passive"}]'
+            onchange=""
+          ></iconbutton>
+        </popover.target>
+        <popover.dropdown>
+          <div style="padding: 8px; min-width: 220px">
+            <label
+              variant="bold"
+              textalign="center"
+              label="Passive Skills"
+            ></label>
+            <div
+              style="
+                margin-top: 4px;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 2px;
+              "
+            >
+              <numberfield
+                size="xs"
+                field="passivePerception"
+                label="Perception"
+                disabled
+                onload="backfillPassiveSkills()"
+              ></numberfield>
+              <numberfield
+                size="xs"
+                field="passiveInvestigation"
+                label="Investigation"
+                disabled
+              ></numberfield>
+              <numberfield
+                size="xs"
+                field="passiveInsight"
+                label="Insight"
+                disabled
+              ></numberfield>
+            </div>
+          </div>
+        </popover.dropdown>
+      </popover>
+    </div>
+
+  <div class="rvtt-skills-grid">
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="acrobaticsProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'acrobatics')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Acrobatics"
+        field="acrobaticsAbility"
+        placeholder="Select ability..."
+        defaultvalue="dexterity"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'acrobatics')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="acrobaticsMod"
+      ></numberfield>
+      <iconbutton
+        field="Acrobatics Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Acrobatics Check", "value": "roll"}]'
+        onclick="rollCheck('acrobatics')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="medicineProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'medicine')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Medicine"
+        field="medicineAbility"
+        placeholder="Select ability..."
+        defaultvalue="wisdom"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'medicine')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="medicineMod"
+      ></numberfield>
+      <iconbutton
+        field="Medicine Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Medicine Check", "value": "roll"}]'
+        onclick="rollCheck('medicine')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="animalHandlingProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'animalHandling')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Animal Handling"
+        field="animalHandlingAbility"
+        placeholder="Select ability..."
+        defaultvalue="wisdom"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'animalHandling')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="animalHandlingMod"
+      ></numberfield>
+      <iconbutton
+        field="Animal Handling Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Animal Handling Check", "value": "roll"}]'
+        onclick="rollCheck('animalHandling')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="natureProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'nature')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Nature"
+        field="natureAbility"
+        placeholder="Select ability..."
+        defaultvalue="intelligence"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'nature')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="natureMod"
+      ></numberfield>
+      <iconbutton
+        field="Nature Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Nature Check", "value": "roll"}]'
+        onclick="rollCheck('nature')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="arcanaProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'arcana')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Arcana"
+        field="arcanaAbility"
+        placeholder="Select ability..."
+        defaultvalue="intelligence"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'arcana')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="arcanaMod"
+      ></numberfield>
+      <iconbutton
+        field="Arcana Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Arcana Check", "value": "roll"}]'
+        onclick="rollCheck('arcana')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="perceptionProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'perception')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Perception"
+        field="perceptionAbility"
+        placeholder="Select ability..."
+        defaultvalue="wisdom"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'perception')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="perceptionMod"
+        onchange="onSkillModChange(value, 'perception')"
+      ></numberfield>
+      <iconbutton
+        field="Perception Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Perception Check", "value": "roll"}]'
+        onclick="rollCheck('perception')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="athleticsProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'athletics')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Athletics"
+        field="athleticsAbility"
+        placeholder="Select ability..."
+        defaultvalue="strength"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'athletics')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="athleticsMod"
+      ></numberfield>
+      <iconbutton
+        field="Athletics Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Athletics Check", "value": "roll"}]'
+        onclick="rollCheck('athletics')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="performanceProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'performance')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Performance"
+        field="performanceAbility"
+        placeholder="Select ability..."
+        defaultvalue="charisma"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'performance')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="performanceMod"
+      ></numberfield>
+      <iconbutton
+        field="Performance Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Performance Check", "value": "roll"}]'
+        onclick="rollCheck('performance')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="deceptionProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'deception')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Deception"
+        field="deceptionAbility"
+        placeholder="Select ability..."
+        defaultvalue="charisma"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'deception')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="deceptionMod"
+      ></numberfield>
+      <iconbutton
+        field="Deception Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Deception Check", "value": "roll"}]'
+        onclick="rollCheck('deception')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="persuasionProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'persuasion')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Persuasion"
+        field="persuasionAbility"
+        placeholder="Select ability..."
+        defaultvalue="charisma"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'persuasion')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="persuasionMod"
+      ></numberfield>
+      <iconbutton
+        field="Persuasion Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Persuasion Check", "value": "roll"}]'
+        onclick="rollCheck('persuasion')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="historyProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'history')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="History"
+        field="historyAbility"
+        placeholder="Select ability..."
+        defaultvalue="intelligence"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'history')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="historyMod"
+      ></numberfield>
+      <iconbutton
+        field="History Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll History Check", "value": "roll"}]'
+        onclick="rollCheck('history')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="religionProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'religion')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Religion"
+        field="religionAbility"
+        placeholder="Select ability..."
+        defaultvalue="intelligence"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'religion')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="religionMod"
+      ></numberfield>
+      <iconbutton
+        field="Religion Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Religion Check", "value": "roll"}]'
+        onclick="rollCheck('religion')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="insightProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'insight')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Insight"
+        field="insightAbility"
+        placeholder="Select ability..."
+        defaultvalue="wisdom"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'insight')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="insightMod"
+        onchange="onSkillModChange(value, 'insight')"
+      ></numberfield>
+      <iconbutton
+        field="Insight Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Insight Check", "value": "roll"}]'
+        onclick="rollCheck('insight')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="sleightOfHandProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'sleightOfHand')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Sleight of Hand"
+        field="sleightOfHandAbility"
+        placeholder="Select ability..."
+        defaultvalue="dexterity"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'sleightOfHand')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="sleightOfHandMod"
+      ></numberfield>
+      <iconbutton
+        field="Sleight of Hand Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Sleight of Hand Check", "value": "roll"}]'
+        onclick="rollCheck('sleightOfHand')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="intimidationProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'intimidation')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Intimidation"
+        field="intimidationAbility"
+        placeholder="Select ability..."
+        defaultvalue="charisma"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'intimidation')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="intimidationMod"
+      ></numberfield>
+      <iconbutton
+        field="Intimidation Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Intimidation Check", "value": "roll"}]'
+        onclick="rollCheck('intimidation')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="stealthProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'stealth')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Stealth"
+        field="stealthAbility"
+        placeholder="Select ability..."
+        defaultvalue="dexterity"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'stealth')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="stealthMod"
+      ></numberfield>
+      <iconbutton
+        field="Stealth Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Stealth Check", "value": "roll"}]'
+        onclick="rollCheck('stealth')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="investigationProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'investigation')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Investigation"
+        field="investigationAbility"
+        placeholder="Select ability..."
+        defaultvalue="intelligence"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'investigation')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="investigationMod"
+        onchange="onSkillModChange(value, 'investigation')"
+      ></numberfield>
+      <iconbutton
+        field="Investigation Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Investigation Check", "value": "roll"}]'
+        onclick="rollCheck('investigation')"
+      ></iconbutton>
+    </div>
+
+    <div class="rvtt-skill-row">
+      <iconbutton
+        field="survivalProf"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+        onchange="setProficiency(value, 'survival')"
+      ></iconbutton>
+      <dropdown
+        class="rvtt-skill-ability"
+        label="Survival"
+        field="survivalAbility"
+        placeholder="Select ability..."
+        defaultvalue="wisdom"
+        size="xs"
+        width="100%"
+        onchange="onAbilityChange(value, 'survival')"
+        options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <numberfield
+        class="rvtt-skill-mod"
+        placeholder="+0"
+        showsign="true"
+        size="xs"
+        hidecontrols="true"
+        field="survivalMod"
+      ></numberfield>
+      <iconbutton
+        field="Survival Check"
+        size="md"
+        color="default"
+        variant="subtle"
+        options='[{"icon": "d20", "label": "Roll Survival Check", "value": "roll"}]'
+        onclick="rollCheck('survival')"
+      ></iconbutton>
+    </div>
+  </div>
+  </div>
+
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label"
+        >&#10022; Tools &amp; Other Skills &#10022;</span
+      >
+    </div>
+    <div style="width: 100%">
+      <list listtype="other_skills_list" field="otherSkills" allowadd=""></list>
+    </div>
+  </div>
+
+  <div
+    class="rvtt-sheet-section rvtt-sheet-corners"
+    style="background: var(--bg, transparent)"
+  >
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--tr"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--bl"></span>
+    <span class="rvtt-sheet-corner rvtt-sheet-corner--br"></span>
+
+    <div class="rvtt-sheet-divider">
+      <span class="rvtt-sheet-divider__label"
+        >&#10022; Proficiencies &#10022;</span
+      >
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <stringfield
+        multiline
+        maxRows="2"
+        field="weaponProficiencies"
+        label="Weapon Proficiencies"
+        placeholder="None"
+      ></stringfield>
+      <stringfield
+        multiline
+        maxRows="2"
+        field="armorTraining"
+        label="Armor Training"
+        placeholder="None"
+      ></stringfield>
+    </div>
+  </div>
 </div>

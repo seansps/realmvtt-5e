@@ -145,8 +145,22 @@
   }
 </script>
 
-<div style="display: flex; flex-direction: row; gap: 4px">
+<!-- Other-skills row. Mirrors the layout of the main skills tab so both
+     read consistently: prof | name | ability | mod | d20. The leader
+     line + per-theme accent come from .rvtt-skill-row in src/index.css. -->
+<div class="rvtt-skill-row">
+  <iconbutton
+    field="skillProf"
+    size="md"
+    color="default"
+    variant="subtle"
+    options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
+    onchange="setProficiency(value);"
+    onclick=""
+  ></iconbutton>
+
   <namefield
+    class="rvtt-skill-name"
     width="100%"
     size="xs"
     placeholder="Enter Skill Name..."
@@ -154,6 +168,7 @@
   ></namefield>
 
   <dropdown
+    class="rvtt-skill-ability"
     field="ability"
     placeholder="Select ability..."
     defaultvalue="strength"
@@ -161,31 +176,23 @@
     width="100%"
     onchange="onAbilityChange(value);"
     options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
-  >
-  </dropdown>
+  ></dropdown>
 
   <numberfield
+    class="rvtt-skill-mod"
     size="xs"
+    hidecontrols="true"
     placeholder="+0"
     field="skillMod"
     showsign="true"
   ></numberfield>
 
   <iconbutton
-    field="skillProf"
-    size="md"
-    variant="outline"
-    options='[{"icon": "IconStar", "label": "Not Proficient", "value": "false"}, {"icon": "IconStarHalfFilled", "label": "Half Proficient", "value": "half"}, {"icon": "IconStarFilled", "label": "Proficient", "value": "true"},  {"icon": "IconRosetteFilled", "label": "Expertise", "value": "expertise"}]'
-    onchange="setProficiency(value);"
-    onclick=""
-  ></iconbutton>
-
-  <iconbutton
     field="skillCheck"
     size="md"
-    variant="light"
+    color="default"
+    variant="subtle"
     options='[{"icon": "d20", "label": "Roll Check", "value": "roll"}]'
     onclick="rollCheck();"
-  >
-  </iconbutton>
+  ></iconbutton>
 </div>
