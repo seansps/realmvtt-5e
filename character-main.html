@@ -2884,6 +2884,14 @@
     showHideLevelUpButton(record);
   }
 
+  function onBroadcast(name, data) {
+    if (name === "xp-awarded") {
+      api.getRecord("characters", record?._id, (freshRecord) => {
+        showHideLevelUpButton(freshRecord || record);
+      });
+    }
+  }
+
   function levelUp() {
     // Prompt for classes to add
     const classSelection = (values) => {

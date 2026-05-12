@@ -22,6 +22,7 @@ if (enemies.length > 0) {
   macro = `\`\`\`Award_XP
 if (isGM) {
   api.awardExp(${xp}, 'Encounter with ${enemies.length} enemies.');
+  api.broadcast('xp-awarded', { amount: ${xp}, source: 'encounter' });
   api.editMessage(null, 'Awarded ${xp} XP to the Party.');
 }
 \`\`\`
