@@ -159,14 +159,18 @@ ${savingThrowButtons}
         >
           <portrait width="30px" height="30px" field="portrait"></portrait>
         </div>
-        <namefield
-          size="xs"
-          width="100%"
-          variant="unstyled"
-          field="namefield"
-          placeholder="Ability Name..."
-        ></namefield>
-        <label color="dimmed" template="Cost: {value}" field="cost" size="xs" hideifempty="true"></label>
+        <div style="flex: 1; min-width: 0">
+          <namefield
+            size="xs"
+            width="100%"
+            variant="unstyled"
+            field="namefield"
+            placeholder="Ability Name..."
+          ></namefield>
+        </div>
+        <div style="flex-shrink: 0; white-space: nowrap">
+          <label color="dimmed" template="{value > 0 ? 'Cost: ' + value : ''}" field="cost" size="xs" hideifempty="true"></label>
+        </div>
         <div style="margin-left: auto">
           <button
             size="xxs"
