@@ -4,7 +4,7 @@
     // We're in a list, so we need to use the data path to the fields metadata
     const dataPathToHideCounter = dataPath.replace(
       ".data.maxDailyUses",
-      ".fields.dailyUses.hidden"
+      ".fields.dailyUses.hidden",
     );
     if (maxDailyUses > 0) {
       api.setValue(dataPathToHideCounter, false);
@@ -20,12 +20,12 @@
       if (totalUses > 0) {
         const dataPathToMaxDailyUses = dataPath.replace(
           ".data.fieldsToAddToUses",
-          ".data.maxDailyUses"
+          ".data.maxDailyUses",
         );
         valuesToSet[dataPathToMaxDailyUses] = totalUses;
         const dataPathToHideCounter = dataPath.replace(
           ".data.fieldsToAddToUses",
-          ".fields.dailyUses.hidden"
+          ".fields.dailyUses.hidden",
         );
         valuesToSet[dataPathToHideCounter] = false;
         api.setValues(valuesToSet);
@@ -34,7 +34,7 @@
   }
 </script>
 
-<div style="display: flex; justify-content: center">
+<div style="display: flex; justify-content: center; margin-top: 4px">
   <label
     class="rvtt-sheet-label rvtt-sheet-label--accent"
     field="namefield"
@@ -96,7 +96,7 @@
       placeholder="N/A"
       size="xs"
       description="Max number of times abilities can be used"
-      onchange="showHideCounter();"
+      onchange="showHideCounter()"
     ></numberfield>
   </div>
   <div style="display: flex; gap: 4px">
@@ -116,7 +116,7 @@
       size="xs"
       placeholder="Select Fields"
       multiselect="10"
-      onchange="updateUses(value);"
+      onchange="updateUses(value)"
       options='[{"label": "Strength Modifier", "value": "strengthMod"},
       {"label": "Dexterity Modifier", "value": "dexterityMod"},
       {"label": "Constitution Modifier", "value": "constitutionMod"},
