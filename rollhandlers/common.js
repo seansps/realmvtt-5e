@@ -497,10 +497,13 @@ function getHpBonusFromModifiers(hpMaxMods) {
 function getDurationInSeconds(duration) {
   if (!duration) return 0;
 
-  // Remove "Concentration, up to " if present
+  // Strip the concentration prefix — supports both the 5e "Concentration,
+  // up to X" syntax and the Level Up "Concentration (X)" syntax so durations
+  // authored in either style parse correctly.
   const cleanDuration = duration
     .toLowerCase()
-    .replace(/^concentration,\s+up\s+to\s+/, "");
+    .replace(/^concentration,\s+up\s+to\s+/, "")
+    .replace(/^concentration\s*\(([^)]+)\)/, "$1");
 
   // Parse the string to get the number and unit
   const match = cleanDuration.match(/(\d+)\s+(round|minute|hour|day|week)s?/i);
@@ -527,6 +530,40 @@ function getDurationInSeconds(duration) {
     }
   }
   return 0;
+}
+
+// Resolve a spell's duration string into the `effectDuration` argument for
+// api.addEffect. Round-based durations (e.g. "Concentration, up to 6 rounds")
+// return { value, unit: "rounds" } so the effect counts down per combat
+// round rather than by elapsed real seconds. A flat "1 minute" duration is
+// short enough to plausibly lapse mid-combat, so it is applied as 10 combat
+// rounds. Everything else falls back to a plain seconds number.
+function getEffectDuration(duration) {
+  if (!duration) return 0;
+
+  // Strip the concentration prefix the same way getDurationInSeconds does.
+  const cleanDuration = duration
+    .toLowerCase()
+    .replace(/^concentration,\s+up\s+to\s+/, "")
+    .replace(/^concentration\s*\(([^)]+)\)/, "$1");
+
+  const roundsMatch = cleanDuration.match(/(\d+)\s+rounds?/i);
+  if (roundsMatch) {
+    const value = parseInt(roundsMatch[1], 10);
+    if (!isNaN(value)) {
+      return { value, unit: "rounds" };
+    }
+  }
+
+  // Special case: a flat "1 minute" duration could lapse mid-combat, so apply
+  // it as 10 combat rounds (1 minute = 10 rounds) rather than 60 elapsed
+  // seconds. Longer minute durations are left alone.
+  const minutesMatch = cleanDuration.match(/(\d+)\s+minutes?/i);
+  if (minutesMatch && parseInt(minutesMatch[1], 10) === 1) {
+    return { value: 10, unit: "rounds" };
+  }
+
+  return getDurationInSeconds(duration);
 }
 
 // Helper function to deduplicate hpByLevel array

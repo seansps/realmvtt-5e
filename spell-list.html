@@ -914,7 +914,12 @@
     const hasConcentration = duration
       ?.toLowerCase()
       .startsWith("concentration");
-    const durationTag = duration.replace("Concentration, ", "").trim();
+    // Strip the concentration prefix for the display tag — supports both the
+    // 5e "Concentration, up to X" syntax and the Level Up "Concentration (X)" syntax.
+    const durationTag = duration
+      .replace(/^Concentration,\s*(up\s+to\s+)?/i, "")
+      .replace(/^Concentration\s*\(([^)]+)\)/i, "$1")
+      .trim();
 
     let components = spell?.data?.components;
     if (components) {
@@ -1000,7 +1005,8 @@
       );
       if (tokenForRecord) {
         const effectValue = spellName;
-        const durationSeconds = getDurationInSeconds(duration);
+        // Round-based durations apply in combat rounds; everything else in seconds.
+        const effectDuration = getEffectDuration(duration);
 
         // If there's an existing concentration effect, remove it first
         if (hasEffect) {
@@ -1017,7 +1023,7 @@
               api.addEffect(
                 "Concentration",
                 updatedRecord,
-                durationSeconds,
+                effectDuration,
                 effectValue,
               );
             });
@@ -1027,7 +1033,7 @@
           api.addEffect(
             "Concentration",
             tokenForRecord,
-            durationSeconds,
+            effectDuration,
             effectValue,
           );
         }
