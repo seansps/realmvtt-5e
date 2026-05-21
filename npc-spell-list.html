@@ -147,11 +147,14 @@
       });
     }
 
-    // Determine if we are casting a spell that ignores resistances / immunities
+    // Determine if we are casting a spell that ignores resistances / immunities.
+    // Gate on `typeof mod.value === "string"` (not valueType) because
+    // getEffectsAndModifiers may resolve a string-typed modifier to a number
+    // (e.g. "Warlock Spellcasting Modifier" → 3) — those can't be keyword-matched.
     const damageIgnoresResistances = damageModifiers
       .filter(
         (mod) =>
-          mod.valueType === "string" &&
+          typeof mod.value === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
           mod.value.trim().toLowerCase().includes("resistance")
       )
@@ -160,7 +163,7 @@
     const damageIgnoresImmunities = damageModifiers
       .filter(
         (mod) =>
-          mod.valueType === "string" &&
+          typeof mod.value === "string" &&
           mod.value.trim().toLowerCase().startsWith("ignore") &&
           (mod.value.trim().toLowerCase().includes("immunities") ||
             mod.value.trim().toLowerCase().includes("immunity"))
@@ -314,8 +317,10 @@
     if (spell?.data?.level?.toLowerCase() === "cantrip") {
       levelToReplace = 0;
     }
+    // Gate on actual value type (not valueType) — getEffectsAndModifiers may
+    // have already resolved a string-typed modifier to a number.
     damageModifiers.forEach((modifier) => {
-      if (modifier?.valueType?.toLowerCase() === "string") {
+      if (typeof modifier?.value === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
           levelToReplace
@@ -323,7 +328,7 @@
       }
     });
     healingModifiers.forEach((modifier) => {
-      if (modifier?.valueType?.toLowerCase() === "string") {
+      if (typeof modifier?.value === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
           levelToReplace
@@ -331,7 +336,7 @@
       }
     });
     attackModifiers.forEach((modifier) => {
-      if (modifier?.valueType?.toLowerCase() === "string") {
+      if (typeof modifier?.value === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
           levelToReplace
