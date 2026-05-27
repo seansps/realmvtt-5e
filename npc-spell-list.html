@@ -714,6 +714,20 @@ ${effectButtons}
       },
     ];
 
+    // Cast level tag — cantrips show as "Cantrip"; spell-level casts show
+    // "Level N" using the level the spell was cast at.
+    if (spell?.data?.level === "Cantrip") {
+      tags.push({ tooltip: "Cast as a cantrip", name: "Cantrip" });
+    } else {
+      const castLevel = spellLevel || actualSpellLevel || 0;
+      if (castLevel > 0) {
+        tags.push({
+          tooltip: `Cast at level ${castLevel}`,
+          name: `Level ${castLevel}`,
+        });
+      }
+    }
+
     if (castingTime) {
       tags.push({
         tooltip: "Casting Time",
