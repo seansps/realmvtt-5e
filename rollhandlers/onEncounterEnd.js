@@ -1,7 +1,13 @@
-// On Encounter End, we want tally the XP for all tokens that were enemies
-const enemies = (data?.tokens || []).filter((t) => t?.faction === "enemy");
+// On Encounter End, we want tally the XP for all NPC tokens that were enemies.
+// PCs/characters can carry the enemy faction in mind-control / charm scenarios
+// but they shouldn't contribute XP — only count NPC records.
+const enemies = (data?.tokens || []).filter(
+  (t) => t?.faction === "enemy" && t?.recordType === "npcs",
+);
 const xp = enemies.reduce((acc, token) => {
-  const xpString = token?.data?.xp || "0";
+  // xp may be stored as a number or a string ("1,800" / "1,800 or 2,300 in lair").
+  // Coerce to string before running any string-shape parsing.
+  const xpString = String(token?.data?.xp ?? "0");
   let xpValue;
 
   if (token?.data?.inLair === true && xpString.includes("in lair")) {
@@ -13,7 +19,8 @@ const xp = enemies.reduce((acc, token) => {
     xpValue = xpString.split(",or")[0].replace(/,/g, "");
   }
 
-  return acc + parseInt(xpValue, 10);
+  const parsed = parseInt(xpValue, 10);
+  return acc + (isNaN(parsed) ? 0 : parsed);
 }, 0);
 
 // Here is a macro to award the XP to the player
