@@ -280,7 +280,7 @@ function getWeaponMasteryMetadata(weaponMasteries, damageModifiers) {
 // Here we need to determine if it was a hit or miss and display in the chat.
 const rollName = data?.roll?.metadata?.rollName;
 const attack = data?.roll?.metadata?.attack;
-const targetName = data?.roll?.metadata?.targetName;
+let targetName = data?.roll?.metadata?.targetName;
 const tooltip = data?.roll?.metadata?.tooltip;
 let damageModifiers = data?.roll?.metadata?.damageModifiers || [];
 const damageIgnoresResistances =
@@ -302,8 +302,22 @@ let damage = data?.roll?.metadata?.damage;
 let autoCritical = data?.roll?.metadata?.autoCritical;
 const animation = data?.roll?.metadata?.animation;
 const tokenId = data?.roll?.metadata?.tokenId;
-const targetId = data?.roll?.metadata?.targetId;
+let targetId = data?.roll?.metadata?.targetId;
 const isRanged = data?.roll?.metadata?.isRanged;
+
+// External rolls (e.g. Beyond20) are built outside the VTT and can't include the
+// live target, so re-resolve the roller's current target here at handling time.
+let beyond20Target = null;
+if (data?.roll?.metadata?.source === "beyond20" && !targetId) {
+  beyond20Target = (api.getTargets() || [])[0]?.token || null;
+  if (beyond20Target) {
+    targetId = beyond20Target._id;
+    targetName =
+      beyond20Target.identified === false
+        ? beyond20Target.record?.unidentifiedName
+        : beyond20Target.record?.name;
+  }
+}
 
 let critOn = data?.roll?.metadata?.critOn || 20;
 const minRoll = data?.roll?.metadata?.minRoll;
@@ -349,6 +363,10 @@ let dc = 0;
 dc = parseInt(data?.roll?.metadata?.dc || "0", 10);
 if (isNaN(dc)) {
   dc = 0;
+}
+// For a re-resolved external (Beyond20) target, derive the AC so HIT/MISS shows.
+if (beyond20Target && dc <= 0) {
+  dc = parseInt(getArmorClassForToken(beyond20Target) || "0", 10) || 0;
 }
 
 const total = data?.roll?.total || 0;
