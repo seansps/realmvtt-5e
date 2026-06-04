@@ -56,6 +56,71 @@
     }
   }
 
+  // Does a weaponFinesse modifier's `field` apply to this attack? Supports:
+  //   - an exact weaponType (e.g. "Unarmed", "Longsword")
+  //   - one or more category clauses joined by "and"/"," — each
+  //     "(Simple|Martial) [Melee|Ranged] weapons [that have|that don't have the
+  //      X or Y property]". A clause matches if the weapon's subtype contains the
+  //     category (and melee/ranged if given) and the property qualifier holds.
+  //   e.g. "Simple weapons and Martial weapons that have the Light property"
+  //        = any Simple weapon OR a Martial weapon with the Light property.
+  function matchesWeaponFinesseField(field, attack) {
+    const f = (field || "").toLowerCase().trim();
+    if (!f) return false;
+    const weaponType = (attack?.data?.weaponType || "").toLowerCase().trim();
+    const subtype = (attack?.data?.subtype || "").toLowerCase();
+    const props = (attack?.data?.weaponProperties || []).map((p) =>
+      String(p).toLowerCase().trim(),
+    );
+
+    const clauses = f
+      .split(/\s+and\s+|,\s*/)
+      .map((c) => c.trim())
+      .filter(Boolean);
+
+    return clauses.some((clause) => {
+      // Exact weapon-type match (e.g. "unarmed")
+      if (clause === weaponType) return true;
+
+      // Category clause: "(simple|martial) [melee|ranged] weapons [qualifier]"
+      const catMatch = clause.match(
+        /^(simple|martial)(?:\s+(melee|ranged))?\s+weapons?(?:\s+(.+))?$/,
+      );
+      if (!catMatch) return false;
+      const category = catMatch[1];
+      const meleeRanged = catMatch[2];
+      const qualifier = (catMatch[3] || "").trim();
+
+      if (!subtype.includes(category)) return false;
+      if (meleeRanged && !subtype.includes(meleeRanged)) return false;
+      if (!qualifier) return true;
+
+      // "that have the X [or Y] property" — weapon has ANY of the listed props
+      const have = qualifier.match(
+        /^that\s+have\s+the\s+(.+?)\s+propert(?:y|ies)$/,
+      );
+      if (have) {
+        return have[1]
+          .split(/\s+or\s+|,\s*/)
+          .map((p) => p.trim())
+          .filter(Boolean)
+          .some((p) => props.includes(p));
+      }
+      // "that don't have the X [or Y] property" — weapon has NONE of them
+      const dont = qualifier.match(
+        /^that\s+(?:don'?t|do\s+not)\s+have\s+the\s+(.+?)\s+propert(?:y|ies)$/,
+      );
+      if (dont) {
+        return !dont[1]
+          .split(/\s+or\s+|,\s*/)
+          .map((p) => p.trim())
+          .filter(Boolean)
+          .some((p) => props.includes(p));
+      }
+      return false;
+    });
+  }
+
   // Parse profciencies and determine from weapon subtype if proficient with it
   function getIsProficient(attack) {
     const weaponSubtype = attack?.data?.subtype || "simple";
@@ -196,6 +261,15 @@
       : "Strength";
     // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
     if (attack?.data?.weaponProperties?.includes("Finesse")) {
+      dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
+    }
+    // weaponFinesse modifier: grants Finesse-like STR/DEX choice to weapons whose
+    // type matches the modifier's field (e.g. "Unarmed", "Simple weapons and
+    // Martial weapons that have the Light property").
+    const weaponFinesseMods = getEffectsAndModifiers(["weaponFinesse"]);
+    if (
+      weaponFinesseMods.some((m) => matchesWeaponFinesseField(m.field, attack))
+    ) {
       dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
     }
     if (dexOrStrMod === "Dexterity") {
@@ -750,6 +824,15 @@
       : "Strength";
     // If not ranged, check if it has Finesse property and default to dexterity unless strength is higher
     if (attack?.data?.weaponProperties?.includes("Finesse")) {
+      dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
+    }
+    // weaponFinesse modifier: grants Finesse-like STR/DEX choice to weapons whose
+    // type matches the modifier's field (e.g. "Unarmed", "Simple weapons and
+    // Martial weapons that have the Light property").
+    const weaponFinesseMods = getEffectsAndModifiers(["weaponFinesse"]);
+    if (
+      weaponFinesseMods.some((m) => matchesWeaponFinesseField(m.field, attack))
+    ) {
       dexOrStrMod = strMod > dexMod ? "Strength" : "Dexterity";
     }
     if (dexOrStrMod === "Dexterity") {

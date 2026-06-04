@@ -114,9 +114,10 @@
       ...feat,
       data: {
         ...feat?.data,
-        // Set a field called featureType to 'feat' so that
-        // So that we can show and filter the two features_list fields properly
-        featureType: "feat",
+        // featureType drives which list a record shows in: "feat" → the Feats
+        // list, anything else → the Features list. A feats-type record whose
+        // Type is "Feature" should live in the Features list, so route it there.
+        featureType: feat?.data?.type === "feature" ? "feature" : "feat",
       },
     };
 

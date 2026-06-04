@@ -1489,6 +1489,9 @@
                       subclass,
                       newLevel,
                       classLevels,
+                      // Use the record after the subclass was added so proficiency
+                      // modifiers append to the current lists, not overwrite them.
+                      recordAfterSubclass,
                     );
                     // Get Spellcasting info for new subclass
                     const subclasses =
@@ -1632,6 +1635,9 @@
           subclass,
           newLevel,
           classLevels,
+          // Pass the record AFTER class base proficiencies were set, so feature
+          // proficiency modifiers append to them instead of overwriting.
+          updatedRecord,
         );
 
         // Set synchronous fields first

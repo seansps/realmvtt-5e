@@ -4472,8 +4472,11 @@ function addMissingClassFeatures(
     }
     if (featureAddedOrUpdated) {
       // Apply one-time modifiers (proficiencies, speed, etc.) on this feature.
-      // AC recalc is handled by recalcACAndHP after all features are added.
-      applyOneTimeModifiers(feature, additionalFieldsToSet);
+      // Pass `rec` so proficiency merges read the CURRENT lists (incl. the class
+      // base proficiencies just granted) and APPEND to them rather than starting
+      // from the stale global record and overwriting. AC recalc is handled by
+      // recalcACAndHP after all features are added.
+      applyOneTimeModifiers(feature, additionalFieldsToSet, rec);
 
       // Collect ability group data to process later (avoid fire-and-forget race conditions)
       const abilityGroupName = feature?.data?.abilityGroupName || "";
