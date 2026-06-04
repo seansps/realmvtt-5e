@@ -8,6 +8,40 @@ This is a D&D 5e 2024 ruleset implementation for Realm VTT. The codebase consist
 
 **Important**: This ruleset uses the Realm VTT API (https://www.realmvtt.com/wiki/ruleset-editor-and-api). HTML and JavaScript must be written to conform to this API. Field values cannot be directly embedded into HTML - all data access must go through the API.
 
+## Building & Deploying (Ruleset Compiler)
+
+This ruleset is authored as local source files and assembled into the single API payload `realmdb.rulesets.json` by the **ruleset-compiler** (`../tools/ruleset-compiler/`).
+
+- **Source of truth**: [`ruleset.config.json`](ruleset.config.json) — defines the 33 record types, their tabs, and all `settings`. It references the HTML/JS source files via `{ "file": "relative/path" }` markers, which the compiler inlines.
+- **Output**: `realmdb.rulesets.json` is the compiled artifact (and a server-normalized Mongo dump of the live ruleset). **Do not hand-edit it** — edit the source files + `ruleset.config.json` and recompile.
+
+### How file references map
+
+- **Record tabs** — `{ "name": "Main", "file": "character-main.html" }` → `{ "name": "Main", "layout": "<html>" }`
+- **Roll types** — `settings.rollTypes[] = { "name": "attack", "file": "rollhandlers/attack.js" }` → `{ "name": "attack", "handleResult": "<js>" }`
+- **Settings scripts** — `commonScript`, `onReroll`, `damage.damageScript`/`healingScript`, and `combatTracker` hooks (`onTokenAdd`, `onEncounterEnd`, `onTurnStart`, `onRollInitiative`, `onRollInitiativeGroup`) are `{ "file": "rollhandlers/*.js" }`.
+- **Characters record extras** — `jsonImport.script`/`postScript` → `importers/dnd-beyond.js` / `importers/post-dnd-beyond.js`; `pdfExport.script` → `exporters/characters.js`; `wizard.steps[].layout` → `wizards/characters/step{1-4}.html`.
+- The compiler only auto-resolves `{file}` refs inside record `tabs`, `jsonImport`, `pdfExport`, and `wizard.steps`; everything under `settings` is resolved generically.
+
+### Commands
+
+```bash
+# Compile to a file (no upload) and inspect
+node ../tools/ruleset-compiler/src/cli.js rulesets . --output /tmp/build.json
+
+# Preview to stdout
+node ../tools/ruleset-compiler/src/cli.js rulesets . --dry-run
+
+# Compile and upload to the live ruleset by ID
+node ../tools/ruleset-compiler/src/cli.js rulesets . -e you@example.com -p PASS -i <rulesetId>
+```
+
+Note the `rulesets` subcommand (not a bare directory argument).
+
+### Round-trip caveat
+
+Compiling reproduces `realmdb.rulesets.json` content-exactly **except**: server-only fields (`_id`, `ownerId`, `createdAt`, `updatedAt`) the compiler can't emit, and ~32 inert default keys (`filters: {}` on list records, default `hideFromCompendium`) that the compiler fills via `fillRecordDefaults` but the server strips on save. Both are harmless — the server re-normalizes on upload.
+
 ## Architecture
 
 ### File Structure
