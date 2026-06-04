@@ -1,0 +1,38 @@
+<script>
+  // Toggling a feature toggle can flip predicate-gated modifiers (e.g.
+  // armorClassBonus, attributeBonus, hitpoints) on and off. The static
+  // sheet values (data.ac, data.hitpoints, etc.) won't reflect that until
+  // we re-derive them. recalcACAndHP rolls up AC and max HP from the
+  // current modifier set — call it after every toggle flip so the sheet
+  // stays in sync.
+  //
+  // Note: recalcAttributeBonuses isn't called here because it walks raw
+  // features without honoring predicates, so it wouldn't change anything
+  // based on a toggle flip. If toggle-gated attributeBonus support is
+  // wanted later, that's a separate change to recalcAttributeBonuses.
+  function onToggleActiveChange() {
+    recalcACAndHP(record, () => {});
+  }
+</script>
+
+<div
+  style="
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    min-height: 30px;
+    height: 30px;
+    margin-left: 4px;
+  "
+>
+  <checkbox
+    field="active"
+    label="Feature Toggle"
+    labelfield="name"
+    size="sm"
+    textalign="right"
+    editable="true"
+    onchange="onToggleActiveChange()"
+  ></checkbox>
+</div>

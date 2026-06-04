@@ -39,22 +39,30 @@ if (dc > 0) {
     message = `**[center][color=green]SUCCESS[/color] [gm]vs DC ${dc}[/gm][/center]**`
   }
   else {
-    // Here we need to remove the Concentration effect.
+    // Concentration check failed — remove the Concentration effect, plus the
+    // "2nd Concentration" slot if dualConcentration granted one (losing
+    // concentration ends both spells).
     const effects = record?.effects || [];
     const concentrationEffect = effects.find(effect => effect.name === 'Concentration');
-    let oldSpellName = '';
+    const secondConcentrationEffect = effects.find(effect => effect.name === '2nd Concentration');
+    const tokenForRecord = api.getToken();
+    const oldValues = tokenForRecord?.effectValues || {};
+    const lostNames = [];
     if (concentrationEffect) {
-      const tokenForRecord = api.getToken();
-      const oldValues = tokenForRecord?.effectValues || {};
       if (oldValues[concentrationEffect?._id]) {
-        oldSpellName = oldValues[concentrationEffect?._id];
+        lostNames.push(oldValues[concentrationEffect._id]);
       }
-      lostConcentrationOn = oldSpellName;
       api.removeEffectById(concentrationEffect._id, tokenForRecord);
     }
+    if (secondConcentrationEffect) {
+      if (oldValues[secondConcentrationEffect?._id]) {
+        lostNames.push(oldValues[secondConcentrationEffect._id]);
+      }
+      api.removeEffectById(secondConcentrationEffect._id, tokenForRecord);
+    }
     message = `**[center][color=red]FAILURE[/color] [gm]vs DC ${dc}[/gm][/center]**`
-    if (oldSpellName) {
-      message += `\n\n[center]Lost concentration on ${oldSpellName}.[/center]`;
+    if (lostNames.length > 0) {
+      message += `\n\n[center]Lost concentration on ${lostNames.join(' and ')}.[/center]`;
     }
   }
 }

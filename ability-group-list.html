@@ -15,7 +15,15 @@
 
   function updateUses(fieldsToAddToUses) {
     if (fieldsToAddToUses && fieldsToAddToUses.length > 0) {
-      const totalUses = getTotalValueFromFields(record, fieldsToAddToUses);
+      // Pass the ability group's name so any "Ability Group Uses Bonus" modifiers
+      // targeting this group are added to the total.
+      const abilityGroup = api.getValue(getNearestParentDataPath(dataPath));
+      const totalUses = getTotalValueFromFields(
+        record,
+        fieldsToAddToUses,
+        undefined,
+        abilityGroup?.name,
+      );
       const valuesToSet = {};
       if (totalUses > 0) {
         const dataPathToMaxDailyUses = dataPath.replace(
@@ -124,6 +132,7 @@
       {"label": "Wisdom Modifier", "value": "wisdomMod"},
       {"label": "Charisma Modifier", "value": "charismaMod"},
       {"label": "Proficiency Bonus", "value": "proficiencyBonus"},
+      {"label": "Half Proficiency Bonus", "value": "halfProficiencyBonus"},
       {"label": "Artificer Level", "value": "artificerLevel"},
       {"label": "Barbarian Level", "value": "barbarianLevel"},
       {"label": "Bard Level", "value": "bardLevel"},
@@ -137,8 +146,18 @@
       {"label": "Sorcerer Level", "value": "sorcererLevel"},
       {"label": "Warlock Level", "value": "warlockLevel"},
       {"label": "Wizard Level", "value": "wizardLevel"},
+      {"label": "Total of Values x 2", "value": "times2"},
       {"label": "Total of Values x 5", "value": "times5"},
-      {"label": "Total of Values Plus 1", "value": "plus1"}]'
+      {"label": "Total of Values Plus 1", "value": "plus1"},
+      {"label": "Total of Values Plus 2", "value": "plus2"},
+      {"label": "Total of Values Plus 3", "value": "plus3"},
+      {"label": "Total of Values Plus 4", "value": "plus4"},
+      {"label": "Total of Values Plus 5", "value": "plus5"},
+      {"label": "Total of Values Plus 6", "value": "plus6"},
+      {"label": "Total of Values Plus 7", "value": "plus7"},
+      {"label": "Total of Values Plus 8", "value": "plus8"},
+      {"label": "Total of Values Plus 9", "value": "plus9"},
+      {"label": "Total of Values Plus 10", "value": "plus10"}]'
     >
     </dropdown>
   </div>

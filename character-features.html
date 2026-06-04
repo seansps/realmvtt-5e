@@ -121,10 +121,46 @@
     };
 
     safeAddValue(`data.features`, featToAdd, (updatedRecord) => {
-      // After adding the feat, we need to update abilities if one was attached to it
+      const rec = updatedRecord || record;
+      // Abilities / ability groups attached to the feat
       updateAbilitiesFromFeature(featToAdd);
-      // Also update HP and AC just in case feature had a modifier on them
-      updateACAndHP(featToAdd, updatedRecord);
+
+      // Apply the feat's one-time modifiers (proficiencies, languages, senses,
+      // resistances, setValue/toggle, HP flag) and re-derive attribute bonuses
+      // (attributeBonus) from all features + equipped items.
+      const fieldsToSet = {};
+      const { needsHpRecalc } = applyOneTimeModifiers(featToAdd, fieldsToSet, rec);
+      recalcAttributeBonuses(fieldsToSet, rec);
+      const pending = extractAllPending(fieldsToSet);
+
+      // Then: grant provided items → slug-matched feats → process feature choices
+      // → recalc AC/HP (re-fetching fresh so the new feat's modifiers are present).
+      const afterFields = () => {
+        applyProvidesItems(featToAdd, rec, () => {
+          applySlugFeaturesForFeatures([featToAdd], rec, () => {
+            processChoices(rec, () => {
+              api.getRecord("characters", record._id, (freshRec) => {
+                if (needsHpRecalc) recalcHitPoints(freshRec);
+                recalcACAndHP(freshRec, () => {});
+              });
+            });
+          });
+        });
+      };
+
+      const continueAfterPending = () => {
+        if (hasAnyPending(pending)) {
+          applyAllPending(pending, rec, afterFields);
+        } else {
+          afterFields();
+        }
+      };
+
+      if (Object.keys(fieldsToSet).length > 0) {
+        api.setValues(fieldsToSet, continueAfterPending);
+      } else {
+        continueAfterPending();
+      }
     });
 
     // Prompt the user to select ASIs or just add them all
@@ -278,6 +314,24 @@
     }
   }
 
+  // Fires when a feature/feat is removed (or the features list otherwise changes).
+  // Re-derives everything that depends on the set of features from current state,
+  // so deleting a feat removes its attributeBonus, toggles, and AC/HP effects.
+  function onFeatureDelete() {
+    api.getRecord(record.recordType, record._id, (freshRecord) => {
+      const fieldsToSet = {};
+      recalcAttributeBonuses(fieldsToSet, freshRecord);
+      recalcToggles(fieldsToSet, freshRecord);
+      if (Object.keys(fieldsToSet).length > 0) {
+        api.setValues(fieldsToSet, () => {
+          recalcACAndHP(freshRecord, () => {});
+        });
+      } else {
+        recalcACAndHP(freshRecord, () => {});
+      }
+    });
+  }
+
   function onSelectShapeshifting(value, recordLink) {
     const npc = recordLink?.value;
     const selectedValue = value[0];
@@ -290,6 +344,21 @@
 
     // If wildshape, we only set physical stats, polymorph sets all stats
     let hasCircleForms = false; // True if we're wild shaping and have Circle Forms
+    // Generic wildShapeBonus modifiers, layered on top of the hardcoded Circle
+    // Forms behavior for backward compatibility. tempHpMultiplier scales the
+    // wild shape temp HP; ac adds to the wild shape AC.
+    let wildShapeTempHpMultiplier = 1;
+    let wildShapeAcBonus = 0;
+    getEffectsAndModifiersForToken(record, ["wildShapeBonus"]).forEach((mod) => {
+      if (mod.field === "tempHpMultiplier") {
+        const v = parseInt(mod.value, 10);
+        if (!isNaN(v) && v > wildShapeTempHpMultiplier) {
+          wildShapeTempHpMultiplier = v;
+        }
+      } else if (mod.field === "ac") {
+        wildShapeAcBonus += parseInt(mod.value, 10) || 0;
+      }
+    });
     if (selectedValue === "polymorph") {
       // Polymorph also gets mental stats
       valuesToSet["data.intelligence"] = npc?.data?.intelligence;
@@ -310,10 +379,11 @@
             (feature) => feature?.name === "Circle Forms",
           );
           if (circleFormsFeature) {
-            valuesToSet["data.tempHp"] = druidLevel * 3;
+            valuesToSet["data.tempHp"] =
+              druidLevel * 3 * wildShapeTempHpMultiplier;
             hasCircleForms = true;
           } else {
-            valuesToSet["data.tempHp"] = druidLevel;
+            valuesToSet["data.tempHp"] = druidLevel * wildShapeTempHpMultiplier;
           }
         }
       } else {
@@ -388,18 +458,15 @@
 
         // Target retains their hitpoints
         moreValuesToSet[`data.hitpoints`] = record?.data?.hitpoints;
-        // Override AC settings with what NPC had
+        // Override AC settings with what NPC had (plus any wildShapeBonus AC)
         if (!hasCircleForms) {
-          moreValuesToSet["data.ac"] = npc?.data?.ac;
+          moreValuesToSet["data.ac"] = (npc?.data?.ac || 0) + wildShapeAcBonus;
         } else {
           // AC equals 13 plus your Wisdom modifier if that total is higher than the Beast’s AC.
           const wisdomMod = parseInt(record?.data?.wisdomMod || "0", 10);
-          const newFormAc = 13 + wisdomMod;
-          if (newFormAc > npc?.data?.ac) {
-            moreValuesToSet["data.ac"] = newFormAc;
-          } else {
-            moreValuesToSet["data.ac"] = npc?.data?.ac;
-          }
+          const newFormAc = 13 + wisdomMod + wildShapeAcBonus;
+          const beastAc = (npc?.data?.ac || 0) + wildShapeAcBonus;
+          moreValuesToSet["data.ac"] = newFormAc > beastAc ? newFormAc : beastAc;
         }
 
         api.setValues(moreValuesToSet);
@@ -566,7 +633,11 @@
       <span class="rvtt-sheet-divider__label">&#10022; Feats &#10022;</span>
     </div>
     <div style="width: 100%">
-      <list listtype="feats_list" field="features"></list>
+      <list
+        listtype="feats_list"
+        field="features"
+        onchange="onFeatureDelete()"
+      ></list>
     </div>
   </div>
 
@@ -605,6 +676,7 @@
         variant="striped"
         recordtype="features"
         icon="IconFlare"
+        onchange="onFeatureDelete()"
       ></list>
     </div>
 

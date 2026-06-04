@@ -231,8 +231,25 @@
         valuesToSet["data.ac"] = totalAc;
       }
 
+      // Re-derive attribute bonuses + speed from remaining features/equipped
+      // items so deleting an item that granted an attributeBonus removes it.
+      const recompileBonuses = (rec) => {
+        const latest = rec || record2;
+        const bonusFields = {};
+        recalcAttributeBonuses(bonusFields, latest);
+        const calculatedSpeed = calculateSpeed(latest);
+        if (calculatedSpeed !== latest?.data?.speed) {
+          bonusFields["data.speed"] = calculatedSpeed;
+        }
+        if (Object.keys(bonusFields).length > 0) {
+          api.setValues(bonusFields);
+        }
+      };
+
       if (Object.keys(valuesToSet).length > 0) {
-        api.setValues(valuesToSet);
+        api.setValues(valuesToSet, (updated) => recompileBonuses(updated));
+      } else {
+        recompileBonuses(record2);
       }
     });
   }

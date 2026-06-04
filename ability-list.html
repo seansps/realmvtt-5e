@@ -61,7 +61,21 @@
         record?.data?.proficiencyBonus || "0",
         10
       );
-      const saveDc = 8 + abilityModifier + proficiencyBonus;
+      // Optionally override with the character's spellcasting DC (8 + spell mod +
+      // proficiency + any Spell DC Bonus modifiers).
+      let spellDcBonus = 0;
+      if (ability?.data?.usesSpellDC) {
+        const spellAbility = getCharacterSpellcastingAbility(record);
+        abilityModifier = parseInt(
+          record?.data?.[`${spellAbility}Mod`] || "0",
+          10
+        );
+        getEffectsAndModifiersForToken(record, ["spellDCBonus"]).forEach((m) => {
+          const v = parseInt(m.value, 10);
+          if (!isNaN(v)) spellDcBonus += v;
+        });
+      }
+      const saveDc = 8 + abilityModifier + proficiencyBonus + spellDcBonus;
       savingThrows.forEach((savingThrow) => {
         // Look up saves of selected tokens and prompt roll for each
         const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
@@ -101,6 +115,37 @@ selectedTokens.forEach(token => {
       });
     }
 
+    // Optional ongoing-damage macro button (with its own level scaling)
+    let ongoingDamageButton = "";
+    if (ability?.data?.ongoingDamage) {
+      let ongoing = ability.data.ongoingDamage || "";
+      const ongoingDamageLevelScaling =
+        ability?.data?.ongoingDamageLevelScaling || [];
+      if (ongoingDamageLevelScaling.length > 0) {
+        const characterLevel = parseInt(record?.data?.level || "1", 10);
+        let bestMatch = null;
+        ongoingDamageLevelScaling.forEach((entry) => {
+          const entryLevel = parseInt(entry?.data?.level || "0", 10);
+          if (entryLevel <= characterLevel) {
+            if (
+              !bestMatch ||
+              entryLevel > parseInt(bestMatch?.data?.level || "0", 10)
+            ) {
+              bestMatch = entry;
+            }
+          }
+        });
+        if (bestMatch?.data?.value) {
+          ongoing = bestMatch.data.value;
+        }
+      }
+      ongoing = checkForReplacements(ongoing, {}, record);
+      ongoingDamageButton = `\`\`\`Roll_Ongoing_Damage
+api.roll('${ongoing}', { rollName: 'Ongoing Damage' }, 'damage');
+\`\`\`
+`;
+    }
+
     const message = `
 #### ${abilityIcon}${abilityName}
 
@@ -110,7 +155,7 @@ ${abilityDescription}
 ---
 ${effectButtons}
 ${savingThrowButtons}
-`;
+${ongoingDamageButton}`;
 
     api.sendMessage(message, undefined, [], []);
 
@@ -125,14 +170,42 @@ ${savingThrowButtons}
       damageTypes: ability?.data?.damageTypes || [],
       showHalf: ability?.data?.showHalf || false,
       showHealing: ability?.data?.showHealing || false,
+      isMagical: ability?.data?.isMagical || false,
       tokenId: tokenId,
       targetId: targetId,
       animation: ability?.data?.animation || null,
     };
 
+    // Ability-level scaling: use the highest entry whose level <= character level
+    let scaledValue = abilityGroupValue;
+    const levelScaling = ability?.data?.levelScaling || [];
+    if (levelScaling.length > 0) {
+      const characterLevel = parseInt(record?.data?.level || "1", 10);
+      let bestMatch = null;
+      levelScaling.forEach((entry) => {
+        const entryLevel = parseInt(entry?.data?.level || "0", 10);
+        if (entryLevel <= characterLevel) {
+          if (
+            !bestMatch ||
+            entryLevel > parseInt(bestMatch?.data?.level || "0", 10)
+          ) {
+            bestMatch = entry;
+          }
+        }
+      });
+      if (bestMatch?.data?.value) {
+        scaledValue = bestMatch.data.value;
+      }
+    }
+
+    // Priority: levelScaling > rollOverride > abilityGroupValue
     let rollValue = abilityGroupValue || "1d20";
     if (ability?.data?.rollOverride) {
       rollValue = ability?.data?.rollOverride;
+    }
+    if (scaledValue && scaledValue !== abilityGroupValue) {
+      // Level scaling found a match — it takes priority
+      rollValue = scaledValue;
     }
     rollValue = checkForReplacements(rollValue, { Roll: abilityGroupValue });
 
@@ -168,8 +241,23 @@ ${savingThrowButtons}
             placeholder="Ability Name..."
           ></namefield>
         </div>
-        <div style="flex-shrink: 0; white-space: nowrap">
-          <label color="dimmed" template="{value > 0 ? 'Cost: ' + value : ''}" field="cost" size="xs" hideifempty="true"></label>
+        <div
+          style="
+            flex-shrink: 0;
+            white-space: nowrap;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+          "
+        >
+          <label
+            color="dimmed"
+            template="{value > 0 ? 'Cost: ' + value + (item.data.actionType ? '&nbsp;|&nbsp;' : '') : ''}"
+            field="cost"
+            size="xs"
+            hideifempty="true"
+          ></label>
+          <label color="dimmed" field="actionType" size="xs"></label>
         </div>
         <div style="margin-left: auto">
           <button

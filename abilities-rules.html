@@ -52,6 +52,47 @@
       description="Show option to apply healing"
     ></checkbox>
   </div>
+  <div style="margin-top: 4px">
+    <checkbox
+      size="md"
+      textalign="right"
+      field="isMagical"
+      label="Counts as Magical"
+      description="This ability's damage counts as magical for bypassing resistances/immunities."
+    ></checkbox>
+  </div>
+</div>
+
+<div style="margin-top: 4px; margin-bottom: 4px">
+  <divider label="Level Scaling"></divider>
+</div>
+<div style="margin-top: 4px">
+  <label
+    size="xs"
+    textalign="left"
+    label="Override the ability value at specific character levels (e.g. a die that grows by level)."
+  ></label>
+  <list
+    listtype="level_scaling_list"
+    field="levelScaling"
+    variant="striped"
+    allowadd=""
+  ></list>
+</div>
+
+<div style="margin-top: 4px">
+  <stringfield
+    field="ongoingDamage"
+    label="Ongoing Damage"
+    placeholder="e.g. 1d10 fire"
+    description="Damage applied each turn while the effect persists (adds a macro button to the chat message)."
+  ></stringfield>
+  <list
+    listtype="level_scaling_list"
+    field="ongoingDamageLevelScaling"
+    variant="striped"
+    allowadd=""
+  ></list>
 </div>
 
 <div style="margin-top: 4px; margin-bottom: 4px">
@@ -93,6 +134,15 @@
       options='[{"label": "Strength", "value": "strength"}, {"label": "Dexterity", "value": "dexterity"}, {"label": "Constitution", "value": "constitution"}, {"label": "Intelligence", "value": "intelligence"}, {"label": "Wisdom", "value": "wisdom"}, {"label": "Charisma", "value": "charisma"}]'
     >
     </dropdown>
+  </div>
+  <div style="margin-top: 4px">
+    <checkbox
+      size="md"
+      textalign="right"
+      field="usesSpellDC"
+      label="Use Spellcasting DC"
+      description="Override the group's save DC calculation: use 8 + spellcasting modifier + proficiency bonus, plus any Spell DC Bonus modifiers."
+    ></checkbox>
   </div>
 </div>
 

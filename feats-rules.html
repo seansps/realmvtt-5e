@@ -1,3 +1,18 @@
+<div style="margin-bottom: 8px">
+  <label label="Slug" size="md" variant="bold" textalign="center"></label>
+  <label
+    label="A unique identifier used to group related feats (e.g. 'dragonborn-paragon'). Other features can add all feats matching a slug."
+    size="sm"
+    textalign="center"
+  ></label>
+  <stringfield
+    size="xs"
+    field="slug"
+    label="Slug"
+    placeholder="e.g. dragonborn-paragon"
+  ></stringfield>
+</div>
+
 <div>
   <label label="Ability" size="md" variant="bold" textalign="center"></label>
   <label
@@ -75,6 +90,7 @@
       {"label": "Wisdom Modifier", "value": "wisdomMod"},
       {"label": "Charisma Modifier", "value": "charismaMod"},
       {"label": "Proficiency Bonus", "value": "proficiencyBonus"},
+      {"label": "Half Proficiency Bonus", "value": "halfProficiencyBonus"},
       {"label": "Artificer Level", "value": "artificerLevel"},
       {"label": "Barbarian Level", "value": "barbarianLevel"},
       {"label": "Bard Level", "value": "bardLevel"},
@@ -88,8 +104,18 @@
       {"label": "Sorcerer Level", "value": "sorcererLevel"},
       {"label": "Warlock Level", "value": "warlockLevel"},
       {"label": "Wizard Level", "value": "wizardLevel"},
+      {"label": "Total of Values x 2", "value": "times2"},
       {"label": "Total of Values x 5", "value": "times5"},
-      {"label": "Total of Values Plus 1", "value": "plus1"}]'
+      {"label": "Total of Values Plus 1", "value": "plus1"},
+      {"label": "Total of Values Plus 2", "value": "plus2"},
+      {"label": "Total of Values Plus 3", "value": "plus3"},
+      {"label": "Total of Values Plus 4", "value": "plus4"},
+      {"label": "Total of Values Plus 5", "value": "plus5"},
+      {"label": "Total of Values Plus 6", "value": "plus6"},
+      {"label": "Total of Values Plus 7", "value": "plus7"},
+      {"label": "Total of Values Plus 8", "value": "plus8"},
+      {"label": "Total of Values Plus 9", "value": "plus9"},
+      {"label": "Total of Values Plus 10", "value": "plus10"}]'
   >
   </dropdown>
   <dropdown
@@ -130,4 +156,64 @@
     variant="striped"
     allowadd=""
   ></list>
+</div>
+
+<div style="margin-top: 8px">
+  <label label="Choices" size="md" variant="bold" textalign="center"></label>
+  <label
+    label="Choices granted by this Feat, if applicable"
+    size="sm"
+    textalign="center"
+  ></label>
+</div>
+
+<div style="width: 100%">
+  <list
+    listtype="feature_choice_list"
+    field="choices"
+    variant="striped"
+    allowadd=""
+  ></list>
+</div>
+
+<div style="margin-top: 8px">
+  <label
+    label="Provides Items"
+    size="md"
+    variant="bold"
+    textalign="center"
+  ></label>
+  <label
+    label="Items, Spells, Abilities, or Feats granted when this Feature is applied"
+    size="sm"
+    textalign="center"
+  ></label>
+</div>
+
+<div style="width: 100%">
+  <list
+    listtype="provides_items_list"
+    field="providesItems"
+    variant="striped-outline"
+  ></list>
+</div>
+
+<div style="margin-top: 8px">
+  <label
+    label="Adds Features With Slug"
+    size="md"
+    variant="bold"
+    textalign="center"
+  ></label>
+  <label
+    label="When this feature is applied, all feats matching this slug are added to the character. Use @record.data.fieldName to read the slug from a character data field."
+    size="sm"
+    textalign="center"
+  ></label>
+  <stringfield
+    size="xs"
+    field="addsFeatsWithSlug"
+    label="Slug to Add"
+    placeholder="e.g. dragonborn-paragon or @record.data.paragonGift"
+  ></stringfield>
 </div>

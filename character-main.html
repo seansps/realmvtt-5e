@@ -1406,26 +1406,18 @@
       saveProficiencies.forEach((proficiency) => {
         valuesToSet[`data.${proficiency}Prof`] = "true";
       });
-      let currentWeaponProficiencies = record?.data?.weaponProficiencies || "";
-      let currentArmorTraining = record?.data?.armorTraining || "";
-      if (currentWeaponProficiencies !== "") {
-        if (currentWeaponProficiencies === "None") {
-          currentWeaponProficiencies = "";
-        } else {
-          currentWeaponProficiencies += ", ";
-        }
-      }
-      currentWeaponProficiencies += classObj?.data?.weaponProficiencies || "";
-      if (currentArmorTraining !== "") {
-        if (currentArmorTraining === "None") {
-          currentArmorTraining = "";
-        } else {
-          currentArmorTraining += ", ";
-        }
-      }
-      currentArmorTraining += classObj?.data?.armorTraining || "";
-      valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
-      valuesToSet[`data.armorTraining`] = currentArmorTraining;
+      // Merge (dedup case-insensitively) rather than blindly concatenating, so
+      // re-dropping a class / overlapping grants don't duplicate entries. Weapons
+      // use the category-superseding merge (full "Martial Weapons" replaces a
+      // limited "Martial weapons that have the Finesse or Light property").
+      valuesToSet[`data.weaponProficiencies`] = mergeWeaponProficiencies(
+        record?.data?.weaponProficiencies || "",
+        classObj?.data?.weaponProficiencies || "",
+      );
+      valuesToSet[`data.armorTraining`] = mergeCommaSeparated(
+        record?.data?.armorTraining || "",
+        classObj?.data?.armorTraining || "",
+      );
 
       // Set Tool Proficiencies as Skills in skills tab
       const toolProficiencies = classObj?.data?.toolProficiencies || "";
@@ -1438,34 +1430,15 @@
     } else if (addingNewClass) {
       // Multiclass do not get save proficiencies
       // Weapon Proficiencies / Armor Training for the multiclass class
-      let currentWeaponProficiencies = record?.data?.weaponProficiencies || "";
-      let currentArmorTraining = record?.data?.armorTraining || "";
-      const newWeaponProficiencies =
-        classObj?.data?.weaponProficienciesMulti || "";
-      const newArmorTraining = classObj?.data?.armorTrainingMulti || "";
-      if (newWeaponProficiencies !== "" && newWeaponProficiencies !== "None") {
-        if (currentWeaponProficiencies !== "") {
-          if (currentWeaponProficiencies === "None") {
-            currentWeaponProficiencies = "";
-          } else {
-            currentWeaponProficiencies += ", ";
-          }
-        }
-        currentWeaponProficiencies += newWeaponProficiencies;
-      }
-      if (newArmorTraining !== "" && newArmorTraining !== "None") {
-        if (currentArmorTraining !== "") {
-          if (currentArmorTraining === "None") {
-            currentArmorTraining = "";
-          } else {
-            currentArmorTraining += ", ";
-          }
-        }
-        currentArmorTraining += newArmorTraining;
-      }
-
-      valuesToSet[`data.weaponProficiencies`] = currentWeaponProficiencies;
-      valuesToSet[`data.armorTraining`] = currentArmorTraining;
+      // Merge (dedup) the multiclass proficiency grants into the current lists.
+      valuesToSet[`data.weaponProficiencies`] = mergeWeaponProficiencies(
+        record?.data?.weaponProficiencies || "",
+        classObj?.data?.weaponProficienciesMulti || "",
+      );
+      valuesToSet[`data.armorTraining`] = mergeCommaSeparated(
+        record?.data?.armorTraining || "",
+        classObj?.data?.armorTrainingMulti || "",
+      );
 
       // Set Tool Proficiencies as Skills in skills tab
       const toolProficiencies = classObj?.data?.toolProficienciesMulti || "";
@@ -1538,20 +1511,27 @@
                       let fIdx = 0;
                       const addNextFeature = () => {
                         if (fIdx >= result.featuresToAdd.length) {
-                          // Then process deferred ability groups
+                          // Then process deferred ability groups, then the
+                          // feature-utils cascade, then continue prompting
                           processDeferredAbilityGroups(
                             result.deferredAbilityGroups,
                             rec,
                             (recAfterGroups) => {
-                              if (nextPrompt) {
-                                api.getRecord(
-                                  "characters",
-                                  recAfterGroups._id,
-                                  (freshRecord) => {
-                                    nextPrompt(freshRecord);
-                                  },
-                                );
-                              }
+                              runClassFeatureCascade(
+                                result.featuresToAdd,
+                                recAfterGroups || rec,
+                                () => {
+                                  if (nextPrompt) {
+                                    api.getRecord(
+                                      "characters",
+                                      (recAfterGroups || rec)._id,
+                                      (freshRecord) => {
+                                        nextPrompt(freshRecord);
+                                      },
+                                    );
+                                  }
+                                },
+                              );
                             },
                           );
                           return;
@@ -1611,14 +1591,25 @@
       // Chain feature adds sequentially via safeAddValue, then process ability groups,
       // to avoid the stale client-cache bug when multiple features are added at the same level.
       const proceedToPrompts = () => {
+        // Final confirmation once all class/level-up processing has completed.
+        const notifyLevelComplete = () => {
+          api.showNotification(
+            `${className} is now level ${newLevel} (total level ${level}).`,
+            "green",
+            "Level Up Complete",
+          );
+        };
         // Prompt for skills first, then HP, then subclass
         const hpStep = (rec) => {
           if (promptSubclass) {
-            updateHitPoints(className, newLevel, level, hitDie, rec, () =>
-              promptSubclass(null),
-            );
+            updateHitPoints(className, newLevel, level, hitDie, rec, () => {
+              notifyLevelComplete();
+              promptSubclass(null);
+            });
           } else {
-            updateHitPoints(className, newLevel, level, hitDie, rec);
+            updateHitPoints(className, newLevel, level, hitDie, rec, () =>
+              notifyLevelComplete(),
+            );
           }
         };
 
@@ -1649,11 +1640,17 @@
           let fIdx = 0;
           const addNextFeature = () => {
             if (fIdx >= result.featuresToAdd.length) {
-              // Then process deferred ability groups
+              // Then process deferred ability groups, then the feature-utils
+              // cascade (attribute bonuses, provides items, slug feats, choices)
               processDeferredAbilityGroups(
                 result.deferredAbilityGroups,
                 rec,
-                () => proceedToPrompts(),
+                (recAfterGroups) =>
+                  runClassFeatureCascade(
+                    result.featuresToAdd,
+                    recAfterGroups || rec,
+                    () => proceedToPrompts(),
+                  ),
               );
               return;
             }
@@ -1676,6 +1673,31 @@
         proceedToPrompts();
       }
     });
+  }
+
+  // Shared tail cascade run after class/subclass features are added: re-derive
+  // attribute bonuses, grant providesItems and slug-matched feats, process any
+  // feature choices, then recalc AC/HP. Mirrors the origin-drop cascade.
+  function runClassFeatureCascade(featuresToAdd, rec, done) {
+    const bonusFields = {};
+    recalcAttributeBonuses(bonusFields, rec);
+    const afterBonuses = (recAfterBonuses) => {
+      const latest = recAfterBonuses || rec;
+      applyProvidesItemsForFeatures(featuresToAdd, latest, () => {
+        applySlugFeaturesForFeatures(featuresToAdd, latest, () => {
+          processChoices(latest, () => {
+            recalcACAndHP(latest, () => {
+              if (done) done();
+            });
+          });
+        });
+      });
+    };
+    if (Object.keys(bonusFields).length > 0) {
+      api.setValues(bonusFields, afterBonuses);
+    } else {
+      afterBonuses(rec);
+    }
   }
 
   // Get the ability score increase from a feature (used for when Feats are added to a character
@@ -1984,57 +2006,42 @@
   }
 
   function onDropSpecies(type, recordLink) {
-    // Check if already has a species
+    // Full feature-utils cascade (parity with Level Up's origin drops):
+    // collect features -> one-time modifiers -> attribute bonuses -> ability
+    // groups -> provides items -> slug features -> choices -> AC/HP recalc.
     const species = record?.data?.species || [];
     const speciesName = recordLink.tooltip;
-
-    const speciesObj = {
-      ...recordLink.value,
-    };
+    const speciesObj = { ...recordLink.value };
     const hasSpecies = species.length > 0;
 
     const fieldsToSet = {};
-
-    // Add the species to the the species list if needed
-    if (!hasSpecies) {
-      api.addValue("data.species", speciesObj);
-    } else {
-      // Remove first species and add the new one
-      api.removeValue("data.species", 0, () => {
-        api.addValue("data.species", speciesObj);
-      });
-    }
-
-    // Get creatureType, size, speed, and senses and update fields
-    const creatureType = speciesObj?.data?.creatureType || "";
-    const size = speciesObj?.data?.size || "";
-    const speed = speciesObj?.data?.speed || "";
-    const senses = speciesObj?.data?.senses || "";
-
-    fieldsToSet["data.creatureType"] = creatureType;
-    fieldsToSet["data.size"] = size;
-    fieldsToSet["data.speed"] = speed;
-    fieldsToSet["data.senses"] = senses;
-
-    // Set the species name
+    fieldsToSet["data.creatureType"] = speciesObj?.data?.creatureType || "";
+    fieldsToSet["data.size"] = speciesObj?.data?.size || "";
+    fieldsToSet["data.speed"] = speciesObj?.data?.speed || "";
+    fieldsToSet["data.senses"] = speciesObj?.data?.senses || "";
     fieldsToSet["data.speciesName"] = speciesName;
-
-    // Unhide the species list
     fieldsToSet["fields.species.hidden"] = false;
 
-    // Collect features and ability groups to add (avoid fire-and-forget race conditions)
-    const features = speciesObj?.data?.feature_list || [];
+    const characterLevel = Math.max(
+      parseInt(record?.data?.level || "1", 10),
+      1,
+    );
+    const allSpeciesFeatures = speciesObj?.data?.feature_list || [];
     const featuresToAdd = [];
-    const deferredAbilityGroups = [];
     const abilityGroupsToAdd = new Set();
+    const deferredAbilityGroups = [];
+    let needsHpRecalc = false;
 
-    features.forEach((feature) => {
+    allSpeciesFeatures.forEach((feature) => {
+      const featureLevel = parseInt(feature?.data?.level || "1", 10);
+      if (featureLevel > characterLevel) return;
+
       featuresToAdd.push({
         ...feature,
         data: {
           ...feature.data,
           source: speciesName,
-          level: 1,
+          level: feature.data?.level || 1,
         },
       });
 
@@ -2093,24 +2100,28 @@
         fieldsToSet["data.ac"] = armorClass;
       }
 
+      // Apply one-time modifiers (proficiencies, languages, senses, toggles, setValue)
+      const { needsHpRecalc: featureNeedsHpRecalc } = applyOneTimeModifiers(
+        feature,
+        fieldsToSet,
+      );
+      if (featureNeedsHpRecalc) needsHpRecalc = true;
+
       // Collect ability group data to process later
       const abilityGroupName = feature?.data?.abilityGroupName || "";
-      if (
-        abilityGroupName !== "" &&
-        !abilityGroupsToAdd.has(abilityGroupName)
-      ) {
+      if (abilityGroupName !== "" && !abilityGroupsToAdd.has(abilityGroupName)) {
         abilityGroupsToAdd.add(abilityGroupName);
-
-        const allAbilities = features
+        const allAbilities = allSpeciesFeatures
           .filter((f) => f.data.abilityGroupName === abilityGroupName)
           .map((f) => f?.data?.ability)
           .filter((ability) => ability !== undefined && ability !== "");
-
         let abilityUsesPerDay = feature?.data?.maxDailyUses || 0;
         if ((feature?.data?.fieldsToAddToUses || []).length > 0) {
           abilityUsesPerDay = getTotalValueFromFields(
             record,
             feature?.data?.fieldsToAddToUses || [],
+            undefined,
+            abilityGroupName,
           );
         }
         deferredAbilityGroups.push({
@@ -2126,39 +2137,68 @@
       }
     });
 
-    // Set synchronous fields first, then chain feature adds and ability groups
-    api.setValues(fieldsToSet, (updatedRecord) => {
-      // Chain feature adds sequentially via safeAddValue
-      let fIdx = 0;
-      const addNextFeature = () => {
-        if (fIdx >= featuresToAdd.length) {
-          // Then process deferred ability groups
-          processDeferredAbilityGroups(
-            deferredAbilityGroups,
-            updatedRecord,
-            (recAfterGroups) => {
-              // Trigger an update of HP in case species contained HP bonuses
-              const conMod = parseInt(
-                recAfterGroups?.data?.constitutionMod || "0",
-                10,
+    // Extract pending deferred items before api.setValues (not real data fields)
+    const pendingItems = extractAllPending(fieldsToSet);
+
+    const afterSpeciesAdded = () => {
+      api.setValues(fieldsToSet, (updatedRecord) => {
+        const afterFeatures = (recAfterAdd) => {
+          const rec = recAfterAdd || updatedRecord;
+          const afterPendingAll = () => {
+            const bonusFields = {};
+            recalcAttributeBonuses(bonusFields, rec);
+            const afterBonuses = (recAfterBonuses) => {
+              const latestRec = recAfterBonuses || rec;
+              if (needsHpRecalc) recalcHitPoints(latestRec);
+              processDeferredAbilityGroups(
+                deferredAbilityGroups,
+                latestRec,
+                (recAfterGroups) => {
+                  applyProvidesItemsForFeatures(
+                    featuresToAdd,
+                    recAfterGroups,
+                    () => {
+                      applySlugFeaturesForFeatures(
+                        featuresToAdd,
+                        recAfterGroups,
+                        () => {
+                          processChoices(recAfterGroups, () => {
+                            recalcACAndHP(recAfterGroups, () => {});
+                          });
+                        },
+                      );
+                    },
+                  );
+                },
               );
-              const newHp = getHpForLevel(conMod, recAfterGroups);
-              if (newHp > recAfterGroups?.data?.hitpoints) {
-                api.setValue("data.hitpoints", newHp);
-              }
-            },
-          );
-          return;
+            };
+            if (Object.keys(bonusFields).length > 0) {
+              api.setValues(bonusFields, afterBonuses);
+            } else {
+              afterBonuses(rec);
+            }
+          };
+          if (hasAnyPending(pendingItems)) {
+            applyAllPending(pendingItems, rec, afterPendingAll);
+          } else {
+            afterPendingAll();
+          }
+        };
+        if (featuresToAdd.length > 0) {
+          api.addValues("data.features", featuresToAdd, afterFeatures);
+        } else {
+          afterFeatures(updatedRecord);
         }
-        safeAddValue(
-          "data.features",
-          featuresToAdd[fIdx++],
-          addNextFeature,
-          updatedRecord,
-        );
-      };
-      addNextFeature();
-    });
+      });
+    };
+
+    if (!hasSpecies) {
+      api.addValue("data.species", speciesObj, afterSpeciesAdded);
+    } else {
+      api.removeValue("data.species", 0, () => {
+        api.addValue("data.species", speciesObj, afterSpeciesAdded);
+      });
+    }
   }
 
   function onDropSubclass(type, recordLink) {
@@ -2258,11 +2298,17 @@
               processDeferredAbilityGroups(
                 allDeferredAbilityGroups,
                 rec,
-                () => {
-                  api.showNotification(
-                    `Added ${recordLink.tooltip} subclass to ${subclassClassName}.`,
-                    "green",
-                    "Subclass Added",
+                (recAfterGroups) => {
+                  runClassFeatureCascade(
+                    allFeaturesToAdd,
+                    recAfterGroups || rec,
+                    () => {
+                      api.showNotification(
+                        `Added ${recordLink.tooltip} subclass to ${subclassClassName}.`,
+                        "green",
+                        "Subclass Added",
+                      );
+                    },
                   );
                 },
               );
@@ -2451,24 +2497,41 @@
     // Update hpByLevel fields
     setHpPerLevel(record, valuesToSet);
 
-    // Set values then update proficiencies based on Level
+    // Set values then update proficiencies based on Level, then re-derive
+    // attribute bonuses (a removed class's features may have carried
+    // attributeBonus modifiers) and recalc AC/HP.
     api.setValues(valuesToSet, (updatedRecord) => {
       updateProficiencies(bonus, updatedRecord);
+      const bonusFields = {};
+      recalcAttributeBonuses(bonusFields, updatedRecord);
+      const afterBonuses = (recAfter) => {
+        recalcACAndHP(recAfter || updatedRecord, () => {});
+      };
+      if (Object.keys(bonusFields).length > 0) {
+        api.setValues(bonusFields, afterBonuses);
+      } else {
+        afterBonuses(updatedRecord);
+      }
     });
   }
 
   function onDeleteBackground() {
-    // Update background text
-    api.setValues({
+    // Remove all features this background granted, then clear its fields and
+    // re-derive attribute bonuses / toggles / passive skills.
+    const backgroundName = record?.data?.backgroundName || "";
+    deleteOriginFeatures(backgroundName, {
       "data.backgroundName": "",
       "fields.backgrounds.hidden": true,
     });
   }
 
   function onDeleteSpecies() {
-    // Update species text
-    api.setValues({
+    // Remove all features this species granted, then clear its fields and
+    // re-derive attribute bonuses / toggles / passive skills.
+    const speciesName = record?.data?.speciesName || "";
+    deleteOriginFeatures(speciesName, {
       "data.speciesName": "",
+      "data.creatureType": "",
       "fields.species.hidden": true,
     });
   }
@@ -2870,6 +2933,15 @@
   function onLoadCharacter() {
     setHpPerLevel(record);
     showHideLevelUpButton(record);
+    // Defensive: data.abilityGroups must be an ARRAY. Some records have it stored
+    // as {} (empty object), which makes .find / array-path patches throw
+    // "abilityGroups.find is not a function" during level-up. Normalize on load.
+    if (
+      record?.data?.abilityGroups !== undefined &&
+      !Array.isArray(record.data.abilityGroups)
+    ) {
+      api.setValue("data.abilityGroups", []);
+    }
     // Set xpMinForLevel if not already set (backfill for existing characters)
     if (
       record?.data?.xpMinForLevel === undefined ||
@@ -2877,6 +2949,74 @@
     ) {
       const curLevel = parseInt(record?.data?.level || "1", 10);
       api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
+    }
+
+    // Give characters a built-in, equipped Unarmed Strike so it always appears
+    // in the Attacks list (and works with Martial Arts / unarmed damage bonuses).
+    // For backwards compatibility, only add it if the character doesn't already
+    // have one of the known unarmed-strike weapons equipped. Guarded by
+    // data.initialized so it is only evaluated once.
+    if (!record?.data?.initialized) {
+      const UNARMED_NAMES = [
+        "Martial Arts Unarmed Strike",
+        "Unarmed Strike",
+        "Enhanced Unarmed Strike",
+      ];
+      const hasUnarmed = (record?.data?.inventory || []).some(
+        (item) =>
+          item?.data?.carried === "equipped" &&
+          UNARMED_NAMES.includes(item?.name),
+      );
+      if (hasUnarmed) {
+        api.setValue("data.initialized", true);
+      } else {
+        api.addValue(
+          "data.inventory",
+          {
+            _id: generateId(),
+            name: "Unarmed Strike",
+            recordType: "items",
+            identified: true,
+            unidentifiedName: "Unarmed Strike",
+            locked: true,
+            portrait: "/images/f370c7cf-0927-4dcb-ba9a-667c79b1ccf8_29.webp",
+            fields: {
+              addDex: { hidden: true },
+              armorCategory: { hidden: true },
+              armorClass: { hidden: true },
+              consumable: { hidden: true },
+              itemListLabel: { hidden: true },
+              items: { hidden: true },
+              maxDex: { hidden: true },
+              stealth: { hidden: true },
+              strength: { hidden: true },
+              attunement: { hidden: false },
+              damage: { hidden: false },
+              rarity: { hidden: false },
+              weaponMastery: { hidden: false },
+              weaponProperties: { hidden: false },
+              weaponType: { hidden: false },
+              spell: { hidden: true },
+              spellLevel: { hidden: true },
+            },
+            data: {
+              description:
+                "<p>You can make an Unarmed Strike to deal damage, attempt a grapple, or shove an enemy.</p><p>Add the Finesse property above if you are able to use Dexterity for the Attack Roll.</p>",
+              type: "melee weapon",
+              subtype: "Simple Melee Weapons",
+              weaponType: "Unarmed",
+              cost: "",
+              weight: 0,
+              damage: "1 bludgeoning",
+              carried: "equipped",
+              unarmedStrike: "true",
+            },
+          },
+          () => {
+            api.setValue("data.initialized", true);
+          },
+        );
+      }
     }
   }
 

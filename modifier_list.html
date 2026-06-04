@@ -4,14 +4,23 @@
     size="xs"
     field="type"
     placeholder="Select Modifier Type"
+    searchable="true"
     label="Modifier Type"
-    options='[{"label": "Attack Bonus", "value": "attackBonus"}, 
+    options='[{"label": "Attack Bonus", "value": "attackBonus"},
     {"label": "Attack Penalty", "value": "attackPenalty"},
+    {"label": "Attacks Targeting You", "value": "attackTargeting"},
     {"label": "Damage Bonus", "value": "damageBonus"},
     {"label": "Damage Penalty", "value": "damagePenalty"},
+    {"label": "Unarmed Damage Override", "value": "unarmedDamageOverride"},
+    {"label": "Weapon Damage Type Override", "value": "weaponDamageTypeOverride"},
     {"label": "Attack Calculation", "value": "attackCalculation"},
+    {"label": "Additional Weapon Mastery", "value": "weaponMastery"},
+    {"label": "Martial Arts Die", "value": "martialArtsDie"},
+    {"label": "Weapon Finesse", "value": "weaponFinesse"},
     {"label": "Healing Bonus", "value": "healingBonus"},
     {"label": "Healing Penalty", "value": "healingPenalty"},
+    {"label": "Hit Die Healing Multiplier", "value": "hitDieHealingMultiplier"},
+    {"label": "Hit Die Healing Bonus (Per Die)", "value": "hitDieHealingBonus"},
     {"label": "Cantrip Damage Bonus", "value": "cantripDamageBonus"},
     {"label": "Cantrip Damage Penalty", "value": "cantripDamagePenalty"},
     {"label": "Spell Damage Bonus", "value": "spellDamageBonus"},
@@ -21,21 +30,51 @@
     {"label": "Spell DC Bonus", "value": "spellDCBonus"},
     {"label": "Saving Throw Bonus", "value": "saveBonus"},
     {"label": "Saving Throw Penalty", "value": "savePenalty"},
+    {"label": "Saving Throw Proficiency", "value": "saveProficiency"},
+    {"label": "Saving Throw Note", "value": "saveNote"},
     {"label": "Ability Check Bonus", "value": "abilityBonus"},
     {"label": "Ability Check Penalty", "value": "abilityPenalty"},
     {"label": "Skill Check Bonus", "value": "skillBonus"},
     {"label": "Skill Check Penalty", "value": "skillPenalty"},
+    {"label": "Skill Proficiency", "value": "skillProficiency"},
+    {"label": "Passive Bonus", "value": "passiveBonus"},
+    {"label": "Passive Penalty", "value": "passivePenalty"},
+    {"label": "Passive Proficiency", "value": "passiveProficiency"},
     {"label": "Armor Class Calculation", "value": "armorClassCalculation"},
+    {"label": "Armor Class Ability Swap", "value": "armorClassAbilitySwap"},
     {"label": "Armor Class Bonus", "value": "armorClassBonus"},
     {"label": "Armor Class Penalty", "value": "armorClassPenalty"},
+    {"label": "Armor Max Dex Bonus", "value": "armorMaxDexBonus"},
     {"label": "Hit Point Maximum", "value": "hitpoints"},
+    {"label": "Temporary HP Bonus", "value": "tempHpBonus"},
+    {"label": "Dual Concentration", "value": "dualConcentration"},
     {"label": "Add Resistance", "value": "resistance"},
     {"label": "Add Vulnerability", "value": "vulnerability"},
     {"label": "Add Immunity", "value": "immunity"},
     {"label": "Initiative Bonus", "value": "initiativeBonus"},
     {"label": "Initiative Penalty", "value": "initiativePenalty"},
-    {"label": "Additional Weapon Mastery", "value": "weaponMastery"},
-    {"label": "Regeneration", "value": "regeneration"}]'
+    {"label": "Base Speed", "value": "baseSpeed"},
+    {"label": "Speed Bonus", "value": "speedBonus"},
+    {"label": "Speed Penalty", "value": "speedPenalty"},
+    {"label": "Weapon Range Bonus", "value": "weaponRangeBonus"},
+    {"label": "Regeneration (Start of Turn)", "value": "regeneration"},
+    {"label": "Regeneration (End of Turn)", "value": "regenerationOnTurnEnd"},
+    {"label": "Armor Proficiency", "value": "armorProficiency"},
+    {"label": "Weapon Proficiency", "value": "weaponProficiency"},
+    {"label": "Tool Proficiency", "value": "toolProficiency"},
+    {"label": "Attribute Bonus", "value": "attributeBonus"},
+    {"label": "Wild Shape Bonus", "value": "wildShapeBonus"},
+    {"label": "Senses", "value": "senses"},
+    {"label": "Set Value", "value": "setValue"},
+    {"label": "No Long Range Disadvantage", "value": "noLongRangeDisadvantage"},
+    {"label": "No Close Range Disadvantage", "value": "noCloseRangeDisadvantage"},
+    {"label": "Death Save Threshold", "value": "deathSaveThreshold"},
+    {"label": "Encumbrance Size Increase", "value": "encumbranceSizeIncrease"},
+    {"label": "Ignore Worn Armor Weight", "value": "ignoreWornArmorWeight"},
+    {"label": "Ignore Armor Skill Penalty", "value": "ignoreArmorSkillPenalty"},
+    {"label": "Add Language", "value": "language"},
+    {"label": "Ability Group Uses Bonus", "value": "abilityGroupUsesBonus"},
+    {"label": "Toggle", "value": "toggle"}]'
   >
   </dropdown>
 
@@ -63,7 +102,7 @@
     field="valueType"
     placeholder="Select Value Type"
     label="Value Type"
-    options='[{"label": "Number", "value": "number"}, 
+    options='[{"label": "Number", "value": "number"},
     {"label": "String", "value": "string"}, {"label": "From Field", "value": "field"}]'
   >
   </dropdown>
@@ -87,3 +126,11 @@
     ></checkbox>
   </div>
 </div>
+<stringfield
+  width="100%"
+  size="xs"
+  field="predicate"
+  label="Predicate"
+  placeholder='e.g. focused-shot or {"or":["focused-shot","power-attack"]}'
+  description='Toggle predicate. Simple string for single toggle, JSON for complex: ["a","b"] (AND), {"or":[...]} {"not":"x"}'
+></stringfield>

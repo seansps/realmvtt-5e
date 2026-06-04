@@ -41,6 +41,21 @@ const showHalf = true;
 // If the damage came from a spell, we track that here for "spell" resistance/immunity/vulnerability
 const isSpell = data.roll?.metadata?.isSpell === true;
 
+// Reliable-style minimum damage die: bump every damage die below the minimum up
+// to it (e.g. "minroll2" granted by a feature). Mutates data.roll so the
+// displayed roll and the Apply macro both use the adjusted values.
+const minDamageRoll = data.roll?.metadata?.minDamageRoll;
+let minDamageRollText = "";
+if (minDamageRoll) {
+  const { totalAdjustment, adjustedCount } = applyMinDamageRoll(
+    data.roll,
+    minDamageRoll,
+  );
+  if (adjustedCount > 0) {
+    minDamageRollText = `\n**[center]Min Die Roll ${minDamageRoll}: ${adjustedCount} ${adjustedCount === 1 ? "die" : "dice"} adjusted (+${totalAdjustment} damage)[/center]**`;
+  }
+}
+
 const damageMacro = `
 \`\`\`Apply_Damage
 let targets = api.getSelectedOrDroppedToken();
@@ -388,7 +403,7 @@ targets.forEach(target => {
   : "";
 
 const message = `
-${damageHeader}
+${damageHeader}${minDamageRollText}
 ${damageMacro}
 ${halfDamageMacro}
 `;

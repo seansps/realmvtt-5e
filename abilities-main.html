@@ -1,23 +1,92 @@
-<div style='display: flex; gap: 4px; flex-direction: column; width: 100%; margin-bottom: 4px;'>
-  <div style='display: flex; gap: 4px; width: 100%'>
-    <div style='width: 125px; height: 125px; min-height: 125px; min-width: 125px;'>
-      <portrait width='125px' height='125px' field="portrait"></portrait>
+<div
+  style="
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 4px;
+  "
+>
+  <div style="display: flex; gap: 4px; width: 100%">
+    <div
+      style="width: 125px; height: 125px; min-height: 125px; min-width: 125px"
+    >
+      <portrait width="125px" height="125px" field="portrait"></portrait>
     </div>
     <div>
-      <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
-        <numberfield width="50%" field="level" label="Required Level" placeholder='None'></numberfield>
-        <numberfield width="50%" field="cost" label="Cost" placeholder='N/A'></numberfield>
+      <div
+        style="
+          display: flex;
+          gap: 4px;
+          flex-direction: row;
+          width: 100%;
+          margin-bottom: 4px;
+        "
+      >
+        <numberfield
+          width="50%"
+          field="level"
+          label="Required Level"
+          placeholder="None"
+        ></numberfield>
+        <numberfield
+          width="50%"
+          field="cost"
+          label="Cost"
+          placeholder="N/A"
+        ></numberfield>
       </div>
-      <div style='display: flex; gap: 4px; flex-direction: row; width: 100%; margin-bottom: 4px;'>
-        <stringfield width="50%" field="class" label="Required Class" placeholder="N/A"></stringfield>
-        <stringfield width="50%" field="subclass" label="Required Subclass" placeholder="N/A"></stringfield>
+      <div
+        style="
+          display: flex;
+          gap: 4px;
+          flex-direction: row;
+          width: 100%;
+          margin-bottom: 4px;
+        "
+      >
+        <stringfield
+          width="50%"
+          field="class"
+          label="Required Class"
+          placeholder="N/A"
+        ></stringfield>
+        <stringfield
+          width="50%"
+          field="subclass"
+          label="Required Subclass"
+          placeholder="N/A"
+        ></stringfield>
+      </div>
+      <div
+        style="
+          display: flex;
+          gap: 4px;
+          flex-direction: row;
+          width: 100%;
+          margin-bottom: 4px;
+        "
+      >
+        <dropdown
+          width="50%"
+          size="sm"
+          field="actionType"
+          placeholder="e.g. Action"
+          label="Action Type"
+          combo="true"
+          options='[{"label": "Action", "value": "Action"}, {"label": "Bonus Action", "value": "Bonus Action"}, {"label": "Reaction", "value": "Reaction"}, {"label": "Other", "value": "Other"}]'
+        ></dropdown>
       </div>
     </div>
   </div>
 
-  <div style='margin-top: 8px; margin-bottom: 8px'>
-    <divider label='Description'></divider>
+  <div style="margin-top: 8px; margin-bottom: 8px">
+    <divider label="Description"></divider>
   </div>
 
-  <richtextfield field="description" label="Description" placeholder='Enter description...'></richtextfield>
+  <richtextfield
+    field="description"
+    label="Description"
+    placeholder="Enter description..."
+  ></richtextfield>
 </div>

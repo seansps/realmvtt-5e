@@ -1,0 +1,178 @@
+<script>
+  function onChoiceTypeChange(value) {
+    const isBuiltIn =
+      value === "skillProficiency" ||
+      value === "skillExpertise" ||
+      value === "skillOrToolExpertise" ||
+      value === "toolProficiency" ||
+      value === "skillOrToolProficiency" ||
+      value === "martialWeaponProficiency" ||
+      value === "languageChoice";
+    const isSimpleChoice = value === "simpleChoice";
+    const isFreeType =
+      value === "weaponProficiencyFreeType" ||
+      value === "armorProficiencyFreeType" ||
+      value === "featureFreeType";
+    const isSpecialty = false;
+    const basePath = getNearestParentDataPath(dataPath);
+
+    const fieldsToSet = {};
+    fieldsToSet[`${basePath}.fields.builtInFields.hidden`] = !isBuiltIn;
+    fieldsToSet[`${basePath}.fields.specialtyNameBox.hidden`] = !isSpecialty;
+    fieldsToSet[`${basePath}.fields.simpleChoiceBox.hidden`] = !isSimpleChoice;
+    fieldsToSet[`${basePath}.fields.manualFields.hidden`] =
+      isBuiltIn || isSimpleChoice || isFreeType;
+    api.setValues(fieldsToSet);
+  }
+</script>
+
+<!-- Represents a list of choices this character is prompted with, when they obtain the feature -->
+<div style="display: flex; flex-direction: column; width: 100%">
+  <namefield
+    field="name"
+    label="Prompt Name"
+    size="xs"
+    placeholder="Enter Prompt Name..."
+    width="100%"
+  ></namefield>
+  <stringfield
+    field="description"
+    label="Prompt Description"
+    size="xs"
+    placeholder="Enter Prompt Description..."
+    width="100%"
+  ></stringfield>
+  <div style="display: flex; gap: 4px">
+    <dropdown
+      width="70%"
+      size="xs"
+      field="choiceType"
+      label="Choice Type"
+      placeholder="Manual (Options/Query)"
+      onchange="onChoiceTypeChange(value)"
+      options='[{"label": "Manual (Options/Query)", "value": ""},
+      {"label": "Skill Proficiency", "value": "skillProficiency"},
+      {"label": "Skill Expertise", "value": "skillExpertise"},
+      {"label": "Skill or Tool Expertise", "value": "skillOrToolExpertise"},
+      {"label": "Tool Proficiency", "value": "toolProficiency"},
+      {"label": "Skill or Tool Proficiency", "value": "skillOrToolProficiency"},
+      {"label": "Martial Weapon Proficiency", "value": "martialWeaponProficiency"},
+      {"label": "Weapon Proficiency (Free Type)", "value": "weaponProficiencyFreeType"},
+      {"label": "Armor Proficiency (Free Type)", "value": "armorProficiencyFreeType"},
+      {"label": "Feature (Free Type)", "value": "featureFreeType"},
+      {"label": "Language Choice", "value": "languageChoice"},
+      {"label": "Simple Choice", "value": "simpleChoice"}]'
+    >
+    </dropdown>
+    <numberfield
+      width="30%"
+      size="xs"
+      field="count"
+      label="Pick Count"
+      placeholder="1"
+    ></numberfield>
+  </div>
+  <box field="builtInFields" hidden="true">
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: flex-end;
+        margin-top: 4px;
+      "
+    >
+      <box field="specialtyNameBox" hidden="true">
+        <stringfield
+          width="100%"
+          size="xs"
+          field="specialtyName"
+          label="Specialty Name"
+          placeholder="Name..."
+        ></stringfield>
+      </box>
+    </div>
+    <stringfield
+      field="restrictTo"
+      label="Restrict To (comma-separated)"
+      size="xs"
+      placeholder="e.g. arcana, history, nature, religion"
+      width="100%"
+      description="Limit choices to these values only. Leave empty for all options."
+    ></stringfield>
+  </box>
+  <box field="simpleChoiceBox" hidden="true">
+    <stringfield
+      field="simpleChoiceOptions"
+      label="Options (comma-separated)"
+      size="xs"
+      placeholder="e.g. Mirror's Glint, Rapid Current, Razor's Edge"
+      width="100%"
+    ></stringfield>
+  </box>
+  <box field="manualFields">
+    <stringfield
+      field="query"
+      label="Choice Query"
+      size="xs"
+      multiline="true"
+      placeholder='{"type": "feats", "query": {}}'
+      width="100%"
+      description="Query to search for options (e.g., abilities, feats). Leave empty to use options list below."
+    ></stringfield>
+    <div style="display: flex; gap: 4px; margin-top: 4px">
+      <dropdown
+        size="xs"
+        width="50%"
+        field="spellcastingAbility"
+        label="Spellcasting Ability (if Spell)"
+        placeholder="Default"
+        options='[{"label": "Default", "value": ""},
+        {"label": "Highest of Int/Wis/Cha", "value": "highest"},
+        {"label": "Highest of Int/Cha", "value": "highest_int_cha"},
+        {"label": "Highest of Wis/Cha", "value": "highest_wis_cha"},
+        {"label": "Highest of Int/Wis", "value": "highest_int_wis"},
+        {"label": "Strength", "value": "strength"},
+        {"label": "Dexterity", "value": "dexterity"},
+        {"label": "Constitution", "value": "constitution"},
+        {"label": "Intelligence", "value": "intelligence"},
+        {"label": "Wisdom", "value": "wisdom"},
+        {"label": "Charisma", "value": "charisma"}]'
+      ></dropdown>
+      <dropdown
+        size="xs"
+        width="50%"
+        field="spellType"
+        label="Spell Type (if Spell)"
+        placeholder="Default"
+        defaultvalue=""
+        options='[{"label": "Default", "value": ""},
+        {"label": "At Will", "value": "atwill"},
+        {"label": "Daily", "value": "daily"}]'
+      ></dropdown>
+    </div>
+    <div style="margin-top: 4px">
+      <checkbox
+        size="xs"
+        field="providesAbilitiesToOwnGroup"
+        label="Add to Feature's Ability Group"
+        description="For abilities: places in the feature's group by default."
+      ></checkbox>
+    </div>
+    <divider label="or"></divider>
+    <div
+      style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px"
+    >
+      <label label="Options" size="xs" textalign="left" variant="bold"></label>
+      <list field="options" listtype="feature_list" variant="striped"></list>
+    </div>
+  </box>
+  <stringfield
+    size="xs"
+    field="skipIfArchetype"
+    label="Skip if Subclass"
+    placeholder="Subclass Name..."
+    description="If the character has one of these subclasses, this choice is skipped entirely."
+    width="100%"
+  ></stringfield>
+</div>

@@ -1,4 +1,61 @@
 <script>
+  // Build the ammo-select dropdown options from Ammunition items in inventory.
+  function ammoOptions() {
+    const inventory = record.data?.inventory || [];
+    return inventory
+      .filter((item) => item.data?.subtype === "Ammunition")
+      .map((ammo) => ({
+        value: ammo._id,
+        label:
+          ammo.identified !== false
+            ? ammo.name
+            : ammo.unidentifiedName || ammo.name,
+      }));
+  }
+
+  // When the user links an ammo item to this weapon, seed the weapon's ammo
+  // count from the selected ammo item's current count.
+  function onAmmoSelectChange(value) {
+    const inventory = record.data?.inventory || [];
+    const ammo = inventory.find((item) => item._id === value);
+    const attackDataPath = getNearestParentDataPath(dataPath);
+    api.setValues({
+      [`${attackDataPath}.data.ammo`]: ammo?.data?.count || 0,
+    });
+  }
+
+  // When the weapon's ammo count is edited directly, push the new count back to
+  // the linked ammo item (and any sibling weapons sharing the same ammo). Thrown
+  // weapons are their own ammo, so they sync to their own inventory count.
+  function onAmmoChange() {
+    const attackDataPath = getNearestParentDataPath(dataPath);
+    const attack = api.getValue(attackDataPath);
+    const isThrown = (attack?.data?.weaponProperties || []).includes("Thrown");
+    let ammoSelected = attack?.data?.ammoSelect;
+    const newAmmoCount = attack?.data?.ammo;
+
+    if (isThrown && !ammoSelected) {
+      ammoSelected = attack._id;
+    }
+    if (!ammoSelected) return;
+
+    const inventory = record.data?.inventory || [];
+    const valuesToSet = {};
+
+    inventory.forEach((item, index) => {
+      if (item._id === ammoSelected) {
+        valuesToSet[`data.inventory.${index}.data.count`] = newAmmoCount;
+      }
+      if (item.data?.ammoSelect === ammoSelected && item._id !== attack._id) {
+        valuesToSet[`data.inventory.${index}.data.ammo`] = newAmmoCount;
+      }
+    });
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
   // Parse profciencies and determine from weapon subtype if proficient with it
   function getIsProficient(attack) {
     const weaponSubtype = attack?.data?.subtype || "simple";
@@ -187,16 +244,63 @@
       icon = "IconBow";
     }
 
-    // If ranged, deduct 1 ammo if set
+    // If ranged, deduct 1 ammo and keep linked ammo / sibling weapons in sync.
+    // Ranged (non-Thrown) deducts from the weapon, its linked ammo item, and any
+    // sibling weapons sharing that ammo. Thrown weapons are their own ammo, so
+    // they deduct from the weapon and its own inventory count.
     if (ranged && attack?.data?.ammo) {
-      const newAmmo = parseInt(attack?.data?.ammo || "0", 10) - 1;
+      const currentAmmo = parseInt(attack?.data?.ammo || "0", 10);
+      const isThrown = (attack?.data?.weaponProperties || []).includes("Thrown");
+      const ammoSelected = attack?.data?.ammoSelect;
+      // Only enforce out-of-ammo when tracking is actually linked (a selected
+      // ammo item, or a thrown weapon whose count we manage) — stay lenient
+      // otherwise so untracked ranged weapons still fire.
+      if ((ammoSelected || isThrown) && currentAmmo <= 0) {
+        api.showNotification("You are out of ammo!", "red", "Out of Ammo");
+        return;
+      }
+      const newAmmo = currentAmmo - 1;
       if (newAmmo >= 0) {
-        api.setValue(`${attackDataPath}.data.ammo`, newAmmo);
+        const ammoValuesToSet = {};
+        ammoValuesToSet[`${attackDataPath}.data.ammo`] = newAmmo;
+        const inventory = record.data?.inventory || [];
+        if (!isThrown && ammoSelected) {
+          inventory.forEach((item, index) => {
+            if (item._id === ammoSelected) {
+              ammoValuesToSet[`data.inventory.${index}.data.count`] = newAmmo;
+            }
+            if (
+              item.data?.ammoSelect === ammoSelected &&
+              item._id !== attack._id
+            ) {
+              ammoValuesToSet[`data.inventory.${index}.data.ammo`] = newAmmo;
+            }
+          });
+        } else if (isThrown) {
+          inventory.forEach((item, index) => {
+            if (item._id === attack._id) {
+              ammoValuesToSet[`data.inventory.${index}.data.count`] = newAmmo;
+            }
+          });
+        }
+        api.setValues(ammoValuesToSet);
       }
     }
 
-    const normalRange = parseInt(attack?.data?.normalRange || "0", 10);
-    const maxRange = parseInt(attack?.data?.maxRange || "0", 10);
+    // weaponRangeBonus modifiers extend a weapon's range (field "normal" or "long")
+    let normalRangeBonus = 0;
+    let longRangeBonus = 0;
+    getEffectsAndModifiers(["weaponRangeBonus"], undefined, attack._id).forEach(
+      (mod) => {
+        const v = parseInt(mod.value, 10);
+        if (isNaN(v)) return;
+        if ((mod.field || "").toLowerCase() === "long") longRangeBonus += v;
+        else normalRangeBonus += v;
+      },
+    );
+    const normalRange =
+      parseInt(attack?.data?.normalRange || "0", 10) + normalRangeBonus;
+    const maxRange = parseInt(attack?.data?.maxRange || "0", 10) + longRangeBonus;
 
     // If ranged, you have Disadvantage on the roll if you are within 5 feet of an enemy who can see you and doesn’t have the Incapacitated condition
     // Get range to all other tokens
@@ -239,6 +343,8 @@
     }
 
     let damage = attack?.data?.damage || "1d4";
+    // Apply unarmed/weapon damage overrides + Martial Arts die
+    damage = applyDamageOverrides(damage, attack);
 
     // Check for versatile property and use 2-handed damage if 2handed is set
     if (
@@ -361,7 +467,10 @@
       });
     }
 
-    if (disDueToProximity) {
+    if (
+      disDueToProximity &&
+      getEffectsAndModifiers(["noCloseRangeDisadvantage"]).length === 0
+    ) {
       modifiers.push({
         name: "Enemy is Within 5 Feet",
         value: "disadvantage",
@@ -414,7 +523,12 @@
           value: "disadvantage",
           active: true,
         });
-      } else if (ranged && targetDistance > normalRange && normalRange > 0) {
+      } else if (
+        ranged &&
+        targetDistance > normalRange &&
+        normalRange > 0 &&
+        getEffectsAndModifiers(["noLongRangeDisadvantage"]).length === 0
+      ) {
         modifiers.push({
           name: "Target is Beyond Normal Range",
           value: "disadvantage",
@@ -499,6 +613,109 @@
     }
   }
 
+  // An unarmedDamageOverride modifier replaces the unarmed strike's base damage
+  // (e.g. a feature that sets it to "1d8"). Last active override wins. Runs before
+  // applyMartialArtsDie so the die can still be upgraded.
+  function applyUnarmedDamageOverride(damage) {
+    const overrideMods = getEffectsAndModifiers(["unarmedDamageOverride"]);
+    if (overrideMods.length === 0) return damage;
+    const override = (overrideMods[overrideMods.length - 1].value ?? "")
+      .toString()
+      .trim();
+    return override || damage;
+  }
+
+  // A weaponDamageTypeOverride modifier swaps a weapon's damage type (e.g.
+  // "1d8 piercing" → "1d8 radiant"). Modifiers may live on a feature/effect or on
+  // the selected ammo (passed via attack._id). Last active override wins.
+  function applyWeaponDamageTypeOverride(damage, attack) {
+    const overrideMods = getEffectsAndModifiers(
+      ["weaponDamageTypeOverride"],
+      undefined,
+      attack?._id,
+    );
+    const active = overrideMods.filter((m) => m.active !== false);
+    if (active.length === 0) return damage;
+    const newType = (active[active.length - 1].value ?? "")
+      .toString()
+      .trim()
+      .toLowerCase();
+    if (!newType) return damage;
+    const primaryType = getDamageType(damage);
+    if (primaryType === newType) return damage;
+    if (!primaryType || primaryType === "untyped") return `${damage} ${newType}`;
+    return damage.replace(new RegExp(primaryType, "gi"), newType);
+  }
+
+  // Applies the damage-string overrides in order: weapon damage-type override
+  // (any weapon), then — for unarmed strikes only — unarmed damage override and
+  // the Martial Arts die.
+  function applyDamageOverrides(damage, attack) {
+    damage = applyWeaponDamageTypeOverride(damage, attack);
+    if ((attack?.data?.weaponType || "").toLowerCase() === "unarmed") {
+      damage = applyUnarmedDamageOverride(damage);
+      damage = applyMartialArtsDie(damage);
+    }
+    return damage;
+  }
+
+  // Upgrades a weapon/unarmed damage string to the character's Martial Arts die
+  // when a martialArtsDie modifier is present. The modifier's `field` holds the
+  // level:die thresholds (e.g. "1:1d6,5:1d8,11:1d10,17:1d12"); the die scales by
+  // the level of the class that granted the modifier (via the feature's source).
+  function applyMartialArtsDie(damage) {
+    const martialArtsMods = getEffectsAndModifiers(["martialArtsDie"]);
+    if (martialArtsMods.length === 0) return damage;
+    const martialModName = martialArtsMods[0].name || "";
+    const martialFeature = (record?.data?.features || []).find(
+      (f) =>
+        f.name === martialModName &&
+        (f.data?.modifiers || []).some(
+          (m) => m.data?.type === "martialArtsDie",
+        ),
+    );
+    const martialSource = martialFeature?.data?.source || "";
+    let classLevel = parseInt(record?.data?.level || "1", 10);
+    if (martialSource) {
+      const classLevels = record?.data?.classLevels || "";
+      const safeSource = martialSource.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+      const classLevelMatch = classLevels.match(
+        new RegExp(`${safeSource}\\s+(\\d+)`, "i"),
+      );
+      if (classLevelMatch) classLevel = parseInt(classLevelMatch[1], 10);
+    }
+    const thresholds = (martialArtsMods[0].field || "")
+      .split(",")
+      .map((entry) => {
+        const [lvl, die] = entry.split(":");
+        return { level: parseInt(lvl, 10), die: (die || "").trim() };
+      })
+      .filter((t) => !isNaN(t.level) && t.die);
+    let martialDie = null;
+    thresholds.forEach((t) => {
+      if (classLevel >= t.level) martialDie = t.die;
+    });
+    if (!martialDie) return damage;
+    const dieOrder = { d4: 4, d6: 6, d8: 8, d10: 10, d12: 12 };
+    const currentDieMatch = damage.match(/(\d+)(d\d+)/);
+    if (currentDieMatch) {
+      const martialDieType = (martialDie.match(/d\d+/) || [martialDie])[0];
+      if (
+        (dieOrder[martialDieType] || 0) > (dieOrder[currentDieMatch[2]] || 0)
+      ) {
+        damage = damage.replace(
+          currentDieMatch[0],
+          `${currentDieMatch[1]}${martialDieType}`,
+        );
+      }
+    } else {
+      // No dice in damage (e.g. "1 bludgeoning") — use the martial arts die
+      const martialDieType = (martialDie.match(/d\d+/) || [martialDie])[0];
+      damage = damage.replace(/^\d+/, `1${martialDieType}`);
+    }
+    return damage;
+  }
+
   function rollDamage(isCritical) {
     const attackDataPath = isCritical
       ? dataPath.replace(".data.critBtn", "")
@@ -559,6 +776,8 @@
     }
 
     let damage = attack?.data?.damage || "1d4";
+    // Apply unarmed/weapon damage overrides + Martial Arts die
+    damage = applyDamageOverrides(damage, attack);
 
     // Check for versatile property and use 2-handed damage if 2handed is set
     if (
@@ -658,6 +877,15 @@
       (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
+    // Reliable-style minimum damage die: a damage modifier whose value is
+    // "minrollN" makes every damage die count as at least N (e.g. Great Weapon
+    // Fighting / similar features). Extract it, then drop the marker so it isn't
+    // shown/applied as a flat togglable bonus.
+    const minDamageRoll = getMinRollModifier(damageModifiers);
+    damageModifiers = damageModifiers.filter(
+      (m) => !m.value.toString().startsWith("minroll"),
+    );
+
     const damageMetadata = {
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
@@ -668,6 +896,7 @@
       portrait: attack?.portrait,
       damageIgnoresResistances: damageIgnoresResistances,
       damageIgnoresImmunities: damageIgnoresImmunities,
+      minDamageRoll: minDamageRoll,
     };
 
     // Add dex or str mod to damage as required unless the damage roll has no dice (e.g. 1) and is not "Unarmed Strike"
@@ -710,17 +939,6 @@
         placeholder="Item Name..."
       ></namefield>
     </div>
-    <!-- Ammo Field for Ranged Weapons -->
-    <numberfield
-      hidden="true"
-      field="ammo"
-      placeholder="0"
-      minvalue="0"
-      variant="tooltip"
-      label="Ammo Remaining"
-      size="xs"
-    >
-    </numberfield>
     <!--  A way to change to thrown if Throw type is there -->
     <iconbutton
       size="md"
@@ -784,4 +1002,40 @@
       ></button>
     </div>
   </div>
+  <!-- Ammo row (own line, hidden by default; shown for ranged/thrown weapons) -->
+  <box field="ammoRow" hidden="true">
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: center;
+        justify-content: flex-end;
+      "
+    >
+      <label size="xs" variant="bold" label="Ammo"></label>
+      <!-- Ammo Select dropdown for Ranged Weapons (not Thrown) -->
+      <dropdown
+        field="ammoSelect"
+        width="120px"
+        size="xs"
+        hidden="true"
+        placeholder="Select Ammo..."
+        optionsFunction="return ammoOptions();"
+        onchange="onAmmoSelectChange(value)"
+      ></dropdown>
+      <!-- Ammo Field for Ranged/Thrown Weapons -->
+      <numberfield
+        field="ammo"
+        placeholder="0"
+        minvalue="0"
+        width="70px"
+        variant="tooltip"
+        label="Ammo Remaining"
+        size="xs"
+        onchange="onAmmoChange()"
+      >
+      </numberfield>
+    </div>
+  </box>
 </div>

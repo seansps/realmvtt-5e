@@ -48,6 +48,14 @@ api.getRecord("characters", recordId, (record) => {
   let numFailures = parseInt(record?.data?.deathSaveFailures || "0", 10);
   let numSuccesses = parseInt(record?.data?.deathSaveSuccesses || "0", 10);
 
+  // deathSaveThreshold modifier: the number of failed death saves before the
+  // character dies (default 3; a higher value lets them survive more failures).
+  let failureThreshold = 3;
+  getEffectsAndModifiersForToken(record, ["deathSaveThreshold"]).forEach((mod) => {
+    const v = parseInt(mod.value, 10);
+    if (!isNaN(v) && v > failureThreshold) failureThreshold = v;
+  });
+
   if (criticalSuccess) {
     // Add 1 HP
     const maxHp = parseInt(record?.data?.hitpoints || "0", 10);
@@ -70,8 +78,8 @@ api.getRecord("characters", recordId, (record) => {
   } else if (criticalFailure) {
     // Add 2 failures
     numFailures += 2;
-    if (numFailures >= 3) {
-      numFailures = 3;
+    if (numFailures >= failureThreshold) {
+      numFailures = failureThreshold;
     }
     valuesToSet["data.deathSaveFailures"] = numFailures;
     api.sendMessage(
@@ -107,9 +115,9 @@ api.getRecord("characters", recordId, (record) => {
 
   api.setValues(valuesToSet);
 
-  // If 3 failures add "Dead" effect to character
+  // If failures reach the threshold, add "Dead" effect to character
 
-  if (numFailures >= 3) {
+  if (numFailures >= failureThreshold) {
     const tokenForRecord = api.getToken();
     if (tokenForRecord) {
       api.addEffect("Dead", tokenForRecord);

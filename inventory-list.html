@@ -4,8 +4,21 @@
     const items = record.data?.inventory || [];
     let totalWeight = 0;
 
+    // ignoreWornArmorWeight: features/effects can make equipped armor & shields
+    // weightless (e.g. a feat that lets you ignore worn-armor weight).
+    const ignoreWornArmor =
+      getEffectsAndModifiers(["ignoreWornArmorWeight"]).length > 0;
+
     items.forEach((item) => {
       if (item.data?.carried !== "dropped") {
+        const itemType = (item.data?.type || "").toLowerCase();
+        if (
+          ignoreWornArmor &&
+          item.data?.carried === "equipped" &&
+          (itemType.includes("armor") || itemType === "shield")
+        ) {
+          return;
+        }
         let weight = parseFloat(item.data?.weight || "0");
         let count = parseFloat(item.data?.count || "0");
         if (count === undefined || isNaN(count)) {
@@ -179,6 +192,41 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
   }
 
   // Then update AC calculation in character-main.html and getArmorClassForToken
+  // When an item's count changes: if it's ammo, push the new count to every
+  // weapon linked to it; if it's a thrown weapon, sync its own ammo to the count.
+  // Also recompute carried weight (the count field's prior onchange behavior).
+  function onCountChange(value) {
+    const itemDataPath = dataPath.replace(".data.count", "");
+    const item = api.getValue(itemDataPath);
+    const isAmmo = item?.data?.subtype === "Ammunition";
+    const isThrown = (item?.data?.weaponProperties || []).includes("Thrown");
+
+    const valuesToSet = {};
+    const inventory = record?.data?.inventory || [];
+
+    // Fold the weight recompute into the same setValues (compute-only, no write)
+    // so it ships in one round-trip — mirrors onItemEquipped / Level Up's pattern
+    // and avoids the race of a separate setTotalWeight() after api.setValues().
+    const totalWeight = setTotalWeight(false);
+    if (totalWeight !== record?.data?.totalWeight) {
+      valuesToSet["data.totalWeight"] = totalWeight;
+    }
+
+    if (isAmmo) {
+      inventory.forEach((invItem, index) => {
+        if (invItem.data?.ammoSelect === item._id) {
+          valuesToSet[`data.inventory.${index}.data.ammo`] = value;
+        }
+      });
+    } else if (isThrown) {
+      valuesToSet[`${itemDataPath}.data.ammo`] = value;
+    }
+
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
   function onItemEquipped() {
     const itemDataPath = dataPath.replace(".data.carried", "");
     const item = api.getValue(itemDataPath);
@@ -257,11 +305,70 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       meleeToggleBtnDisabled: {
         hidden: !isMelee || (isMelee && isThrown),
       },
-      ammo: { hidden: isMelee && !isThrown },
+      // Ammo row (count) shows for ranged or thrown-melee weapons
+      ammoRow: {
+        hidden: isMelee && !isThrown,
+      },
+      // Ammo-select dropdown shows only for pure ranged weapons (thrown weapons
+      // are their own ammo, so they get the count field but no select)
+      ammoSelect: {
+        hidden: isMelee || isThrown,
+      },
+    };
+
+    // Keep a thrown weapon's ammo count synced to its inventory count when equipped
+    if (isThrown && item.data?.count !== item.data?.ammo) {
+      valuesToSet[`${itemDataPath}.data.ammo`] = item.data?.count || 0;
+    }
+
+    // On equip, apply the item's one-time modifiers (proficiencies, languages,
+    // senses, resistances, setValue/toggle, HP flag). Collected as pending so the
+    // async proficiency/language adds don't race the field writes below.
+    let needsHpRecalc = false;
+    if (value === "equipped") {
+      const result = applyOneTimeModifiers(item, valuesToSet);
+      needsHpRecalc = result.needsHpRecalc;
+    }
+    const pendingItems = extractAllPending(valuesToSet);
+
+    const afterPendingAll = () => {
+      if (needsHpRecalc) recalcHitPoints();
+    };
+    const applyPendingIfNeeded = (rec) => {
+      if (hasAnyPending(pendingItems)) {
+        applyAllPending(pendingItems, rec || record, afterPendingAll);
+      } else {
+        afterPendingAll();
+      }
+    };
+
+    // Re-derive attribute bonuses (attributeBonus modifiers) and speed from ALL
+    // features + currently equipped items. This is what makes equip/unequip
+    // actually apply/remove attributeBonus — it re-derives from current state, so
+    // it works in both directions. Mirrors Level Up's onItemEquipped tail.
+    const recompileBonuses = (rec) => {
+      const latest = rec || record;
+      const bonusFields = {};
+      recalcAttributeBonuses(bonusFields, latest);
+      const calculatedSpeed = calculateSpeed(latest);
+      if (calculatedSpeed !== latest?.data?.speed) {
+        bonusFields["data.speed"] = calculatedSpeed;
+      }
+      if (Object.keys(bonusFields).length > 0) {
+        api.setValues(bonusFields, (afterBonuses) =>
+          applyPendingIfNeeded(afterBonuses),
+        );
+      } else {
+        applyPendingIfNeeded(latest);
+      }
     };
 
     if (Object.keys(valuesToSet).length > 0) {
-      api.setValues(valuesToSet);
+      api.setValues(valuesToSet, (updatedRecord) =>
+        recompileBonuses(updatedRecord),
+      );
+    } else {
+      recompileBonuses(record);
     }
   }
 </script>
@@ -286,7 +393,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
       width="100%"
       field="count"
       placeholder="0"
-      onchange="setTotalWeight()"
+      onchange="onCountChange(value)"
     ></numberfield>
   </div>
   <div style="min-width: 50px; flex-grow: 1">

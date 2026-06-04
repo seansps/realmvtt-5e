@@ -52,20 +52,27 @@ if (!isGM && targets.length === 0) {
 
 targets.forEach(target => {
   const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
+  // Sum any tempHpBonus modifiers (e.g. "+PB to temp HP gained") and add them.
+  let tempHpBonus = 0;
+  getEffectsAndModifiersForToken(target, ['tempHpBonus']).forEach(mod => {
+    const v = typeof mod.value === 'number' ? mod.value : parseInt(mod.value || '0', 10);
+    if (!isNaN(v)) tempHpBonus += v;
+  });
+  const grantedTempHp = tempHp + tempHpBonus;
   // Temp HP always overrides existing temp HP, if it is higher
-  const newTempHp = Math.max(tempHp, oldTempHp);
+  const newTempHp = Math.max(grantedTempHp, oldTempHp);
   api.setValueOnToken(target, "data.tempHp", newTempHp);
   const unIdentified = target.identified === false;
   let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
   targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
-  const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+  const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{targetName\} received \$\{grantedTempHp\} Temporary Hit Points.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
 
-  api.sendMessage(\`\$\{targetName\} received \$\{tempHp\} Temporary Hit Points.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
+  api.sendMessage(\`\$\{targetName\} received \$\{grantedTempHp\} Temporary Hit Points.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
 
   // If healing > 0, float text
-  if (tempHp > 0) {
-    api.floatText(target, \`+\${tempHp}\`, "#1165ed");
+  if (grantedTempHp > 0) {
+    api.floatText(target, \`+\${grantedTempHp}\`, "#1165ed");
   }
 });
 \`\`\`

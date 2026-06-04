@@ -5,6 +5,9 @@
     // It could be a numerical modifier, or a die we are adding
     let attackModifiers = [];
 
+    // Predicate context so spell:<school> can gate spell attack modifiers.
+    const spellPredCtx = { spellSchool: spell?.data?.school || "" };
+
     const spellModBonus = parseInt(
       api.getValue("data.spellModBonus") || "0",
       10,
@@ -52,11 +55,17 @@
     const effectModifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       "spell",
+      undefined,
+      undefined,
+      spellPredCtx,
     );
     // Get spell-specific attack modifiers filtered to ranged/melee
     const spellAttackEffectModifiers = getEffectsAndModifiers(
       ["spellAttackBonus", "spellAttackPenalty"],
       spellAttackField,
+      undefined,
+      undefined,
+      spellPredCtx,
     );
     effectModifiers.forEach((modifier) => {
       attackModifiers.push(modifier);
@@ -74,6 +83,10 @@
     // Get the spell by path to ensure most up-to-date value
     const spellDataPath = dataPath.replace(".data.castBtn", "");
     const spell = api.getValue(spellDataPath);
+
+    // Predicate context for this cast so spell:<school> predicates can gate
+    // spell attack / damage / DC / healing modifiers by School of Magic.
+    const spellPredCtx = { spellSchool: spell?.data?.school || "" };
 
     const spellName = spell?.name || "Unknown Spell";
     const spellDescription = api.richTextToMarkdown(
@@ -132,10 +145,16 @@
           ? getEffectsAndModifiers(
               ["cantripDamageBonus", "cantripDamagePenalty"],
               spell?.data?.isAttack ? "attack" : "all",
+              undefined,
+              undefined,
+              spellPredCtx,
             )
           : getEffectsAndModifiers(
               ["spellDamageBonus", "spellDamagePenalty"],
               spell?.data?.isAttack ? "attack" : "all",
+              undefined,
+              undefined,
+              spellPredCtx,
             );
       // Filter attack modifiers if not attack spell
       if (!spell?.data?.isAttack) {
@@ -154,10 +173,13 @@
       });
     } else if (spell?.data?.healing) {
       // Get healing modifiers
-      const moreHealingModifiers = getEffectsAndModifiers([
-        "healingBonus",
-        "healingPenalty",
-      ]);
+      const moreHealingModifiers = getEffectsAndModifiers(
+        ["healingBonus", "healingPenalty"],
+        "",
+        undefined,
+        undefined,
+        spellPredCtx,
+      );
       moreHealingModifiers.forEach((modifier) => {
         healingModifiers.push({
           ...modifier,
@@ -607,7 +629,13 @@
       saveDc = saveDcOverride;
     }
     // Get spell dc modifiers
-    const spellDcModifiers = getEffectsAndModifiers(["spellDCBonus"]);
+    const spellDcModifiers = getEffectsAndModifiers(
+      ["spellDCBonus"],
+      "",
+      undefined,
+      undefined,
+      spellPredCtx,
+    );
     saveDc += spellDcModifiers.reduce(
       (acc, mod) => acc + parseInt(mod?.value || "0", 10),
       0,
@@ -1016,28 +1044,61 @@
 
     let lostConcentrationOn = "";
     if (hasConcentration) {
-      // Check for existing Concentration effect
+      // Check for existing Concentration effects
       const tokenForRecord = api.getToken();
       const effects = tokenForRecord?.effects || [];
-      const hasEffect = effects.find(
+      const primary = effects.find(
         (effect) => effect?.name?.toLowerCase() === "concentration",
       );
+      const secondary = effects.find(
+        (effect) => effect?.name?.toLowerCase() === "2nd concentration",
+      );
+      // dualConcentration: lets you hold a second concentration spell. 5e won't
+      // stack a second effect with the same name, so the extra spell goes into a
+      // distinct "2nd Concentration" slot rather than a duplicate "Concentration".
+      const allowDual =
+        getEffectsAndModifiers(["dualConcentration"]).length > 0;
       if (tokenForRecord) {
         const effectValue = spellName;
         // Round-based durations apply in combat rounds; everything else in seconds.
         const effectDuration = getEffectDuration(duration);
+        const oldValues = tokenForRecord?.effectValues || {};
 
-        // If there's an existing concentration effect, remove it first
-        if (hasEffect) {
-          // Old spell name
-          const oldValues = tokenForRecord?.effectValues || {};
-          if (oldValues[hasEffect?._id]) {
-            lostConcentrationOn = oldValues[hasEffect?._id];
+        if (primary && allowDual) {
+          // Already concentrating + dual active → use the 2nd Concentration slot,
+          // keeping the primary spell. Replace any existing 2nd-slot spell.
+          if (secondary) {
+            if (oldValues[secondary._id]) {
+              lostConcentrationOn = oldValues[secondary._id];
+            }
+            api.removeEffectById(secondary._id, tokenForRecord, () => {
+              api.getRecord(record.recordType, record._id, (updatedRecord) => {
+                api.addEffect(
+                  "2nd Concentration",
+                  updatedRecord,
+                  effectDuration,
+                  effectValue,
+                );
+              });
+            });
+          } else {
+            api.addEffect(
+              "2nd Concentration",
+              tokenForRecord,
+              effectDuration,
+              effectValue,
+            );
           }
+        } else if (primary) {
+          // Replacing the primary concentration also ends any 2nd slot.
+          const lostNames = [];
+          if (oldValues[primary._id]) lostNames.push(oldValues[primary._id]);
+          if (secondary && oldValues[secondary._id]) {
+            lostNames.push(oldValues[secondary._id]);
+          }
+          lostConcentrationOn = lostNames.join(" and ");
 
-          // Remove old concentration effect, then add new one in callback
-          api.removeEffectById(hasEffect._id, tokenForRecord, () => {
-            // Get fresh record after removal before adding new effect
+          const addPrimary = () =>
             api.getRecord(record.recordType, record._id, (updatedRecord) => {
               api.addEffect(
                 "Concentration",
@@ -1046,9 +1107,16 @@
                 effectValue,
               );
             });
-          });
+
+          if (secondary) {
+            api.removeEffectById(secondary._id, tokenForRecord, () => {
+              api.removeEffectById(primary._id, tokenForRecord, addPrimary);
+            });
+          } else {
+            api.removeEffectById(primary._id, tokenForRecord, addPrimary);
+          }
         } else {
-          // No existing concentration, just add the new one
+          // Not concentrating yet — add the primary slot.
           api.addEffect(
             "Concentration",
             tokenForRecord,

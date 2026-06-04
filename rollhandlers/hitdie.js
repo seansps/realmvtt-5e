@@ -22,6 +22,27 @@ api.getRecord('characters', recordId, (record) => {
     // Minimum of 1
     if (amountToAdd <= 0) { amountToAdd = 1; }
 
+    // Hit-die healing multiplier (e.g. doubles HP from hit dice). Highest active
+    // multiplier wins (they don't compound); a value <= 1 has no effect.
+    let hdMultiplier = 1;
+    getEffectsAndModifiersForToken(record, ["hitDieHealingMultiplier"]).forEach((mod) => {
+      const v = parseInt(mod.value, 10);
+      if (!isNaN(v) && v > hdMultiplier) hdMultiplier = v;
+    });
+    if (hdMultiplier > 1) { amountToAdd *= hdMultiplier; }
+
+    // Hit-die healing bonus (flat bonus per die spent)
+    let hdBonus = 0;
+    getEffectsAndModifiersForToken(record, ["hitDieHealingBonus"]).forEach((mod) => {
+      const v = parseInt(mod.value, 10);
+      if (!isNaN(v)) hdBonus += v;
+    });
+    if (hdBonus !== 0) {
+      const diceSpent = parseInt(data?.roll?.metadata?.hitDieCount || "1", 10);
+      amountToAdd += hdBonus * diceSpent;
+    }
+    if (amountToAdd <= 0) { amountToAdd = 1; }
+
     const maxHp = parseInt(record?.data?.hitpoints || '0', 10);
     let newHp = amountToAdd + parseInt(record?.data?.curhp || '0', 10);
     if (newHp > maxHp) {

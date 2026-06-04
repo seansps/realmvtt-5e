@@ -45,6 +45,18 @@ function processDeferredAbilityGroups(groups, rec, done) {
     done(rec);
     return;
   }
+  // Defensive: data.abilityGroups must be an ARRAY. Some character records have
+  // it stored as {} (empty object), which makes .find / array-path patches throw
+  // "abilityGroups.find is not a function" in the client. Normalize to [] first,
+  // re-fetch, then continue (the array branch below won't re-trigger this).
+  if (!Array.isArray(rec?.data?.abilityGroups)) {
+    api.setValues({ "data.abilityGroups": [] }, () => {
+      api.getRecord(rec?.recordType || "characters", rec?._id, (fresh) => {
+        processDeferredAbilityGroups(groups, fresh || rec, done);
+      });
+    });
+    return;
+  }
   let idx = 0;
   const processNext = (currentRec) => {
     if (idx >= groups.length) {
@@ -211,7 +223,25 @@ function capitalize(string) {
 // Calculate the passive value for a skill given its computed modifier.
 // 5e: passive = 10 + skillMod.
 function calcPassiveSkillFromMod(rec, skillField, skillMod) {
-  return 10 + skillMod;
+  let passive = 10 + skillMod;
+  const r = rec || record;
+  // passiveProficiency: treat as proficient for the passive score only (+prof)
+  if (
+    getEffectsAndModifiersForToken(r, ["passiveProficiency"], skillField).length >
+    0
+  ) {
+    passive += parseInt(r?.data?.proficiencyBonus || "0", 10);
+  }
+  // passiveBonus / passivePenalty: flat adjustments (penalties arrive negated)
+  getEffectsAndModifiersForToken(
+    r,
+    ["passiveBonus", "passivePenalty"],
+    skillField,
+  ).forEach((m) => {
+    const v = parseInt(m.value, 10);
+    if (!isNaN(v)) passive += v;
+  });
+  return passive;
 }
 
 // Write both the skill mod and its passive into a valuesToSet map.
@@ -683,7 +713,28 @@ function setModifier(
 
   // Update carry weight if strength
   if (attribute === "strength") {
-    const size = record?.data?.size || "Medium";
+    let size = record?.data?.size || "Medium";
+    // encumbranceSizeIncrease: count as a larger size for carry capacity
+    // (e.g. Powerful Build). Each modifier bumps the size up by its value (or 1).
+    const sizeOrder = [
+      "tiny",
+      "small",
+      "medium",
+      "large",
+      "huge",
+      "gargantuan",
+    ];
+    let sizeSteps = 0;
+    getEffectsAndModifiers(["encumbranceSizeIncrease"]).forEach((mod) => {
+      const v = parseInt(mod.value, 10);
+      sizeSteps += isNaN(v) ? 1 : v;
+    });
+    if (sizeSteps > 0) {
+      const idx = sizeOrder.indexOf(size.toLowerCase());
+      if (idx >= 0) {
+        size = sizeOrder[Math.min(idx + sizeSteps, sizeOrder.length - 1)];
+      }
+    }
     const { carry, dragLiftPush } = getCarryWeight(val, size);
     valuesToSet["data.maxCarryWeight"] = carry;
     valuesToSet["data.dragLiftPush"] = dragLiftPush;
@@ -810,7 +861,10 @@ function setModifier(
   });
 
   // Go through abilityGroups and update maxDailyUses if needed
-  const abilityGroups = record?.data?.abilityGroups || [];
+  // (guard: must be an array — some records store it as {} which would crash)
+  const abilityGroups = Array.isArray(record?.data?.abilityGroups)
+    ? record.data.abilityGroups
+    : [];
   abilityGroups.forEach((abilityGroup, index) => {
     if (
       abilityGroup?.data?.fieldsToAddToUses &&
@@ -965,7 +1019,12 @@ function doubleDamageDice(damage) {
 }
 
 // Checks for replacements in a string modifier
-function checkForReplacements(value, replacements = {}, recordOverride = null) {
+function checkForReplacements(
+  value,
+  replacements = {},
+  recordOverride = null,
+  casterToken = null,
+) {
   let thisRecord = recordOverride || record;
   // Case for 'Half Character Level' or 'Half <class> Level'
   const matchLevel = value.match(/[Hh]alf (\w+) [Ll]evel/);
@@ -977,11 +1036,11 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
       const characterLevel = parseInt(thisRecord?.data?.level || "1", 10);
       value = value.replaceAll(matchLevel[0], Math.floor(characterLevel / 2));
     } else {
-      // Class specific half level
+      // Class specific half level (resolve Level Up class aliases, e.g. Adept → Monk)
       const characterClassLevel =
-        (thisRecord?.data?.classLevels || "").match(
-          `${className} (\\d+)`,
-        )?.[1] || 0;
+        (thisRecord?.data?.classLevels || "")
+          .toLowerCase()
+          .match(`${resolveClassAlias(className)} (\\d+)`)?.[1] || 0;
       if (characterClassLevel) {
         value = value.replaceAll(
           matchLevel[0],
@@ -998,11 +1057,11 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
       const characterLevel = parseInt(thisRecord?.data?.level || "1", 10);
       value = value.replaceAll(matchClassLevel[0], characterLevel);
     } else {
-      // Class specific level
+      // Class specific level (resolve Level Up class aliases, e.g. Adept → Monk)
       const characterClassLevel =
-        (thisRecord?.data?.classLevels || "").match(
-          `${className} (\\d+)`,
-        )?.[1] || 0;
+        (thisRecord?.data?.classLevels || "")
+          .toLowerCase()
+          .match(`${resolveClassAlias(className)} (\\d+)`)?.[1] || 0;
       if (characterClassLevel) {
         value = value.replaceAll(
           matchClassLevel[0],
@@ -1035,6 +1094,11 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
     );
     value = value.replaceAll(matchModifier[0], attributeMod);
   }
+  // Whether the value is a function-style expression (ternary/gte/...) — string
+  // path values are then quoted so they're valid arguments to those functions.
+  const isFunctionExpr =
+    /^(ternary|lt|lte|gt|gte|eq|ne|and|or|not|nand|xor)\(/.test(value.trim());
+
   // Replace @record.data.X with the value at that path on the character
   const recordDataMatches = [...value.matchAll(/@record\.data\.([\w.]+)/g)];
   for (const match of recordDataMatches) {
@@ -1044,7 +1108,31 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
       resolved = resolved?.[segment];
     }
     if (resolved !== undefined && resolved !== null) {
-      value = value.replaceAll(match[0], String(resolved));
+      const replacement =
+        isFunctionExpr && typeof resolved === "string"
+          ? `'${String(resolved).replace(/'/g, "\\'")}'`
+          : String(resolved);
+      value = value.replaceAll(match[0], replacement);
+    }
+  }
+
+  // Replace @caster.data.X with the value at that path on the caster/attacker
+  // token. Used for effects whose value resolves against whoever applied them.
+  if (casterToken) {
+    const casterDataMatches = [...value.matchAll(/@caster\.data\.([\w.]+)/g)];
+    for (const match of casterDataMatches) {
+      const path = match[1];
+      let resolved = casterToken?.data;
+      for (const segment of path.split(".")) {
+        resolved = resolved?.[segment];
+      }
+      if (resolved !== undefined && resolved !== null) {
+        const replacement =
+          isFunctionExpr && typeof resolved === "string"
+            ? `'${String(resolved).replace(/'/g, "\\'")}'`
+            : String(resolved);
+        value = value.replaceAll(match[0], replacement);
+      }
     }
   }
 
@@ -1067,10 +1155,52 @@ function checkForReplacements(value, replacements = {}, recordOverride = null) {
     return String(result);
   });
 
+  // Evaluate function-style expressions matching the effects engine syntax,
+  // e.g. ternary(gte(@record.data.effects.stoneskin.spellLevel, 7), a, b).
+  if (
+    /^(ternary|lt|lte|gt|gte|eq|ne|and|or|not|nand|xor)\(/.test(value.trim())
+  ) {
+    return String(evaluateFunctions(value.trim()));
+  }
+
   return value;
 }
 
+// Extracts the base die type from a damage string (e.g. "2d6 slashing" → "d6").
+function getBaseDieType(damage) {
+  const match = (damage || "").match(/d\d+/);
+  return match ? match[0] : "0";
+}
+
+// Resolves @damageDie references in a value string, replacing with the base die
+// type. "2@damageDie" → "2d6"; standalone "@damageDie" → "1d6".
+function resolveDamageDie(modValue, baseDie) {
+  if (modValue && modValue.includes("@damageDie")) {
+    return modValue.replace(/(\d?)@damageDie/g, (match, prefix) => {
+      return (prefix || "1") + baseDie;
+    });
+  }
+  return modValue;
+}
+
+// Level Up → 5e class-name translations. Lets content imported from the Level Up
+// ruleset resolve correctly: an Adept's "adeptLevel" reads the character's Monk
+// level, Herald → Paladin, Berserker → Barbarian. Keyed/valued in lowercase.
+const CLASS_ALIASES = {
+  adept: "monk",
+  herald: "paladin",
+  berserker: "barbarian",
+};
+
+// Normalize a class name (or "{class}" portion of a "{class}Level" field) through
+// the alias map. Accepts any casing; returns lowercase.
+function resolveClassAlias(name) {
+  const lower = (name || "").toString().trim().toLowerCase();
+  return CLASS_ALIASES[lower] || lower;
+}
+
 function isClassLevel(field) {
+  if (typeof field !== "string" || !field.endsWith("Level")) return false;
   return [
     "artificerLevel",
     "barbarianLevel",
@@ -1085,11 +1215,15 @@ function isClassLevel(field) {
     "sorcererLevel",
     "warlockLevel",
     "wizardLevel",
+    // Level Up class aliases (resolve to a 5e class via CLASS_ALIASES)
+    "adeptLevel",
+    "heraldLevel",
+    "berserkerLevel",
   ].includes(field);
 }
 
 function getClassLevel(recordContext, field, fieldValueOverrides) {
-  const className = field.replace("Level", "");
+  const className = resolveClassAlias(field.replace("Level", ""));
   let classLevels = recordContext?.data?.classLevels || "";
   if (fieldValueOverrides && fieldValueOverrides[`data.classLevels`]) {
     classLevels = fieldValueOverrides[`data.classLevels`];
@@ -1103,16 +1237,30 @@ function getTotalValueFromFields(
   recordContext,
   fieldsToAddToUses,
   fieldValueOverrides,
+  abilityGroupName,
 ) {
   let total = 0;
+  let times2 = false;
   let times5 = false;
-  let plus1 = false;
+  let plusN = 0;
   fieldsToAddToUses.forEach((field) => {
     let value = 0;
-    if (field === "times5") {
+    if (field === "times2") {
+      times2 = true;
+      return;
+    } else if (field === "times5") {
       times5 = true;
-    } else if (field === "plus1") {
-      plus1 = true;
+      return;
+    } else if (/^plus(\d+)$/.test(field)) {
+      plusN += parseInt(field.replace("plus", ""), 10) || 0;
+      return;
+    } else if (field === "halfProficiencyBonus") {
+      value = Math.floor(
+        parseInt(recordContext?.data?.proficiencyBonus || "0", 10) / 2,
+      );
+    } else if (field === "warlockSpellcastingMod") {
+      // 5e warlocks cast with Charisma
+      value = parseInt(recordContext?.data?.charismaMod || "0", 10);
     } else if (isClassLevel(field)) {
       value = getClassLevel(recordContext, field, fieldValueOverrides);
     } else {
@@ -1133,11 +1281,25 @@ function getTotalValueFromFields(
   if (total < 1) {
     total = 1;
   }
+  if (times2) {
+    total *= 2;
+  }
   if (times5) {
     total *= 5;
   }
-  if (plus1) {
-    total += 1;
+  total += plusN;
+  // Ability-group-specific bonus from abilityGroupUsesBonus modifiers (e.g. a
+  // feat that grants +N uses to a named ability group).
+  if (abilityGroupName) {
+    const bonusMods = getEffectsAndModifiersForToken(
+      recordContext,
+      ["abilityGroupUsesBonus"],
+      abilityGroupName,
+    );
+    bonusMods.forEach((m) => {
+      const v = parseInt(m.value, 10);
+      if (!isNaN(v)) total += v;
+    });
   }
   return total;
 }
@@ -1162,215 +1324,20 @@ function getEffectsAndModifiers(
   field = "",
   itemId = undefined,
   appliedById = undefined,
+  context = undefined,
 ) {
-  let results = [];
-
-  // Set of stack modifiers that we have seen so we don't duplicate them
-  const stackModifiers = {};
-
-  // First collect modifiers from effects
-  const effects = record?.effects || [];
-  effects.forEach((effect) => {
-    const rules = effect.rules || [];
-    rules.forEach((rule) => {
-      // Check for extra data on the rule (e.g. active: false)
-      const ruleActive = rule.data && rule.data.active === false ? false : true;
-
-      const ruleType = rule?.type || "";
-      const isPenalty = ruleType.toLowerCase().includes("penalty");
-      let value = rule.value || "";
-      if (rule.valueType === "number") {
-        value = parseInt(rule.value, 10);
-        if (isNaN(value)) {
-          value = 0;
-        }
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-      } else if (
-        rule.valueType === "string" &&
-        !value.trim().startsWith("-") &&
-        isPenalty &&
-        !value.includes("disadvantage")
-      ) {
-        value = "-" + value;
-      }
-      // Check for strings that require replacements
-      if (rule.valueType === "string") {
-        value = checkForReplacements(value);
-      }
-      if (
-        value !== 0 &&
-        (rule.valueType === "number" || rule.valueType === "string")
-      ) {
-        let name = effect.name || "Effect";
-        // If this is a stackable effect, add the effect per stack amount with a different name each time
-        let times = 1;
-        if (effect.stackable) {
-          times = record?.effectIds?.filter((id) => id === effect?._id).length;
-        }
-        for (let i = 0; i < times; i++) {
-          results.push({
-            name: i > 0 ? `${name} (x${i + 1})` : name,
-            value: value,
-            active: ruleActive,
-            modifierType: ruleType,
-            field: rule?.field || "",
-            valueType: rule.valueType,
-            isPenalty: isPenalty,
-            isEffect: true,
-            appliedBy: getEffectAppliedBy(record, effect),
-          });
-        }
-      } else if (rule.valueType === "api") {
-        let value = parseInt(record?.effectValues?.[effect?._id] || "0", 10);
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-        if (value !== 0) {
-          results.push({
-            name: effect.name || "Effect",
-            value: value,
-            active: ruleActive,
-            modifierType: ruleType,
-            field: rule?.field || "",
-            valueType: rule.valueType,
-            isPenalty: isPenalty,
-            isEffect: true,
-            appliedBy: null,
-          });
-        }
-      } else if (
-        rule.valueType === "stack" &&
-        !stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`]
-      ) {
-        stackModifiers[`${effect?._id}-${JSON.stringify(rule)}`] = true;
-        // The value is the number of times they have this effect
-        let value = record?.effectIds?.filter(
-          (id) => id === effect?._id,
-        ).length;
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-        // Check if there is addtional math to apply to it
-        const math = rule?.value || "";
-        if (math) {
-          value = applyMath(value, math);
-        }
-        if (value !== 0) {
-          results.push({
-            name: effect.name || "Effect",
-            value: value,
-            active: ruleActive,
-            modifierType: ruleType,
-            field: rule?.field || "",
-            valueType: rule.valueType,
-            isPenalty: isPenalty,
-            isEffect: true,
-            appliedBy: getEffectAppliedBy(record, effect),
-          });
-        }
-      }
-    });
-  });
-
-  // Now collect all modifiers from Features and Items
-  const features = record?.data?.features || [];
-  const items = record?.data?.inventory || [];
-  // Filter items that are not equipped or that require attunement and not attuned
-  const equippedItems = items.filter(
-    (item) =>
-      item.data?.carried === "equipped" &&
-      (!item.data?.attunement || item.data?.attuned === "true"),
+  // Delegate to the token-based resolver (operating on the current record) so
+  // predicate gating, wildShapeBonus injection, and modifier handling live in
+  // one place and apply consistently to character-sheet rolls. `context` carries
+  // target/attacker info so target-aware predicates resolve.
+  return getEffectsAndModifiersForToken(
+    record,
+    types,
+    field,
+    itemId,
+    appliedById,
+    context,
   );
-  [...features, ...equippedItems].forEach((feature) => {
-    const modifiers = feature.data?.modifiers || [];
-    modifiers.forEach((modifier) => {
-      const ruleType = modifier.data?.type || "";
-      const isPenalty = ruleType.toLowerCase().includes("penalty");
-      let value = modifier.data?.value || "";
-      if (modifier.data?.valueType === "number") {
-        value = parseInt(modifier.data?.value, 10);
-        if (isNaN(value)) {
-          value = 0;
-        }
-        if (isPenalty && value > 0) {
-          value = -value;
-        }
-      } else if (modifier.data?.valueType === "field") {
-        const fieldToUse = modifier.data?.value || "";
-        if (fieldToUse) {
-          value = record?.data?.[fieldToUse] || "";
-        }
-      } else if (
-        modifier.data?.valueType === "string" &&
-        !value.trim().startsWith("-") &&
-        isPenalty
-      ) {
-        value = "-" + value;
-      }
-
-      // Check for strings that require replacements
-      if (modifier.data?.valueType === "string") {
-        value = checkForReplacements(value);
-      }
-
-      // Only relevant if it has a value
-      if (value !== 0) {
-        // Check if this only applies to equipped item and mark it with ID if so
-        const itemOnly = modifier.data?.itemOnly || false;
-        results.push({
-          name: feature?.name || "Feature",
-          value: value,
-          active: modifier.data?.active === true,
-          modifierType: ruleType,
-          field: modifier.data?.field || "",
-          valueType: modifier.data?.valueType,
-          itemId: itemOnly ? feature?._id : undefined,
-          isPenalty: isPenalty,
-          isEffect: false,
-        });
-      }
-    });
-  });
-
-  // Special case for armor, if this is a stealth check
-  if (field === "stealth") {
-    const bestEquippedArmor = record?.data?.armor || undefined;
-    if (bestEquippedArmor?.stealthPenalty) {
-      results.push({
-        name: "Disadvantage due to Armor",
-        value: "disadvantage",
-        active: true,
-        modifierType: "skillPenalty",
-        isPenalty: true,
-        field: "stealth",
-        isEffect: false,
-      });
-    }
-  }
-
-  if (types && types.length > 0) {
-    results = results.filter((r) => types.includes(r.modifierType));
-  }
-
-  if (field && field !== "") {
-    results = results.filter(
-      (r) => r.field === field || r.field === "all" || !r.field,
-    );
-  }
-
-  // Filter by itemId if provided
-  results = results.filter(
-    (r) => r.itemId === itemId || r.itemId === undefined,
-  );
-
-  // Filter by appliedById if provided
-  if (appliedById) {
-    results = results.filter((r) => r.appliedBy === appliedById);
-  }
-
-  return results;
 }
 
 // In this call we look for effects that are relevant to the caller and the target for damage rolls
@@ -1443,6 +1410,7 @@ function getEffectsAndModifiersForToken(
   field = "",
   itemId = undefined,
   appliedById = undefined,
+  context = undefined,
 ) {
   if (!target) {
     return [];
@@ -1452,13 +1420,63 @@ function getEffectsAndModifiersForToken(
   // Set of stack modifiers that we have seen so we don't duplicate them
   const stackModifiers = {};
 
+  // Derive weapon-aware predicate context when an itemId is provided. Lets
+  // weapon:<property> / weapon:ranged / weapon:melee predicates fire based on
+  // the actual attacking weapon and its rangeToggleBtn for thrown weapons.
+  let effectiveContext = context;
+  if (itemId) {
+    const _inv = (
+      Array.isArray(target?.data?.inventory) ? target.data.inventory : []
+    ).filter(Boolean);
+    const _weapon = _inv.find((i) => i._id === itemId);
+    if (_weapon) {
+      const isRangedWeaponType = (_weapon?.data?.type || "").includes("ranged");
+      const isThrown = (_weapon?.data?.weaponProperties || []).includes(
+        "Thrown",
+      );
+      let isRangedAttack;
+      if (isRangedWeaponType) isRangedAttack = true;
+      else if (isThrown)
+        isRangedAttack = _weapon?.data?.rangeToggleBtn === "ranged";
+      else isRangedAttack = false;
+      effectiveContext = {
+        ...(context || {}),
+        weapon: _weapon,
+        isRangedAttack,
+      };
+    }
+  }
+  // Always thread the rollField into context so self:proficient (and similar
+  // field-aware predicates) can resolve against the current roll's skill/ability.
+  if (field) {
+    effectiveContext = { ...(effectiveContext || {}), rollField: field };
+  }
+
   // First collect modifiers from effects
   const effects = target?.effects || [];
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
       // Check for extra data on the rule (e.g. active: false)
-      const ruleActive = rule.data && rule.data.active === false ? false : true;
+      let ruleActive = rule.data && rule.data.active === false ? false : true;
+
+      // Evaluate predicates — if any fail, deactivate this rule
+      const predicates = rule.data?.predicate;
+      if (predicates && predicates.length > 0) {
+        if (!effectiveContext && _predicatesRequireContext(predicates)) {
+          ruleActive = false;
+        } else {
+          const predicateResult = evaluatePredicates(
+            predicates,
+            effectiveContext,
+            effect,
+            target,
+          );
+          if (!predicateResult) {
+            ruleActive = false;
+          }
+        }
+      }
 
       const ruleType = rule?.type || "";
       const isPenalty = ruleType.toLowerCase().includes("penalty");
@@ -1574,9 +1592,65 @@ function getEffectsAndModifiersForToken(
       item.data?.carried === "equipped" &&
       (!item.data?.attunement || item.data?.attuned === "true"),
   );
-  [...features, ...equippedItems].forEach((feature) => {
+
+  // If checking modifiers for a specific weapon, also include its selected
+  // ammo's modifiers (the weapon's ammoSelect points at an Ammunition item).
+  // The ammo item is given the weapon's itemId so its modifiers apply here.
+  let ammoEffects = [];
+  if (itemId) {
+    const weapon = equippedItems.find((item) => item._id === itemId);
+    if (weapon) {
+      const ammoSelectId = weapon.data?.ammoSelect;
+      if (ammoSelectId) {
+        const ammoItem = items.find((item) => item._id === ammoSelectId);
+        if (ammoItem) {
+          ammoEffects.push({ ...ammoItem, _id: itemId });
+        }
+      }
+    }
+  }
+
+  // Collect active toggles for predicate checking. We store BOTH the raw
+  // field and the slugified form so a predicate authored as
+  // "social-against-creature" still matches a toggle whose field is
+  // "Social Against Creature" (or vice versa). Same forgiving behavior used
+  // for effect:/feature: predicates.
+  const activeToggles = new Set();
+  (target?.data?.toggles || []).forEach((t) => {
+    if (!t?.data?.active) return;
+    const f = t?.data?.field;
+    if (!f) return;
+    activeToggles.add(f);
+    const slug = _slugifyName(f);
+    if (slug) activeToggles.add(slug);
+  });
+  // Collect slugified names of effects on the record for effect:<slug> predicates
+  const effectSlugs = new Set(
+    (target?.effects || []).map((e) => _slugifyName(e?.name)).filter(Boolean),
+  );
+  // Collect slugified names of features/feats on the record for feature:<slug> predicates
+  const featureSlugs = new Set(
+    features.map((f) => _slugifyName(f?.name)).filter(Boolean),
+  );
+
+  [...features, ...equippedItems, ...ammoEffects].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
     modifiers.forEach((modifier) => {
+      // Skip modifiers with a predicate if it doesn't pass
+      const predicate = (modifier.data?.predicate || "").trim();
+      if (
+        predicate &&
+        !_evaluateTogglePredicate(
+          predicate,
+          activeToggles,
+          effectSlugs,
+          featureSlugs,
+          effectiveContext,
+          target,
+        )
+      )
+        return;
+
       const ruleType = modifier.data?.type || "";
       const isPenalty = ruleType.toLowerCase().includes("penalty");
       let value = modifier.data?.value || "";
@@ -1639,6 +1713,72 @@ function getEffectsAndModifiersForToken(
         isEffect: false,
       });
     }
+  }
+
+  // Wild Shape attack bonuses: when in Wild Shape, collect wildShapeBonus
+  // modifiers with field "attack" and inject them as attackBonus modifiers
+  // (they aren't collected above since the types filter is attackBonus/Penalty).
+  if (
+    target?.data?.shapeshiftingType === "wildshape" &&
+    (types.includes("attackBonus") || types.includes("attackPenalty"))
+  ) {
+    [...features, ...equippedItems].forEach((feature) => {
+      const modifiers = feature.data?.modifiers || [];
+      modifiers.forEach((modifier) => {
+        if (
+          modifier.data?.type === "wildShapeBonus" &&
+          modifier.data?.field === "attack"
+        ) {
+          let value = modifier.data?.value || 0;
+          if (modifier.data?.valueType === "number") {
+            value = parseInt(value, 10) || 0;
+          }
+          if (value !== 0) {
+            results.push({
+              name: feature?.name || "Wild Shape Bonus",
+              value: value,
+              active: true,
+              modifierType: "attackBonus",
+              field: field,
+              valueType: modifier.data?.valueType,
+              isPenalty: false,
+              isEffect: false,
+            });
+          }
+        }
+      });
+    });
+  }
+
+  // Wild Shape damage bonuses: when in Wild Shape, collect wildShapeBonus
+  // modifiers with field "damage" and inject them as damageBonus modifiers.
+  if (
+    target?.data?.shapeshiftingType === "wildshape" &&
+    (types.includes("damageBonus") || types.includes("damagePenalty"))
+  ) {
+    [...features, ...equippedItems].forEach((feature) => {
+      const modifiers = feature.data?.modifiers || [];
+      modifiers.forEach((modifier) => {
+        if (
+          modifier.data?.type === "wildShapeBonus" &&
+          modifier.data?.field === "damage"
+        ) {
+          const value = modifier.data?.value || "";
+          if (value) {
+            results.push({
+              name: feature?.name || "Wild Shape Bonus",
+              value: value,
+              active: true,
+              modifierType: "damageBonus",
+              field: field,
+              valueType: modifier.data?.valueType,
+              isPenalty: false,
+              isEffect: false,
+            });
+          }
+        }
+      });
+    });
   }
 
   if (types && types.length > 0) {
@@ -1742,6 +1882,24 @@ function getArmorClassForToken(token) {
   const dexMod = parseInt(token?.data?.dexterityMod || "0", 10);
   const bestEquippedArmor = token?.data?.armor || undefined;
   let armorClass = 10 + dexMod;
+  // armorClassAbilitySwap: when armored, an ability other than DEX may supply the
+  // AC ability bonus (e.g. a feature granting "use Constitution while armored").
+  // An optional value restricts it to a specific armor category. Capped by the
+  // armor's max-dex like the normal DEX bonus.
+  let acAbilityMod = dexMod;
+  getEffectsAndModifiersForToken(token, ["armorClassAbilitySwap"]).forEach((mod) => {
+    const targetAbility = (mod.field || "").toLowerCase();
+    if (!targetAbility) return;
+    const categoryRestriction = (mod.value || "").toString().toLowerCase();
+    const armorCategory = (
+      bestEquippedArmor?.category ||
+      bestEquippedArmor?.armorCategory ||
+      ""
+    ).toLowerCase();
+    if (categoryRestriction && categoryRestriction !== armorCategory) return;
+    const m = parseInt(token?.data?.[`${targetAbility}Mod`] || "0", 10);
+    if (!isNaN(m)) acAbilityMod = m;
+  });
   // Else, we use the armor class value (for tokens)
   if (record?.recordType === "npcs") {
     armorClass = parseInt(token?.data?.ac || "0", 10);
@@ -1752,7 +1910,7 @@ function getArmorClassForToken(token) {
     armorClass =
       bestEquippedArmor.ac +
       (bestEquippedArmor.maxDex
-        ? Math.min(dexMod, bestEquippedArmor.maxDex)
+        ? Math.min(acAbilityMod, bestEquippedArmor.maxDex)
         : 0);
   }
 
@@ -3009,4 +3167,1075 @@ function rollSkillCheck(skill, dc) {
       );
     }
   });
+}
+
+
+// ===== Ported from Level Up common.js (generic helpers needed by feature-utils) =====
+
+function _isWeaponPropertyCondition(field) {
+  const parts = field
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return parts.length > 0 && parts.every((p) => _WEAPON_PROPERTY_SET.has(p));
+}
+
+// Check if a record/token has an equipped weapon with any of the given properties
+
+function _hasEquippedWeaponWithProperty(rec, field) {
+  const requiredProps = field
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const inventory = rec?.data?.inventory || [];
+  return inventory.some((item) => {
+    if (item?.data?.carried !== "equipped") return false;
+    const props = item?.data?.weaponProperties || [];
+    return requiredProps.some((rp) =>
+      props.some((p) => p.toLowerCase() === rp.toLowerCase()),
+    );
+  });
+}
+
+// Get the carry and drag/lift/push weights for a creature
+
+function evaluateFunctions(expr) {
+  expr = expr.trim();
+
+  const findClosingParen = (str, startIndex) => {
+    let depth = 0;
+    for (let i = startIndex; i < str.length; i++) {
+      if (str[i] === "(") depth++;
+      if (str[i] === ")") {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return -1;
+  };
+
+  const splitArguments = (argsStr) => {
+    const args = [];
+    let current = "";
+    let depth = 0;
+    for (let i = 0; i < argsStr.length; i++) {
+      const char = argsStr[i];
+      if (char === "(") depth++;
+      if (char === ")") depth--;
+      if (char === "," && depth === 0) {
+        args.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    if (current.trim()) args.push(current.trim());
+    return args;
+  };
+
+  const functionPattern =
+    /^(ternary|lt|lte|gt|gte|eq|ne|and|or|not|nand|xor)\(/;
+  const match = expr.match(functionPattern);
+
+  if (match) {
+    const funcName = match[1];
+    const openParen = expr.indexOf("(");
+    const closeParen = findClosingParen(expr, openParen);
+    if (closeParen === -1) return expr;
+
+    const argsStr = expr.substring(openParen + 1, closeParen);
+    const args = splitArguments(argsStr);
+    const evaluatedArgs = args.map((arg) => evaluateFunctions(arg));
+
+    let result;
+    switch (funcName) {
+      case "ternary":
+        result = evaluatedArgs[0] ? evaluatedArgs[1] : evaluatedArgs[2];
+        break;
+      case "lt":
+        result = Number(evaluatedArgs[0]) < Number(evaluatedArgs[1]);
+        break;
+      case "lte":
+        result = Number(evaluatedArgs[0]) <= Number(evaluatedArgs[1]);
+        break;
+      case "gt":
+        result = Number(evaluatedArgs[0]) > Number(evaluatedArgs[1]);
+        break;
+      case "gte":
+        result = Number(evaluatedArgs[0]) >= Number(evaluatedArgs[1]);
+        break;
+      case "eq":
+        result = evaluatedArgs[0] == evaluatedArgs[1];
+        break; // eslint-disable-line eqeqeq
+      case "ne":
+        result = evaluatedArgs[0] != evaluatedArgs[1];
+        break; // eslint-disable-line eqeqeq
+      case "and":
+        result = evaluatedArgs[0] && evaluatedArgs[1];
+        break;
+      case "or":
+        result = evaluatedArgs[0] || evaluatedArgs[1];
+        break;
+      case "not":
+        result = !evaluatedArgs[0];
+        break;
+      case "nand":
+        result = !(evaluatedArgs[0] && evaluatedArgs[1]);
+        break;
+      case "xor":
+        result = !!(evaluatedArgs[0] ? !evaluatedArgs[1] : evaluatedArgs[1]);
+        break;
+      default:
+        return expr;
+    }
+
+    const remainder = expr.substring(closeParen + 1).trim();
+    if (remainder) return String(result) + remainder;
+    return result;
+  }
+
+  // Single-quoted string literal — unwrap
+  if (expr.startsWith("'") && expr.endsWith("'") && expr.length >= 2) {
+    return expr.slice(1, -1).replace(/\\'/g, "'");
+  }
+
+  // Number
+  const num = Number(expr);
+  if (!isNaN(num) && expr !== "") return num;
+
+  // Bare string — return as-is
+  return expr;
+}
+
+// Evaluate a ternary expression string, supporting chained ternaries.
+// Format: "condition ? trueValue : falseValue"
+// Conditions support: >=, <=, >, <, ==, !=
+// Values can be anything (dice strings, numbers, text).
+// Example: "5 >= 16 ? 1d10 : 5 >= 11 ? 1d8 : 5 >= 5 ? 1d6 : 1d4"
+
+function _slugifyName(name) {
+  return (name || "")
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// Evaluates predicates on a rule. Supports strings, arrays (AND), and objects (not/or/and/nand/nor).
+// Evaluate a toggle predicate against a set of active toggle field names.
+// Supports:
+//   - Simple string: "focused-shot" — true if toggle is active
+//   - "effect:<slug>" — true if the record has an effect whose slugified name matches
+//     (e.g. "effect:hunters-target" matches an effect named "Hunter's Target")
+//   - "feature:<slug>" — true if the record has a feature/feat in data.features whose
+//     slugified name matches (e.g. "feature:trained-accuracy" matches "Trained Accuracy")
+//   - JSON array (AND): ["focused-shot", "power-attack"] — all must be active
+//   - JSON object with operators:
+//     { "or": ["focused-shot", "effect:hunters-target"] } — any must be active
+//     { "not": "feature:trained-accuracy" } — feature must NOT be present
+//     { "and": ["focused-shot", "power-attack"] } — all must be active
+//     { "nand": [...] }, { "nor": [...] }
+// Predicate field value is a string — parsed as JSON if it starts with [ or {.
+
+function _evaluateTogglePredicate(
+  predicateStr,
+  activeToggles,
+  effectSlugs,
+  featureSlugs,
+  context,
+  target,
+) {
+  if (!predicateStr) return true;
+  let parsed;
+  const trimmed = predicateStr.trim();
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (e) {
+      // Treat as simple string
+      return _evalToggleNode(
+        trimmed,
+        activeToggles,
+        effectSlugs,
+        featureSlugs,
+        context,
+        target,
+      );
+    }
+  } else {
+    return _evalToggleNode(
+      trimmed,
+      activeToggles,
+      effectSlugs,
+      featureSlugs,
+      context,
+      target,
+    );
+  }
+  return _evalToggleNode(
+    parsed,
+    activeToggles,
+    effectSlugs,
+    featureSlugs,
+    context,
+    target,
+  );
+}
+
+// Walk a parsed predicate node and collect every bare toggle-field reference
+// (i.e. strings that aren't the "effect:" or "feature:" prefixed forms). Used
+// to label a modifier's chat-row by its toggle display name instead of the
+// owning feature's name, so a roll prompt shows e.g. "Trained Accuracy 1"
+// rather than "Archery" when the toggle gated the modifier.
+
+function _collectPredicateToggleFields(node, out) {
+  if (!node) return;
+  if (typeof node === "string") {
+    if (node.startsWith("effect:") || node.startsWith("feature:")) return;
+    out.push(node);
+    return;
+  }
+  if (Array.isArray(node)) {
+    node.forEach((item) => _collectPredicateToggleFields(item, out));
+    return;
+  }
+  if (typeof node === "object") {
+    for (const key of ["not", "or", "and", "nand", "nor"]) {
+      if (key in node) _collectPredicateToggleFields(node[key], out);
+    }
+  }
+}
+
+// Resolve the best toggle-display-name for a predicate string. Prefers active
+// toggles so OR-predicates report the one that actually fired. Returns "" if
+// the predicate doesn't reference any known toggle field.
+
+function _getPredicateToggleName(predicateStr, toggles, activeToggles) {
+  if (!predicateStr) return "";
+  const fields = [];
+  const trimmed = predicateStr.trim();
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      _collectPredicateToggleFields(JSON.parse(trimmed), fields);
+    } catch (e) {
+      fields.push(trimmed);
+    }
+  } else if (
+    !trimmed.startsWith("effect:") &&
+    !trimmed.startsWith("feature:")
+  ) {
+    fields.push(trimmed);
+  }
+  if (fields.length === 0) return "";
+  const byField = new Map();
+  (toggles || []).forEach((t) => {
+    const f = t?.data?.field;
+    if (f && !byField.has(f)) byField.set(f, t?.name || f);
+  });
+  // Prefer an active toggle so OR-predicates label with the one that fired
+  const active = fields.find((f) => activeToggles.has(f) && byField.has(f));
+  if (active) return byField.get(active);
+  const any = fields.find((f) => byField.has(f));
+  return any ? byField.get(any) : "";
+}
+
+function _evalToggleNode(
+  node,
+  activeToggles,
+  effectSlugs,
+  featureSlugs,
+  context,
+  target,
+) {
+  if (typeof node === "string") {
+    if (node.startsWith("effect:")) {
+      const slug = node.slice("effect:".length).trim().toLowerCase();
+      return !!effectSlugs && effectSlugs.has(slug);
+    }
+    if (node.startsWith("feature:")) {
+      const slug = node.slice("feature:".length).trim().toLowerCase();
+      return !!featureSlugs && featureSlugs.has(slug);
+    }
+    // Context-based predicates — delegate to the full evaluator so feature/item
+    // modifiers can use spell:/target:/attacker:/self:/sense:/weapon: predicates too.
+    if (
+      node.startsWith("spell:") ||
+      node.startsWith("target:") ||
+      node.startsWith("attacker:") ||
+      node.startsWith("self:") ||
+      node.startsWith("sense:") ||
+      node.startsWith("weapon:")
+    ) {
+      // If the predicate needs context but none was provided, treat as inactive
+      if (!context && _predicatesRequireContext(node)) return false;
+      return evaluateSinglePredicate(node, context, null, target);
+    }
+    // Toggle match: try raw first, then slug-tolerant. activeToggles already
+    // contains both the raw field and its slug for every active toggle.
+    if (activeToggles.has(node)) return true;
+    const nodeSlug = _slugifyName(node);
+    return !!nodeSlug && activeToggles.has(nodeSlug);
+  }
+  if (Array.isArray(node)) {
+    // Array = implicit AND
+    return node.every((item) =>
+      _evalToggleNode(
+        item,
+        activeToggles,
+        effectSlugs,
+        featureSlugs,
+        context,
+        target,
+      ),
+    );
+  }
+  if (typeof node === "object" && node !== null) {
+    if ("not" in node)
+      return !_evalToggleNode(
+        node.not,
+        activeToggles,
+        effectSlugs,
+        featureSlugs,
+        context,
+        target,
+      );
+    if ("or" in node) {
+      const arr = Array.isArray(node.or) ? node.or : [node.or];
+      return arr.some((item) =>
+        _evalToggleNode(
+          item,
+          activeToggles,
+          effectSlugs,
+          featureSlugs,
+          context,
+          target,
+        ),
+      );
+    }
+    if ("and" in node) {
+      const arr = Array.isArray(node.and) ? node.and : [node.and];
+      return arr.every((item) =>
+        _evalToggleNode(
+          item,
+          activeToggles,
+          effectSlugs,
+          featureSlugs,
+          context,
+          target,
+        ),
+      );
+    }
+    if ("nand" in node) {
+      const arr = Array.isArray(node.nand) ? node.nand : [node.nand];
+      return !arr.every((item) =>
+        _evalToggleNode(
+          item,
+          activeToggles,
+          effectSlugs,
+          featureSlugs,
+          context,
+          target,
+        ),
+      );
+    }
+    if ("nor" in node) {
+      const arr = Array.isArray(node.nor) ? node.nor : [node.nor];
+      return !arr.some((item) =>
+        _evalToggleNode(
+          item,
+          activeToggles,
+          effectSlugs,
+          featureSlugs,
+          context,
+          target,
+        ),
+      );
+    }
+  }
+  return false;
+}
+
+// Returns true if any predicate in the tree references target:/attacker: context.
+// Used to mark rules as inactive when no context is available rather than
+// letting "not" invert an indeterminate false into true.
+
+function _predicatesRequireContext(predicates) {
+  if (!predicates) return false;
+  if (typeof predicates === "string") {
+    return (
+      predicates.startsWith("target:") ||
+      predicates.startsWith("attacker:") ||
+      predicates.startsWith("spell:") ||
+      predicates.startsWith("weapon:") ||
+      // Bare "self:proficient" needs rollField; explicit "self:proficient:<skill>" doesn't.
+      predicates === "self:proficient"
+    );
+  }
+  if (Array.isArray(predicates)) {
+    return predicates.some((p) => _predicatesRequireContext(p));
+  }
+  if (typeof predicates === "object") {
+    for (const key of ["not", "or", "and", "nand", "nor"]) {
+      if (key in predicates) return _predicatesRequireContext(predicates[key]);
+    }
+  }
+  return false;
+}
+
+// Returns true if no predicates, or all pass. Returns false if any fail.
+// context = { attackerToken, targetCreatureType } — roll context
+// effect = the effect being evaluated (for appliedBy lookup)
+// target = the token that has the effect (for effectValues lookup)
+
+function evaluatePredicates(predicates, context, effect, target) {
+  if (!predicates || (Array.isArray(predicates) && predicates.length === 0))
+    return true;
+  return evaluateSinglePredicate(predicates, context, effect, target);
+}
+
+function evaluateSinglePredicate(predicate, context, effect, target) {
+  // String predicate — evaluate the condition directly
+  if (typeof predicate === "string") {
+    if (predicate === "target:applied_by") {
+      if (!context) return false;
+      const appliedBy = getEffectAppliedBy(target, effect);
+      return (
+        !!appliedBy &&
+        !!context.attackerToken?._id &&
+        appliedBy === context.attackerToken._id
+      );
+    }
+    if (predicate.startsWith("target:creature_type:")) {
+      if (!context) return false;
+      const requiredType = predicate
+        .slice("target:creature_type:".length)
+        .toLowerCase()
+        .trim();
+      const creatureType = (context.targetCreatureType || "").toLowerCase();
+      const types = creatureType.split(",").map((t) => t.trim());
+      return types.includes(requiredType);
+    }
+    if (predicate.startsWith("self:creature_type:")) {
+      const requiredType = predicate
+        .slice("self:creature_type:".length)
+        .toLowerCase()
+        .trim();
+      const creatureType = (target?.data?.creatureType || "").toLowerCase();
+      const types = creatureType.split(",").map((t) => t.trim());
+      return types.includes(requiredType);
+    }
+    if (predicate.startsWith("attacker:senses:")) {
+      if (!context) return false;
+      const requiredSense = predicate
+        .slice("attacker:senses:".length)
+        .toLowerCase()
+        .trim();
+      const senses = (context.attackerToken?.data?.senses || "").toLowerCase();
+      return senses.includes(requiredSense);
+    }
+    if (predicate.startsWith("self:senses:")) {
+      const requiredSense = predicate
+        .slice("self:senses:".length)
+        .toLowerCase()
+        .trim();
+      const senses = (target?.data?.senses || "").toLowerCase();
+      return senses.includes(requiredSense);
+    }
+    // Proficiency predicate: "self:proficient" or "self:proficient:<skill>"
+    //   self:proficient            → proficient in the skill currently being
+    //                                 rolled (uses context.rollField)
+    //   self:proficient:<skill>    → proficient in the named skill
+    // "Proficient" here means full prof or expertise (not half).
+    if (
+      predicate === "self:proficient" ||
+      predicate.startsWith("self:proficient:")
+    ) {
+      let skillField = "";
+      if (predicate === "self:proficient") {
+        if (!context?.rollField) return false;
+        skillField = context.rollField;
+      } else {
+        skillField = predicate.slice("self:proficient:".length).trim();
+      }
+      if (!skillField) return false;
+      // Try direct match first, then camelCase if the user passed a display name
+      const profValue =
+        target?.data?.[`${skillField}Prof`] ??
+        target?.data?.[`${normalToCamelCase(skillField)}Prof`];
+      return profValue === "true" || profValue === "expertise";
+    }
+    // Spell predicate: "spell:<school>" — true if the spell currently being cast
+    // belongs to the given School of Magic. 5e has a single school per spell
+    // (data.school), surfaced as context.spellSchool by the cast path.
+    if (predicate.startsWith("spell:")) {
+      if (!context) return false;
+      const requiredSchool = predicate
+        .slice("spell:".length)
+        .toLowerCase()
+        .trim();
+      return (
+        !!context.spellSchool &&
+        String(context.spellSchool).toLowerCase() === requiredSchool
+      );
+    }
+    // Weapon predicate: "weapon:<property>" — checks the attacking weapon's
+    // properties or the attack's melee/ranged mode. Context is populated by
+    // getEffectsAndModifiersForToken when itemId is provided.
+    //   weapon:ranged  → true if the attack is currently a ranged attack
+    //                    (ranged weapons, or thrown weapons with rangeToggleBtn=ranged)
+    //   weapon:melee   → true if the attack is currently a melee attack
+    //   weapon:pact    → true if data.isPactWeapon is set, or if the weapon
+    //                    name contains "pact" (case-insensitive). The name
+    //                    fallback catches user-renamed magic weapons.
+    //   weapon:<prop>  → true if data.weaponProperties contains <prop>
+    //                    (case-insensitive; e.g. weapon:finesse, weapon:two-handed)
+    if (predicate.startsWith("weapon:")) {
+      if (!context?.weapon) return false;
+      const rest = predicate.slice("weapon:".length).toLowerCase().trim();
+      if (rest === "ranged") return context.isRangedAttack === true;
+      if (rest === "melee") return context.isRangedAttack === false;
+      // weapon:pact — true if data.isPactWeapon is set, or if the weapon
+      // name contains "pact" (e.g. a manually-named magic pact weapon).
+      if (rest === "pact") {
+        if (context.weapon?.data?.isPactWeapon === true) return true;
+        return (context.weapon?.name || "").toLowerCase().includes("pact");
+      }
+      // weapon:name:<substring> — case-insensitive substring match on name
+      if (rest.startsWith("name:")) {
+        const needle = rest.slice("name:".length).trim();
+        if (!needle) return false;
+        return (context.weapon?.name || "").toLowerCase().includes(needle);
+      }
+      // weapon:type:<exact> — exact (ci) match against data.weaponType
+      if (rest.startsWith("type:")) {
+        const wantedType = rest.slice("type:".length).trim();
+        if (!wantedType) return false;
+        return (
+          (context.weapon?.data?.weaponType || "").toLowerCase().trim() ===
+          wantedType
+        );
+      }
+      // weapon:<property> — case-insensitive match on data.weaponProperties
+      const weaponProps = (context.weapon?.data?.weaponProperties || []).map(
+        (p) => String(p).toLowerCase(),
+      );
+      return weaponProps.includes(rest);
+    }
+    // Comparison: "self:data.path:op:value"
+    // Operators: gte, gt, lte, lt, eq. If the rhs is non-numeric, "eq" falls
+    // back to case-insensitive string equality (other ops require numbers).
+    const compMatch = predicate.match(/^self:([^:]+):(gte|gt|lte|lt|eq):(.+)$/);
+    if (compMatch) {
+      const [, path, op, rawVal] = compMatch;
+      let actual = target;
+      for (const part of path.split(".")) {
+        actual = actual?.[part];
+        if (actual === undefined || actual === null) break;
+      }
+      const threshold = parseFloat(rawVal);
+      if (isNaN(threshold)) {
+        if (op === "eq") {
+          return (
+            String(actual ?? "")
+              .trim()
+              .toLowerCase() === rawVal.trim().toLowerCase()
+          );
+        }
+        return false;
+      }
+      const num = parseFloat(actual);
+      if (isNaN(num)) return false;
+      if (op === "gte") return num >= threshold;
+      if (op === "gt") return num > threshold;
+      if (op === "lte") return num <= threshold;
+      if (op === "lt") return num < threshold;
+      if (op === "eq") return num === threshold;
+    }
+    return false;
+  }
+
+  // Array: implicit AND — all items must be true
+  if (Array.isArray(predicate)) {
+    return predicate.every((item) =>
+      evaluateSinglePredicate(item, context, effect, target),
+    );
+  }
+
+  // Object: logical operators
+  if (typeof predicate === "object" && predicate !== null) {
+    if ("not" in predicate) {
+      return !evaluateSinglePredicate(predicate.not, context, effect, target);
+    }
+    if ("or" in predicate) {
+      const arr = Array.isArray(predicate.or) ? predicate.or : [predicate.or];
+      return arr.some((item) =>
+        evaluateSinglePredicate(item, context, effect, target),
+      );
+    }
+    if ("and" in predicate) {
+      const arr = Array.isArray(predicate.and)
+        ? predicate.and
+        : [predicate.and];
+      return arr.every((item) =>
+        evaluateSinglePredicate(item, context, effect, target),
+      );
+    }
+    if ("nand" in predicate) {
+      const arr = Array.isArray(predicate.nand)
+        ? predicate.nand
+        : [predicate.nand];
+      return !arr.every((item) =>
+        evaluateSinglePredicate(item, context, effect, target),
+      );
+    }
+    if ("nor" in predicate) {
+      const arr = Array.isArray(predicate.nor)
+        ? predicate.nor
+        : [predicate.nor];
+      return !arr.some((item) =>
+        evaluateSinglePredicate(item, context, effect, target),
+      );
+    }
+  }
+
+  return false;
+}
+
+// Same as getEffectsAndModifiers but for a token that is passed
+
+function getAbilityScoreIncrease(feature) {
+  const asi = feature?.data?.abilityScores || "";
+  let max = 20;
+  let scores = [];
+  if (!asi) {
+    return { max, scores, promptChoice: false, count: 0 };
+  }
+
+  const lower = asi.toLowerCase();
+
+  // Parse the maximum value from the phrase
+  const maxMatch = lower.match(/to a maximum of (\d+)/);
+  if (maxMatch) {
+    max = parseInt(maxMatch[1], 10);
+  }
+
+  // "Increase one ability score by 2, or increase two ability scores by 1"
+  if (
+    lower.match(/one ability score of your choice/) &&
+    lower.match(/or increase two ability scores/)
+  ) {
+    return {
+      max,
+      scores: [
+        "strength",
+        "dexterity",
+        "constitution",
+        "intelligence",
+        "wisdom",
+        "charisma",
+      ],
+      promptChoice: true,
+      count: 2,
+    };
+  }
+
+  // "An ability score of your choice increases by 1" or
+  // "increase one ability score" / "choose one ability in which"
+  if (
+    lower.match(/an ability score of your choice/) ||
+    lower.match(/increase one ability score/) ||
+    lower.match(/choose one ability in which/)
+  ) {
+    // Only if no specific abilities are named
+    const namedAbilities = lower.match(
+      /strength|dexterity|constitution|intelligence|wisdom|charisma/g,
+    );
+    if (!namedAbilities) {
+      return {
+        max,
+        scores: [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma",
+        ],
+        promptChoice: true,
+        count: 1,
+      };
+    }
+  }
+
+  // Extract named ability scores (e.g. "Your Strength or Dexterity score increases by 1")
+  const abilityMatch = lower.match(
+    /strength|dexterity|constitution|intelligence|wisdom|charisma/g,
+  );
+  if (abilityMatch) {
+    scores = abilityMatch;
+  }
+
+  return { max, scores, promptChoice: scores.length > 1, count: 1 };
+}
+
+function recalcPassiveSkills(rec, fieldsToSet) {
+  getSkills().forEach((skill) => {
+    const modKey = `data.${skill.field}Mod`;
+    const skillMod =
+      fieldsToSet[modKey] !== undefined
+        ? parseInt(fieldsToSet[modKey], 10) || 0
+        : parseInt(rec?.data?.[`${skill.field}Mod`] || "0", 10);
+    const cap = skill.field.charAt(0).toUpperCase() + skill.field.slice(1);
+    const passiveKey = `data.passive${cap}`;
+    const detailKey = `data.passive${cap}Detail`;
+    const result = calcPassiveSkillFromMod(rec, skill.field, skillMod);
+    fieldsToSet[passiveKey] = result.value;
+    fieldsToSet[detailKey] = result.breakdown;
+  });
+}
+
+// Known weapon properties for conditional AC bonus checks
+
+function calculateSpeed(rec) {
+  // Base speed comes from the heritage (biological trait), default 30 ft
+  const heritage = (rec?.data?.heritages || [])[0];
+  const heritageSpeed = String(heritage?.data?.speed || "30 ft");
+
+  // Parse heritage speed (extract number from string like "30 ft" or "30")
+  const match = heritageSpeed.match(/(\d+)/);
+  if (!match) return heritageSpeed; // Return as-is if unparseable
+
+  let speedValue = parseInt(match[1], 10);
+  const unit = heritageSpeed.replace(match[1], "").trim() || "ft";
+
+  // Collect additional speed modes (e.g., "Fly (30 ft)"). Dedupe by source name
+  // so a feature that was re-added at a higher level (levelScaling upgrade) replaces
+  // its prior string instead of stacking a duplicate.
+  const additionalModes = [];
+  const modeIndexBySource = new Map();
+  const addMode = (sourceName, bonusValue) => {
+    const key = (sourceName || "").trim();
+    if (key && modeIndexBySource.has(key)) {
+      additionalModes[modeIndexBySource.get(key)] = bonusValue;
+    } else {
+      const idx = additionalModes.length;
+      additionalModes.push(bonusValue);
+      if (key) modeIndexBySource.set(key, idx);
+    }
+  };
+
+  // Apply all feature speed modifiers: baseSpeed first (upgrades only), then bonus/penalty
+  const features = rec?.data?.features || [];
+  features.forEach((feature) => {
+    const modifiers = feature?.data?.modifiers || [];
+    modifiers.forEach((mod) => {
+      if (mod?.data?.active !== false && mod?.data?.type === "baseSpeed") {
+        const newBase = parseInt(mod?.data?.value, 10) || 0;
+        if (newBase > speedValue) {
+          speedValue = newBase;
+        }
+      }
+    });
+  });
+  features.forEach((feature) => {
+    const modifiers = feature?.data?.modifiers || [];
+    modifiers.forEach((mod) => {
+      if (mod?.data?.active !== false) {
+        if (mod?.data?.type === "speedPenalty") {
+          const penaltyValue = Math.abs(parseInt(mod?.data?.value, 10) || 0);
+          speedValue -= penaltyValue;
+        } else if (mod?.data?.type === "speedBonus") {
+          const bonusValue = mod?.data?.value;
+          const numericBonus = parseInt(bonusValue, 10);
+          if (
+            !isNaN(numericBonus) &&
+            String(numericBonus) === String(bonusValue).trim()
+          ) {
+            speedValue += numericBonus;
+          } else if (bonusValue) {
+            addMode(feature?.name, bonusValue);
+          }
+        }
+      }
+    });
+  });
+
+  // Get speedBonus and speedPenalty modifiers from equipped items
+  const inventory = rec?.data?.inventory || [];
+  inventory.forEach((item) => {
+    if (item?.data?.carried === "equipped") {
+      const modifiers = item?.data?.modifiers || [];
+      modifiers.forEach((mod) => {
+        if (mod?.data?.active !== false) {
+          if (mod?.data?.type === "speedPenalty") {
+            const penaltyValue = Math.abs(parseInt(mod?.data?.value, 10) || 0);
+            speedValue -= penaltyValue;
+          } else if (mod?.data?.type === "speedBonus") {
+            const bonusValue = mod?.data?.value;
+            const numericBonus = parseInt(bonusValue, 10);
+            if (
+              !isNaN(numericBonus) &&
+              String(numericBonus) === String(bonusValue).trim()
+            ) {
+              speedValue += numericBonus;
+            } else if (bonusValue) {
+              addMode(item?.name, bonusValue);
+            }
+          }
+        }
+      });
+    }
+  });
+
+  // Don't allow speed to go below 0
+  speedValue = Math.max(0, speedValue);
+
+  // Construct final speed string
+  let finalSpeed = `${speedValue} ${unit}`;
+  if (additionalModes.length > 0) {
+    finalSpeed += ", " + additionalModes.join(", ");
+  }
+
+  return finalSpeed;
+}
+
+// Returns grid squares occupied by a creature of the given size
+
+function getEffectiveMaxDex(rec, bestEquippedArmor) {
+  const baseCap = bestEquippedArmor?.maxDex || 0;
+  // 0 = no Dex allowed (heavy); 99 = uncapped (light). Neither should be
+  // touched by a "raise the cap" feature.
+  if (baseCap === 0 || baseCap >= 99) return baseCap;
+  const category = (bestEquippedArmor?.category || "").toLowerCase();
+  const mods = getEffectsAndModifiersForToken(rec, ["armorMaxDexBonus"]);
+  let floor = 0;
+  mods.forEach((mod) => {
+    if (mod.active === false) return;
+    const f = (mod.field || "").toLowerCase().trim();
+    if (f && f !== "all" && f !== category) return;
+    const v = parseInt(mod.value, 10);
+    if (!isNaN(v) && v > floor) floor = v;
+  });
+  return Math.max(baseCap, floor);
+}
+
+// Gets the best equipped armor for the context of the current PC
+
+
+
+// Builds an Apply-Damage macro (triple-backtick block) from a PRE-BUILT
+// damageByType map (e.g. {"fire": 12}). Mirrors damage.js's inline Apply_Damage
+// macro (RIV by type, threshold, temp HP, death, concentration, undo) for
+// synthetic damage sources (ongoing/ability damage). 5e 2024 has no
+// magical/silvered/cold-iron distinction, so RIV is purely by damage type.
+function getDamageMacro(macroName, damageByType, options = {}) {
+  const {
+    isCritical = false,
+    isSpell = false,
+    isHalf = false,
+    damageIgnoresResistances = [],
+    damageIgnoresImmunities = [],
+  } = options;
+  return `\`\`\`${macroName}
+let targets = api.getSelectedOrDroppedToken();
+
+// If record is not null, check if we're the GM or owner and use it
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
+}
+
+// If we're a player and we did not drop on a record, get our owned tokens
+if (!isGM && targets.length === 0) {
+    targets = api.getSelectedOwnedTokens().map(target => target.token);
+}
+
+targets.forEach(target => {
+  // Apply damage
+  if (target && target.data) {
+    let damage = 0;
+
+    const RIV = getRIV(target);
+
+    // First, just get the total of all damage for each type
+    const damageByType = ${JSON.stringify(damageByType)};
+
+    // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
+    Object.keys(damageByType).forEach(type => {
+      let thisDamage = damageByType[type];
+      ${isHalf ? 'thisDamage = Math.floor(thisDamage / 2);' : ''}
+      // If the damage type is in the ignore resistances list, we don't apply resistances
+      if (!${JSON.stringify(
+        damageIgnoresResistances
+      )}.includes(type.toLowerCase())) {
+        if (RIV.resistances.includes(type.toLowerCase() || '')
+          || (${isSpell} && RIV.resistances.includes('spell'))) {
+          thisDamage = Math.floor(thisDamage * 0.5);
+        }
+      }
+      // If the damage type is in the ignore immunities list, we don't apply immunities
+      if (!${JSON.stringify(
+        damageIgnoresImmunities
+      )}.includes(type.toLowerCase())) {
+        if (RIV.immunities.includes(type.toLowerCase() || '')
+          || (${isSpell} && RIV.immunities.includes('spell'))) {
+          thisDamage = 0;
+        }
+      }
+      if (RIV.vulnerabilities.includes(type.toLowerCase() || '')
+        || (${isSpell} && RIV.vulnerabilities.includes('spell'))) {
+        thisDamage = Math.floor(thisDamage * 2);
+      }
+
+      // Apply additional one-off resistances per damage type
+      if (RIV.resistanceByDamage[type.toLowerCase()]) {
+        thisDamage -= RIV.resistanceByDamage[type.toLowerCase()];
+        if (thisDamage < 0) {
+          thisDamage = 0;
+        }
+      }
+
+      damage += thisDamage;
+    });
+
+    // We cannot deal negative damage
+    if (damage < 0) {
+      damage = 0;
+    }
+
+    // Finally, if the target has a damage threshold, we need to check if the damage done meets or exceeds the threshold
+    let dueToThreshold = false;
+    if (target.data?.damageThreshold && damage < target.data?.damageThreshold) {
+      // If the damage is less than the threshold, it takes no damage
+      damage = 0;
+      dueToThreshold = true;
+    }
+
+    var curhp = target.data?.curhp || 0;
+    const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
+
+    // If damage > 0, float text
+    if (damage > 0) {
+      if ((curhp + oldTempHp) - damage <= 0) {
+        if (target.recordType === 'npcs') {
+          api.addEffect("Dead", target);
+        }
+        else {
+          api.addEffects(["Unconscious", "Prone"], target);
+        }
+      }
+      api.floatText(target, \`-\$\{damage\}\`, '#FF0000');
+    }
+    
+    // First deduct from Temp HP
+    const newTempHp = Math.max(oldTempHp - damage, 0);
+    const originalDamage = damage;
+    damage = Math.max(damage - oldTempHp, 0);
+    let usedTempHp = false;
+    if (newTempHp !== oldTempHp) {
+      api.setValueOnToken(target, "data.tempHp", newTempHp);
+      usedTempHp = true;
+    }
+
+    // Then deduct from Current HP and check for Instant Death
+    let instantDeath = false;
+    curhp -= damage;
+    if (curhp < 0) { 
+      // If the remainder of damage >= max HP, we apply Instant Death (if it's a character)
+      if (Math.abs(curhp) >= target.data?.hitpoints && target.recordType === 'characters') {
+        instantDeath = true;
+      }
+      curhp = 0;
+    }
+    if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
+    const oldHp = (target.data?.curhp || 0);
+    api.setValueOnToken(target, "data.curhp", curhp);
+    
+    const unIdentified = target.identified === false;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
+
+    let message = \`\$\{targetName\} took \$\{damage\} damage.\`;
+    if (usedTempHp) {
+      message = \`\$\{targetName\} took \$\{originalDamage\} damage and lost \$\{damage\} HP after deducting Temp HP.\`;
+    }
+    if (dueToThreshold) {
+      message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
+    }
+
+    if (instantDeath && target.recordType === 'characters') {
+      message += \`\n**[center][color=red]INSTANT DEATH[/color][/center]**\`;
+      applyInstantDeath(target);
+    }
+    else if (damage > 0 && target.recordType === 'characters') {
+      // If damage was done, we apply death failures if necessary and not instant death
+      applyDeathFailures(target, ${isCritical});
+    }
+
+    // Check for Concentration effect, and add a button to Roll Concentration Check
+    let concentrationMacro = '';
+    const effects = target.effects || [];
+    const concentration = effects.find(effect => effect.name === 'Concentration');
+    let oldSpellName = '';
+    if (concentration && originalDamage > 0 && curhp > 0) {
+      // DC is half the damage done rounded down or 10, whichever is higher, to a max of 30 
+      concentrationMacro = getConcentrationMacro(originalDamage);
+    }
+    else if (concentration && curhp <= 0) {
+      // Remove the Concentration effect
+      const oldValues = target?.effectValues || {};
+      if (oldValues[concentration?._id]) {
+        oldSpellName = oldValues[concentration?._id];
+      }
+      const conId = concentration?._id;
+      api.removeEffectById(conId, target);
+    }
+
+    const macro = damage > 0 && !instantDeath ? \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.tempHp', '\$\{oldTempHp\}'); api.editMessage(null, '~\$\{message\}~'); } else { api.showNotification('Only the GM can undo damage.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\` : '';
+
+    if (oldSpellName) {
+      message += \`\nLost concentration on \$\{oldSpellName\}.\`;
+    }
+
+    api.sendMessage(\`\$\{message\}\\n\$\{macro\}\\n\$\{concentrationMacro\}\`, undefined, undefined, undefined, target);
+  }
+});
+\`\`\``;
+}
+
+// Apply a "minimum damage die roll" (e.g. minDamageRoll=2 → every damage die that
+// rolled below 2 is treated as 2). Mutates roll.types/roll.dice in place and bumps
+// roll.total by the adjustment. Returns { totalAdjustment, adjustedCount }.
+// Sourced from a damage modifier whose value is "minrollN" (via getMinRollModifier).
+function applyMinDamageRoll(roll, minDamageRoll) {
+  let totalAdjustment = 0;
+  let adjustedCount = 0;
+  if (!roll || !minDamageRoll) {
+    return { totalAdjustment, adjustedCount };
+  }
+  if (Array.isArray(roll.types)) {
+    roll.types = roll.types.map((t) => {
+      const value = parseInt(t.value, 10);
+      if (t.die && !isNaN(value) && value < minDamageRoll) {
+        totalAdjustment += minDamageRoll - value;
+        adjustedCount++;
+        return { ...t, value: minDamageRoll };
+      }
+      return t;
+    });
+  }
+  if (Array.isArray(roll.dice)) {
+    roll.dice = roll.dice.map((d) => {
+      const value = parseInt(d.value, 10);
+      if (d.reason !== "dropped" && !isNaN(value) && value < minDamageRoll) {
+        return { ...d, value: minDamageRoll };
+      }
+      return d;
+    });
+  }
+  if (totalAdjustment > 0) {
+    roll.total = (parseInt(roll.total, 10) || 0) + totalAdjustment;
+  }
+  return { totalAdjustment, adjustedCount };
 }

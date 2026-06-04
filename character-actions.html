@@ -393,6 +393,74 @@
       "initiative",
     );
   }
+
+  // Standard 2024 combat actions for the "Actions in Combat" accordion. Posts the
+  // action's rules text to chat; actions with an `effect` also append a macro
+  // button that applies that effect to the selected/dropped token(s).
+  const STANDARD_ACTIONS = {
+    Dodge: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/buffs/speed-boost.webp",
+      effect: "Dodge",
+      description:
+        "Until the start of your next turn, any attack roll made against you has Disadvantage if you can see the attacker, and you make Dexterity saving throws with Advantage. You lose these benefits if you have the Incapacitated condition or if your Speed is 0.",
+    },
+    Help: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/buffs/empowerment-boost.webp",
+      description:
+        "Do one of the following:\n\n**Assist an Ability Check.** Choose one of your skill or tool proficiencies and one ally near enough to assist; that ally has Advantage on their next ability check with the chosen skill or tool. Expires at the start of your next turn.\n\n**Assist an Attack Roll.** Distract an enemy within 5 feet of you, giving one ally Advantage on their next attack roll against that enemy. Expires at the start of your next turn.",
+    },
+    Dash: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/buffs/blazing-speed.webp",
+      description:
+        "You gain extra movement for the current turn equal to your Speed after applying any modifiers. You can use a special speed (Fly, Swim, etc.) instead of your Speed when you take this action.",
+    },
+    Disengage: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/buffs/enhanced-armor-vest.webp",
+      description:
+        "Your movement doesn't provoke Opportunity Attacks for the rest of the current turn.",
+    },
+    Hide: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/magic/nature/stealth-hide-eyes-green.webp",
+      description:
+        "Make a DC 15 Dexterity (Stealth) check while you're Heavily Obscured or behind Three-Quarters or Total Cover and out of any enemy's line of sight. On a success you have the Invisible condition while hidden; note your check total (the DC for a creature to find you with a Wisdom (Perception) check).\n\nYou stop being hidden if you make a sound louder than a whisper, an enemy finds you, you make an attack roll, or you cast a spell with a Verbal component.",
+    },
+    Ready: {
+      icon: "https://assets.realmvtt.com/icons/scifi/skills/blue/timer-icon.webp",
+      description:
+        "Decide a perceivable trigger and the action (or movement up to your Speed) you'll take in response via your Reaction before the start of your next turn. A readied spell is cast as normal (expending resources) and held with Concentration until released by the trigger; if your Concentration breaks, the spell dissipates.",
+    },
+    Utilize: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/melee/hand-grip-sword-strike-orange.webp",
+      description:
+        "Use an object that requires an action to use (objects you'd normally interact with as part of another action don't require the Utilize action).",
+    },
+    Study: {
+      icon: "https://assets.realmvtt.com/icons/scifi/general/magnifying-glass.webp",
+      description:
+        "Make an Intelligence check to study your memory, a book, a clue, or another source of knowledge and call to mind an important piece of information about it.",
+    },
+    Influence: {
+      icon: "https://assets.realmvtt.com/icons/fantasy/skills/buffs/empowerment-boost.webp",
+      description:
+        "Urge a monster to do something. The DM decides whether it's Willing (complies, no check), Unwilling (refuses, no check), or Hesitant (an ability check is required). A Hesitant check's default DC is 15 or the monster's Intelligence score, whichever is higher.",
+    },
+  };
+
+  function useStandardAction(name) {
+    const action = STANDARD_ACTIONS[name];
+    if (!action) return;
+    const iconImg = action.icon ? `![](${action.icon}?width=24&height=24) ` : "";
+    let message = `#### ${iconImg}${name} [Action]\n\n---\n\n${action.description}`;
+    if (action.effect) {
+      message += `\n\n\`\`\`Apply_${action.effect}
+let targets = api.getSelectedOrDroppedToken();
+targets.forEach(target => {
+api.addEffect('${action.effect}', target);
+});
+\`\`\``;
+    }
+    api.sendMessage(message, undefined, [], []);
+  }
 </script>
 
 <!-- Actions tab. sheet--spread enables Cinzel labels + per-theme dividers;
@@ -442,6 +510,13 @@
       ></list>
     </div>
 
+    <!-- Feature toggles: flip predicate-gated modifiers (e.g. "Power Attack",
+         "Reckless") on/off. Populated automatically by features carrying a
+         `toggle` modifier. -->
+    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px">
+      <list listtype="toggle_list" field="toggles" variant="unstyled"></list>
+    </div>
+
     <div
       style="
         display: flex;
@@ -476,6 +551,120 @@
         variant="default"
         allowadd=""
       ></list>
+    </div>
+
+    <!-- Standard 2024 combat actions — useStandardAction() posts the action's
+         rules text (with icon) to chat; Dodge also applies its effect. -->
+    <div style="margin-top: 4px">
+      <accordion size="sm" field="standardActionsOpen" variant="contained">
+        <accordion.control>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+              height: 100%;
+            "
+          >
+            <label
+              class="rvtt-sheet-label rvtt-sheet-label--accent"
+              label="Actions in Combat"
+            ></label>
+          </div>
+        </accordion.control>
+        <divider label="Standard Actions" color="primary"></divider>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/buffs/speed-boost.webp" alt="Dodge" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Dodge [Action]"
+              onclick="useStandardAction('Dodge')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/buffs/empowerment-boost.webp" alt="Help" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Help [Action]"
+              onclick="useStandardAction('Help')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/buffs/blazing-speed.webp" alt="Dash" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Dash [Action]"
+              onclick="useStandardAction('Dash')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/buffs/enhanced-armor-vest.webp" alt="Disengage" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Disengage [Action]"
+              onclick="useStandardAction('Disengage')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/magic/nature/stealth-hide-eyes-green.webp" alt="Hide" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Hide [Action]"
+              onclick="useStandardAction('Hide')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/scifi/skills/blue/timer-icon.webp" alt="Ready" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Ready [Action]"
+              onclick="useStandardAction('Ready')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/melee/hand-grip-sword-strike-orange.webp" alt="Utilize" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Utilize [Action]"
+              onclick="useStandardAction('Utilize')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/scifi/general/magnifying-glass.webp" alt="Study" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Study [Action]"
+              onclick="useStandardAction('Study')"
+            ></button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0">
+            <div style="box-sizing: border-box; width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--mantine-color-default-border); border-radius: 4px; overflow: hidden"><img src="https://assets.realmvtt.com/icons/fantasy/skills/buffs/empowerment-boost.webp" alt="Influence" width="28" height="28" style="display: block; width: 100%; height: 100%; object-fit: cover" /></div><button
+              size="xxs"
+              variant="outline"
+              width="100%"
+              label="Influence [Action]"
+              onclick="useStandardAction('Influence')"
+            ></button>
+          </div>
+        </div>
+      </accordion>
     </div>
   </div>
 

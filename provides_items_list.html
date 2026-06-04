@@ -1,0 +1,58 @@
+<div style="min-height: 30px; display: flex; flex-direction: column; gap: 4px">
+  <div style="display: flex; gap: 4px; align-items: center">
+    <div style="width: 30px; min-width: 30px">
+      <portrait width="30px" height="30px" name="portrait"></portrait>
+    </div>
+    <namefield
+      width="100%"
+      size="xs"
+      variant="tooltip"
+      label="Name"
+      field="namefield"
+    ></namefield>
+  </div>
+  <div style="display: flex; gap: 4px; align-items: center">
+    <numberfield
+      width="80px"
+      size="xs"
+      field="levelRequirement"
+      label="Level Req."
+      placeholder="—"
+    ></numberfield>
+    <dropdown
+      size="xs"
+      field="spellcastingAbility"
+      label="Related Ability (if Applicable)"
+      placeholder="Default"
+      options='[{"label": "Default", "value": ""},
+      {"label": "Highest of Int/Wis/Cha", "value": "highest"},
+      {"label": "Highest of Int/Cha", "value": "highest_int_cha"},
+      {"label": "Highest of Wis/Cha", "value": "highest_wis_cha"},
+      {"label": "Highest of Int/Wis", "value": "highest_int_wis"},
+      {"label": "Strength", "value": "strength"},
+      {"label": "Dexterity", "value": "dexterity"},
+      {"label": "Constitution", "value": "constitution"},
+      {"label": "Intelligence", "value": "intelligence"},
+      {"label": "Wisdom", "value": "wisdom"},
+      {"label": "Charisma", "value": "charisma"}]'
+    ></dropdown>
+    <dropdown
+      size="xs"
+      field="spellType"
+      label="Type (if Applicable)"
+      placeholder="Default"
+      defaultvalue=""
+      options='[{"label": "Default", "value": ""},
+      {"label": "At Will", "value": "atwill"},
+      {"label": "Daily", "value": "daily"}]'
+    ></dropdown>
+  </div>
+  <div>
+    <checkbox
+      size="xs"
+      field="providesAbilitiesToOwnGroup"
+      label="Add to Feature's Ability Group"
+      description="For abilities: places in the feature's group always."
+    ></checkbox>
+  </div>
+</div>

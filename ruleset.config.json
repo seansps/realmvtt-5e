@@ -1,8 +1,8 @@
 {
-  "name": "Dungeons and Dragons 5th Edition (2024)",
+  "name": "Dungeons and Dragons 5th Edition (DEV)",
   "description": "The 5th Edition of Dungeons and Dragons using the revised 2024 rules.",
   "version": 1,
-  "published": true,
+  "published": false,
   "records": [
     {
       "name": "Characters",
@@ -129,6 +129,10 @@
           "file": "npcs-main.html"
         },
         {
+          "name": "Actions in Combat",
+          "file": "npc-actions-in-combat.html"
+        },
+        {
           "name": "Gear",
           "file": "npcs-gear.html"
         },
@@ -193,7 +197,8 @@
       "filters": {
         "level": "dynamic",
         "class": "dynamic",
-        "subclass": "dynamic"
+        "subclass": "dynamic",
+        "actionType": "dynamic"
       },
       "hideFromCompendium": false
     },
@@ -295,7 +300,8 @@
       "emptyListText": "",
       "singleRow": false,
       "filters": {
-        "type": "origin,general,fightingStyle,epicBoon,eldritchInvocation"
+        "type": "origin,general,fightingStyle,epicBoon,eldritchInvocation,feature",
+        "prerequisites": "dynamic"
       },
       "hideFromCompendium": false,
       "hasToken": false
@@ -309,12 +315,12 @@
       "tabs": [
         {
           "name": "Main",
-          "file": "features-main.html",
+          "file": "feats-main.html",
           "fields": []
         },
         {
           "name": "Rules",
-          "file": "features-rules.html"
+          "file": "feats-rules.html"
         }
       ],
       "hideFromCompendium": true,
@@ -544,9 +550,7 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Ability",
-      "allowedListTypes": [
-        "abilities"
-      ],
+      "allowedListTypes": ["abilities"],
       "newItemName": "New Ability",
       "newItemUnidentifiedName": "New Ability",
       "stackDuplicates": false,
@@ -863,9 +867,7 @@
           ]
         }
       ],
-      "allowedListTypes": [
-        "items"
-      ],
+      "allowedListTypes": ["items"],
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
@@ -904,6 +906,12 @@
           "operator": "equals",
           "value": "{data.filterByType}",
           "isOr": false
+        },
+        {
+          "field": "unarmedStrike",
+          "operator": "not_equals",
+          "value": "true",
+          "isOr": false
         }
       ],
       "disableDrop": true,
@@ -926,9 +934,7 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
-      "allowedListTypes": [
-        "items"
-      ],
+      "allowedListTypes": ["items"],
       "newItemName": "New Item",
       "newItemUnidentifiedName": "Unidentified Item",
       "stackDuplicates": true,
@@ -979,6 +985,126 @@
       "singleRow": false
     },
     {
+      "name": "Feature Choice List",
+      "type": "feature_choice_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 430,
+      "tabs": [
+        {
+          "name": "Main",
+          "file": "feature-choice-list.html",
+          "fields": []
+        }
+      ],
+      "hideFromCompendium": false,
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Feature Choice",
+      "allowedListTypes": [],
+      "newItemName": "New Choice Set",
+      "newItemUnidentifiedName": "Choice Set",
+      "stackDuplicates": false,
+      "disableDrop": false,
+      "countFieldName": "",
+      "emptyListText": "No Choices",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": false
+    },
+    {
+      "name": "Level Scaling List",
+      "type": "level_scaling_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 60,
+      "tabs": [
+        {
+          "name": "Main",
+          "file": "level-scaling-list.html",
+          "fields": []
+        }
+      ],
+      "hideFromCompendium": false,
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Level Scaling",
+      "allowedListTypes": [],
+      "newItemName": "Scaling",
+      "newItemUnidentifiedName": "Scaling",
+      "stackDuplicates": false,
+      "disableDrop": false,
+      "countFieldName": "",
+      "emptyListText": "No Scaling",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": false
+    },
+    {
+      "name": "Provides Items List",
+      "type": "provides_items_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 60,
+      "tabs": [
+        {
+          "name": "Main",
+          "file": "provides_items_list.html",
+          "fields": []
+        }
+      ],
+      "hideFromCompendium": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": true,
+      "addButtonText": "",
+      "allowedListTypes": ["items", "spells", "feats", "abilities"],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "disableDrop": false,
+      "countFieldName": "",
+      "emptyListText": "Drag Items, Spells, Abilities or Feats",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": false
+    },
+    {
+      "name": "Toggle List",
+      "type": "toggle_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 60,
+      "tabs": [
+        {
+          "name": "Main",
+          "file": "toggle-list.html",
+          "fields": []
+        }
+      ],
+      "hideFromCompendium": false,
+      "icon": "",
+      "showAddButton": false,
+      "showDeleteButton": false,
+      "addButtonText": "",
+      "allowedListTypes": [],
+      "newItemName": "",
+      "newItemUnidentifiedName": "",
+      "stackDuplicates": false,
+      "disableDrop": false,
+      "countFieldName": "",
+      "emptyListText": " ",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": true
+    },
+    {
       "name": "NPC Actions List",
       "type": "npc_actions_list",
       "isList": true,
@@ -1025,9 +1151,7 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
-      "allowedListTypes": [
-        "items"
-      ],
+      "allowedListTypes": ["items"],
       "newItemName": "New Item",
       "newItemUnidentifiedName": "Unidentified Item",
       "stackDuplicates": true,
@@ -1094,9 +1218,7 @@
       "showAddButton": false,
       "showDeleteButton": true,
       "addButtonText": "Add Spell",
-      "allowedListTypes": [
-        "spells"
-      ],
+      "allowedListTypes": ["spells"],
       "newItemName": "New Spell",
       "newItemUnidentifiedName": "Spell",
       "stackDuplicates": false,
@@ -1275,9 +1397,7 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Spell",
-      "allowedListTypes": [
-        "spells"
-      ],
+      "allowedListTypes": ["spells"],
       "newItemName": "New Spell",
       "newItemUnidentifiedName": "New Spell",
       "stackDuplicates": false,
@@ -1458,7 +1578,9 @@
       "onTurnStart": {
         "file": "rollhandlers/onTurnStart.js"
       },
-      "onTurnEnd": "",
+      "onTurnEnd": {
+        "file": "rollhandlers/onTurnEnd.js"
+      },
       "onRoundStart": "",
       "onRoundEnd": "",
       "onRollInitiative": {
@@ -2638,12 +2760,259 @@
         "label": "Spell or Ability Name",
         "type": "spellName",
         "fields": []
+      },
+      {
+        "label": "Attacks Targeting You By Applicant",
+        "type": "attackTargetBonus",
+        "fields": [],
+        "freeTextField": false
+      },
+      {
+        "label": "Damage Bonus Targeting You",
+        "type": "damageTargetBonusAny",
+        "fields": [],
+        "freeTextField": false
+      },
+      {
+        "label": "Hit Die Healing Bonus (Per Die)",
+        "type": "hitDieHealingBonus",
+        "fields": [],
+        "freeTextField": true
+      },
+      {
+        "label": "Hit Die Healing Multiplier",
+        "type": "hitDieHealingMultiplier",
+        "fields": [],
+        "freeTextField": true
+      },
+      {
+        "label": "Ongoing Damage",
+        "type": "ongoingDamage",
+        "fields": [],
+        "freeTextField": false
+      },
+      {
+        "label": "Regeneration (End of Turn)",
+        "type": "regenerationOnTurnEnd",
+        "fields": [],
+        "freeTextField": true
+      },
+      {
+        "label": "Unarmed Damage Override",
+        "type": "unarmedDamageOverride",
+        "fields": [],
+        "freeTextField": false
+      },
+      {
+        "label": "Weapon Finesse",
+        "type": "weaponFinesse",
+        "fields": [
+          {
+            "label": "",
+            "field": ""
+          }
+        ],
+        "freeTextField": true
+      },
+      {
+        "label": "Weapon Proficiency",
+        "type": "weaponProficiency",
+        "fields": [],
+        "freeTextField": true
+      },
+      {
+        "label": "Weapon Range Bonus",
+        "type": "weaponRangeBonus",
+        "fields": [
+          {
+            "label": "Normal Range",
+            "field": "normal"
+          },
+          {
+            "label": "Long Range",
+            "field": "long"
+          }
+        ],
+        "freeTextField": false
+      },
+      {
+        "label": "Ability Group Uses Bonus",
+        "type": "abilityGroupUsesBonus",
+        "fields": []
+      },
+      {
+        "label": "Armor Class Ability Swap",
+        "type": "armorClassAbilitySwap",
+        "fields": []
+      },
+      {
+        "label": "Armor Class Calculation",
+        "type": "armorClassCalculation",
+        "fields": []
+      },
+      {
+        "label": "Armor Max Dex Bonus",
+        "type": "armorMaxDexBonus",
+        "fields": []
+      },
+      {
+        "label": "Armor Proficiency",
+        "type": "armorProficiency",
+        "fields": []
+      },
+      {
+        "label": "Attribute Bonus",
+        "type": "attributeBonus",
+        "fields": []
+      },
+      {
+        "label": "Base Speed",
+        "type": "baseSpeed",
+        "fields": []
+      },
+      {
+        "label": "Death Save Threshold",
+        "type": "deathSaveThreshold",
+        "fields": []
+      },
+      {
+        "label": "Dual Concentration",
+        "type": "dualConcentration",
+        "fields": []
+      },
+      {
+        "label": "Encumbrance Size Increase",
+        "type": "encumbranceSizeIncrease",
+        "fields": []
+      },
+      {
+        "label": "Healing Bonus",
+        "type": "healingBonus",
+        "fields": []
+      },
+      {
+        "label": "Healing Penalty",
+        "type": "healingPenalty",
+        "fields": []
+      },
+      {
+        "label": "Hit Point Maximum",
+        "type": "hitpoints",
+        "fields": []
+      },
+      {
+        "label": "Ignore Armor Skill Penalty",
+        "type": "ignoreArmorSkillPenalty",
+        "fields": []
+      },
+      {
+        "label": "Ignore Worn Armor Weight",
+        "type": "ignoreWornArmorWeight",
+        "fields": []
+      },
+      {
+        "label": "Add Language",
+        "type": "language",
+        "fields": []
+      },
+      {
+        "label": "Martial Arts Die",
+        "type": "martialArtsDie",
+        "fields": []
+      },
+      {
+        "label": "No Close Range Disadvantage",
+        "type": "noCloseRangeDisadvantage",
+        "fields": []
+      },
+      {
+        "label": "No Long Range Disadvantage",
+        "type": "noLongRangeDisadvantage",
+        "fields": []
+      },
+      {
+        "label": "Passive Bonus",
+        "type": "passiveBonus",
+        "fields": []
+      },
+      {
+        "label": "Passive Penalty",
+        "type": "passivePenalty",
+        "fields": []
+      },
+      {
+        "label": "Passive Proficiency",
+        "type": "passiveProficiency",
+        "fields": []
+      },
+      {
+        "label": "Saving Throw Note",
+        "type": "saveNote",
+        "fields": []
+      },
+      {
+        "label": "Saving Throw Proficiency",
+        "type": "saveProficiency",
+        "fields": []
+      },
+      {
+        "label": "Senses",
+        "type": "senses",
+        "fields": []
+      },
+      {
+        "label": "Set Value",
+        "type": "setValue",
+        "fields": []
+      },
+      {
+        "label": "Skill Proficiency",
+        "type": "skillProficiency",
+        "fields": []
+      },
+      {
+        "label": "Speed Bonus",
+        "type": "speedBonus",
+        "fields": []
+      },
+      {
+        "label": "Speed Penalty",
+        "type": "speedPenalty",
+        "fields": []
+      },
+      {
+        "label": "Temporary HP Bonus",
+        "type": "tempHpBonus",
+        "fields": []
+      },
+      {
+        "label": "Toggle",
+        "type": "toggle",
+        "fields": []
+      },
+      {
+        "label": "Tool Proficiency",
+        "type": "toolProficiency",
+        "fields": []
+      },
+      {
+        "label": "Weapon Damage Type Override",
+        "type": "weaponDamageTypeOverride",
+        "fields": []
+      },
+      {
+        "label": "Additional Weapon Mastery",
+        "type": "weaponMastery",
+        "fields": []
+      },
+      {
+        "label": "Wild Shape Bonus",
+        "type": "wildShapeBonus",
+        "fields": []
       }
     ],
     "otherSettings": {
-      "advDisRolls": [
-        "d20"
-      ],
+      "advDisRolls": ["d20"],
       "advName": "Advantage",
       "advShortName": "ADV",
       "disName": "Disadvantage",
@@ -2651,7 +3020,11 @@
       "commonScript": {
         "file": "rollhandlers/common.js"
       },
-      "scripts": {},
+      "scripts": {
+        "feature-utils": {
+          "file": "rollhandlers/feature-utils.js"
+        }
+      },
       "defaultDice": "default",
       "defaultUnitsPerSquare": 5,
       "defaultUnits": "feet",
