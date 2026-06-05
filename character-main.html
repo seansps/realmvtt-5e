@@ -1601,34 +1601,46 @@
       // After data is updated, update the proficiency modifiers
       updateProficiencies(bonus, updatedRecord);
 
-      // Re-merge the KNOWN class base proficiencies (from valuesToSet) onto the
-      // settled values. A feature/choice added during the cascade can be handed a
-      // stale cached record and overwrite the base it never saw; this restores it.
-      // Dedup-merge, so it's a no-op when the base is already present.
-      const reapplyClassBaseProficiencies = (done) => {
+      // Re-derive ALL proficiency grants onto the settled record: the KNOWN class
+      // base (from valuesToSet) PLUS every feature's weaponProficiency/
+      // armorProficiency modifier. Features/choices added during the cascade can
+      // be handed a stale cached record and overwrite each other's grants; merging
+      // them all here (additive dedup) restores everything that was clobbered and
+      // is a no-op when nothing was lost.
+      const reapplyProficiencies = (done) => {
         const baseWeapon = valuesToSet["data.weaponProficiencies"] || "";
         const baseArmor = valuesToSet["data.armorTraining"] || "";
-        if (!baseWeapon && !baseArmor) {
-          if (done) done();
-          return;
-        }
         api.getRecord("characters", record._id, (fresh) => {
-          const fields = {};
-          if (baseWeapon) {
-            fields["data.weaponProficiencies"] = mergeWeaponProficiencies(
-              fresh?.data?.weaponProficiencies || "",
-              baseWeapon,
-            );
-          }
-          if (baseArmor) {
-            fields["data.armorTraining"] = mergeCommaSeparated(
-              fresh?.data?.armorTraining || "",
-              baseArmor,
-            );
-          }
-          api.setValues(fields, () => {
-            if (done) done();
+          const origWeapon = fresh?.data?.weaponProficiencies || "";
+          const origArmor = fresh?.data?.armorTraining || "";
+          let weapon = origWeapon;
+          let armor = origArmor;
+          if (baseWeapon) weapon = mergeWeaponProficiencies(weapon, baseWeapon);
+          if (baseArmor) armor = mergeCommaSeparated(armor, baseArmor);
+          (fresh?.data?.features || []).forEach((f) => {
+            (f?.data?.modifiers || []).forEach((m) => {
+              const t = m?.data?.type;
+              const rawV = m?.data?.value;
+              const v =
+                typeof rawV === "string" ? rawV.trim() : String(rawV || "");
+              if (!v || v === "None") return;
+              if (t === "weaponProficiency")
+                weapon = mergeWeaponProficiencies(weapon, v);
+              else if (t === "armorProficiency")
+                armor = mergeCommaSeparated(armor, v);
+            });
           });
+          const fields = {};
+          if (weapon !== origWeapon)
+            fields["data.weaponProficiencies"] = weapon;
+          if (armor !== origArmor) fields["data.armorTraining"] = armor;
+          if (Object.keys(fields).length > 0) {
+            api.setValues(fields, () => {
+              if (done) done();
+            });
+          } else if (done) {
+            done();
+          }
         });
       };
 
@@ -1698,8 +1710,7 @@
                   runClassFeatureCascade(
                     result.featuresToAdd,
                     recAfterGroups || rec,
-                    () =>
-                      reapplyClassBaseProficiencies(() => proceedToPrompts()),
+                    () => reapplyProficiencies(() => proceedToPrompts()),
                   ),
               );
               return;
