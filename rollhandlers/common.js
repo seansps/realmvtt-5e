@@ -1338,6 +1338,32 @@ function getTotalValueFromFields(
   return total;
 }
 
+// Collects active `saveNote` modifiers for the given save (ability name like
+// "dexterity") and returns them as an array of {name, tooltip} for use in
+// metadata.tags. Matches modifier.field against the save ability ("dexterity"),
+// the suffixed form ("dexteritySave"), "saves" (any save), or "all".
+// Value format: "TagName|Description" (description optional, pipe-separated).
+function collectSaveNotes(target, save) {
+  const all = getEffectsAndModifiersForToken(target, ["saveNote"], "");
+  const saveLower = (save || "").toLowerCase();
+  const saveSuffix = saveLower ? `${saveLower}save` : "";
+  const result = [];
+  all.forEach((n) => {
+    if (n.active === false) return;
+    const f = (n.field || "").toLowerCase().trim();
+    const matches =
+      !f || f === "all" || f === "saves" || f === saveLower || f === saveSuffix;
+    if (!matches) return;
+    const raw = String(n.value || "");
+    const sepIdx = raw.indexOf("|");
+    const tag = (sepIdx >= 0 ? raw.slice(0, sepIdx) : raw).trim();
+    const tooltip = sepIdx >= 0 ? raw.slice(sepIdx + 1).trim() : "";
+    if (!tag) return;
+    result.push({ name: tag, tooltip });
+  });
+  return result;
+}
+
 function getEffectAppliedBy(record, effect) {
   const effectValue = record?.effectValues?.[effect?._id];
   if (effectValue && effectValue?.tokenId !== "null") {
@@ -2800,6 +2826,9 @@ function rollSavingThrow(save, dc) {
       dc: dc,
       minRoll: minRoll,
     };
+    // saveNote modifiers → reminder tags above the save result.
+    const saveNotes = collectSaveNotes(token, save);
+    if (saveNotes.length) metadata.tags = saveNotes;
 
     api.promptRollForToken(
       token,

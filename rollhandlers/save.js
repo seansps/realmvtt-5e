@@ -43,7 +43,11 @@ if (dc > 0) {
   }
 }
 
+// saveNote reminder tags threaded through metadata.tags by the prompt phase.
+const noteTags = Array.isArray(data?.roll?.metadata?.tags)
+  ? data.roll.metadata.tags
+  : [];
 api.sendMessage(message, roll, [], [{
   name: rollName || "Save",
   tooltip: tooltip || `${rollName || ""} Saving Throw`
-}]);
+}, ...noteTags]);

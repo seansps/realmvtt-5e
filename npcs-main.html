@@ -216,6 +216,9 @@
       tooltip: `${capitalize(save)} Saving Throw`,
       dc: 0,
     };
+    // saveNote modifiers → reminder tags above the save result.
+    const saveNotes = collectSaveNotes(record, save);
+    if (saveNotes.length) metadata.tags = saveNotes;
 
     api.promptRoll(
       `${capitalize(save)} Save`,
