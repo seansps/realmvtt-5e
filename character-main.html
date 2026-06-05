@@ -1410,12 +1410,19 @@
       // re-dropping a class / overlapping grants don't duplicate entries. Weapons
       // use the category-superseding merge (full "Martial Weapons" replaces a
       // limited "Martial weapons that have the Finesse or Light property").
+      // Read the CURRENT lists via api.getValue (fresh) — the global `record` is a
+      // stale snapshot and would miss proficiencies a feature/choice granted just
+      // before this drop, causing them to be clobbered.
       valuesToSet[`data.weaponProficiencies`] = mergeWeaponProficiencies(
-        record?.data?.weaponProficiencies || "",
+        api.getValue("data.weaponProficiencies") ||
+          record?.data?.weaponProficiencies ||
+          "",
         classObj?.data?.weaponProficiencies || "",
       );
       valuesToSet[`data.armorTraining`] = mergeCommaSeparated(
-        record?.data?.armorTraining || "",
+        api.getValue("data.armorTraining") ||
+          record?.data?.armorTraining ||
+          "",
         classObj?.data?.armorTraining || "",
       );
 
@@ -1431,12 +1438,17 @@
       // Multiclass do not get save proficiencies
       // Weapon Proficiencies / Armor Training for the multiclass class
       // Merge (dedup) the multiclass proficiency grants into the current lists.
+      // Read fresh (api.getValue) so prior feature/choice grants aren't clobbered.
       valuesToSet[`data.weaponProficiencies`] = mergeWeaponProficiencies(
-        record?.data?.weaponProficiencies || "",
+        api.getValue("data.weaponProficiencies") ||
+          record?.data?.weaponProficiencies ||
+          "",
         classObj?.data?.weaponProficienciesMulti || "",
       );
       valuesToSet[`data.armorTraining`] = mergeCommaSeparated(
-        record?.data?.armorTraining || "",
+        api.getValue("data.armorTraining") ||
+          record?.data?.armorTraining ||
+          "",
         classObj?.data?.armorTrainingMulti || "",
       );
 
