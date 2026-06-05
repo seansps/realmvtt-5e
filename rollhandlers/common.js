@@ -3698,19 +3698,23 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
         target?.data?.[`${normalToCamelCase(skillField)}Prof`];
       return profValue === "true" || profValue === "expertise";
     }
-    // Spell predicate: "spell:<school>" — true if the spell currently being cast
-    // belongs to the given School of Magic. 5e has a single school per spell
-    // (data.school), surfaced as context.spellSchool by the cast path.
+    // Spell predicate: "spell:<value>" — true if the spell currently being cast
+    // matches <value> as either its School of Magic (data.school, e.g.
+    // "spell:evocation") OR one of its spell lists (data.spellLists, the classes
+    // that can cast it, e.g. "spell:druid" / "spell:cleric"). Both surfaced on
+    // context by the cast path.
     if (predicate.startsWith("spell:")) {
       if (!context) return false;
-      const requiredSchool = predicate
-        .slice("spell:".length)
-        .toLowerCase()
-        .trim();
-      return (
-        !!context.spellSchool &&
-        String(context.spellSchool).toLowerCase() === requiredSchool
-      );
+      const required = predicate.slice("spell:".length).toLowerCase().trim();
+      if (
+        context.spellSchool &&
+        String(context.spellSchool).toLowerCase() === required
+      ) {
+        return true;
+      }
+      return (context.spellLists || [])
+        .map((l) => String(l).toLowerCase())
+        .includes(required);
     }
     // Weapon predicate: "weapon:<property>" — checks the attacking weapon's
     // properties or the attack's melee/ranged mode. Context is populated by

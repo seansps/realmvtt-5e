@@ -5,8 +5,12 @@
     // It could be a numerical modifier, or a die we are adding
     let attackModifiers = [];
 
-    // Predicate context so spell:<school> can gate spell attack modifiers.
-    const spellPredCtx = { spellSchool: spell?.data?.school || "" };
+    // Predicate context so spell:<value> (school or spell list/class) can gate
+    // spell attack modifiers.
+    const spellPredCtx = {
+      spellSchool: spell?.data?.school || "",
+      spellLists: spell?.data?.spellLists || [],
+    };
 
     const spellModBonus = parseInt(
       api.getValue("data.spellModBonus") || "0",
@@ -84,9 +88,13 @@
     const spellDataPath = dataPath.replace(".data.castBtn", "");
     const spell = api.getValue(spellDataPath);
 
-    // Predicate context for this cast so spell:<school> predicates can gate
-    // spell attack / damage / DC / healing modifiers by School of Magic.
-    const spellPredCtx = { spellSchool: spell?.data?.school || "" };
+    // Predicate context for this cast so spell:<value> predicates can gate spell
+    // attack / damage / DC / healing modifiers by School of Magic (data.school)
+    // or spell list / class (data.spellLists, e.g. spell:druid, spell:cleric).
+    const spellPredCtx = {
+      spellSchool: spell?.data?.school || "",
+      spellLists: spell?.data?.spellLists || [],
+    };
 
     const spellName = spell?.name || "Unknown Spell";
     const spellDescription = api.richTextToMarkdown(
