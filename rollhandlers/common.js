@@ -1774,7 +1774,7 @@ function getEffectsAndModifiersForToken(
             results.push({
               name: feature?.name || "Wild Shape Bonus",
               value: value,
-              active: true,
+              active: modifier.data?.active === true,
               modifierType: "attackBonus",
               field: field,
               valueType: modifier.data?.valueType,
@@ -1811,7 +1811,7 @@ function getEffectsAndModifiersForToken(
             results.push({
               name: feature?.name || "Wild Shape Bonus",
               value: value,
-              active: true,
+              active: modifier.data?.active === true,
               modifierType: "damageBonus",
               field: field,
               valueType: modifier.data?.valueType,
