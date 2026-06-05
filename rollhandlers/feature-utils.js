@@ -1597,12 +1597,12 @@ function applyProvidesItems(feature, characterRecord, callback) {
         const abilityToAdd = { ...item, _id: generateId() };
         // Fetch fresh record to check existing groups
         api.getRecord(charRecType, charRecId, (freshRec) => {
-          const existingGroup = freshRec?.data?.abilityGroups?.find(
+          const existingGroup = (Array.isArray(freshRec?.data?.abilityGroups) ? freshRec.data.abilityGroups : []).find(
             (ag) => ag?.name === groupName,
           );
 
           if (existingGroup) {
-            const groupIdx = freshRec?.data?.abilityGroups?.findIndex(
+            const groupIdx = (Array.isArray(freshRec?.data?.abilityGroups) ? freshRec.data.abilityGroups : []).findIndex(
               (ag) => ag?.name === groupName,
             );
             safeAddValue(
@@ -2507,12 +2507,12 @@ function _processChoiceAbility(feature, characterRecord, callback) {
   const charRecType = characterRecord?.recordType || "characters";
   const charRecId = characterRecord?._id;
   api.getRecord(charRecType, charRecId, (freshRec) => {
-    const existingGroup = freshRec?.data?.abilityGroups?.find(
+    const existingGroup = (Array.isArray(freshRec?.data?.abilityGroups) ? freshRec.data.abilityGroups : []).find(
       (ag) => ag?.name === abilityGroupName,
     );
 
     const abilityAddedCallback = (updatedRec) => {
-      const abilityGroupIndex = updatedRec?.data?.abilityGroups?.findIndex(
+      const abilityGroupIndex = (Array.isArray(updatedRec?.data?.abilityGroups) ? updatedRec.data.abilityGroups : []).findIndex(
         (ag) => ag?.name === abilityGroupName,
       );
       if (abilityGroupIndex === -1) {
@@ -4113,7 +4113,7 @@ function promptForChoices(
             characterRecord.recordType || "characters",
             characterRecord._id,
             function (freshRec) {
-              var existingGroup = freshRec?.data?.abilityGroups?.find(
+              var existingGroup = (Array.isArray(freshRec?.data?.abilityGroups) ? freshRec.data.abilityGroups : []).find(
                 function (ag) {
                   return ag?.name === abilityGroupName;
                 },
@@ -4127,7 +4127,7 @@ function promptForChoices(
                   },
                   function (updatedRecord) {
                     var groupIdx =
-                      updatedRecord?.data?.abilityGroups?.findIndex(
+                      (Array.isArray(updatedRecord?.data?.abilityGroups) ? updatedRecord.data.abilityGroups : []).findIndex(
                         function (ag) {
                           return ag?.name === abilityGroupName;
                         },
@@ -4146,7 +4146,7 @@ function promptForChoices(
                   characterRecord,
                 );
               } else {
-                var groupIdx = freshRec?.data?.abilityGroups?.findIndex(
+                var groupIdx = (Array.isArray(freshRec?.data?.abilityGroups) ? freshRec.data.abilityGroups : []).findIndex(
                   function (ag) {
                     return ag?.name === abilityGroupName;
                   },
@@ -4550,12 +4550,12 @@ function updateAbilitiesFromFeature(feature, recordOverride) {
     const abilityRestoresOn = feature?.data?.restoreOn || "";
     const savingThrowAbility = feature?.data?.savingThrowAbility || "";
     const altSavingThrowAbility = feature?.data?.altSavingThrowAbility || "";
-    let abilityGroup = rec?.data?.abilityGroups?.find(
+    let abilityGroup = (Array.isArray(rec?.data?.abilityGroups) ? rec.data.abilityGroups : []).find(
       (ag) => ag?.name === abilityGroupName,
     );
     // When the group is added, or found, we add abilities to it or set data on it
     const abilityAddedCallback = (updatedRec) => {
-      const abilityGroupIndex = updatedRec?.data?.abilityGroups?.findIndex(
+      const abilityGroupIndex = (Array.isArray(updatedRec?.data?.abilityGroups) ? updatedRec.data.abilityGroups : []).findIndex(
         (ag) => ag?.name === abilityGroupName,
       );
       if (abilityGroupIndex === -1) {

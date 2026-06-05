@@ -64,12 +64,12 @@ function processDeferredAbilityGroups(groups, rec, done) {
       return;
     }
     const ag = groups[idx++];
-    const existingGroup = currentRec?.data?.abilityGroups?.find(
+    const existingGroup = (Array.isArray(currentRec?.data?.abilityGroups) ? currentRec.data.abilityGroups : []).find(
       (g) => g?.name === ag.abilityGroupName,
     );
 
     const afterGroupExists = (recWithGroup) => {
-      const groupIdx = recWithGroup?.data?.abilityGroups?.findIndex(
+      const groupIdx = (Array.isArray(recWithGroup?.data?.abilityGroups) ? recWithGroup.data.abilityGroups : []).findIndex(
         (g) => g?.name === ag.abilityGroupName,
       );
       if (groupIdx === -1) {
@@ -977,6 +977,34 @@ function evaluateMath(stringValue) {
   }
 }
 
+// Like evaluateMath but honors the named helpers ceil/floor/round/abs/min/max
+// and does NOT implicitly floor the result (so `ceil(1/2)` is 1, not 0). Used
+// for `{...}` blocks that contain one of those functions.
+function evaluateMathExpression(stringValue) {
+  if (!stringValue) return 0;
+  try {
+    // Map the bare helper names to Math.* so they're callable.
+    const mapped = stringValue.replace(
+      /\b(ceil|floor|round|abs|min|max)\b/gi,
+      (m) => "Math." + m.toLowerCase(),
+    );
+    // Validate: after removing the allowed Math.* helpers, only digits,
+    // operators, parens, commas, dots and whitespace may remain. This blocks
+    // arbitrary identifiers / code from being evaluated.
+    const stripped = mapped.replace(
+      /Math\.(?:ceil|floor|round|abs|min|max)/g,
+      "",
+    );
+    if (!/^[\s0-9+\-*/().,]*$/.test(stripped)) {
+      return 0;
+    }
+    const result = Function(`'use strict'; return (${mapped})`)();
+    return typeof result === "number" && isFinite(result) ? result : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
 function applyMath(value, math) {
   // Trim spaces and split the string into operator and number
   const trimmedMath = math.trim();
@@ -1150,6 +1178,12 @@ function checkForReplacements(
     // Check for ternary syntax (contains ? and :)
     if (expression.includes("?")) {
       return evaluateTernary(expression);
+    }
+    // If the expression uses a named helper (ceil/floor/round/abs/min/max),
+    // evaluate it honoring that function (e.g. ceil(1/2) → 1). Plain arithmetic
+    // still rounds down via evaluateMath (D&D convention).
+    if (/\b(?:ceil|floor|round|abs|min|max)\s*\(/i.test(expression)) {
+      return String(evaluateMathExpression(expression));
     }
     const result = evaluateMath(expression);
     return String(result);
