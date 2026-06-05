@@ -690,12 +690,31 @@
   // An unarmedDamageOverride modifier replaces the unarmed strike's base damage
   // (e.g. a feature that sets it to "1d8"). Last active override wins. Runs before
   // applyMartialArtsDie so the die can still be upgraded.
-  function applyUnarmedDamageOverride(damage) {
+  //
+  // Versatile syntax "1d6/1d8 bludgeoning": the first token holds two dice
+  // separated by "/". Reuses the existing two-hand toggle — the die AFTER the
+  // slash is used when the attack is set to Two-Handed (handBtn "two", i.e. not
+  // holding a weapon or shield), the die BEFORE it otherwise. E.g. Unarmed
+  // Fighting: 1d6 + STR, becoming 1d8 with both hands free. A value with no "/"
+  // is used verbatim, exactly as before.
+  function applyUnarmedDamageOverride(damage, attack) {
     const overrideMods = getEffectsAndModifiers(["unarmedDamageOverride"]);
     if (overrideMods.length === 0) return damage;
-    const override = (overrideMods[overrideMods.length - 1].value ?? "")
+    let override = (overrideMods[overrideMods.length - 1].value ?? "")
       .toString()
       .trim();
+    if (!override) return damage;
+
+    const parts = override.split(/\s+/);
+    if (parts[0].includes("/")) {
+      const [oneHandDie, twoHandDie] = parts[0].split("/");
+      if (oneHandDie && twoHandDie) {
+        const chosen =
+          attack?.data?.handBtn === "two" ? twoHandDie : oneHandDie;
+        const rest = parts.slice(1).join(" ");
+        override = (rest ? `${chosen} ${rest}` : chosen).trim();
+      }
+    }
     return override || damage;
   }
 
@@ -727,7 +746,7 @@
   function applyDamageOverrides(damage, attack) {
     damage = applyWeaponDamageTypeOverride(damage, attack);
     if ((attack?.data?.weaponType || "").toLowerCase() === "unarmed") {
-      damage = applyUnarmedDamageOverride(damage);
+      damage = applyUnarmedDamageOverride(damage, attack);
       damage = applyMartialArtsDie(damage);
     }
     return damage;
