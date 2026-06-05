@@ -186,9 +186,20 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
 
     updateAttributes(item, valuesToSet);
 
-    if (Object.keys(valuesToSet).length > 0) {
-      api.setValues(valuesToSet);
-    }
+    // Re-derive attribute bonuses/sets so attuning APPLIES an item's attribute
+    // modifiers (attributeBonus/attributeSet) and un-attuning REMOVES them —
+    // recalcAttributeBonuses re-derives from current state and the inventory
+    // scan only counts attuned items. Write the attuned value back so the
+    // setValues callback hands us a record reflecting the new attunement state.
+    valuesToSet[`${itemDataPath}.data.attuned`] = item?.data?.attuned;
+
+    api.setValues(valuesToSet, (updatedRecord) => {
+      const bonusFields = {};
+      recalcAttributeBonuses(bonusFields, updatedRecord);
+      if (Object.keys(bonusFields).length > 0) {
+        api.setValues(bonusFields);
+      }
+    });
   }
 
   // Then update AC calculation in character-main.html and getArmorClassForToken

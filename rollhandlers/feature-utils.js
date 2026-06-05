@@ -1928,10 +1928,13 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
     });
   });
 
-  // Sum from equipped inventory items
+  // Sum from equipped inventory items. Items that require attunement only
+  // contribute while attuned (e.g. an Amulet of Health does nothing until
+  // attuned, even if worn) — un-attuning re-derives and drops the change.
   const inventory = rec?.data?.inventory || [];
   inventory.forEach((item) => {
     if (item?.data?.carried !== "equipped") return;
+    if (item?.data?.attunement && item?.data?.attuned !== "true") return;
     const modifiers = item?.data?.modifiers || [];
     modifiers.forEach((mod) => {
       if (mod?.data?.type === "attributeBonus") collectAttributeBonus(mod);
