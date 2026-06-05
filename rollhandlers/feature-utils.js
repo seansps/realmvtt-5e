@@ -1880,6 +1880,7 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
   // is a new ability score maximum (e.g. "4:24" = +4, max 24).
   const totalBonuses = {};
   const abilityMaxes = {}; // highest max override per ability
+  const abilitySets = {}; // highest "set" (override floor) per ability
   const features = rec?.data?.features || [];
 
   function collectAttributeBonus(mod) {
@@ -1903,10 +1904,27 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
     }
   }
 
+  // attributeSet — set the score TO a value (e.g. Amulet of Health "your
+  // Constitution is 19"). Applied as a floor: the score becomes the greater of
+  // its natural value and the set value, so it has no effect if the score
+  // without it is already >= the set value. Highest set value wins.
+  function collectAttributeSet(mod) {
+    const ability = (mod?.data?.field || "").trim().toLowerCase();
+    if (!ability) return;
+    const setVal = parseInt(resolveModifierValue(mod, rec), 10);
+    if (!isNaN(setVal)) {
+      abilitySets[ability] =
+        ability in abilitySets
+          ? Math.max(abilitySets[ability], setVal)
+          : setVal;
+    }
+  }
+
   features.forEach((feature) => {
     const modifiers = feature?.data?.modifiers || [];
     modifiers.forEach((mod) => {
       if (mod?.data?.type === "attributeBonus") collectAttributeBonus(mod);
+      else if (mod?.data?.type === "attributeSet") collectAttributeSet(mod);
     });
   });
 
@@ -1917,6 +1935,7 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
     const modifiers = item?.data?.modifiers || [];
     modifiers.forEach((mod) => {
       if (mod?.data?.type === "attributeBonus") collectAttributeBonus(mod);
+      else if (mod?.data?.type === "attributeSet") collectAttributeSet(mod);
     });
   });
 
@@ -1926,9 +1945,18 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
     const currentBonus = parseInt(rec?.data?.[`${ability}Bonus`] ?? "0", 10);
     const newMax = abilityMaxes[ability] || null;
     const currentMax = rec?.data?.[`${ability}Max`] ?? null;
+    const newSet = ability in abilitySets ? abilitySets[ability] : null;
+    const rawCurrentSet = rec?.data?.[`${ability}Set`];
+    const currentSet =
+      rawCurrentSet === undefined ||
+      rawCurrentSet === null ||
+      rawCurrentSet === ""
+        ? null
+        : parseInt(rawCurrentSet, 10);
 
     // Skip if nothing changed
-    if (newBonus === currentBonus && newMax === currentMax) return;
+    if (newBonus === currentBonus && newMax === currentMax && newSet === currentSet)
+      return;
 
     // Initialize base if not yet set (snapshot from current score minus old bonus)
     const existingBase = rec?.data?.[`${ability}Base`];
@@ -1952,6 +1980,21 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
       if (newTotal > newMax) {
         newTotal = newMax;
       }
+    }
+
+    // Attribute SET (override floor): the score becomes at least the set value
+    // (e.g. Amulet of Health "your Constitution is 19"). No effect if the score
+    // without it is already >= the set value. Applied AFTER the max cap because
+    // a set may legitimately exceed the normal max (e.g. Belt of Giant Strength
+    // sets STR to 21+). Track the value in data.{ability}Set so removing the
+    // source reverts the score, and clear it when no set source remains.
+    if (newSet !== null) {
+      fieldsToSet[`data.${ability}Set`] = newSet;
+      if (newTotal < newSet) {
+        newTotal = newSet;
+      }
+    } else if (currentSet !== null) {
+      fieldsToSet[`data.${ability}Set`] = null;
     }
 
     fieldsToSet[`data.${ability}`] = newTotal;
