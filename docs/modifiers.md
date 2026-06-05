@@ -97,7 +97,7 @@ is left blank.
 
 It scales by the level of the **class that granted the feature** (not your total
 character level), so a multiclassed Monk 5 / Fighter 3 still gets the level-5 die.
-It only *upgrades* the unarmed/monk-weapon damage die — if your weapon already
+It only _upgrades_ the unarmed/monk-weapon damage die — if your weapon already
 rolls a larger die, that larger die is kept.
 
 **Example — Monk's Martial Arts:** on the Martial Arts feature, **Type**
@@ -117,14 +117,14 @@ rolls a larger die, that larger die is kept.
 
 ### Saves, checks & skills
 
-| Modifier                          | Field                           | Value                                    | Example                                                          |
-| --------------------------------- | ------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
-| **Saving Throw Bonus / Penalty**  | ability or `all`                | number/string/`advantage`/`disadvantage` | Add Prof to Wis saves; or `advantage` on a save                  |
-| **Saving Throw Proficiency**      | ability                         | —                                        | Grant proficiency in a save                                      |
-| **Saving Throw Note**             | ability/`{ability}Save`/`saves`/`all`/blank | `Tag\|Tooltip`               | A reminder tag (e.g. **Evasion**) shown on the result — no math  |
-| **Ability Check Bonus / Penalty** | ability                         | number/string/`advantage`/`disadvantage` | Advantage on Strength checks                                     |
-| **Skill Check Bonus / Penalty**   | a skill, `proficient`, or `all` | number/string/`advantage`/`disadvantage` | `+2` to Stealth; `proficient` = only skills you're proficient in |
-| **Skill Proficiency**             | a skill or `all`                | `true`, `half`, `expertise`              | Expertise: doubles proficiency if already proficient             |
+| Modifier                          | Field                                       | Value                                    | Example                                                                                      |
+| --------------------------------- | ------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Saving Throw Bonus / Penalty**  | ability or `all`                            | number/string/`advantage`/`disadvantage` | Add Prof to Wis saves; or `advantage` on a save                                              |
+| **Saving Throw Proficiency**      | ability                                     | —                                        | Grant proficiency in a save                                                                  |
+| **Saving Throw Note**             | ability/`{ability}Save`/`saves`/`all`/blank | `Tag(PIPE)Tooltip`                       | A reminder tag (e.g. **Evasion**) shown on the result — no math - replace (PIPE) with a pipe |
+| **Ability Check Bonus / Penalty** | ability                                     | number/string/`advantage`/`disadvantage` | Advantage on Strength checks                                                                 |
+| **Skill Check Bonus / Penalty**   | a skill, `proficient`, or `all`             | number/string/`advantage`/`disadvantage` | `+2` to Stealth; `proficient` = only skills you're proficient in                             |
+| **Skill Proficiency**             | a skill or `all`                            | `true`, `half`, `expertise`              | Expertise: doubles proficiency if already proficient                                         |
 
 ### Passive scores
 
@@ -160,10 +160,10 @@ To make _your own_ damage ignore a target's defenses (e.g. a sorcerer's Elementa
 Adept, or a feature that says "your fire damage ignores resistance"), use a
 **Damage Bonus** with a **String** value in one of these forms:
 
-| Value | Effect |
-|---|---|
+| Value                      | Effect                                                             |
+| -------------------------- | ------------------------------------------------------------------ |
 | `ignore <type> resistance` | The target's **resistance** to `<type>` is ignored for this attack |
-| `ignore <type> immunity` | The target's **immunity** to `<type>` is ignored for this attack |
+| `ignore <type> immunity`   | The target's **immunity** to `<type>` is ignored for this attack   |
 
 The middle word is the damage type, so the value is exactly three words —
 `ignore fire resistance`, `ignore cold immunity`. These are **directives, not
@@ -271,9 +271,9 @@ become available because they're aimed _at_ a creature:
   - `noAdvantage` — cancels any Advantage the attacker would otherwise have
     (e.g. "attack rolls against you don't have Advantage"); does not grant
     disadvantage
-  Honored by every attack path (weapon, spell, NPC action, Wild Shape). Pair with
-  predicates like `{"not": "target:applied_by"}` for "disadvantage on attacks,
-  except from me."
+    Honored by every attack path (weapon, spell, NPC action, Wild Shape). Pair with
+    predicates like `{"not": "target:applied_by"}` for "disadvantage on attacks,
+    except from me."
 
 Effects also support target-aware predicates (`target:creature_type:dragon`,
 `self:senses:darkvision`) and special value sources (stack count, externally-set
