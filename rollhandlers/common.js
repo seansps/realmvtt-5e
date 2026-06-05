@@ -1766,8 +1766,11 @@ function getEffectsAndModifiersForToken(
           let value = modifier.data?.value || 0;
           if (modifier.data?.valueType === "number") {
             value = parseInt(value, 10) || 0;
+          } else if (typeof value === "string") {
+            // Resolve {expression}/ternary and class-level tokens.
+            value = checkForReplacements(value, {}, target);
           }
-          if (value !== 0) {
+          if (value !== 0 && value !== "") {
             results.push({
               name: feature?.name || "Wild Shape Bonus",
               value: value,
@@ -1797,8 +1800,14 @@ function getEffectsAndModifiersForToken(
           modifier.data?.type === "wildShapeBonus" &&
           modifier.data?.field === "damage"
         ) {
-          const value = modifier.data?.value || "";
+          let value = modifier.data?.value || "";
           if (value) {
+            // Resolve {expression}/ternary and class-level tokens (e.g. Primal
+            // Strike's "{Druid Level >= 15 ? 2d8 thunder : 1d8 thunder}"), the
+            // same way the normal string-modifier path does.
+            if (typeof value === "string") {
+              value = checkForReplacements(value, {}, target);
+            }
             results.push({
               name: feature?.name || "Wild Shape Bonus",
               value: value,
