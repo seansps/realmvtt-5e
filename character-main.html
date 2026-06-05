@@ -1601,6 +1601,37 @@
       // After data is updated, update the proficiency modifiers
       updateProficiencies(bonus, updatedRecord);
 
+      // Re-merge the KNOWN class base proficiencies (from valuesToSet) onto the
+      // settled values. A feature/choice added during the cascade can be handed a
+      // stale cached record and overwrite the base it never saw; this restores it.
+      // Dedup-merge, so it's a no-op when the base is already present.
+      const reapplyClassBaseProficiencies = (done) => {
+        const baseWeapon = valuesToSet["data.weaponProficiencies"] || "";
+        const baseArmor = valuesToSet["data.armorTraining"] || "";
+        if (!baseWeapon && !baseArmor) {
+          if (done) done();
+          return;
+        }
+        api.getRecord("characters", record._id, (fresh) => {
+          const fields = {};
+          if (baseWeapon) {
+            fields["data.weaponProficiencies"] = mergeWeaponProficiencies(
+              fresh?.data?.weaponProficiencies || "",
+              baseWeapon,
+            );
+          }
+          if (baseArmor) {
+            fields["data.armorTraining"] = mergeCommaSeparated(
+              fresh?.data?.armorTraining || "",
+              baseArmor,
+            );
+          }
+          api.setValues(fields, () => {
+            if (done) done();
+          });
+        });
+      };
+
       // Add class features for added class at the new level, using the chosen subclass for it (if one)
       // and if we're not prompting for one.
       // Chain feature adds sequentially via safeAddValue, then process ability groups,
@@ -1667,7 +1698,8 @@
                   runClassFeatureCascade(
                     result.featuresToAdd,
                     recAfterGroups || rec,
-                    () => proceedToPrompts(),
+                    () =>
+                      reapplyClassBaseProficiencies(() => proceedToPrompts()),
                   ),
               );
               return;
