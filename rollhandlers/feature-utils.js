@@ -1323,7 +1323,6 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
           const existingDist = eMatch ? parseInt(eMatch[2], 10) : 0;
           entries[existingIdx] = `${newName} ${existingDist + primaryDist}`;
         } else if (primaryDist === 0) {
-          skillOrToolExpertise;
           // No range specified = unlimited, always overwrite
           entries[existingIdx] = `${newName} ${primaryDist}`;
         } else {

@@ -1767,48 +1767,8 @@
 
   // Get the ability score increase from a feature (used for when Feats are added to a character
   // after dropping a Background)
-  function getAbilityScoreIncrease(feature) {
-    const asi = feature?.data?.abilityScores || "";
-    let max = 20;
-    let scores = [];
-    if (!asi) {
-      return { max, scores, promptChoice: false, count: 0 };
-    }
-
-    // Parse the maximum value from the phrase
-    const maxMatch = asi.toLowerCase().match(/to a maximum of (\d+)/);
-    if (maxMatch) {
-      max = parseInt(maxMatch[1], 10);
-    }
-
-    if (
-      asi.toLowerCase().match(/one ability score of your choice/) &&
-      asi.toLowerCase().match(/or increase two ability scores/)
-    ) {
-      return {
-        max,
-        scores: [
-          "strength",
-          "dexterity",
-          "constitution",
-          "intelligence",
-          "wisdom",
-          "charisma",
-        ],
-        promptChoice: true,
-        count: 2,
-      };
-    }
-
-    const abilityMatch = asi
-      .toLowerCase()
-      .match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g);
-    if (abilityMatch) {
-      scores = abilityMatch;
-    }
-
-    return { max, scores, promptChoice: scores.length > 1, count: 1 };
-  }
+  // getAbilityScoreIncrease is defined globally in rollhandlers/common.js
+  // (single source of truth — do not re-declare here).
 
   // Add abilities from a feat when added to a character
   // (Called after adding a Feat on Background Drop)
