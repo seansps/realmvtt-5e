@@ -121,7 +121,7 @@ rolls a larger die, that larger die is kept.
 | --------------------------------- | ------------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
 | **Saving Throw Bonus / Penalty**  | ability or `all`                | number/string/`advantage`/`disadvantage` | Add Prof to Wis saves; or `advantage` on a save                  |
 | **Saving Throw Proficiency**      | ability                         | —                                        | Grant proficiency in a save                                      |
-| **Saving Throw Note**             | ability/`saves`/blank           | `Tag\|Tooltip`                           | A reminder tag (e.g. **Evasion**) shown on the result — no math  |
+| **Saving Throw Note**             | ability/`{ability}Save`/`saves`/`all`/blank | `Tag\|Tooltip`               | A reminder tag (e.g. **Evasion**) shown on the result — no math  |
 | **Ability Check Bonus / Penalty** | ability                         | number/string/`advantage`/`disadvantage` | Advantage on Strength checks                                     |
 | **Skill Check Bonus / Penalty**   | a skill, `proficient`, or `all` | number/string/`advantage`/`disadvantage` | `+2` to Stealth; `proficient` = only skills you're proficient in |
 | **Skill Proficiency**             | a skill or `all`                | `true`, `half`, `expertise`              | Expertise: doubles proficiency if already proficient             |
@@ -263,10 +263,17 @@ These work in bonus/penalty values:
 When building an **Effect** (rather than a feature/item), a few extra types
 become available because they're aimed _at_ a creature:
 
-- **Attacks Targeting You** — adjusts attacks made against the affected creature
-  (supports `advantage`, `disadvantage`, `critical`, and granting the attacker a
-  die). Pair with predicates like `{"not": "target:applied_by"}` for
-  "disadvantage on attacks, except from me."
+- **Attacks Targeting You** — adjusts attacks made against the affected creature.
+  Supported values:
+  - `advantage` / `disadvantage` — attacker rolls with adv/disadv
+  - `critical` — attacks against this creature auto-crit (also `critical19`, etc.
+    to widen the attacker's crit range)
+  - `noAdvantage` — cancels any Advantage the attacker would otherwise have
+    (e.g. "attack rolls against you don't have Advantage"); does not grant
+    disadvantage
+  Honored by every attack path (weapon, spell, NPC action, Wild Shape). Pair with
+  predicates like `{"not": "target:applied_by"}` for "disadvantage on attacks,
+  except from me."
 
 Effects also support target-aware predicates (`target:creature_type:dragon`,
 `self:senses:darkvision`) and special value sources (stack count, externally-set

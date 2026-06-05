@@ -198,9 +198,12 @@
         target?.token,
         targetDistance,
       );
+      let hasNoAdvantage = false;
       targetEffects.forEach((r) => {
         if (r.value === "critical") {
           autoCritical = true;
+        } else if (r.value === "noAdvantage") {
+          hasNoAdvantage = true;
         } else {
           modifiers.push(r);
         }
@@ -232,7 +235,16 @@
         tokenId: ourToken?._id,
         targetId: target?.token?._id,
       };
-      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
+      const rollModifiers = hasNoAdvantage
+        ? modifiers.filter((m) => m.value !== "advantage")
+        : modifiers;
+      api.promptRoll(
+        `${name} Attack`,
+        diceRoll,
+        rollModifiers,
+        metadata,
+        "attack",
+      );
     });
 
     if (!targets.length) {

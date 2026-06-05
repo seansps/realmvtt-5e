@@ -504,14 +504,20 @@ targets.forEach(target => {
   }
 
   // Get effects and modifiers for the target
+  let hasNoAdvantage = false;
   const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
   targetEffects.forEach(r => {
     if (r.value === "critical") {
       autoCritical = true;
+    } else if (r.value === "noAdvantage") {
+      hasNoAdvantage = true;
     } else {
       attackModifiers.push(r);
     }
   });
+  if (hasNoAdvantage) {
+    attackModifiers = attackModifiers.filter(m => m.value !== "advantage");
+  }
 
   // Get damage effects for the target
   const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(

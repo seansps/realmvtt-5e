@@ -615,9 +615,14 @@
         target?.token,
         targetDistance,
       );
+      let hasNoAdvantage = false;
       targetEffects.forEach((r) => {
         if (r.value === "critical") {
           autoCritical = true;
+        } else if (r.value === "noAdvantage") {
+          // "Attacks Targeting You" = noAdvantage: attacks against this target
+          // can't benefit from Advantage — strip advantage modifiers below.
+          hasNoAdvantage = true;
         } else {
           modifiers.push(r);
         }
@@ -657,7 +662,16 @@
           ? attack?.data?.animation
           : undefined,
       };
-      api.promptRoll(`${name} Attack`, diceRoll, modifiers, metadata, "attack");
+      const rollModifiers = hasNoAdvantage
+        ? modifiers.filter((m) => m.value !== "advantage")
+        : modifiers;
+      api.promptRoll(
+        `${name} Attack`,
+        diceRoll,
+        rollModifiers,
+        metadata,
+        "attack",
+      );
     });
 
     if (!targets.length) {
