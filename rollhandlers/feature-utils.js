@@ -1702,6 +1702,16 @@ function applyNewlyUnlockedProvidesItems(characterRecord, callback) {
       (freshRec?.data?.inventory || []).forEach((it) =>
         existingItemNames.add((it?.name || "").toLowerCase()),
       );
+      // Existing ability names (across all ability groups) for dedup.
+      const existingAbilityNames = new Set();
+      (Array.isArray(freshRec?.data?.abilityGroups)
+        ? freshRec.data.abilityGroups
+        : []
+      ).forEach((g) =>
+        (g?.data?.abilities || []).forEach((a) =>
+          existingAbilityNames.add((a?.name || "").toLowerCase()),
+        ),
+      );
 
       // Build synthetic features containing only the newly-unlocked items.
       // Track seen item names to avoid double-adding when the same feature
@@ -1720,6 +1730,8 @@ function applyNewlyUnlockedProvidesItems(characterRecord, callback) {
           if (recordType === "spells" && existingSpellNames.has(name))
             return false;
           if (recordType === "items" && existingItemNames.has(name))
+            return false;
+          if (recordType === "abilities" && existingAbilityNames.has(name))
             return false;
           seenItemNames.add(name);
           return true;

@@ -1745,10 +1745,14 @@
     const afterBonuses = (recAfterBonuses) => {
       const latest = recAfterBonuses || rec;
       applyProvidesItemsForFeatures(featuresToAdd, latest, () => {
-        applySlugFeaturesForFeatures(featuresToAdd, latest, () => {
-          processChoices(latest, () => {
-            recalcACAndHP(latest, () => {
-              if (done) done();
+        // Grant providesItems on EXISTING features whose levelRequirement is now
+        // met (e.g. a level-7 feature that provides an ability at level 14).
+        applyNewlyUnlockedProvidesItems(latest, () => {
+          applySlugFeaturesForFeatures(featuresToAdd, latest, () => {
+            processChoices(latest, () => {
+              recalcACAndHP(latest, () => {
+                if (done) done();
+              });
             });
           });
         });
