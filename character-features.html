@@ -48,8 +48,12 @@
     // All modifiers and are parsed by the same functions
     const featToAdd = {
       ...feat,
+      // Fresh _id so the added feature doesn't collide with the compendium source
+      // (or other copies of the same feat); the original is kept as data.fromId.
+      _id: generateId(),
       data: {
         ...feat?.data,
+        fromId: feat?._id,
         // featureType drives which list a record shows in: "feat" → the Feats
         // list, anything else → the Features list. A feats-type record whose
         // Type is "Feature" should live in the Features list, so route it there.
