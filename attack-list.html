@@ -628,6 +628,36 @@
         }
       });
 
+      // Re-collect our own attack modifiers that need target context, so
+      // predicates like target:effect:<slug> / attacker:effect:<slug> resolve
+      // against the creature being attacked. Crit/minroll values are applied via
+      // metadata, not shown as toggles, so they're excluded from the prompt list.
+      const predicateContext = {
+        attackerToken: target?.token,
+        targetToken: target?.token,
+        targetCreatureType: target?.token?.data?.creatureType || "",
+      };
+      const contextMods = getEffectsAndModifiers(
+        ["attackBonus", "attackPenalty"],
+        ranged ? "ranged" : "melee",
+        attack._id,
+        undefined,
+        predicateContext,
+      );
+      contextMods.forEach((mod) => {
+        const existing = modifiers.find(
+          (m) => m.name === mod.name && m.value === mod.value,
+        );
+        if (existing) {
+          existing.active = mod.active;
+        } else if (
+          !mod.value.toString().startsWith("critical") &&
+          !mod.value.toString().startsWith("minroll")
+        ) {
+          modifiers.push(mod);
+        }
+      });
+
       // Get damage effects for the target
       const targetDamageEffects = getDamageEffectsForTarget(
         ourToken,

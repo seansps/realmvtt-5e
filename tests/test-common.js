@@ -11,6 +11,7 @@ const {
   resolveClassAlias,
   checkForReplacements,
   getTotalValueFromFields,
+  evaluateSinglePredicate,
 } = ctx;
 
 section("getProficiencyBonus — 5e proficiency progression");
@@ -49,6 +50,41 @@ section("getTotalValueFromFields — uses-calc fields, multipliers, aliases");
   assert("wizardLevel", getTotalValueFromFields(rec, ["wizardLevel"]), 10);
   assert("adeptLevel alias -> Monk 4", getTotalValueFromFields(rec, ["adeptLevel"]), 4);
   assert("min of 1 when empty", getTotalValueFromFields(rec, []), 1);
+}
+
+section("attacker:effect: / target:effect: predicates");
+{
+  const atk = {
+    attackerToken: { effects: [{ name: "Look At Me! (Chosen Enemy)" }] },
+  };
+  const tgt = {
+    targetToken: { effects: [{ name: "Look At Me! (Chosen Enemy)" }] },
+  };
+  assert(
+    "attacker:effect true when attacker marked",
+    evaluateSinglePredicate("attacker:effect:look-at-me-chosen-enemy", atk),
+    true,
+  );
+  assert(
+    "attacker:effect false with no context",
+    evaluateSinglePredicate("attacker:effect:look-at-me-chosen-enemy", undefined),
+    false,
+  );
+  assert(
+    "target:effect true when target marked",
+    evaluateSinglePredicate("target:effect:look-at-me-chosen-enemy", tgt),
+    true,
+  );
+  assert(
+    "target:effect false with no context",
+    evaluateSinglePredicate("target:effect:look-at-me-chosen-enemy", undefined),
+    false,
+  );
+  assert(
+    "target:effect false on slug mismatch",
+    evaluateSinglePredicate("target:effect:wrong-slug", tgt),
+    false,
+  );
 }
 
 process.exit(summary());

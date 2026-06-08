@@ -3705,6 +3705,29 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       const senses = (context.attackerToken?.data?.senses || "").toLowerCase();
       return senses.includes(requiredSense);
     }
+    // "attacker:effect:<slug>" — true if the attacking creature (context.attackerToken)
+    // has an effect whose slugified name matches. Lets a defender scope a bonus to a
+    // chosen attacker by marking that attacker with a known effect. Requires attacker
+    // context (threaded by the attack flows).
+    if (predicate.startsWith("attacker:effect:")) {
+      if (!context?.attackerToken) return false;
+      const slug = predicate.slice("attacker:effect:".length).trim().toLowerCase();
+      if (!slug) return false;
+      return (context.attackerToken.effects || []).some(
+        (e) => _slugifyName(e?.name) === slug,
+      );
+    }
+    // "target:effect:<slug>" — true if the creature being attacked (context.targetToken)
+    // has an effect whose slugified name matches. Lets an attacker scope a bonus to a
+    // marked target (e.g. a taunt that grants advantage attacking the chosen creature).
+    if (predicate.startsWith("target:effect:")) {
+      if (!context?.targetToken) return false;
+      const slug = predicate.slice("target:effect:".length).trim().toLowerCase();
+      if (!slug) return false;
+      return (context.targetToken.effects || []).some(
+        (e) => _slugifyName(e?.name) === slug,
+      );
+    }
     if (predicate.startsWith("self:senses:")) {
       const requiredSense = predicate
         .slice("self:senses:".length)
