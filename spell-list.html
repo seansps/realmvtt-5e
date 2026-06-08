@@ -812,6 +812,50 @@
       damageModifiers.push(r);
     });
 
+    // Re-collect spell/cantrip damage bonuses that need target context (e.g.
+    // target:effect:<slug>). Build-time had no target; merge spell + target
+    // context so spell:/target: predicates resolve, mirror the field/type
+    // handling, and dedup.
+    {
+      const _spellDmgCtx = Object.assign(
+        {
+          attackerToken: target?.token,
+          targetToken: target?.token,
+          targetCreatureType: target?.token?.data?.creatureType || "",
+        },
+        ${JSON.stringify(spellPredCtx)},
+      );
+      const _spellDmgTypes = ${spell?.data?.level?.toLowerCase() === "cantrip"}
+        ? ["cantripDamageBonus", "cantripDamagePenalty"]
+        : ["spellDamageBonus", "spellDamagePenalty"];
+      let _spellDmgMods = getEffectsAndModifiersForToken(
+        ourToken,
+        _spellDmgTypes,
+        ${JSON.stringify(spell?.data?.isAttack ? "attack" : "all")},
+        undefined,
+        undefined,
+        _spellDmgCtx,
+      );
+      if (${!spell?.data?.isAttack}) {
+        _spellDmgMods = _spellDmgMods.filter(
+          (m) => (m?.field || "") !== "attack",
+        );
+      }
+      _spellDmgMods.forEach((modifier) => {
+        const _m = {
+          ...modifier,
+          type: modifier.value.toString().split(" ")?.[1]
+            ? ""
+            : ${JSON.stringify(primaryDamageType)},
+        };
+        const _e = damageModifiers.find(
+          (x) => x.name === _m.name && x.value === _m.value,
+        );
+        if (_e) _e.active = _m.active;
+        else damageModifiers.push(_m);
+      });
+    }
+
     const metadata = {
       "rollName": 'Attack',
       "attack": \`${spellName}\`,

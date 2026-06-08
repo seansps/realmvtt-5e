@@ -667,6 +667,30 @@
         damageModifiers.push(r);
       });
 
+      // Re-collect our own damage modifiers that need target context (e.g. a
+      // damageBonus gated by target:effect:<slug>). The base collection ran with
+      // no target, so context-requiring predicates were skipped/inactive there.
+      // Apply the same type mapping the base pass uses, then dedup.
+      getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        ranged ? "ranged" : "melee",
+        attack._id,
+        undefined,
+        predicateContext,
+      )
+        .map((mod) => {
+          const modType = getDamageType(mod?.value?.toString() || "");
+          const type = modType === "untyped" ? mod?.type || damageType : "";
+          return { ...mod, type };
+        })
+        .forEach((mod) => {
+          const existing = damageModifiers.find(
+            (m) => m.name === mod.name && m.value === mod.value,
+          );
+          if (existing) existing.active = mod.active;
+          else damageModifiers.push(mod);
+        });
+
       const diceRoll = "1d20";
       const metadata = {
         rollName: "Attack",
@@ -982,6 +1006,28 @@
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
+      });
+
+      // Re-collect our own damage modifiers that need target context (e.g. a
+      // damageBonus gated by target:effect:<slug>). The map() below applies the
+      // type handling to whatever we add here. Dedup against existing.
+      const predicateContext = {
+        attackerToken: target?.token,
+        targetToken: target?.token,
+        targetCreatureType: target?.token?.data?.creatureType || "",
+      };
+      getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        ranged ? "ranged" : "melee",
+        attack._id,
+        undefined,
+        predicateContext,
+      ).forEach((mod) => {
+        const existing = damageModifiers.find(
+          (m) => m.name === mod.name && m.value === mod.value,
+        );
+        if (existing) existing.active = mod.active;
+        else damageModifiers.push(mod);
       });
     });
 

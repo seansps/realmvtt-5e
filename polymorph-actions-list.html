@@ -144,6 +144,15 @@
     if (critOnMods.length) {
       critOn = Math.min(...critOnMods);
     }
+    // criticalExtend: lower the crit range by 1 per source (floor 17), or 19 if
+    // there's no other crit source. Applied via metadata.critOn, not shown.
+    const critExtendCount = modifiers.filter(
+      (m) => m.value.toString() === "criticalExtend" && m.active !== false,
+    ).length;
+    if (critExtendCount > 0) {
+      if (critOn === null) critOn = 20;
+      critOn = Math.max(17, critOn - critExtendCount);
+    }
     // Filter these out of the modifiers array, we don't need them to be toggleable
     modifiers = modifiers.filter(
       (m) => !m.value.toString().startsWith("critical"),
@@ -217,6 +226,34 @@
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
       });
+
+      // Re-collect our own damage modifiers that need target context (e.g. a
+      // damageBonus gated by target:effect:<slug>). Field undefined matches the
+      // base collection. Apply the same type mapping, then dedup.
+      const predicateContext = {
+        attackerToken: target?.token,
+        targetToken: target?.token,
+        targetCreatureType: target?.token?.data?.creatureType || "",
+      };
+      getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        undefined,
+        attack._id,
+        undefined,
+        predicateContext,
+      )
+        .map((mod) => {
+          const modType = getDamageType(mod?.value?.toString() || "");
+          const type = modType === "untyped" ? mod?.type || damageType : "";
+          return { ...mod, type };
+        })
+        .forEach((mod) => {
+          const existing = damageModifiers.find(
+            (m) => m.name === mod.name && m.value === mod.value,
+          );
+          if (existing) existing.active = mod.active;
+          else damageModifiers.push(mod);
+        });
 
       const diceRoll = "1d20";
       const metadata = {
@@ -298,6 +335,28 @@
       );
       targetDamageEffects.forEach((r) => {
         damageModifiers.push(r);
+      });
+
+      // Re-collect our own damage modifiers that need target context (e.g. a
+      // damageBonus gated by target:effect:<slug>). The map() below applies the
+      // type handling to whatever we add here. Dedup against existing.
+      const predicateContext = {
+        attackerToken: target?.token,
+        targetToken: target?.token,
+        targetCreatureType: target?.token?.data?.creatureType || "",
+      };
+      getEffectsAndModifiers(
+        ["damageBonus", "damagePenalty"],
+        undefined,
+        attack._id,
+        undefined,
+        predicateContext,
+      ).forEach((mod) => {
+        const existing = damageModifiers.find(
+          (m) => m.name === mod.name && m.value === mod.value,
+        );
+        if (existing) existing.active = mod.active;
+        else damageModifiers.push(mod);
       });
     });
 
