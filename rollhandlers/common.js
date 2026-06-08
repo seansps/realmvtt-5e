@@ -1520,9 +1520,20 @@ function getEffectsAndModifiersForToken(
       // Check for extra data on the rule (e.g. active: false)
       let ruleActive = rule.data && rule.data.active === false ? false : true;
 
-      // Evaluate predicates — if any fail, deactivate this rule
+      // Evaluate predicates — if any fail, deactivate this rule.
       const predicates = rule.data?.predicate;
-      if (predicates && predicates.length > 0) {
+      // A predicate is "present" if it's a non-empty string/array OR an object
+      // with keys (e.g. {"not": "target:applied_by"}). Objects have no `.length`,
+      // so the old `predicates.length > 0` check silently skipped them — leaving
+      // the rule ALWAYS active instead of gated. Accept all three shapes.
+      const hasPredicate =
+        !!predicates &&
+        (Array.isArray(predicates) || typeof predicates === "string"
+          ? predicates.length > 0
+          : typeof predicates === "object"
+            ? Object.keys(predicates).length > 0
+            : false);
+      if (hasPredicate) {
         if (!effectiveContext && _predicatesRequireContext(predicates)) {
           ruleActive = false;
         } else {

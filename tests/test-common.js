@@ -12,6 +12,7 @@ const {
   checkForReplacements,
   getTotalValueFromFields,
   evaluateSinglePredicate,
+  getEffectsAndModifiersForToken,
 } = ctx;
 
 section("getProficiencyBonus — 5e proficiency progression");
@@ -84,6 +85,38 @@ section("attacker:effect: / target:effect: predicates");
     "target:effect false on slug mismatch",
     evaluateSinglePredicate("target:effect:wrong-slug", tgt),
     false,
+  );
+}
+
+section("effect-rule predicate — object shape (e.g. {not: ...}) is gated");
+{
+  const mk = (senses) => ({
+    data: { senses },
+    effects: [
+      {
+        name: "E",
+        rules: [
+          {
+            data: { predicate: { not: "self:senses:darkvision" } },
+            type: "attackBonus",
+            field: "all",
+            value: "2",
+            valueType: "number",
+          },
+        ],
+      },
+    ],
+  });
+  assert(
+    "object predicate fails → rule inactive",
+    getEffectsAndModifiersForToken(mk("Darkvision 60"), ["attackBonus"], "all")[0]
+      ?.active,
+    false,
+  );
+  assert(
+    "object predicate passes → rule active",
+    getEffectsAndModifiersForToken(mk(""), ["attackBonus"], "all")[0]?.active,
+    true,
   );
 }
 
