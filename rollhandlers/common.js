@@ -1934,6 +1934,9 @@ function getMinRollModifier(modifiers) {
   const minRollMatch = /minroll(\d+)/;
   const minRollMods = modifiers
     .map((m) => {
+      // Skip deactivated (e.g. predicate-failed) minroll modifiers so a gated
+      // "minroll3" only applies when its predicate passed.
+      if (m?.active === false) return null;
       const match = m.value.toString().match(minRollMatch);
       return match ? parseInt(match[1], 10) : null;
     })

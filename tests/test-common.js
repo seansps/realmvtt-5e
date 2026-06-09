@@ -13,6 +13,7 @@ const {
   getTotalValueFromFields,
   evaluateSinglePredicate,
   getEffectsAndModifiersForToken,
+  getMinRollModifier,
 } = ctx;
 
 section("getProficiencyBonus — 5e proficiency progression");
@@ -132,5 +133,9 @@ section("effect-rule predicate — object shape (e.g. {not: ...}) is gated");
     true,
   );
 }
+
+section("getMinRollModifier — active gating");
+assert("active minroll3 → 3", getMinRollModifier([{ value: "minroll3", active: true }]), 3);
+assert("inactive minroll3 → null", getMinRollModifier([{ value: "minroll3", active: false }]), null);
 
 process.exit(summary());
