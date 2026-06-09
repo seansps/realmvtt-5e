@@ -81,6 +81,19 @@ section("attacker:effect: / target:effect: predicates");
     evaluateSinglePredicate("target:effect:look-at-me-chosen-enemy", undefined),
     false,
   );
+  // source:<slug> — matches the spell/ability that forced the roll.
+  assert(
+    "source: matches the forcing ability name",
+    evaluateSinglePredicate("source:imposing-glare", {
+      sourceName: "Imposing Glare",
+    }),
+    true,
+  );
+  assert(
+    "source: false with no context",
+    evaluateSinglePredicate("source:imposing-glare", undefined),
+    false,
+  );
   assert(
     "target:effect false on slug mismatch",
     evaluateSinglePredicate("target:effect:wrong-slug", tgt),

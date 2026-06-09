@@ -89,7 +89,7 @@ selectedTokens.forEach(token => {
     active: true,
   });
 
-  const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+  const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}', undefined, undefined, { sourceName: ${JSON.stringify(abilityName)} });
   saveMods.forEach(mod => {
     saveModifiers.push(mod);
   });

@@ -2796,7 +2796,11 @@ ${effectButtons}
   api.sendMessage(message, undefined, [], []);
 }
 
-function rollSavingThrow(save, dc) {
+function rollSavingThrow(save, dc, options) {
+  // options.sourceName — the spell/ability that forced the save, so effects
+  // gated by the "source:<slug>" predicate resolve.
+  const sourceName = options?.sourceName;
+  const saveContext = sourceName ? { sourceName } : undefined;
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
     save = save.toLowerCase();
@@ -2820,6 +2824,9 @@ function rollSavingThrow(save, dc) {
       token,
       ["saveBonus", "savePenalty"],
       save,
+      undefined,
+      undefined,
+      saveContext,
     );
     saveModifiers.forEach((modifier) => {
       modifiers.push(modifier);
@@ -3650,6 +3657,7 @@ function _predicatesRequireContext(predicates) {
       predicates.startsWith("attacker:") ||
       predicates.startsWith("spell:") ||
       predicates.startsWith("weapon:") ||
+      predicates.startsWith("source:") ||
       // Bare "self:proficient" needs rollField; explicit "self:proficient:<skill>" doesn't.
       predicates === "self:proficient"
     );
@@ -3738,6 +3746,16 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       return (context.targetToken.effects || []).some(
         (e) => _slugifyName(e?.name) === slug,
       );
+    }
+    // "source:<slug>" — true if the spell/ability that triggered this roll has a
+    // slugified name matching. context.sourceName is threaded by rollSavingThrow
+    // (ability saves) and the spell save macros (spell name). Lets an effect
+    // grant a bonus/penalty on saves vs a specific named feature.
+    if (predicate.startsWith("source:")) {
+      if (!context?.sourceName) return false;
+      const slug = predicate.slice("source:".length).trim().toLowerCase();
+      if (!slug) return false;
+      return _slugifyName(context.sourceName) === slug;
     }
     if (predicate.startsWith("self:senses:")) {
       const requiredSense = predicate
