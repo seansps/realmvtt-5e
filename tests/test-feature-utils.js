@@ -99,4 +99,60 @@ section("resolveModifierValue — number/string/field value types");
   assert("field type reads from record", resolveModifierValue({ data: { valueType: "field", value: "proficiencyBonus" } }, rec), 3);
 }
 
+section("resolveSkillCheckAbility — effect-driven skill ability override (use if higher)");
+{
+  const mkRec = (overrides) => ({
+    data: {
+      strengthMod: "1",
+      intelligenceMod: "5",
+      classes: [{ data: { spellcastingAbility: "intelligence" } }],
+      ...overrides,
+    },
+    effects: [
+      {
+        name: "Mighty Magic",
+        rules: [
+          {
+            type: "skillAbility",
+            field: "athletics",
+            value: "Spellcasting Ability",
+            valueType: "string",
+            data: {},
+          },
+        ],
+      },
+    ],
+  });
+
+  // Spellcasting ability (INT +5) beats configured Strength (+1) → swap.
+  let r = resolveSkillCheckAbility(mkRec(), "athletics", "strength", 1);
+  assert("sentinel → intelligence", r.ability, "intelligence");
+  assert("sentinel mod → 5", r.abilityMod, 5);
+
+  // Strength higher than spellcasting → keep base.
+  r = resolveSkillCheckAbility(mkRec({ strengthMod: "6" }), "athletics", "strength", 6);
+  assert("keeps strength when higher", r.ability, "strength");
+  assert("keeps mod 6", r.abilityMod, 6);
+
+  // Scoped to athletics — unrelated skill untouched.
+  r = resolveSkillCheckAbility(mkRec(), "stealth", "dexterity", 2);
+  assert("unrelated skill untouched", r.ability, "dexterity");
+
+  // Literal ability value.
+  const litRec = {
+    data: { strengthMod: "1", dexterityMod: "4" },
+    effects: [
+      {
+        name: "Cat's Grace",
+        rules: [
+          { type: "skillAbility", field: "athletics", value: "dexterity", valueType: "string", data: {} },
+        ],
+      },
+    ],
+  };
+  r = resolveSkillCheckAbility(litRec, "athletics", "strength", 1);
+  assert("literal dexterity wins", r.ability, "dexterity");
+  assert("literal mod 4", r.abilityMod, 4);
+}
+
 process.exit(summary());
