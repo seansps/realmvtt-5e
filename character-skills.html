@@ -71,7 +71,7 @@
   }
 
   function rollCheck(skill) {
-    const ability =
+    let ability =
       record?.data?.[`${skill}Ability`] || getAbilityFromSkill(skill);
     const mod = `${ability}Mod`;
 
@@ -80,6 +80,15 @@
     if (abilityMod === undefined || isNaN(abilityMod)) {
       abilityMod = 0;
     }
+
+    // Effect-driven skill-ability override (e.g. "use spellcasting ability for
+    // Athletics checks, if higher").
+    ({ ability, abilityMod } = resolveSkillCheckAbility(
+      record,
+      skill,
+      ability,
+      abilityMod,
+    ));
 
     const proficiencyBonus = parseInt(
       record?.data?.proficiencyBonus || "0",

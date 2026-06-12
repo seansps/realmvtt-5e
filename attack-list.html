@@ -280,12 +280,14 @@
       ["attackCalculation"],
       undefined,
       attack._id,
-    );
+    ).filter((m) => m?.active !== false);
     // If we have an attack calculation modifier, use the field defined instead
     // of the above
     if (attackCalculationMod.length) {
-      const attackCalculation =
-        attackCalculationMod[attackCalculationMod.length - 1]?.field;
+      const attackCalculation = resolveAttackCalculationAbility(
+        attackCalculationMod[attackCalculationMod.length - 1]?.field,
+        record,
+      );
       if (attackCalculation) {
         dexOrStrMod = capitalize(attackCalculation);
         modToUse = parseInt(
@@ -930,12 +932,14 @@
       ["attackCalculation"],
       undefined,
       attack._id,
-    );
+    ).filter((m) => m?.active !== false);
     // If we have an attack calculation modifier, use the field defined instead
     // of the above
     if (attackCalculationMod.length) {
-      const attackCalculation =
-        attackCalculationMod[attackCalculationMod.length - 1]?.field;
+      const attackCalculation = resolveAttackCalculationAbility(
+        attackCalculationMod[attackCalculationMod.length - 1]?.field,
+        record,
+      );
       if (attackCalculation) {
         dexOrStrMod = capitalize(attackCalculation);
         modToUse = parseInt(

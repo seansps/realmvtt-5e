@@ -2714,6 +2714,84 @@
         ]
       },
       {
+        "label": "Skill Check Ability",
+        "type": "skillAbility",
+        "fields": [
+          {
+            "label": "Acrobatics",
+            "field": "acrobatics"
+          },
+          {
+            "label": "Animal Handling",
+            "field": "animalHandling"
+          },
+          {
+            "label": "Arcana",
+            "field": "arcana"
+          },
+          {
+            "label": "Athletics",
+            "field": "athletics"
+          },
+          {
+            "label": "Deception",
+            "field": "deception"
+          },
+          {
+            "label": "History",
+            "field": "history"
+          },
+          {
+            "label": "Insight",
+            "field": "insight"
+          },
+          {
+            "label": "Intimidation",
+            "field": "intimidation"
+          },
+          {
+            "label": "Investigation",
+            "field": "investigation"
+          },
+          {
+            "label": "Medicine",
+            "field": "medicine"
+          },
+          {
+            "label": "Nature",
+            "field": "nature"
+          },
+          {
+            "label": "Perception",
+            "field": "perception"
+          },
+          {
+            "label": "Performance",
+            "field": "performance"
+          },
+          {
+            "label": "Persuasion",
+            "field": "persuasion"
+          },
+          {
+            "label": "Religion",
+            "field": "religion"
+          },
+          {
+            "label": "Sleight of Hand",
+            "field": "sleightOfHand"
+          },
+          {
+            "label": "Stealth",
+            "field": "stealth"
+          },
+          {
+            "label": "Survival",
+            "field": "survival"
+          }
+        ]
+      },
+      {
         "label": "Spell Attack Bonus",
         "type": "spellAttackBonus",
         "fields": []

@@ -215,6 +215,43 @@ function getAbilityFromSkill(skill) {
   }
 }
 
+// Resolves an effect-driven skill-ability override (modifier type "skillAbility").
+// An active skillAbility modifier whose field is the skill (e.g. "athletics")
+// names an alternate ability to use for that skill check — either a literal
+// ability ("strength") or the "Spellcasting Ability" sentinel (resolved to the
+// character's best class spellcasting ability, same as attackCalculation). The
+// override only wins if its ability modifier is HIGHER than the skill's
+// currently-configured ability, matching effects like "you can use your
+// spellcasting ability for Athletics checks". Returns { ability, abilityMod }.
+function resolveSkillCheckAbility(rec, skill, baseAbility, baseAbilityMod, context) {
+  const overrides = getEffectsAndModifiersForToken(
+    rec,
+    ["skillAbility"],
+    skill,
+    undefined,
+    undefined,
+    context,
+  );
+  let ability = baseAbility;
+  let abilityMod = baseAbilityMod;
+  overrides.forEach((mod) => {
+    if (mod?.active === false) return;
+    const raw = (mod?.value ?? "").toString().trim();
+    if (!raw) return;
+    // resolveAttackCalculationAbility handles the "Spellcasting Ability" sentinel
+    // and passes literal ability names through unchanged.
+    const candidate = (resolveAttackCalculationAbility(raw, rec) || "")
+      .toLowerCase();
+    if (!candidate) return;
+    const candidateMod = parseInt(rec?.data?.[`${candidate}Mod`] || "0", 10) || 0;
+    if (candidateMod > abilityMod) {
+      ability = candidate;
+      abilityMod = candidateMod;
+    }
+  });
+  return { ability, abilityMod };
+}
+
 function capitalize(string) {
   if (!string || typeof string !== "string") return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -3151,7 +3188,7 @@ function rollSkillCheck(skill, dc) {
         }
       }
       // skill is already normalized to camelCase field format (e.g., "sleightOfHand")
-      const ability =
+      let ability =
         token?.data?.[`${skill}Ability`] ||
         skillInfo?.ability ||
         getAbilityFromSkill(skill);
@@ -3162,6 +3199,15 @@ function rollSkillCheck(skill, dc) {
       if (abilityMod === undefined || isNaN(abilityMod)) {
         abilityMod = 0;
       }
+
+      // Effect-driven skill-ability override (e.g. "use spellcasting ability for
+      // Athletics, if higher").
+      ({ ability, abilityMod } = resolveSkillCheckAbility(
+        token,
+        skill,
+        ability,
+        abilityMod,
+      ));
 
       const proficiencyBonus = parseInt(
         token?.data?.proficiencyBonus || "0",

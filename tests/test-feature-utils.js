@@ -20,6 +20,7 @@ const {
   mergeCommaSeparated,
   mergeWeaponProficiencies,
   resolveModifierValue,
+  resolveSkillCheckAbility,
 } = ctx;
 
 section("getTotalLevel — sums class levels from a classLevels string");
