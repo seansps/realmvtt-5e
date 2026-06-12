@@ -2416,9 +2416,12 @@ function getAltSpellDamageButtons(
       });
     });
 
-    // Replace the spell level with the actual spell level if in a  modifier
+    // Replace the spell level with the actual spell level if in a  modifier.
+    // Gate on the actual value type (not valueType) — getEffectsAndModifiers may
+    // have already resolved a string-typed modifier to a number (e.g. "Warlock
+    // Spellcasting Modifier" → 3), in which case .replace would not exist.
     altDamageModifiers.forEach((modifier) => {
-      if (modifier?.valueType?.toLowerCase() === "string") {
+      if (typeof modifier?.value === "string") {
         modifier.value = modifier.value.replace(
           /[Ss]pell [Ll]evel/g,
           levelCastAt,
