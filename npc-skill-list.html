@@ -5,7 +5,7 @@
 		const skillWithModDataPath = dataPath.replace('.name', '.data.skillWithMod');
 		const valuesToSet = {};
 		// Remove modifier from the name used by the tag
-		let skillNameWithoutMod = skillName;
+		let skillNameWithoutMod = skillName || '';
 		if (skillNameWithoutMod.includes('+')) {
 			skillNameWithoutMod = skillNameWithoutMod.split('+')[0].trim();
 		}
@@ -21,7 +21,7 @@
 	function rollCheck() {
 		// Parse the skill name to get the skill name and modifier
 		const skillPath = dataPath.replace('.skillWithMod', '');
-		const skillName = api.getValue(`${skillPath}.skillWithMod`);
+		const skillName = api.getValue(`${skillPath}.skillWithMod`) || '';
 		let skillNameWithoutMod = skillName;
 		let modValue = '0';
 		if (skillNameWithoutMod.includes('+')) {
