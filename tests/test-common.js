@@ -82,6 +82,20 @@ section("attacker:effect: / target:effect: predicates");
     evaluateSinglePredicate("target:effect:look-at-me-chosen-enemy", undefined),
     false,
   );
+  // spell:<slug> — matches the cast spell's NAME (in addition to school/lists/tags).
+  assert(
+    "spell:<slug> matches the cast spell name",
+    evaluateSinglePredicate("spell:call-lightning", {
+      spellName: "Call Lightning",
+    }),
+    true,
+  );
+  assert(
+    "spell:<slug> false on a different spell name",
+    evaluateSinglePredicate("spell:call-lightning", { spellName: "Fireball" }),
+    false,
+  );
+
   // source:<slug> — matches the spell/ability that forced the roll.
   assert(
     "source: matches the forcing ability name",

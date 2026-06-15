@@ -5,11 +5,13 @@
     // It could be a numerical modifier, or a die we are adding
     let attackModifiers = [];
 
-    // Predicate context so spell:<value> (school or spell list/class) can gate
-    // spell attack modifiers.
+    // Predicate context so spell:<value> (name, school, tag, or spell
+    // list/class) can gate spell attack modifiers.
     const spellPredCtx = {
+      spellName: spell?.name || "",
       spellSchool: spell?.data?.school || "",
       spellLists: spell?.data?.spellLists || [],
+      spellTags: spell?.data?.spellTags || [],
     };
 
     const spellModBonus = parseInt(
@@ -92,8 +94,10 @@
     // attack / damage / DC / healing modifiers by School of Magic (data.school)
     // or spell list / class (data.spellLists, e.g. spell:druid, spell:cleric).
     const spellPredCtx = {
+      spellName: spell?.name || "",
       spellSchool: spell?.data?.school || "",
       spellLists: spell?.data?.spellLists || [],
+      spellTags: spell?.data?.spellTags || [],
     };
 
     const spellName = spell?.name || "Unknown Spell";
@@ -676,11 +680,21 @@
               ? capitalize(primaryDamageType)
               : "Spell"
           }_Damage
+  const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
+    damageModifiers,
+  )}));${buildSpellDamageRuntimeMerge({
+    modifiersVar: "damageModifiers",
+    isCantrip: spell?.data?.level?.toLowerCase() === "cantrip",
+    isAttack: false,
+    primaryDamageType,
+    spellPredCtx,
+    levelCastAt: levelToReplace,
+  })}
   api.promptRoll(\`${spellName} ${
     primaryDamageType !== "untyped" ? capitalize(primaryDamageType) : "Spell"
-  } Damage\`, '${spellDamage}', ${JSON.stringify(
-    damageModifiers,
-  )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+  } Damage\`, '${spellDamage}', damageModifiers, ${JSON.stringify(
+    saveDamageMetadata,
+  )}, 'damage')
   \`\`\``
         : "";
 

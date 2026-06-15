@@ -2392,6 +2392,39 @@ function applyInstantDeath(target) {
   api.addEffect("Dead", target);
 }
 
+// Builds a JS snippet (string) embedded into a spell's damage-button macro that
+// RE-COLLECTS spell/cantrip damage bonuses when the button is clicked — so an
+// effect applied AFTER the spell was cast is still picked up at damage time.
+// Assumes a damage-modifiers array variable named by `opts.modifiersVar` is in
+// scope (seeded with the build-time modifiers); new bonuses are merged by
+// name+value (updating active), mirroring the build-time field/type handling.
+function buildSpellDamageRuntimeMerge(opts) {
+  const modifiersVar = opts.modifiersVar || "damageModifiers";
+  const isCantrip = !!opts.isCantrip;
+  const isAttack = !!opts.isAttack;
+  const damageTypeJson = JSON.stringify(opts.primaryDamageType || "untyped");
+  const ctxJson = JSON.stringify(opts.spellPredCtx || {});
+  const levelJson = JSON.stringify(String(opts.levelCastAt ?? ""));
+  const fieldJson = JSON.stringify(isAttack ? "attack" : "all");
+  return `
+  // Re-collect spell/cantrip damage bonuses at runtime (post-cast effects apply).
+  {
+    const _types = ${isCantrip} ? ["cantripDamageBonus","cantripDamagePenalty"] : ["spellDamageBonus","spellDamagePenalty"];
+    const _ctx = ${ctxJson};
+    let _mods = getEffectsAndModifiersForToken(api.getToken(), _types, ${fieldJson}, undefined, undefined, _ctx);
+    if (${!isAttack}) _mods = _mods.filter((m) => (m?.field || "") !== "attack");
+    _mods.forEach((modifier) => {
+      let _v = modifier.value;
+      if (typeof _v === "string") _v = _v.replace(/[Ss]pell [Ll]evel/g, ${levelJson});
+      if (typeof _v === "string" && _v.toLowerCase().includes("ignore")) return;
+      const _m = { ...modifier, value: _v, type: _v.toString().split(" ")?.[1] ? "" : ${damageTypeJson} };
+      const _e = ${modifiersVar}.find((x) => x.name === _m.name && x.value === _m.value);
+      if (_e) _e.active = _m.active;
+      else ${modifiersVar}.push(_m);
+    });
+  }`;
+}
+
 // Get the alt damage buttons in the context of a Character of NPC for a given alt damage amount
 function getAltSpellDamageButtons(
   spell,
@@ -2471,14 +2504,34 @@ function getAltSpellDamageButtons(
       (m) => !m.value.toString().toLowerCase().includes("ignore"),
     );
 
+    // Predicate context so the runtime re-collection can resolve spell:<name>,
+    // spell:<school/list/tag> predicates on the re-collected damage bonuses.
+    const spellPredCtx = {
+      spellName: spell?.name || "",
+      spellSchool: spell?.data?.school || "",
+      spellLists: spell?.data?.spellLists || [],
+      spellTags: spell?.data?.spellTags || [],
+      spellOtherSchools: spell?.data?.otherSchools || [],
+    };
+
     return `\`\`\`Roll_${
       altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
     }_Damage
+const altDamageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
+      altDamageModifiers,
+    )}));${buildSpellDamageRuntimeMerge({
+      modifiersVar: "altDamageModifiers",
+      isCantrip: spell?.data?.level?.toLowerCase() === "cantrip",
+      isAttack: spell?.data?.isAttack === true,
+      primaryDamageType: altDamageType,
+      spellPredCtx,
+      levelCastAt,
+    })}
 api.promptRoll(\`${
       altDamageType !== "untyped" ? capitalize(altDamageType) : "Spell"
-    } Damage\`, '${damageString}', ${JSON.stringify(
-      altDamageModifiers,
-    )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+    } Damage\`, '${damageString}', altDamageModifiers, ${JSON.stringify(
+      saveDamageMetadata,
+    )}, 'damage')
 \`\`\``;
   });
 
@@ -3848,6 +3901,15 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
     if (predicate.startsWith("spell:")) {
       if (!context) return false;
       const required = predicate.slice("spell:".length).toLowerCase().trim();
+      // spell:<slug> matches the cast spell's NAME (e.g. spell:call-lightning
+      // for a spell named "Call Lightning") in addition to school/lists/tags.
+      if (context.spellName && _slugifyName(context.spellName) === required) {
+        return true;
+      }
+      const tags = (context.spellTags || []).map((t) =>
+        String(t).toLowerCase(),
+      );
+      if (tags.includes(required)) return true;
       if (
         context.spellSchool &&
         String(context.spellSchool).toLowerCase() === required

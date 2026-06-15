@@ -391,13 +391,29 @@
               ? capitalize(primaryDamageType)
               : "Spell"
           }_Damage
+const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
+            damageModifiers
+          )}));${buildSpellDamageRuntimeMerge({
+            modifiersVar: "damageModifiers",
+            isCantrip: spell?.data?.level?.toLowerCase() === "cantrip",
+            isAttack: false,
+            primaryDamageType,
+            spellPredCtx: {
+              spellName: spell?.name || "",
+              spellSchool: spell?.data?.school || "",
+              spellLists: spell?.data?.spellLists || [],
+              spellTags: spell?.data?.spellTags || [],
+              spellOtherSchools: spell?.data?.otherSchools || [],
+            },
+            levelCastAt: levelToReplace,
+          })}
 api.promptRoll(\`${spellName} ${
             primaryDamageType !== "untyped"
               ? capitalize(primaryDamageType)
               : "Spell"
-          } Damage\`, '${spellDamage}', ${JSON.stringify(
-            damageModifiers
-          )}, ${JSON.stringify(saveDamageMetadata)}, 'damage')
+          } Damage\`, '${spellDamage}', damageModifiers, ${JSON.stringify(
+            saveDamageMetadata
+          )}, 'damage')
 \`\`\``
         : "";
 
@@ -542,6 +558,7 @@ targets.forEach(target => {
         targetCreatureType: target?.token?.data?.creatureType || "",
       },
       ${JSON.stringify({
+        spellName: spell?.name || "",
         spellTags: spell?.data?.spellTags || [],
         spellSchool: spell?.data?.school || "",
         spellOtherSchools: spell?.data?.otherSchools || [],
