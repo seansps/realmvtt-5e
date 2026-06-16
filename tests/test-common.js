@@ -96,6 +96,25 @@ section("attacker:effect: / target:effect: predicates");
     false,
   );
 
+  // attacker:creature_type:<type> — gates a defender's attackTargeting effect to
+  // the attacker's creature type; parentheticals count as their own types.
+  const feyHagAtk = { attackerToken: { data: { creatureType: "Fey (Hag)" } } };
+  assert(
+    "attacker:creature_type matches base type",
+    evaluateSinglePredicate("attacker:creature_type:fey", feyHagAtk),
+    true,
+  );
+  assert(
+    "attacker:creature_type matches parenthetical sub-type",
+    evaluateSinglePredicate("attacker:creature_type:hag", feyHagAtk),
+    true,
+  );
+  assert(
+    "attacker:creature_type false with no context",
+    evaluateSinglePredicate("attacker:creature_type:fey", undefined),
+    false,
+  );
+
   // source:<slug> — matches the spell/ability that forced the roll.
   assert(
     "source: matches the forcing ability name",
