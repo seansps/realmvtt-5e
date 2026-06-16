@@ -3516,6 +3516,32 @@ function _slugifyName(name) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Parse a creature-type string into a flat, lowercased list of types, treating
+// parenthetical sub-types as their own entries. So "Fey (Hag)" -> ["fey","hag"]
+// and "Humanoid (Elf, Human)" -> ["humanoid","elf","human"]. Comma-separated at
+// the top level too ("Celestial, Fiend" -> ["celestial","fiend"]).
+function _parseCreatureTypes(raw) {
+  const lower = (raw || "").toLowerCase();
+  const types = [];
+  (lower.match(/\(([^)]*)\)/g) || []).forEach((group) => {
+    group
+      .replace(/[()]/g, "")
+      .split(",")
+      .forEach((t) => {
+        const x = t.trim();
+        if (x) types.push(x);
+      });
+  });
+  lower
+    .replace(/\([^)]*\)/g, " ")
+    .split(",")
+    .forEach((t) => {
+      const x = t.trim();
+      if (x) types.push(x);
+    });
+  return types;
+}
+
 // Evaluates predicates on a rule. Supports strings, arrays (AND), and objects (not/or/and/nand/nor).
 // Evaluate a toggle predicate against a set of active toggle field names.
 // Supports:
@@ -3807,18 +3833,32 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
         .slice("target:creature_type:".length)
         .toLowerCase()
         .trim();
-      const creatureType = (context.targetCreatureType || "").toLowerCase();
-      const types = creatureType.split(",").map((t) => t.trim());
-      return types.includes(requiredType);
+      return _parseCreatureTypes(context.targetCreatureType).includes(
+        requiredType,
+      );
     }
     if (predicate.startsWith("self:creature_type:")) {
       const requiredType = predicate
         .slice("self:creature_type:".length)
         .toLowerCase()
         .trim();
-      const creatureType = (target?.data?.creatureType || "").toLowerCase();
-      const types = creatureType.split(",").map((t) => t.trim());
-      return types.includes(requiredType);
+      return _parseCreatureTypes(target?.data?.creatureType).includes(
+        requiredType,
+      );
+    }
+    // "attacker:creature_type:<type>" — true if the attacking creature
+    // (context.attackerToken) is of the given creature type. Lets a defender's
+    // attackTargeting effect scope to attacker species (e.g. "fiends have
+    // disadvantage on attacks against you").
+    if (predicate.startsWith("attacker:creature_type:")) {
+      if (!context?.attackerToken) return false;
+      const requiredType = predicate
+        .slice("attacker:creature_type:".length)
+        .toLowerCase()
+        .trim();
+      return _parseCreatureTypes(
+        context.attackerToken?.data?.creatureType,
+      ).includes(requiredType);
     }
     if (predicate.startsWith("attacker:senses:")) {
       if (!context) return false;
