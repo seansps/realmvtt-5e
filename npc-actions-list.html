@@ -750,12 +750,24 @@
 const selectedTokens = api.getSelectedOrDroppedToken();
 selectedTokens.forEach(token => {
 	let saveModifiers = [];
-	const modifier = token?.data?.['${savingThrow}Save'] || 0;
-	saveModifiers.push({
-		name: '${capitalize(savingThrow)} Save',
-		value: modifier,
-		active: true,
-	});
+	const isNpc = token?.linked === false || token?.recordType === 'npcs';
+	if (isNpc) {
+		// NPCs store a flat save total — use it directly.
+		const modifier = token?.data?.['${savingThrow}Save'] || 0;
+		if (modifier.toString() !== '0') {
+			saveModifiers.push({ name: '${capitalize(savingThrow)} Save', value: modifier, active: true });
+		}
+	} else {
+		// PCs (a PC saving against the NPC's action): build from the ability
+		// modifier + proficiency each roll so override effects on the ability
+		// score / modifier are picked up.
+		const abilityMod = parseInt(token?.data?.['${savingThrow}Mod'] || '0', 10) || 0;
+		saveModifiers.push({ name: '${capitalize(savingThrow)}', value: abilityMod, active: true });
+		const pb = parseInt(token?.data?.proficiencyBonus || '0', 10) || 0;
+		if (token?.data?.['${savingThrow}Prof'] === 'true') {
+			saveModifiers.push({ name: 'Proficient', value: pb, active: true });
+		}
+	}
 
 	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
 	saveMods.forEach(mod => {

@@ -2621,17 +2621,27 @@
   }
 
   function rollSave(save) {
-    const mod = `${save}Save`;
     let modifiers = [];
-    let saveMod = record?.data?.[mod] || "0";
-    if (saveMod === undefined) {
-      saveMod = 0;
-    }
 
-    if (saveMod !== "0") {
+    // Build the save from its parts each roll (instead of the precomputed
+    // data.{save}Save total) so an override effect that changes the ability
+    // score / modifier is picked up automatically. Like skills: one modifier
+    // for the ability, one for proficiency, plus all other modifiers below.
+    const abilityMod = parseInt(record?.data?.[`${save}Mod`] || "0", 10) || 0;
+    modifiers.push({
+      name: capitalize(save),
+      value: abilityMod,
+      active: true,
+    });
+
+    const proficiencyBonus = parseInt(
+      record?.data?.proficiencyBonus || "0",
+      10,
+    );
+    if (record?.data?.[`${save}Prof`] === "true") {
       modifiers.push({
-        name: `${capitalize(save)} Save Modifier`,
-        value: saveMod,
+        name: "Proficient",
+        value: isNaN(proficiencyBonus) ? 0 : proficiencyBonus,
         active: true,
       });
     }

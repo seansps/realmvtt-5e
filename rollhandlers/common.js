@@ -2900,19 +2900,45 @@ function rollSavingThrow(save, dc, options) {
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
     save = save.toLowerCase();
-    const mod = `${save.trim().toLowerCase()}Save`;
     let modifiers = [];
-    let saveMod = token?.data?.[mod] || "0";
-    if (saveMod === undefined) {
-      saveMod = 0;
-    }
 
-    if (saveMod !== "0") {
+    const isNpc =
+      token?.linked === false || token?.recordType === "npcs";
+
+    if (isNpc) {
+      // NPCs store a flat save total in data.{save}Save — use it directly.
+      const saveMod = token?.data?.[`${save}Save`] || "0";
+      if (saveMod.toString() !== "0") {
+        modifiers.push({
+          name: `${capitalize(save)} Save Modifier`,
+          value: saveMod,
+          active: true,
+        });
+      }
+    } else {
+      // PCs: build the save from its parts each roll (instead of the
+      // precomputed data.{save}Save total) so an override effect that changes
+      // the ability score / modifier is picked up automatically. Like skills:
+      // one modifier for the ability, one for proficiency, plus all the other
+      // modifiers collected below.
+      const abilityMod = parseInt(token?.data?.[`${save}Mod`] || "0", 10) || 0;
       modifiers.push({
-        name: `${capitalize(save)} Save Modifier`,
-        value: saveMod,
+        name: capitalize(save),
+        value: abilityMod,
         active: true,
       });
+
+      const proficiencyBonus = parseInt(
+        token?.data?.proficiencyBonus || "0",
+        10,
+      );
+      if (token?.data?.[`${save}Prof`] === "true") {
+        modifiers.push({
+          name: "Proficient",
+          value: isNaN(proficiencyBonus) ? 0 : proficiencyBonus,
+          active: true,
+        });
+      }
     }
 
     // Check effects for all save bonuses and penalties for saves
