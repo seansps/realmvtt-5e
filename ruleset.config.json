@@ -2840,6 +2840,12 @@
         "fields": []
       },
       {
+        "label": "Temporary HP (Start of Turn)",
+        "type": "tempHpStartOfTurn",
+        "fields": [],
+        "freeTextField": false
+      },
+      {
         "label": "Attacks Targeting You By Applicant",
         "type": "attackTargetBonus",
         "fields": [],

@@ -119,7 +119,7 @@ rolls a larger die, that larger die is kept.
 
 | Modifier                          | Field                                       | Value                                    | Example                                                                                      |
 | --------------------------------- | ------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Saving Throw Bonus / Penalty**  | ability or `all`                            | number/string/`advantage`/`disadvantage` | Add Prof to Wis saves; or `advantage` on a save                                              |
+| **Saving Throw Bonus / Penalty**  | ability, `all`, or `spell`                  | number/string/`advantage`/`disadvantage` | Add Prof to Wis saves; `advantage` on a save; `spell` = only saves forced by a spell         |
 | **Saving Throw Proficiency**      | ability                                     | —                                        | Grant proficiency in a save                                                                  |
 | **Saving Throw Note**             | ability/`{ability}Save`/`saves`/`all`/blank | `Tag(PIPE)Tooltip`                       | A reminder tag (e.g. **Evasion**) shown on the result — no math - replace (PIPE) with a pipe |
 | **Ability Check Bonus / Penalty** | ability                                     | number/string/`advantage`/`disadvantage` | Advantage on Strength checks                                                                 |

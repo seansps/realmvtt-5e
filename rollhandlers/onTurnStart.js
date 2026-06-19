@@ -89,7 +89,14 @@ targets.forEach(target => {
     let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
     targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
 
-    const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { api.setValueOnTokenById('\$\{target._id\}', '\$\{target.recordType\}', 'data.curhp', '\$\{oldHp\}'); api.editMessage(null, '~\$\{targetName\} healed for \$\{healing\} HP.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+    // A set linked value means target is a token (address by token id); no linked
+    // value means it is a record/sheet (address via getRecord + setValuesOnRecord).
+    const isToken = target.linked !== undefined && target.linked !== null;
+    const undoBody = isToken
+      ? "api.setValueOnTokenById('" + target._id + "', '" + target.recordType + "', 'data.curhp', '" + oldHp + "')"
+      : "api.getRecord('" + target.recordType + "', '" + target._id + "', (rec) => { if (rec) api.setValuesOnRecord(rec, { 'data.curhp': " + oldHp + " }); })";
+
+    const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { \$\{undoBody\}; api.editMessage(null, '~\$\{targetName\} healed for \$\{healing\} HP.~'); } else { api.showNotification('Only the GM can undo healing.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
     
     api.sendMessage(\`\$\{targetName\} healed for \$\{healing\} HP.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
 
@@ -103,4 +110,68 @@ targets.forEach(target => {
 
   const message = `Regenerates ${healing} HP, unless deactivated.\n\n${healingMacro}`;
   api.sendMessage(message, undefined, [], [], token);
+}
+
+// Check for Temporary HP at start of turn (e.g. Heroism). Temp HP doesn't
+// stack — take the highest granted value rather than summing.
+const tempHpMods = getEffectsAndModifiersForToken(token, ["tempHpStartOfTurn"], "");
+let tempHpAmount = 0;
+let tempHpEffectNames = "";
+tempHpMods.forEach((modifier) => {
+  const val = typeof modifier.value === "number" ? modifier.value : parseInt(modifier.value, 10);
+  if (!isNaN(val) && val > 0) {
+    if (val > tempHpAmount) tempHpAmount = val;
+    if (tempHpEffectNames !== "") {
+      tempHpEffectNames += ", ";
+    }
+    tempHpEffectNames += modifier.name;
+  }
+});
+
+if (tempHpAmount > 0) {
+  const tempHpMacro = `\`\`\`Apply_Temp_HP
+const tempHpGain = ${tempHpAmount};
+
+let targets = api.getSelectedOrDroppedToken();
+
+if (record) {
+  if (isGM || record?.record?.ownerId === userId) {
+    targets = [record];
+  }
+}
+
+if (!isGM && targets.length === 0) {
+  targets = api.getSelectedOwnedTokens().map(target => target.token);
+}
+
+targets.forEach(target => {
+  if (target && target.data) {
+    const oldTempHp = parseInt(target.data?.tempHp || '0', 10);
+    // Gaining temp HP overrides whatever the target currently has.
+    const newTempHp = tempHpGain;
+    api.setValueOnToken(target, "data.tempHp", newTempHp);
+    const unIdentified = target.identified === false;
+    let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
+    targetName = targetName.replace(/'/g, '');
+
+    // A set linked value means target is a token (address by token id); no linked
+    // value means it is a record/sheet (address via getRecord + setValuesOnRecord).
+    const isToken = target.linked !== undefined && target.linked !== null;
+    const undoBody = isToken
+      ? "api.setValueOnTokenById('" + target._id + "', '" + target.recordType + "', 'data.tempHp', '" + oldTempHp + "')"
+      : "api.getRecord('" + target.recordType + "', '" + target._id + "', (rec) => { if (rec) api.setValuesOnRecord(rec, { 'data.tempHp': " + oldTempHp + " }); })";
+
+    const macro = \`\\\`\\\`\\\`Undo\\n if (isGM) { \$\{undoBody\}; api.editMessage(null, '~\$\{targetName\} temp HP reverted to \$\{oldTempHp\}.~'); } else { api.showNotification('Only the GM can undo this.', 'yellow', 'Notice'); } \\n\\\`\\\`\\\`\`;
+
+    api.sendMessage(\`\$\{targetName\} gains \$\{tempHpGain\} temporary hit points.\\n\$\{macro\}\`, undefined, undefined, undefined, target);
+
+    if (tempHpGain > 0) {
+      api.floatText(target, \`+\${tempHpGain}\`, "#1165ed");
+    }
+  }
+});
+\`\`\``;
+
+  const tempHpMessage = `Gains ${tempHpAmount} temporary hit points at the start of its turn (${tempHpEffectNames}).\n\n${tempHpMacro}`;
+  api.sendMessage(tempHpMessage, undefined, [], [], token);
 }
