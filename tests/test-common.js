@@ -164,6 +164,45 @@ section("attacker:effect: / target:effect: predicates");
   );
 }
 
+section("getEffectsAndModifiersForToken — skips Realm effect rule types");
+{
+  // An "input" rule's value is an object {prompt, placeholder, ...}; treating it
+  // as a modifier value used to crash with "d.trim is not a function".
+  const rec = {
+    data: {},
+    effects: [
+      {
+        name: "Spell Effect: Magic Weapon",
+        rules: [
+          {
+            type: "input",
+            valueType: "string",
+            field: "data.effectChoices.magicWeapon.weapon",
+            value: { prompt: "Enter the weapon name", placeholder: "e.g. Longsword" },
+          },
+          { type: "attackBonus", valueType: "number", field: "all", value: "1" },
+        ],
+      },
+    ],
+    effectIds: [],
+    effectValues: {},
+  };
+  let threw = false;
+  let res = [];
+  try {
+    res = getEffectsAndModifiersForToken(rec, ["attackBonus"], "all");
+  } catch (e) {
+    threw = true;
+  }
+  assert("input rule does not crash collection", threw, false);
+  assert("attackBonus rule still collected", res.length, 1);
+  assert(
+    "input rule not returned as a modifier",
+    res.some((m) => m.modifierType === "input"),
+    false,
+  );
+}
+
 section("effect-rule predicate — object shape (e.g. {not: ...}) is gated");
 {
   const mk = (senses) => ({

@@ -1517,6 +1517,18 @@ function getAttackModifiersForTarget(target, distance) {
   return results;
 }
 
+// Effect rule types handled by the Realm client effect engine (prompts and
+// structural rules), NOT by the ruleset's modifier system. Their `value` is an
+// object, so the modifier collector must skip them.
+const REALM_EFFECT_RULE_TYPES = new Set([
+  "input",
+  "choiceSet",
+  "override",
+  "data",
+  "aura",
+  "light",
+]);
+
 // Same as getEffectsAndModifiers but for a token that is passed
 function getEffectsAndModifiersForToken(
   target,
@@ -1571,6 +1583,12 @@ function getEffectsAndModifiersForToken(
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
+      // Skip Realm-handled effect rule types (prompts / structural rules). These
+      // are processed by the client effect engine, not by the modifier system,
+      // and their `value` is an object (e.g. an input's {prompt, placeholder})
+      // — trying to treat it as a modifier value crashes ("d.trim is not a
+      // function").
+      if (REALM_EFFECT_RULE_TYPES.has(rule?.type)) return;
       // Check for extra data on the rule (e.g. active: false)
       let ruleActive = rule.data && rule.data.active === false ? false : true;
 
