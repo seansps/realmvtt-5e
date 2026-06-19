@@ -3858,9 +3858,47 @@ function evaluatePredicates(predicates, context, effect, target) {
   return evaluateSinglePredicate(predicates, context, effect, target);
 }
 
+// Resolve @record.data.X / @caster.data.X references embedded in a predicate
+// string to their current values, so a predicate can reference a choiceSet /
+// input / stored value — e.g. "weapon:@record.data.effectChoices.magicWeapon.weapon"
+// becomes "weapon:longsword". @record resolves against the token being evaluated
+// (`target`); @caster against the applying/attacking token from context. Always
+// substitutes a String (never an object/undefined), so downstream .trim() /
+// .toLowerCase() calls can't throw on a non-string.
+function _resolvePredicateRefs(predicate, target, context) {
+  const resolvePath = (root, path) => {
+    let v = root;
+    for (const seg of path.split(".")) {
+      v = v == null ? undefined : v[seg];
+      if (v === undefined || v === null) return undefined;
+    }
+    return v;
+  };
+  const sub = (root) => (m, path) => {
+    const v = resolvePath(root, path);
+    // Leave the raw reference untouched if it resolves to nothing or an object
+    // (e.g. the choice container without its leaf field) so we never inject
+    // "[object Object]" or undefined into the predicate.
+    return v === undefined || typeof v === "object" ? m : String(v);
+  };
+  let out = predicate.replace(/@record\.data\.([\w.]+)/g, sub(target?.data));
+  const caster = context?.casterToken || context?.attackerToken;
+  out = out.replace(/@caster\.data\.([\w.]+)/g, sub(caster?.data));
+  return out;
+}
+
 function evaluateSinglePredicate(predicate, context, effect, target) {
   // String predicate — evaluate the condition directly
   if (typeof predicate === "string") {
+    // Resolve embedded @record.data / @caster.data references first so
+    // predicates can be driven by choiceSet/input values (e.g.
+    // "weapon:@record.data.effectChoices.magicWeapon.weapon" → "weapon:longsword").
+    if (
+      predicate.indexOf("@record.data.") !== -1 ||
+      predicate.indexOf("@caster.data.") !== -1
+    ) {
+      predicate = _resolvePredicateRefs(predicate, target, context);
+    }
     if (predicate === "target:applied_by") {
       if (!context) return false;
       const appliedBy = getEffectAppliedBy(target, effect);

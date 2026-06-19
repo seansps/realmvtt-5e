@@ -133,6 +133,35 @@ section("attacker:effect: / target:effect: predicates");
     evaluateSinglePredicate("target:effect:wrong-slug", tgt),
     false,
   );
+
+  // @record.data references inside a predicate resolve to the stored value
+  // (e.g. a choiceSet-picked weapon) so "weapon:type:@record..." matches it.
+  const refRec = {
+    data: { effectChoices: { magicWeapon: { weapon: "Longsword" } } },
+  };
+  const refLongsword = {
+    weapon: { data: { weaponType: "Longsword", weaponProperties: [] } },
+  };
+  assert(
+    "@record predicate ref matches the chosen weapon type",
+    evaluateSinglePredicate(
+      "weapon:type:@record.data.effectChoices.magicWeapon.weapon",
+      refLongsword,
+      null,
+      refRec,
+    ),
+    true,
+  );
+  assert(
+    "@record predicate ref to an object container does not throw / match",
+    evaluateSinglePredicate(
+      "weapon:type:@record.data.effectChoices.magicWeapon",
+      refLongsword,
+      null,
+      refRec,
+    ),
+    false,
+  );
 }
 
 section("effect-rule predicate — object shape (e.g. {not: ...}) is gated");
