@@ -76,6 +76,11 @@
     // Modifiers for Damage and Healing
     let damageModifiers = [];
     let primaryDamageType = "untyped";
+    // All damage types in the base damage formula (supports multi-type formulas
+    // like "2d8 bludgeoning + 4d6 cold"). primaryDamageType stays the first type
+    // for ability-mod / default-modifier typing; allDamageTypes drives the
+    // button label.
+    let allDamageTypes = getDamageTypes(spell?.data?.damage || "");
     let healingModifiers = [];
     if (
       spell?.data?.damage ||
@@ -86,15 +91,11 @@
       const spellcastingAbility =
         spellAction?.data?.spellcastingAbility || "intelligence";
       const abilityMod = api.getValue(`data.${spellcastingAbility}Mod`) || 0;
-      // Safely parse the damage type from the damage string, handling potential null values and irregular spacing
-      const damageString = spell?.data?.damage || "";
-      const damageParts = damageString.trim().split(/\s+/); // Split by one or more spaces
-      const damageType = damageParts.length > 1 ? damageParts[1] : "untyped";
-      primaryDamageType = damageType;
+      primaryDamageType = allDamageTypes[0] || "untyped";
       if (spell?.data?.damage && spell?.data?.addAbility) {
         damageModifiers.push({
           name: capitalize(spellcastingAbility),
-          type: spell?.data?.damage ? damageType : "untyped",
+          type: spell?.data?.damage ? primaryDamageType : "untyped",
           value: abilityMod,
           active: true,
         });
@@ -384,13 +385,13 @@
           icon: "IconWand",
           portrait: spell?.portrait,
         };
+    // Button label: a single-type spell names its type ("Fire Damage"); a
+    // multi-type formula ("2d8 bludgeoning + 4d6 cold") falls back to "Spell".
+    const damageButtonLabel =
+      allDamageTypes.length === 1 ? capitalize(allDamageTypes[0]) : "Spell";
     const damageButton =
       spell?.data?.damage && spell?.data?.isAttack !== true
-        ? `\`\`\`Roll_${
-            primaryDamageType !== "untyped"
-              ? capitalize(primaryDamageType)
-              : "Spell"
-          }_Damage
+        ? `\`\`\`Roll_${damageButtonLabel}_Damage
 const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
             damageModifiers
           )}));${buildSpellDamageRuntimeMerge({
@@ -407,11 +408,7 @@ const damageModifiers = JSON.parse(JSON.stringify(${JSON.stringify(
             },
             levelCastAt: levelToReplace,
           })}
-api.promptRoll(\`${spellName} ${
-            primaryDamageType !== "untyped"
-              ? capitalize(primaryDamageType)
-              : "Spell"
-          } Damage\`, '${spellDamage}', damageModifiers, ${JSON.stringify(
+api.promptRoll(\`${spellName} ${damageButtonLabel} Damage\`, '${spellDamage}', damageModifiers, ${JSON.stringify(
             saveDamageMetadata
           )}, 'damage')
 \`\`\``

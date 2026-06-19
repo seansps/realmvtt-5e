@@ -1072,6 +1072,23 @@ function getDamageType(rollString) {
   return match && match[1] ? match[1] : "untyped";
 }
 
+// Extracts ALL damage types from a (possibly multi-segment) damage formula.
+// e.g. "2d8 bludgeoning + 4d6 cold" -> ["bludgeoning","cold"]; "1d6 fire" ->
+// ["fire"]; "2d6" -> []. Splits on "+" and "," and reuses getDamageType per
+// segment (which only treats a SPACE-separated trailing word as a type, so a
+// bare "2d8" yields no false "d8" type). Order-preserving, de-duplicated.
+function getDamageTypes(formula) {
+  if (!formula || typeof formula !== "string") return [];
+  const types = [];
+  formula.split(/[+,]/).forEach((segment) => {
+    const t = getDamageType(segment.trim());
+    if (t && t.toLowerCase() !== "untyped" && !types.includes(t)) {
+      types.push(t);
+    }
+  });
+  return types;
+}
+
 // Doubles the dice in the damage string
 function doubleDamageDice(damage) {
   if (damage && typeof damage === "string" && damage.includes("d")) {
