@@ -785,7 +785,22 @@
         override = (rest ? `${chosen} ${rest}` : chosen).trim();
       }
     }
-    return override || damage;
+    if (!override) return damage;
+
+    // Don't downgrade: only apply the override when its die is LARGER than the
+    // unarmed strike's current die. A Monk whose Martial Arts Die already grants
+    // a 1d8 shouldn't be reduced to a 1d6 override. (A flat override or flat
+    // current damage — no "dN" — has die size 0 and is left to apply as before.)
+    const dieSize = (s) => {
+      const m = (s || "").toString().match(/d(\d+)/i);
+      return m ? parseInt(m[1], 10) : 0;
+    };
+    const overrideDie = dieSize(override);
+    const currentDie = dieSize(damage);
+    if (overrideDie && currentDie >= overrideDie) {
+      return damage;
+    }
+    return override;
   }
 
   // A weaponDamageTypeOverride modifier swaps a weapon's damage type (e.g.
