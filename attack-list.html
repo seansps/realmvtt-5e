@@ -803,6 +803,56 @@
     return override;
   }
 
+  // weaponDamageOverride: a feature/effect modifier that replaces a weapon's
+  // damage dice (e.g. Shillelagh makes the weapon's die a 1d8). Predicate-gated
+  // — attack._id is passed so weapon:name:/weapon:type: predicates resolve, so
+  // it can be scoped to a specific weapon (e.g.
+  // "weapon:name:@record.data.effectChoices.shillelagh.weapon"). Last active
+  // override wins; supports versatile "1d6/1d8" via the hand toggle; never
+  // downgrades a larger existing die; preserves the weapon's damage type when
+  // the override value doesn't specify one.
+  function applyWeaponDamageOverride(damage, attack) {
+    const overrideMods = getEffectsAndModifiers(
+      ["weaponDamageOverride"],
+      undefined,
+      attack?._id,
+    ).filter((m) => m.active !== false);
+    if (overrideMods.length === 0) return damage;
+    let override = (overrideMods[overrideMods.length - 1].value ?? "")
+      .toString()
+      .trim();
+    if (!override) return damage;
+
+    const parts = override.split(/\s+/);
+    if (parts[0].includes("/")) {
+      const [oneHandDie, twoHandDie] = parts[0].split("/");
+      if (oneHandDie && twoHandDie) {
+        const chosen =
+          attack?.data?.handBtn === "two" ? twoHandDie : oneHandDie;
+        const rest = parts.slice(1).join(" ");
+        override = (rest ? `${chosen} ${rest}` : chosen).trim();
+      }
+    }
+    if (!override) return damage;
+
+    const dieSize = (s) => {
+      const m = (s || "").toString().match(/d(\d+)/i);
+      return m ? parseInt(m[1], 10) : 0;
+    };
+    const overrideDie = dieSize(override);
+    const currentDie = dieSize(damage);
+    // Don't downgrade a weapon that already rolls a larger die.
+    if (overrideDie && currentDie >= overrideDie) return damage;
+    // If the override is just a die (no damage type), keep the weapon's type.
+    if (overrideDie && !/\s/.test(override)) {
+      const currentType = getDamageType(damage);
+      if (currentType && currentType !== "untyped") {
+        return `${override} ${currentType}`;
+      }
+    }
+    return override;
+  }
+
   // A weaponDamageTypeOverride modifier swaps a weapon's damage type (e.g.
   // "1d8 piercing" → "1d8 radiant"). Modifiers may live on a feature/effect or on
   // the selected ammo (passed via attack._id). Last active override wins.
@@ -833,6 +883,10 @@
     if ((attack?.data?.weaponType || "").toLowerCase() === "unarmed") {
       damage = applyUnarmedDamageOverride(damage, attack);
       damage = applyMartialArtsDie(damage);
+    } else {
+      // Other weapons: a weaponDamageOverride effect can replace the die (e.g.
+      // Shillelagh), scoped to a specific weapon via its predicate.
+      damage = applyWeaponDamageOverride(damage, attack);
     }
     return damage;
   }

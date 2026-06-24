@@ -626,6 +626,47 @@ var characterEntityId = ddb.id;
   }
 });
 
+// Translate a DDB item's grantedModifiers (the magic bonuses baked into the item
+// definition) into Realm item modifier records stored on data.modifiers. This covers
+// magic armor/shields (+1/+2/+3 AC) and protective wondrous items / rings like the
+// Cloak of Protection (which grants BOTH an AC bonus and a saving-throw bonus).
+// Realm needs these as data.modifiers so the bonus re-applies whenever the sheet
+// recalculates AC and saves — DDB's flat numbers alone wouldn't survive a recalc.
+//
+// Only AC and save bonuses are translated here; weapon/damage magic bonuses are
+// handled elsewhere via the weapon's own fields.
+var ITEM_MODIFIER_TYPE_MAP = {
+  "armor-class": "armorClassBonus",
+  "saving-throws": "saveBonus",
+};
+
+function translateItemModifiers(def, itemId) {
+  var out = [];
+  (def.grantedModifiers || []).forEach(function (gm, gIdx) {
+    if (!gm || gm.type !== "bonus") return;
+    var realmType = ITEM_MODIFIER_TYPE_MAP[gm.subType];
+    if (!realmType) return;
+    if (gm.value == null) return;
+    out.push({
+      _id: "import-item-" + itemId + "-mod-" + gIdx,
+      name: "New Modifier",
+      unidentifiedName: "Modifier",
+      recordType: "records",
+      identified: true,
+      data: {
+        type: realmType,
+        valueType: "number",
+        value: "" + gm.value,
+        active: true,
+      },
+      fields: {
+        itemOnly: { hidden: false },
+      },
+    });
+  });
+  return out;
+}
+
 // DDB weapon property IDs -> Realm property names
 var WEAPON_PROPERTY_MAP = {
   Ammunition: "Ammunition",
@@ -815,6 +856,22 @@ var WEAPON_PROPERTY_MAP = {
   if (def.canAttune) {
     extraData.attunement = true;
     extraData.attuned = item.isAttuned ? "true" : "false";
+  }
+
+  // Magic-item modifiers (AC / save bonuses from grantedModifiers). When an item
+  // carries these, the bonus only counts while the item is equipped (and, for
+  // attunement items, attuned), so make sure those flags are set when DDB has the
+  // item equipped — otherwise the imported modifier would sit inert.
+  var itemModifiers = translateItemModifiers(def, item.id);
+  if (itemModifiers.length > 0) {
+    extraData.modifiers = itemModifiers;
+    if (item.equipped) {
+      extraData.carried = "equipped";
+      if (def.canAttune) {
+        extraData.attunement = true;
+        extraData.attuned = "true";
+      }
+    }
   }
 
   _pendingRecords.push({

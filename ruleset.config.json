@@ -3080,6 +3080,11 @@
         "fields": []
       },
       {
+        "label": "Weapon Damage Override",
+        "type": "weaponDamageOverride",
+        "fields": []
+      },
+      {
         "label": "Weapon Damage Type Override",
         "type": "weaponDamageTypeOverride",
         "fields": []
