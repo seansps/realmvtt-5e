@@ -107,15 +107,54 @@ const regenEndMods = getEffectsAndModifiersForToken(
   "",
 );
 let regenEndHealing = 0;
+const regenEndDiceParts = [];
+let regenEndNames = "";
 const isBloodied =
   token?.data?.curhp <= Math.floor((token?.data?.hitpoints || 0) / 2);
 regenEndMods.forEach((modifier) => {
   if (modifier.field === "bloodied" && !isBloodied) return;
-  const val = parseInt(modifier.value, 10);
-  if (!isNaN(val) && val > 0) regenEndHealing += val;
+  const raw = (modifier.value ?? "").toString().trim();
+  if (!raw) return;
+  if (/\d*d\d+/i.test(raw)) {
+    regenEndDiceParts.push(raw);
+    if (regenEndNames !== "") regenEndNames += ", ";
+    regenEndNames += modifier.name || "";
+  } else {
+    const val = parseInt(raw, 10);
+    if (!isNaN(val) && val > 0) {
+      regenEndHealing += val;
+      if (regenEndNames !== "") regenEndNames += ", ";
+      regenEndNames += modifier.name || "";
+    }
+  }
 });
 
-if (regenEndHealing > 0 && token.data?.curhp < token.data?.hitpoints) {
+// Dice-based regeneration: roll it as a healing roll (so e.g. 7d4 actually
+// rolls instead of applying a flat 7). Any flat regeneration is folded in.
+if (regenEndDiceParts.length > 0 && token.data?.curhp < token.data?.hitpoints) {
+  const regenFormula = [
+    ...regenEndDiceParts,
+    ...(regenEndHealing > 0 ? [String(regenEndHealing)] : []),
+  ].join(" + ");
+  api.roll(
+    regenFormula,
+    {
+      rollName: regenEndNames
+        ? `Regeneration (${regenEndNames})`
+        : "Regeneration",
+      recordId: token.record?._id || token._id,
+      recordType: token.recordType || token.record?.recordType,
+      tokenId: token._id,
+    },
+    "healing",
+  );
+}
+
+if (
+  regenEndDiceParts.length === 0 &&
+  regenEndHealing > 0 &&
+  token.data?.curhp < token.data?.hitpoints
+) {
   const healingMacro = `\`\`\`Apply_Healing
 const healing = ${regenEndHealing};
 

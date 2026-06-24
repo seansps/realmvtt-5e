@@ -46,20 +46,58 @@ if (token?.data?.usedLegendaryActions) {
 // Check for Regeneration effects
 const modifiers = getEffectsAndModifiersForToken(token, ["regeneration"], "");
 
-// This gets applied to the token's HP via a macro
+// This gets applied to the token's HP via a macro. Flat regeneration is summed
+// and applied via the button below; dice-based regeneration (e.g. "7d4") is
+// rolled as a healing roll so the dice actually roll instead of being ignored.
 let healing = 0;
+const regenDiceParts = [];
 let effectsNames = "";
 modifiers.forEach((modifier) => {
-  if (typeof modifier.value === "number" && modifier.value > 0) {
-    healing += modifier.value;
-    if (effectsNames !== "") {
-      effectsNames += ", ";
+  const raw = (
+    typeof modifier.value === "number"
+      ? String(modifier.value)
+      : (modifier.value ?? "").toString()
+  ).trim();
+  if (!raw) return;
+  if (/\d*d\d+/i.test(raw)) {
+    regenDiceParts.push(raw);
+    if (effectsNames !== "") effectsNames += ", ";
+    effectsNames += modifier.name || "";
+  } else {
+    const val = parseInt(raw, 10);
+    if (!isNaN(val) && val > 0) {
+      healing += val;
+      if (effectsNames !== "") effectsNames += ", ";
+      effectsNames += modifier.name || "";
     }
-    effectsNames += modifier.name;
   }
 });
 
-if (healing > 0 && token.data?.curhp < token.data?.hitpoints) {
+// Dice-based regeneration: roll it as a healing roll (so e.g. 7d4 actually
+// rolls). Any flat regeneration is folded into the same roll. healing.js shows
+// the rolled total with the standard Apply Healing (+ Undo) button.
+if (regenDiceParts.length > 0 && token.data?.curhp < token.data?.hitpoints) {
+  const regenFormula = [
+    ...regenDiceParts,
+    ...(healing > 0 ? [String(healing)] : []),
+  ].join(" + ");
+  api.roll(
+    regenFormula,
+    {
+      rollName: effectsNames ? `Regeneration (${effectsNames})` : "Regeneration",
+      recordId: token.record?._id || token._id,
+      recordType: token.recordType || token.record?.recordType,
+      tokenId: token._id,
+    },
+    "healing",
+  );
+}
+
+if (
+  regenDiceParts.length === 0 &&
+  healing > 0 &&
+  token.data?.curhp < token.data?.hitpoints
+) {
   const healingMacro = `\`\`\`Apply_Healing
 const healing = ${healing};
 
