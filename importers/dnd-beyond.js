@@ -681,6 +681,13 @@ var WEAPON_PROPERTY_MAP = {
   Versatile: "Versatile",
 };
 
+// Track the best equipped armor/shield as we build inventory. The sheet's AC
+// recalc (recalcACAndHP) reads the derived data.armor object — NOT the inventory
+// items — so without setting it here, the first dex change recomputes AC with no
+// armor base until the user re-toggles equip. Mirror getBestEquippedArmor()'s shape:
+// { ac, maxDex (0=heavy/none, 99=light/uncapped), shieldAc, stealthPenalty }.
+var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: false };
+
 (ddb.inventory || []).forEach(function (item) {
   var def = item.definition || {};
   var filterType = def.filterType || "Other Gear";
@@ -874,6 +881,25 @@ var WEAPON_PROPERTY_MAP = {
     }
   }
 
+  // Roll this item into the derived data.armor object if it's equipped armor/shield.
+  // ac is the armor's BASE AC (the magic +1/+2/+3 is applied separately as an
+  // armorClassBonus modifier), matching how getBestEquippedArmor() reads the item.
+  if (item.equipped && type === "armor" && extraData.armorClass) {
+    if (extraData.armorClass > bestEquippedArmorObj.ac) {
+      bestEquippedArmorObj.ac = extraData.armorClass;
+      bestEquippedArmorObj.maxDex = extraData.addDex
+        ? extraData.maxDex != null
+          ? extraData.maxDex
+          : 99
+        : 0;
+      bestEquippedArmorObj.stealthPenalty = extraData.stealth === "disadvantage";
+    }
+  } else if (item.equipped && type === "shield" && extraData.armorClass) {
+    if (extraData.armorClass > bestEquippedArmorObj.shieldAc) {
+      bestEquippedArmorObj.shieldAc = extraData.armorClass;
+    }
+  }
+
   _pendingRecords.push({
     recordType: "items",
     targetPath: "data.inventory",
@@ -881,6 +907,10 @@ var WEAPON_PROPERTY_MAP = {
     extraData: extraData,
   });
 });
+
+// Persist the derived armor object so AC recalcs (on dex change, etc.) have the
+// correct armor base immediately — without requiring the user to re-equip.
+charData.armor = bestEquippedArmorObj;
 
 // Custom items (user-created entries like "Contact: Guide", "Drone Blueprint").
 // These have no definition — just a name, quantity, weight, cost, and description.
