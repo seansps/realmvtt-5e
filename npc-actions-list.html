@@ -1,4 +1,15 @@
 <script>
+  // True if a damage string deals actual damage. Static damage (e.g. "60") and
+  // dice ("2d6") count; only an explicit 0 ("0", "0 fire") or empty/undefined
+  // hides the damage/critical buttons.
+  function hasRealDamage(d) {
+    const s = (d ?? "").toString().trim();
+    if (!s) return false;
+    if (/\d*d\d+/i.test(s)) return true;
+    const n = parseInt(s, 10);
+    return !isNaN(n) && n !== 0;
+  }
+
   // Convert 5e formatted damage strings to string Realm VTT needs such as 1d4 piercing + 3 piercing + 2d6 poison (converted from (1d4 + 3) piercing damage plus (2d6) poison damage)
   function getDamage(description) {
     // Handle both formats: "7 (1d8 + 3)" and "1d8 + 3"
@@ -129,17 +140,18 @@
         }
       }
 
-      // If these are set, we also need to show the damage/attack buttons
+      // If these are set, we also need to show the damage/attack buttons.
+      // Damage/critical only show when there's actual damage (0 → hidden).
+      const attackHasDamage = hasRealDamage(damageString);
       valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = false;
-      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = false;
-      valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = false;
+      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] =
+        !attackHasDamage;
+      valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] =
+        !attackHasDamage;
     } else {
       valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = true;
-      if (action?.data?.damage) {
-        valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = false;
-      } else {
-        valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = true;
-      }
+      valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] =
+        !hasRealDamage(action?.data?.damage);
       valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = true;
     }
 
@@ -206,10 +218,15 @@
   function onAttackChange(isAttack) {
     const valuesToSet = {};
     const actionDataPath = dataPath.replace(".data.isAttack", "");
+    const action = api.getValue(actionDataPath);
+    // Damage/critical only show when there's actual damage (0 → hidden).
+    const hasDmg = hasRealDamage(action?.data?.damage);
 
     valuesToSet[`${actionDataPath}.fields.rollAttackBtn.hidden`] = !isAttack;
-    valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] = !isAttack;
-    valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] = !isAttack;
+    valuesToSet[`${actionDataPath}.fields.rollDamageBtn.hidden`] =
+      !isAttack || !hasDmg;
+    valuesToSet[`${actionDataPath}.fields.rollCriticalBtn.hidden`] =
+      !isAttack || !hasDmg;
     api.setValues(valuesToSet);
   }
 
@@ -296,10 +313,16 @@
 
   function updateDamage(damage) {
     const actionDataPath = dataPath.replace(".data.damage", "");
-    api.setValue(
-      `${actionDataPath}.fields.rollDamageBtn.hidden`,
-      damage === "" || damage === undefined || damage === null,
-    );
+    const action = api.getValue(actionDataPath);
+    const isAttack =
+      action?.data?.isAttack === true || action?.data?.isAttack === "true";
+    // Damage button shows whenever there's real damage; critical only for
+    // attacks with real damage. Damage of 0 hides both.
+    const hasDmg = hasRealDamage(damage);
+    api.setValues({
+      [`${actionDataPath}.fields.rollDamageBtn.hidden`]: !hasDmg,
+      [`${actionDataPath}.fields.rollCriticalBtn.hidden`]: !hasDmg || !isAttack,
+    });
   }
 
   // Roll Attack

@@ -1,4 +1,15 @@
 <script>
+  // True if a damage string deals actual damage. Static damage (e.g. "60") and
+  // dice ("2d6") count; only an explicit 0 ("0", "0 fire") or empty/undefined
+  // hides the damage button.
+  function hasRealDamage(d) {
+    const s = (d ?? "").toString().trim();
+    if (!s) return false;
+    if (/\d*d\d+/i.test(s)) return true;
+    const n = parseInt(s, 10);
+    return !isNaN(n) && n !== 0;
+  }
+
   // Convert 5e formatted damage strings to string Realm VTT needs such as 1d4 piercing + 3 piercing + 2d6 poison (converted from (1d4 + 3) piercing damage plus (2d6) poison damage)
   function getDamage(description) {
     // Handle both formats: "7 (1d8 + 3)" and "1d8 + 3"
@@ -115,7 +126,7 @@
     const traitDataPath = dataPath.replace(".data.damage", "");
     api.setValue(
       `${traitDataPath}.fields.rollDamageBtn.hidden`,
-      damage === "" || damage === undefined || damage === null,
+      !hasRealDamage(damage),
     );
   }
 
@@ -168,7 +179,8 @@
     const damageString = getDamage(description);
     if (damageString) {
       valuesToSet[`${traitDataPath}.data.damage`] = damageString;
-      valuesToSet[`${traitDataPath}.fields.rollDamageBtn.hidden`] = false;
+      valuesToSet[`${traitDataPath}.fields.rollDamageBtn.hidden`] =
+        !hasRealDamage(damageString);
     }
 
     // Parse for spellcasting — supports two common formats:
