@@ -149,6 +149,11 @@
     api.setValue(`${traitDataPath}.fields.spells.hidden`, !isSpellcasting);
   }
 
+  function toggleShowUseButton(value) {
+    const traitDataPath = dataPath.replace(".data.showUseButton", "");
+    api.setValue(`${traitDataPath}.fields.useBtn.hidden`, !value);
+  }
+
   function updateTraitDescription(description) {
     const traitDataPath = dataPath.replace(".data.description", "");
     const valuesToSet = {};
@@ -417,6 +422,15 @@ ${effectButtons}
     label="Settings"
     size="xs"
   >
+    <div style="margin-bottom: 8px">
+      <checkbox
+        field="showUseButton"
+        label="Show Use Button"
+        size="sm"
+        textalign="left"
+        onchange="toggleShowUseButton(value)"
+      ></checkbox>
+    </div>
     <div
       style="
         display: flex;

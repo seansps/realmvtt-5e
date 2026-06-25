@@ -238,6 +238,11 @@
     api.setValue(spellListDataPath, !isSpellcasting);
   }
 
+  function toggleShowUseButton(value) {
+    const actionDataPath = dataPath.replace(".data.showUseButton", "");
+    api.setValue(`${actionDataPath}.fields.useBtn.hidden`, !value);
+  }
+
   function updateUsesPerDay(usesPerDay) {
     const actionDataPath = dataPath.replace(".data.usesPerDay", "");
     const valuesToSet = {};
@@ -938,6 +943,15 @@ ${effectButtons}
     label="Settings"
     size="xs"
   >
+    <div style="margin-bottom: 8px">
+      <checkbox
+        field="showUseButton"
+        label="Show Use Button"
+        size="sm"
+        textalign="left"
+        onchange="toggleShowUseButton(value)"
+      ></checkbox>
+    </div>
     <div style="display: flex; flex-direction: row; gap: 8px">
       <div style="display: flex; flex-direction: column; gap: 4px">
         <checkbox
