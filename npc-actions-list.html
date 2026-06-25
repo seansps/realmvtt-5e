@@ -772,6 +772,13 @@
     if (action?.data?.isSave) {
       const savingThrows = action?.data?.savingThrows || [];
       const saveDc = action?.data?.saveDC || 0;
+      // Thread the action name as sourceName into the defender's save predicate
+      // context (6th arg) so effects gated by source:<slug> (e.g. "disadvantage
+      // on saves against the banshee's Baleful Wail" → source:baleful-wail)
+      // resolve.
+      const saveCtxArg = `, undefined, undefined, ${JSON.stringify({
+        sourceName: action?.name || "",
+      })}`;
       savingThrows.forEach((savingThrow) => {
         // Look up saves of selected tokens and prompt roll for each
         const rollSaveButton = `\`\`\`Roll_${capitalize(savingThrow)}_Save
@@ -797,7 +804,7 @@ selectedTokens.forEach(token => {
 		}
 	}
 
-	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}');
+	const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}'${saveCtxArg});
 	saveMods.forEach(mod => {
 		saveModifiers.push(mod);
 	});
