@@ -637,8 +637,16 @@
       api.promptRoll(`Attack ${name}`, diceRoll, modifiers, metadata, "attack");
     }
 
-    updateReactions();
-    updateLegendaryActions();
+    // Only mark reactions/legendary used from the Attack button when no Use
+    // button is shown for this action. When a Use button IS shown, the player
+    // marks usage by clicking Use, so the Attack button must not also spend it
+    // (otherwise an action with both buttons double-spends).
+    const useBtnShown =
+      api.getValue(`${attackDataPath}.fields.useBtn.hidden`) === false;
+    if (!useBtnShown) {
+      updateReactions();
+      updateLegendaryActions();
+    }
   }
 
   function rollDamage(isCritical) {
