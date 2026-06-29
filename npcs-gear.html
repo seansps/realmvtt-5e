@@ -98,11 +98,22 @@
   }
 </script>
 
-<div>
-  <label variant="bold" textalign="center" label="Gear"></label>
-</div>
+<style>
+  .rvtt-npc-section {
+    padding-bottom: 4px;
+    border-bottom: 1px solid
+      var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+  }
+</style>
 
-<div style="display: flex; flex-direction: row">
+<div class="rvtt-npc-section">Gear</div>
+
+<div style="display: flex; flex-direction: row; margin-top: 8px">
   <div style="margin-left: 34px">
     <label variant="bold" size="xs" textalign="left" label="Count"></label>
   </div>

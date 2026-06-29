@@ -122,9 +122,20 @@
   }
 </script>
 
-<div style="margin-bottom: 4px">
-  <divider label="Settings"></divider>
-</div>
+<style>
+  .rvtt-npc-section {
+    padding-bottom: 4px;
+    border-bottom: 1px solid
+      var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+  }
+</style>
+
+<div class="rvtt-npc-section" style="margin-bottom: 8px">Settings</div>
 
 <checkbox
   field="inLair"
@@ -178,9 +189,7 @@
   </numberfield>
 </div>
 
-<div style="margin-bottom: 4px">
-  <divider label="Spellcasting"></divider>
-</div>
+<div class="rvtt-npc-section" style="margin-top: 14px; margin-bottom: 8px">Spellcasting</div>
 
 <label variant="bold" label="Spell Slots by Level" size="sm"></label>
 <label

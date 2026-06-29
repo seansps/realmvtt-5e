@@ -223,9 +223,20 @@
   }
 </script>
 
-<div>
-  <label variant="bold" textalign="center" label="Description"></label>
-</div>
+<style>
+  .rvtt-npc-section {
+    padding-bottom: 4px;
+    border-bottom: 1px solid
+      var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+  }
+</style>
+
+<div class="rvtt-npc-section" style="margin-bottom: 8px">Description</div>
 
 <div>
   <richtextfield

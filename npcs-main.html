@@ -1,67 +1,37 @@
 <script>
   function onTypeChange(npcType) {
+    // Each conditional row is wrapped in a <box field="...Row"> so its amber key
+    // label hides together with its field. creatureType / alignment have no
+    // separate label, so they toggle directly.
+    const creatureGroups = [
+      "tempHpRow",
+      "hitDiceRow",
+      "sensesRow",
+      "languagesRow",
+      "skillsRow",
+      "creatureType",
+      "alignment",
+    ];
+    const vehicleGroups = [
+      "weightRow",
+      "crewRow",
+      "passengersRow",
+      "cargoRow",
+      "damageThresholdRow",
+    ];
     const fieldsToHide = [];
     const fieldsToShow = [];
     if (npcType === "vehicle") {
-      // Hide creature fields
-      fieldsToHide.push("tempHp");
-      fieldsToHide.push("creatureType");
-      fieldsToHide.push("alignment");
-      fieldsToHide.push("hitDice");
-      fieldsToHide.push("senses");
-      fieldsToHide.push("skills");
-      fieldsToHide.push("skillsLabel");
-      fieldsToHide.push("languages");
-      // Show vehicle fields
-      fieldsToShow.push("weight");
-      fieldsToShow.push("crew");
-      fieldsToShow.push("passengers");
-      fieldsToShow.push("cargo");
-      fieldsToShow.push("damageThreshold");
-      fieldsToShow.push("cost");
-      // Hide trap fields
-      fieldsToHide.push("trapType");
+      fieldsToHide.push(...creatureGroups, "trapType");
+      fieldsToShow.push(...vehicleGroups, "costRow");
     } else if (npcType === "trap") {
-      // Hide creature fields
-      fieldsToHide.push("tempHp");
-      fieldsToHide.push("creatureType");
-      fieldsToHide.push("alignment");
-      fieldsToHide.push("hitDice");
-      fieldsToHide.push("senses");
-      fieldsToHide.push("skills");
-      fieldsToHide.push("skillsLabel");
-      fieldsToHide.push("languages");
-      // Hide vehicle fields
-      fieldsToHide.push("weight");
-      fieldsToHide.push("crew");
-      fieldsToHide.push("passengers");
-      fieldsToHide.push("cargo");
-      fieldsToHide.push("damageThreshold");
-      // Show trap fields
-      fieldsToShow.push("trapType");
-      fieldsToShow.push("cost");
+      fieldsToHide.push(...creatureGroups, ...vehicleGroups);
+      fieldsToShow.push("trapType", "costRow");
     } else {
-      // Show creature fields
-      fieldsToShow.push("tempHp");
-      fieldsToShow.push("creatureType");
-      fieldsToShow.push("alignment");
-      fieldsToShow.push("hitDice");
-      fieldsToShow.push("senses");
-      fieldsToShow.push("skills");
-      fieldsToShow.push("skillsLabel");
-      fieldsToShow.push("languages");
-      // Hide vehicle fields
-      fieldsToHide.push("weight");
-      fieldsToHide.push("crew");
-      fieldsToHide.push("passengers");
-      fieldsToHide.push("cargo");
-      fieldsToHide.push("damageThreshold");
-      fieldsToHide.push("cost");
-      // Hide trap fields
-      fieldsToHide.push("trapType");
+      fieldsToShow.push(...creatureGroups);
+      fieldsToHide.push(...vehicleGroups, "costRow", "trapType");
     }
     api.setHidden(fieldsToHide, true, () => {
-      // Do this in callback to avoid race condition
       api.setHidden(fieldsToShow, false);
     });
   }
@@ -334,6 +304,9 @@
   function onLoadNPC() {
     const valuesToSet = {};
 
+    // Re-apply type-based row visibility on load (onchange only fires on change).
+    onTypeChange(record?.data?.type || "creature");
+
     // Toggle the visibility of the traits accordion
     if (
       record.data?.hasTraits &&
@@ -440,1170 +413,582 @@
   }
 </script>
 
-<div style="display: flex; margin-top: 4px; flex-direction: row">
-  <div style="display: flex; flex-direction: column; width: 100%">
-    <div style="display: flex; flex-direction: row; gap: 4px">
-      <div
-        style="display: flex; flex-direction: column; gap: 0px; width: 110px"
-      >
-        <div
-          style="
-            width: 110px;
-            min-width: 110px;
-            max-width: 110px;
-            min-height: 110px;
-            max-height: 110px;
-          "
-        >
-          <portrait width="110px" height="110px" objectfit="contain"></portrait>
-        </div>
-        <dropdown
-          onload="onLoadNPC()"
-          size="xs"
-          width="100%"
-          field="type"
-          label="Type"
-          placeholder="NPC Type..."
-          onchange="onTypeChange(value)"
-          options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}, {"value": "trap", "label": "Trap"}]'
-        >
-        </dropdown>
+<!--
+  NPC stat block (5e) — mirrors the Level Up NPC design: one bordered-less card,
+  dark amber-ruled header, inline AC / HP / Speed lines, a 3x2 ability-card grid,
+  amber underlined section headers. 5e specifics: a full alignment dropdown (no
+  alignment-traits), initiative mod + score + roll button sit on the HP line (no
+  initiative-skill dropdown), no Maneuver DC, and no separate Condition Immunities
+  field (onLoadNPC merges it into Immunities). Every field + handler is preserved.
+-->
+<style>
+  .rvtt-npc-root {
+    --npc-accent: var(
+      --mantine-color-secondary-filled,
+      var(--mantine-primary-color-filled)
+    );
+  }
+  .rvtt-npc-card {
+    width: 100%;
+  }
+  .rvtt-npc-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 6px 0 10px;
+    border-bottom: 2px solid var(--npc-accent);
+  }
+  .rvtt-npc-portrait {
+    width: 76px;
+    min-width: 76px;
+    height: 76px;
+    flex: none;
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .rvtt-npc-name {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+    color: var(--mantine-color-text);
+  }
+  .rvtt-npc-sub {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .rvtt-npc-cr {
+    flex: none;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+  }
+  .rvtt-npc-cr-label {
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--npc-accent);
+  }
+  .rvtt-npc-body {
+    padding: 8px 0 6px;
+  }
+  .rvtt-npc-gap {
+    margin-top: 8px;
+  }
+  .rvtt-npc-defenses {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 14px;
+  }
+  .rvtt-npc-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .rvtt-npc-line--top {
+    align-items: center;
+  }
+  .rvtt-npc-key {
+    font-weight: 700;
+    color: var(--npc-accent);
+    white-space: nowrap;
+  }
+  .rvtt-npc-dim {
+    font-size: 11px;
+    color: var(--mantine-color-dimmed);
+  }
+  .rvtt-npc-slash {
+    color: var(--mantine-color-dimmed);
+  }
+  .rvtt-npc-hairline {
+    height: 1px;
+    background: var(--mantine-color-default-border);
+    margin: 8px 0;
+  }
+  .rvtt-npc-abilities {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .rvtt-npc-ab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 4px 2px 3px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: 4px;
+  }
+  .rvtt-npc-ab .mantine-NumberInput-input {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+  .rvtt-npc-ab-label {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--npc-accent);
+  }
+  .rvtt-npc-ab-score .mantine-NumberInput-input {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+  }
+  .rvtt-npc-ab-modrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .rvtt-npc-ab-saverow {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .rvtt-npc-ab-savelabel {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mantine-color-dimmed);
+  }
+  .rvtt-npc-section {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--npc-accent);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--npc-accent);
+  }
+  .rvtt-npc-tight .mantine-NumberInput-input,
+  .rvtt-npc-tight .mantine-TextInput-input,
+  .rvtt-npc-tight .mantine-Textarea-input,
+  .rvtt-npc-tight .mantine-Input-input {
+    min-height: 0 !important;
+    height: auto !important;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    line-height: 1.35 !important;
+  }
+</style>
+
+<div class="rvtt-npc-root sheet--spread" style="margin-top: 4px">
+  <div class="rvtt-npc-card">
+    <!-- ===== Header band ===== -->
+    <div class="rvtt-npc-head">
+      <div class="rvtt-npc-portrait">
+        <portrait width="76px" height="76px" objectfit="cover"></portrait>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0px; width: 100%">
-        <div style="display: flex; flex-direction: row; gap: 4px">
+
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <label field="namefield" class="rvtt-npc-name"></label>
+
+        <!-- Subtitle: type / size / creature type / alignment (+ vehicle/trap variants) -->
+        <div class="rvtt-npc-sub">
+          <dropdown
+            onload="onLoadNPC()"
+            size="xs"
+            width="104px"
+            field="type"
+            placeholder="Type..."
+            onchange="onTypeChange(value)"
+            options='[{"value": "creature", "label": "Creature"}, {"value": "vehicle", "label": "Vehicle"}, {"value": "trap", "label": "Trap"}]'
+          ></dropdown>
           <dropdown
             size="xs"
-            width="100%"
+            width="100px"
             field="size"
-            label="Size"
-            placeholder="Select Size..."
+            placeholder="Size..."
             options='[{"value": "tiny", "label": "Tiny"}, {"value": "small", "label": "Small"}, {"value": "medium", "label": "Medium"}, {"value": "large", "label": "Large"}, {"value": "huge", "label": "Huge"}, {"value": "gargantuan", "label": "Gargantuan"}]'
-          >
-          </dropdown>
-          <stringfield
-            size="xs"
-            width="100%"
-            field="creatureType"
-            label="Creature Type"
-            placeholder="Creature Type..."
-          >
-          </stringfield>
-          <stringfield
-            hidden="true"
-            size="xs"
-            width="100%"
-            field="trapType"
-            label="Trap Type"
-            placeholder="Trap Type..."
-          >
-          </stringfield>
+          ></dropdown>
+          <div style="flex: 1; min-width: 110px">
+            <stringfield
+              size="xs"
+              width="100%"
+              field="creatureType"
+              variant="unstyled"
+              placeholder="Creature Type..."
+            ></stringfield>
+            <stringfield
+              hidden="true"
+              size="xs"
+              width="100%"
+              field="trapType"
+              variant="unstyled"
+              placeholder="Trap Type..."
+            ></stringfield>
+          </div>
           <dropdown
             size="xs"
-            width="100%"
+            width="150px"
             field="alignment"
-            label="Alignment"
             placeholder="Alignment..."
             options='[
-			{"value": "unaligned", "label": "Unaligned"},
+				{"value": "unaligned", "label": "Unaligned"},
       {"value": "any alignment", "label": "Any Alignment"},
-			{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"}, 
-			{"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"}, 
-			{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"}, 
-			{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"}, 
-			{"value": "chaotic evil", "label": "Chaotic Evil"}]'
+				{"value": "lawful good", "label": "Lawful Good"}, {"value": "neutral good", "label": "Neutral Good"},
+				{"value": "chaotic good", "label": "Chaotic Good"}, {"value": "lawful neutral", "label": "Lawful Neutral"},
+				{"value": "neutral", "label": "Neutral"}, {"value": "chaotic neutral", "label": "Chaotic Neutral"},
+				{"value": "lawful evil", "label": "Lawful Evil"}, {"value": "neutral evil", "label": "Neutral Evil"},
+				{"value": "chaotic evil", "label": "Chaotic Evil"}]'
           ></dropdown>
-          <!-- Vehicle fields -->
-          <numberfield
-            hidden="true"
-            size="xs"
-            width="100%"
-            field="weight"
-            label="Weight"
-            placeholder="Weight..."
-          >
-          </numberfield>
-          <stringfield
-            hidden="true"
-            size="xs"
-            width="100%"
-            field="cost"
-            label="Cost"
-            placeholder="Cost..."
-          >
-          </stringfield>
         </div>
-        <div
-          style="
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            align-items: flex-end;
-            width: 100%;
-          "
-        >
-          <numberfield
-            size="xs"
-            icon="IconShield"
-            color="blue"
-            width="100%"
-            field="ac"
-            label="AC"
-            placeholder="AC..."
-          >
-          </numberfield>
-          <numberfield
-            showsign="true"
-            size="xs"
-            width="100%"
-            field="initiativeMod"
-            label="Initiative"
-            placeholder="0"
-          >
-          </numberfield>
-          <numberfield
-            size="xs"
-            width="100%"
-            field="initiativeScore"
-            label="Initiative Score"
-            placeholder="0"
-          >
-          </numberfield>
-          <iconbutton
-            size="md"
-            field="rollInitiativeBtn"
-            variant="outline"
-            options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]'
-            onclick="rollInitiative()"
-          >
-          </iconbutton>
-        </div>
-        <div
-          style="
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            align-items: flex-end;
-            width: 100%;
-          "
-        >
-          <numberfield
-            size="xs"
-            width="22%"
-            icon="IconHeart"
-            placeholder="0"
-            field="curhp"
-            label="HP"
-            color="pink"
-          >
-          </numberfield>
-          <numberfield
-            size="xs"
-            width="22%"
-            icon="IconHeartFilled"
-            placeholder="0"
-            field="hitpoints"
-            label="Max HP"
-            color="green"
-          ></numberfield>
-          <numberfield
-            size="xs"
-            width="22%"
-            icon="IconHeartFilled"
-            placeholder="0"
-            field="tempHp"
-            label="Temp HP"
-            color="blue"
-          ></numberfield>
+      </div>
+
+      <!-- Challenge / XP -->
+      <div class="rvtt-npc-cr">
+        <div style="display: flex; align-items: center; gap: 4px">
+          <span class="rvtt-npc-cr-label">CHALLENGE</span>
           <stringfield
+            field="challengeRating"
             size="xs"
-            width="34%"
-            field="hitDice"
-            label="Hit Dice"
-            placeholder="Hit Dice..."
-          >
-          </stringfield>
-          <!-- Vehicle fields -->
-          <numberfield
-            hidden="true"
-            size="xs"
-            width="34%"
-            field="damageThreshold"
-            label="Damage Threshold"
-            color="blue"
+            width="46px"
+            variant="unstyled"
             placeholder="0"
-            icon="IconShieldFilled"
-          >
-          </numberfield>
+            onchange="updateCR(value)"
+          ></stringfield>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px">
+          <stringfield
+            field="xp"
+            size="xs"
+            width="64px"
+            variant="unstyled"
+            textalign="right"
+            placeholder="0"
+          ></stringfield>
+          <span class="rvtt-npc-dim">XP</span>
         </div>
       </div>
     </div>
 
-    <div style="margin-top: 4px">
-      <divider color="pink" label="Ability Scores" textalign="center"></divider>
-    </div>
+    <!-- ===== Body ===== -->
+    <div class="rvtt-npc-body">
+      <!-- Defenses: AC / HP (+ initiative) / Speed inline lines -->
+      <div class="rvtt-npc-defenses rvtt-npc-tight">
+        <div class="rvtt-npc-line">
+          <span class="rvtt-npc-key">AC</span>
+          <numberfield field="ac" size="xs" width="44px" variant="unstyled" hidecontrols="true" placeholder="10"></numberfield>
+        </div>
+        <div class="rvtt-npc-line" style="gap: 3px">
+          <span class="rvtt-npc-key">HP</span>
+          <numberfield field="curhp" size="xs" width="36px" variant="unstyled" hidecontrols="true" placeholder="0" inputcolor="red"></numberfield>
+          <span class="rvtt-npc-slash">/</span>
+          <numberfield field="hitpoints" size="xs" width="36px" variant="unstyled" hidecontrols="true" placeholder="0" inputcolor="green"></numberfield>
+          <box field="tempHpRow" width="fit-content">
+            <div style="display: flex; align-items: center; gap: 3px">
+              <span class="rvtt-npc-dim">TMP</span>
+              <numberfield field="tempHp" size="xs" width="30px" variant="unstyled" hidecontrols="true" placeholder="0" inputcolor="blue"></numberfield>
+            </div>
+          </box>
+          <box field="hitDiceRow" width="fit-content">
+            <div style="display: flex; align-items: center; gap: 3px; min-width: 58px">
+              <span class="rvtt-npc-dim">HD</span>
+              <stringfield field="hitDice" size="xs" width="100%" variant="unstyled" placeholder="Hit Dice..."></stringfield>
+            </div>
+          </box>
+          <span class="rvtt-npc-key" style="margin-left: 4px">Init</span>
+          <numberfield field="initiativeMod" size="xs" width="32px" variant="unstyled" hidecontrols="true" showsign="true" placeholder="0"></numberfield>
+          <iconbutton field="rollInitiativeBtn" size="sm" variant="subtle" color="default" options='[{"icon": "D20", "label": "Roll Initiative", "value": "roll"}]' onclick="rollInitiative()"></iconbutton>
+          <span class="rvtt-npc-dim">Score</span>
+          <numberfield field="initiativeScore" size="xs" width="32px" variant="unstyled" hidecontrols="true" placeholder="0"></numberfield>
+        </div>
+        <div class="rvtt-npc-line rvtt-npc-line--top">
+          <span class="rvtt-npc-key">Speed</span>
+          <div style="flex: 1">
+            <stringfield field="speed" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="Speed..."></stringfield>
+          </div>
+        </div>
 
-    <!-- Attributes -->
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 0px;
-        align-items: flex-end;
-        flex-wrap: wrap;
-      "
-    >
-      <table style="width: 50%; min-width: 240px; flex-grow: 1">
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-            <th><label label="MOD" variant="bold" size="xs"></label></th>
-            <th><label label="SAVE" variant="bold" size="xs"></label></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <label label="STR" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="strength"
-                onchange="setModifier(value, 'strength')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="strengthMod"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Strength Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Strength Check", "value": "roll"}]'
-                  onclick="rollCheck('strength')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="strengthSave"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Strength Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Strength Save", "value": "roll"}]'
-                  onclick="rollSave('strength')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label label="DEX" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="dexterity"
-                onchange="setModifier(value, 'dexterity')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="dexterityMod"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Dexterity Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Dexterity Check", "value": "roll"}]'
-                  onclick="rollCheck('dexterity')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="dexteritySave"
-                  placeholder="+0"
-                >
-                </numberfield>
-                <iconbutton
-                  size="md"
-                  field="Dexterity Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Dexterity Save", "value": "roll"}]'
-                  onclick="rollSave('dexterity')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label label="CON" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="constitution"
-                onchange="setModifier(value, 'constitution')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="constitutionMod"
-                  placeholder="+0"
-                >
-                </numberfield>
-                <iconbutton
-                  size="md"
-                  field="Constitution Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Constitution Check", "value": "roll"}]'
-                  onclick="rollCheck('constitution')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="constitutionSave"
-                  placeholder="+0"
-                >
-                </numberfield>
-                <iconbutton
-                  size="md"
-                  field="Constitution Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Constitution Save", "value": "roll"}]'
-                  onclick="rollSave('constitution')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <!-- Vehicle / trap stats (shown by NPC type) -->
+        <box field="weightRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Weight</span>
+            <numberfield field="weight" size="xs" width="120px" variant="unstyled" hidecontrols="true" placeholder="0"></numberfield>
+          </div>
+        </box>
+        <box field="costRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Cost</span>
+            <stringfield field="cost" size="xs" width="160px" variant="unstyled" placeholder="Cost..."></stringfield>
+          </div>
+        </box>
+        <box field="crewRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Crew</span>
+            <stringfield field="crew" size="xs" width="160px" variant="unstyled" placeholder="Crew..."></stringfield>
+          </div>
+        </box>
+        <box field="passengersRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Passengers</span>
+            <stringfield field="passengers" size="xs" width="160px" variant="unstyled" placeholder="Passengers..."></stringfield>
+          </div>
+        </box>
+        <box field="cargoRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Cargo</span>
+            <stringfield field="cargo" size="xs" width="160px" variant="unstyled" placeholder="Cargo..."></stringfield>
+          </div>
+        </box>
+        <box field="damageThresholdRow" hidden="true">
+          <div class="rvtt-npc-line">
+            <span class="rvtt-npc-key">Damage Threshold</span>
+            <numberfield field="damageThreshold" size="xs" width="90px" variant="unstyled" hidecontrols="true" placeholder="0"></numberfield>
+          </div>
+        </box>
+      </div>
 
-      <table style="width: 50%; min-width: 240px; flex-grow: 1">
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-            <th><label label="MOD" variant="bold" size="xs"></label></th>
-            <th><label label="SAVE" variant="bold" size="xs"></label></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <label label="INT" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="intelligence"
-                onchange="setModifier(value, 'intelligence')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="intelligenceMod"
-                  placeholder="+0"
-                >
-                </numberfield>
-                <iconbutton
-                  size="md"
-                  field="Intelligence Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Intelligence Check", "value": "roll"}]'
-                  onclick="rollCheck('intelligence')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="intelligenceSave"
-                  placeholder="+0"
-                >
-                </numberfield>
-                <iconbutton
-                  size="md"
-                  field="Intelligence Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Intelligence Save", "value": "roll"}]'
-                  onclick="rollSave('intelligence')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label label="WIS" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="wisdom"
-                onchange="setModifier(value, 'wisdom')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="wisdomMod"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Wisdom Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Wisdom Check", "value": "roll"}]'
-                  onclick="rollCheck('wisdom')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="wisdomSave"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Wisdom Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Wisdom Save", "value": "roll"}]'
-                  onclick="rollSave('wisdom')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label label="CHA" variant="bold" size="xs"></label>
-            </td>
-            <td>
-              <numberfield
-                size="xs"
-                width="100%"
-                field="charisma"
-                onchange="setModifier(value, 'charisma')"
-                placeholder="0"
-              ></numberfield>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="charismaMod"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Charisma Check"
-                  variant="light"
-                  options='[{"icon": "D20", "label": "Roll Charisma Check", "value": "roll"}]'
-                  onclick="rollCheck('charisma')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-            <td>
-              <div
-                style="
-                  display: flex;
-                  flex-direction: row;
-                  gap: 4px;
-                  align-items: flex-end;
-                "
-              >
-                <numberfield
-                  showsign="true"
-                  size="xs"
-                  width="100%"
-                  field="charismaSave"
-                  placeholder="+0"
-                ></numberfield>
-                <iconbutton
-                  size="md"
-                  field="Charisma Save"
-                  variant="default"
-                  options='[{"icon": "D20", "label": "Roll Charisma Save", "value": "roll"}]'
-                  onclick="rollSave('charisma')"
-                >
-                </iconbutton>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="rvtt-npc-hairline"></div>
 
-    <div style="margin-top: 4px">
-      <divider color="pink"></divider>
-    </div>
+      <!-- Ability scores: 3x2 cards (score / mod + d20 / save + d20) -->
+      <div class="rvtt-npc-abilities">
+        <!-- STR -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">STR</div>
+          <numberfield class="rvtt-npc-ab-score" field="strength" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'strength')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="strengthMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('strength')"></numberfield>
+            <iconbutton field="Strength Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Strength Check", "value": "roll"}]' onclick="rollCheck('strength')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="strengthSave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('strength')"></numberfield>
+            <iconbutton field="Strength Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Strength Save", "value": "roll"}]' onclick="rollSave('strength')"></iconbutton>
+          </div>
+        </div>
+        <!-- DEX -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">DEX</div>
+          <numberfield class="rvtt-npc-ab-score" field="dexterity" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'dexterity')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="dexterityMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('dexterity')"></numberfield>
+            <iconbutton field="Dexterity Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Dexterity Check", "value": "roll"}]' onclick="rollCheck('dexterity')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="dexteritySave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('dexterity')"></numberfield>
+            <iconbutton field="Dexterity Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Dexterity Save", "value": "roll"}]' onclick="rollSave('dexterity')"></iconbutton>
+          </div>
+        </div>
+        <!-- CON -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">CON</div>
+          <numberfield class="rvtt-npc-ab-score" field="constitution" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'constitution')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="constitutionMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('constitution')"></numberfield>
+            <iconbutton field="Constitution Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Constitution Check", "value": "roll"}]' onclick="rollCheck('constitution')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="constitutionSave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('constitution')"></numberfield>
+            <iconbutton field="Constitution Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Constitution Save", "value": "roll"}]' onclick="rollSave('constitution')"></iconbutton>
+          </div>
+        </div>
+        <!-- INT -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">INT</div>
+          <numberfield class="rvtt-npc-ab-score" field="intelligence" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'intelligence')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="intelligenceMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('intelligence')"></numberfield>
+            <iconbutton field="Intelligence Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Intelligence Check", "value": "roll"}]' onclick="rollCheck('intelligence')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="intelligenceSave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('intelligence')"></numberfield>
+            <iconbutton field="Intelligence Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Intelligence Save", "value": "roll"}]' onclick="rollSave('intelligence')"></iconbutton>
+          </div>
+        </div>
+        <!-- WIS -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">WIS</div>
+          <numberfield class="rvtt-npc-ab-score" field="wisdom" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'wisdom')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="wisdomMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('wisdom')"></numberfield>
+            <iconbutton field="Wisdom Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Wisdom Check", "value": "roll"}]' onclick="rollCheck('wisdom')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="wisdomSave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('wisdom')"></numberfield>
+            <iconbutton field="Wisdom Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Wisdom Save", "value": "roll"}]' onclick="rollSave('wisdom')"></iconbutton>
+          </div>
+        </div>
+        <!-- CHA -->
+        <div class="rvtt-npc-ab">
+          <div class="rvtt-npc-ab-label">CHA</div>
+          <numberfield class="rvtt-npc-ab-score" field="charisma" size="xs" width="100%" variant="unstyled" hidecontrols="true" textalign="center" placeholder="10" onchange="setModifier(value, 'charisma')"></numberfield>
+          <div class="rvtt-npc-ab-modrow">
+            <numberfield field="charismaMod" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollCheck('charisma')"></numberfield>
+            <iconbutton field="Charisma Check" size="sm" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Charisma Check", "value": "roll"}]' onclick="rollCheck('charisma')"></iconbutton>
+          </div>
+          <div class="rvtt-npc-ab-saverow">
+            <span class="rvtt-npc-ab-savelabel">SAVE</span>
+            <numberfield field="charismaSave" size="xs" width="34px" variant="unstyled" hidecontrols="true" showsign="true" textalign="center" placeholder="+0" onclick="rollSave('charisma')"></numberfield>
+            <iconbutton field="Charisma Save" size="xs" variant="subtle" color="default" options='[{"icon": "d20", "label": "Roll Charisma Save", "value": "roll"}]' onclick="rollSave('charisma')"></iconbutton>
+          </div>
+        </div>
+      </div>
 
-    <!-- Skills -->
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        align-items: flex-start;
-        margin-top: 4px;
-      "
-    >
-      <label
-        label="Skills"
-        variant="bold"
-        size="xs"
-        field="skillsLabel"
-      ></label>
-      <list listtype="skill_list" field="skills"></list>
-    </div>
-
-    <!-- Additional Attributes -->
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        align-items: flex-end;
-      "
-    >
-      <stringfield
-        width="100%"
-        multiline="true"
-        size="xs"
-        field="speed"
-        label="Speed"
-        placeholder="Speed..."
+      <!-- Proficiency -->
+      <div
+        class="rvtt-npc-tight"
+        style="display: flex; flex-wrap: wrap; gap: 4px 22px; margin-top: 7px; font-size: 14px; align-items: center"
       >
-      </stringfield>
-      <stringfield
-        width="100%"
-        multiline="true"
-        size="xs"
-        field="senses"
-        label="Senses"
-        placeholder="Senses..."
-      ></stringfield>
-      <!-- Vehicle fields -->
-      <stringfield
-        hidden="true"
-        size="xs"
-        width="100%"
-        field="crew"
-        label="Crew"
-        placeholder="Crew..."
+        <div style="display: flex; align-items: center; gap: 5px">
+          <span class="rvtt-npc-key">Proficiency</span>
+          <numberfield field="proficiencyBonus" size="xs" width="44px" variant="unstyled" hidecontrols="true" showsign="true" placeholder="+2"></numberfield>
+        </div>
+        <numberfield field="level" size="xs" placeholder="0" hidden="true"></numberfield>
+      </div>
+
+      <!-- Detail lines: Senses / Languages / defenses / Skills -->
+      <div
+        class="rvtt-npc-tight"
+        style="display: flex; flex-direction: column; gap: 4px; margin-top: 7px; font-size: 14px"
       >
-      </stringfield>
-    </div>
+        <box field="sensesRow">
+          <div class="rvtt-npc-line rvtt-npc-line--top">
+            <span class="rvtt-npc-key">Senses</span>
+            <div style="flex: 1">
+              <stringfield field="senses" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="Senses..."></stringfield>
+            </div>
+          </div>
+        </box>
+        <box field="languagesRow">
+          <div class="rvtt-npc-line rvtt-npc-line--top">
+            <span class="rvtt-npc-key">Languages</span>
+            <div style="flex: 1">
+              <stringfield field="languages" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="Enter Languages..."></stringfield>
+            </div>
+          </div>
+        </box>
+        <div class="rvtt-npc-line rvtt-npc-line--top">
+          <span class="rvtt-npc-key">Vulnerabilities</span>
+          <div style="flex: 1">
+            <stringfield field="vulnerabilities" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="None"></stringfield>
+          </div>
+        </div>
+        <div class="rvtt-npc-line rvtt-npc-line--top">
+          <span class="rvtt-npc-key">Resistances</span>
+          <div style="flex: 1">
+            <stringfield field="resistances" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="None"></stringfield>
+          </div>
+        </div>
+        <div class="rvtt-npc-line rvtt-npc-line--top">
+          <span class="rvtt-npc-key">Immunities</span>
+          <div style="flex: 1">
+            <stringfield field="immunities" size="xs" width="100%" multiline="true" variant="unstyled" placeholder="None"></stringfield>
+          </div>
+        </div>
+        <box field="skillsRow">
+          <div class="rvtt-npc-line rvtt-npc-line--top">
+            <label class="rvtt-npc-key" field="skillsLabel" label="Skills"></label>
+            <div style="flex: 1">
+              <list listtype="skill_list" field="skills"></list>
+            </div>
+          </div>
+        </box>
+      </div>
 
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        align-items: flex-end;
-      "
-    >
-      <stringfield
-        width="100%"
-        size="xs"
-        multiline="true"
-        field="languages"
-        label="Languages"
-        placeholder="Enter Languages..."
-      >
-      </stringfield>
-      <!-- Vehicle fields -->
-      <stringfield
-        hidden="true"
-        size="xs"
-        width="100%"
-        field="passengers"
-        label="Passengers"
-        placeholder="Passengers..."
-      >
-      </stringfield>
-      <stringfield
-        hidden="true"
-        size="xs"
-        width="100%"
-        field="cargo"
-        label="Cargo"
-        placeholder="Cargo..."
-      >
-      </stringfield>
-    </div>
+      <!-- Subsection settings (edit only) -->
+      <box hideonlocked="true" field="settingsDivider">
+        <div class="rvtt-npc-section" style="margin-top: 10px">Subsection Settings</div>
+      </box>
+      <div style="display: flex; flex-direction: row; gap: 16px; flex-wrap: wrap; margin-top: 6px">
+        <checkbox hideonlocked="true" field="hasTraits" label="Has Traits" size="sm" onchange="onHasTraitsChange()"></checkbox>
+        <checkbox hideonlocked="true" field="hasActions" label="Has Actions" size="sm" onchange="onHasActionsChange()"></checkbox>
+        <checkbox hideonlocked="true" field="hasBonusActions" label="Has Bonus Actions" size="sm" onchange="onHasBonusActionsChange()"></checkbox>
+        <checkbox hideonlocked="true" field="hasReactions" label="Has Reactions" size="sm" onchange="onHasReactionsChange()"></checkbox>
+        <checkbox hideonlocked="true" field="hasLegendaryActions" label="Has Legendary Actions" size="sm" onchange="onHasLegendaryActionsChange()"></checkbox>
+        <checkbox hideonlocked="true" field="hasLairActions" label="Has Lair Actions" size="sm" onchange="onHasLairActionsChange()"></checkbox>
+      </div>
 
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        align-items: flex-end;
-      "
-    >
-      <stringfield
-        width="100%"
-        size="xs"
-        field="challengeRating"
-        label="CR"
-        placeholder="Enter Challenge Rating..."
-        onchange="updateCR(value)"
-      >
-      </stringfield>
-      <stringfield
-        width="100%"
-        size="xs"
-        field="xp"
-        label="XP"
-        placeholder="Enter XP..."
-      >
-      </stringfield>
-      <numberfield
-        showsign="true"
-        width="100%"
-        size="xs"
-        field="proficiencyBonus"
-        label="PB"
-        placeholder="+2"
-      >
-      </numberfield>
-      <!-- Hidden field to store level for spell casting -->
-      <numberfield
-        size="xs"
-        field="level"
-        label="Level"
-        placeholder="0"
-        hidden="true"
-      ></numberfield>
-    </div>
+      <!-- ===== Traits ===== -->
+      <box field="featuresDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Traits</div>
+      </box>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_traits_list" field="features"></list>
+      </div>
 
-    <div
-      style="
-        width: 100%;
-        margin-top: 4px;
-        margin-bottom: 4px;
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-      "
-    >
-      <stringfield
-        width="33%"
-        size="xs"
-        multiline="true"
-        field="vulnerabilities"
-        label="Vulnerabilities"
-        placeholder="None"
-      >
-      </stringfield>
-      <stringfield
-        width="33%"
-        size="xs"
-        multiline="true"
-        field="resistances"
-        label="Resistances"
-        placeholder="None"
-      >
-      </stringfield>
-      <stringfield
-        width="33%"
-        size="xs"
-        multiline="true"
-        field="immunities"
-        label="Immunities"
-        placeholder="None"
-      >
-      </stringfield>
-    </div>
+      <!-- ===== Actions ===== -->
+      <box field="actionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Actions</div>
+      </box>
+      <div style="margin-top: 8px">
+        <label hidden="true" variant="bold" field="spellSlotsLabel" label="Spell Slots" size="sm" textalign="center"></label>
+      </div>
+      <div style="display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center">
+        <counter field="spellSlots1" hidden="true" maxvaluefield="numSpellSlots1" label="Level 1" size="xs" textalign="center" color="violet" editable="true"></counter>
+        <counter field="spellSlots2" hidden="true" maxvaluefield="numSpellSlots2" label="Level 2" size="xs" textalign="center" color="blue" editable="true"></counter>
+        <counter field="spellSlots3" hidden="true" maxvaluefield="numSpellSlots3" label="Level 3" size="xs" textalign="center" color="cyan" editable="true"></counter>
+        <counter field="spellSlots4" hidden="true" maxvaluefield="numSpellSlots4" label="Level 4" size="xs" textalign="center" color="teal" editable="true"></counter>
+        <counter field="spellSlots5" hidden="true" maxvaluefield="numSpellSlots5" label="Level 5" size="xs" textalign="center" color="green" editable="true"></counter>
+        <counter field="spellSlots6" hidden="true" maxvaluefield="numSpellSlots6" label="Level 6" size="xs" textalign="center" color="lime" editable="true"></counter>
+        <counter field="spellSlots7" hidden="true" maxvaluefield="numSpellSlots7" label="Level 7" size="xs" textalign="center" color="yellow" editable="true"></counter>
+        <counter field="spellSlots8" hidden="true" maxvaluefield="numSpellSlots8" label="Level 8" size="xs" textalign="center" color="orange" editable="true"></counter>
+        <counter field="spellSlots9" hidden="true" maxvaluefield="numSpellSlots9" label="Level 9" size="xs" textalign="center" color="red" editable="true"></counter>
+      </div>
+      <div style="width: 100%">
+        <list hidden="true" listtype="npc_actions_list" field="actions"></list>
+      </div>
 
-    <divider
-      hideonlocked="true"
-      color="pink"
-      label="Subsection Settings"
-      field="settingsDivider"
-      textalign="center"
-    >
-    </divider>
+      <!-- ===== Bonus Actions ===== -->
+      <box field="bonusActionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Bonus Actions</div>
+      </box>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_actions_list" field="bonusActions"></list>
+      </div>
 
-    <div style="display: flex; flex-direction: row; gap: 18px; flex-wrap: wrap">
-      <checkbox
-        hideonlocked="true"
-        field="hasTraits"
-        label="Has Traits"
-        size="sm"
-        onchange="onHasTraitsChange()"
-      >
-      </checkbox>
+      <!-- ===== Reactions ===== -->
+      <box field="reactionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Reactions</div>
+      </box>
+      <div style="margin-top: 8px">
+        <label hidden="true" variant="bold" field="reactionsLabel" label="Uses" size="sm" textalign="center"></label>
+      </div>
+      <div style="display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center">
+        <counter hidden="true" field="usedReactions" size="xs" maxvaluefield="maxReactions" textalign="center" editable="true"></counter>
+      </div>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_actions_list" field="reactions"></list>
+      </div>
 
-      <checkbox
-        hideonlocked="true"
-        field="hasActions"
-        label="Has Actions"
-        size="sm"
-        onchange="onHasActionsChange()"
-      >
-      </checkbox>
+      <!-- ===== Legendary Actions ===== -->
+      <box field="legendaryActionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Legendary Actions</div>
+      </box>
+      <div style="margin-top: 8px">
+        <label hidden="true" variant="bold" field="legendaryActionsLabel" label="Uses" size="sm" textalign="center"></label>
+      </div>
+      <div style="display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center">
+        <counter hidden="true" field="usedLegendaryActions" size="xs" maxvaluefield="maxLegendaryActions" textalign="center" editable="true"></counter>
+      </div>
+      <stringfield hidden="true" field="legendaryActionsDescription" placeholder="Enter Legendary Actions description..." size="xs" multiline="true" onchange="updateLegendaryActionsDescription(value)"></stringfield>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_actions_list" field="legendaryActions"></list>
+      </div>
 
-      <checkbox
-        hideonlocked="true"
-        field="hasBonusActions"
-        label="Has Bonus Actions"
-        size="sm"
-        onchange="onHasBonusActionsChange()"
-      >
-      </checkbox>
-
-      <checkbox
-        hideonlocked="true"
-        field="hasReactions"
-        label="Has Reactions"
-        size="sm"
-        onchange="onHasReactionsChange()"
-      >
-      </checkbox>
-
-      <checkbox
-        hideonlocked="true"
-        field="hasLegendaryActions"
-        label="Has Legendary Actions"
-        size="sm"
-        onchange="onHasLegendaryActionsChange()"
-      >
-      </checkbox>
-
-      <checkbox
-        hideonlocked="true"
-        field="hasLairActions"
-        label="Has Lair Actions"
-        size="sm"
-        onchange="onHasLairActionsChange()"
-      >
-      </checkbox>
-    </div>
-
-    <divider
-      hidden="true"
-      color="pink"
-      label="Traits"
-      field="featuresDivider"
-      textalign="center"
-    ></divider>
-
-    <div style="width: 100%">
-      <list hidden="true" listtype="npc_traits_list" field="features"></list>
-    </div>
-
-    <divider
-      hidden="true"
-      color="pink"
-      label="Actions"
-      field="actionsDivider"
-      textalign="center"
-    ></divider>
-
-    <!-- We'll list spell slots here, if they have them -->
-    <div style="margin-top: 8px">
-      <label
-        hidden="true"
-        variant="bold"
-        field="spellSlotsLabel"
-        label="Spell Slots"
-        size="sm"
-        textalign="center"
-      ></label>
-    </div>
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 4px;
-        justify-content: center;
-      "
-    >
-      <counter
-        field="spellSlots1"
-        hidden="true"
-        maxvaluefield="numSpellSlots1"
-        label="Level 1"
-        size="xs"
-        textalign="center"
-        color="violet"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots2"
-        hidden="true"
-        maxvaluefield="numSpellSlots2"
-        label="Level 2"
-        size="xs"
-        textalign="center"
-        color="blue"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots3"
-        hidden="true"
-        maxvaluefield="numSpellSlots3"
-        label="Level 3"
-        size="xs"
-        textalign="center"
-        color="cyan"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots4"
-        hidden="true"
-        maxvaluefield="numSpellSlots4"
-        label="Level 4"
-        size="xs"
-        textalign="center"
-        color="teal"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots5"
-        hidden="true"
-        maxvaluefield="numSpellSlots5"
-        label="Level 5"
-        size="xs"
-        textalign="center"
-        color="green"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots6"
-        hidden="true"
-        maxvaluefield="numSpellSlots6"
-        label="Level 6"
-        size="xs"
-        textalign="center"
-        color="lime"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots7"
-        hidden="true"
-        maxvaluefield="numSpellSlots7"
-        label="Level 7"
-        size="xs"
-        textalign="center"
-        color="yellow"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots8"
-        hidden="true"
-        maxvaluefield="numSpellSlots8"
-        label="Level 8"
-        size="xs"
-        textalign="center"
-        color="orange"
-        editable="true"
-      ></counter>
-      <counter
-        field="spellSlots9"
-        hidden="true"
-        maxvaluefield="numSpellSlots9"
-        label="Level 9"
-        size="xs"
-        textalign="center"
-        color="red"
-        editable="true"
-      ></counter>
-    </div>
-
-    <div style="width: 100%">
-      <list hidden="true" listtype="npc_actions_list" field="actions"></list>
-    </div>
-
-    <!-- Bonus Actions -->
-    <divider
-      hidden="true"
-      color="pink"
-      label="Bonus Actions"
-      field="bonusActionsDivider"
-      textalign="center"
-    ></divider>
-
-    <div style="width: 100%">
-      <list
-        hidden="true"
-        listtype="npc_actions_list"
-        field="bonusActions"
-      ></list>
-    </div>
-
-    <!-- Reactions -->
-    <divider
-      hidden="true"
-      color="pink"
-      label="Reactions"
-      field="reactionsDivider"
-      textalign="center"
-    ></divider>
-
-    <div style="margin-top: 8px">
-      <label
-        hidden="true"
-        variant="bold"
-        field="reactionsLabel"
-        label="Reactions"
-        size="sm"
-        textalign="center"
-      ></label>
-    </div>
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 4px;
-        justify-content: center;
-      "
-    >
-      <counter
-        hidden="true"
-        field="usedReactions"
-        size="xs"
-        maxvaluefield="maxReactions"
-        textalign="center"
-        editable="true"
-      ></counter>
-    </div>
-
-    <div style="width: 100%">
-      <list hidden="true" listtype="npc_actions_list" field="reactions"></list>
-    </div>
-
-    <!-- Legendary Actions -->
-    <divider
-      hidden="true"
-      color="pink"
-      label="Legendary Actions"
-      field="legendaryActionsDivider"
-      textalign="center"
-    ></divider>
-
-    <div style="margin-top: 8px">
-      <label
-        hidden="true"
-        variant="bold"
-        field="legendaryActionsLabel"
-        label="Legendary Actions"
-        size="sm"
-        textalign="center"
-      ></label>
-    </div>
-    <div
-      style="
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 4px;
-        justify-content: center;
-      "
-    >
-      <counter
-        hidden="true"
-        field="usedLegendaryActions"
-        size="xs"
-        maxvaluefield="maxLegendaryActions"
-        textalign="center"
-        editable="true"
-      ></counter>
-    </div>
-
-    <stringfield
-      hidden="true"
-      field="legendaryActionsDescription"
-      placeholder="Enter Legendary Actions description..."
-      size="xs"
-      multiline="true"
-      onchange="updateLegendaryActionsDescription(value)"
-    ></stringfield>
-
-    <div style="width: 100%">
-      <list
-        hidden="true"
-        listtype="npc_actions_list"
-        field="legendaryActions"
-      ></list>
-    </div>
-
-    <!-- Lair Actions -->
-    <divider
-      hidden="true"
-      color="pink"
-      label="Lair Actions"
-      field="lairActionsDivider"
-      textalign="center"
-    ></divider>
-
-    <stringfield
-      hidden="true"
-      field="lairActionsDescription"
-      placeholder="Enter Lair Actions description..."
-      size="xs"
-      multiline="true"
-    ></stringfield>
-
-    <div style="width: 100%">
-      <list
-        hidden="true"
-        listtype="npc_actions_list"
-        field="lairActions"
-      ></list>
+      <!-- ===== Lair Actions ===== -->
+      <box field="lairActionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Lair Actions</div>
+      </box>
+      <div class="rvtt-npc-gap">
+        <stringfield hidden="true" field="lairActionsDescription" placeholder="Enter Lair Actions description..." size="xs" multiline="true"></stringfield>
+      </div>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_actions_list" field="lairActions"></list>
+      </div>
     </div>
   </div>
 </div>

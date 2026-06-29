@@ -70,8 +70,21 @@ api.addEffect('${action.effect}', target);
   }
 </script>
 
+<style>
+  .rvtt-npc-section {
+    padding-bottom: 4px;
+    border-bottom: 1px solid
+      var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+  }
+</style>
+
 <div style="display: flex; flex-direction: column; gap: 6px; padding: 6px">
-  <label size="sm" variant="bold" label="Actions in Combat"></label>
+  <div class="rvtt-npc-section">Actions in Combat</div>
   <div
     style="
       display: grid;

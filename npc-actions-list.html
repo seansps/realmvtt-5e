@@ -868,7 +868,13 @@ ${effectButtons}
   }
 </script>
 
-<div style="width: 100%">
+<div
+  style="
+    width: 100%;
+    padding-left: 8px;
+    border-left: 2px solid var(--mantine-color-secondary-filled, var(--mantine-primary-color-filled));
+  "
+>
   <!-- Name and Buttons -->
   <div
     style="display: flex; flex-direction: row; gap: 4px; align-items: center"
@@ -884,9 +890,10 @@ ${effectButtons}
       ></namefield>
       <label
         field="namefield"
-        size="xs"
+        size="sm"
         variant="bold"
         hideonlocked="false"
+        style="font-style: italic"
       ></label>
     </div>
     <!-- Uses / Day  Counter -->
