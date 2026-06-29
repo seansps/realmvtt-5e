@@ -645,13 +645,14 @@
       </div>
 
       <!-- Challenge / XP -->
-      <div class="rvtt-npc-cr">
+      <div class="rvtt-npc-cr rvtt-npc-tight">
         <div style="display: flex; align-items: center; gap: 4px">
           <span class="rvtt-npc-cr-label">CHALLENGE</span>
           <stringfield
             field="challengeRating"
             size="xs"
-            width="46px"
+            width="96px"
+            multiline="true"
             variant="unstyled"
             placeholder="0"
             onchange="updateCR(value)"
@@ -661,7 +662,8 @@
           <stringfield
             field="xp"
             size="xs"
-            width="64px"
+            width="110px"
+            multiline="true"
             variant="unstyled"
             textalign="right"
             placeholder="0"
