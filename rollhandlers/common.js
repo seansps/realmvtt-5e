@@ -3739,14 +3739,18 @@ function _evalToggleNode(
       return !!featureSlugs && featureSlugs.has(slug);
     }
     // Context-based predicates — delegate to the full evaluator so feature/item
-    // modifiers can use spell:/target:/attacker:/self:/sense:/weapon: predicates too.
+    // modifiers can use spell:/target:/attacker:/self:/sense:/weapon:/source:
+    // predicates too. source:<slug> gates a modifier to a save forced by a
+    // specific named ability/spell (context.sourceName), e.g. an undead's
+    // "advantage on saves to resist Turn Undead" trait.
     if (
       node.startsWith("spell:") ||
       node.startsWith("target:") ||
       node.startsWith("attacker:") ||
       node.startsWith("self:") ||
       node.startsWith("sense:") ||
-      node.startsWith("weapon:")
+      node.startsWith("weapon:") ||
+      node.startsWith("source:")
     ) {
       // If the predicate needs context but none was provided, treat as inactive
       if (!context && _predicatesRequireContext(node)) return false;
