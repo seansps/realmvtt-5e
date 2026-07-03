@@ -459,6 +459,12 @@
       };
     });
 
+    // Effect-driven resistance/immunity bypass — see rollDamage(). Parsed here so
+    // the attack path (roll to hit, then damage) honors a "Corrosive Blood"-style
+    // effect too. attack.js forwards these metadata keys to the damage handler.
+    const _bypass = extractDamageBypass(damageModifiers);
+    damageModifiers = _bypass.cleaned;
+
     let autoCritical = modifiers.some((m) => m.value === "critical");
     // Check for crit on 19 or some other number
     const critOnMatch = /critical(\d+)/;
@@ -593,6 +599,8 @@
         dc: targetAc,
         damage: damage,
         damageModifiers: damageModifiers,
+        damageIgnoresResistances: _bypass.damageIgnoresResistances,
+        damageIgnoresImmunities: _bypass.damageIgnoresImmunities,
         autoCritical: autoCritical,
         critOn: critOn,
         minRoll: minRoll,
@@ -626,6 +634,8 @@
         dc: 0,
         damage: damage,
         damageModifiers: damageModifiers,
+        damageIgnoresResistances: _bypass.damageIgnoresResistances,
+        damageIgnoresImmunities: _bypass.damageIgnoresImmunities,
         critOn: critOn,
         minRoll: minRoll,
         tokenId: ourToken?._id,
@@ -718,6 +728,13 @@
       };
     });
 
+    // Effect-driven resistance/immunity bypass (e.g. an effect that makes the
+    // creature's acid ignore acid resistance / immunity). Pull the markers out
+    // of the damage modifiers and forward them so damage.js applies the bypass;
+    // the cleaned list drops them so they don't roll as bogus damage terms.
+    const _bypass = extractDamageBypass(damageModifiers);
+    damageModifiers = _bypass.cleaned;
+
     const damageMetadata = {
       // This is so that our damage handler script can tell if it was from a critical hit
       // And is set if the Attack Roll was a critical hit, but not in the case of using the Damage Button
@@ -730,6 +747,8 @@
           : "IconSword"
         : undefined,
       portrait: attack?.data?.isAttack ? attack?.portrait : undefined,
+      damageIgnoresResistances: _bypass.damageIgnoresResistances,
+      damageIgnoresImmunities: _bypass.damageIgnoresImmunities,
     };
 
     api.promptRoll(

@@ -4413,6 +4413,50 @@ function getEffectiveMaxDex(rec, bestEquippedArmor) {
 // macro (RIV by type, threshold, temp HP, death, concentration, undo) for
 // synthetic damage sources (ongoing/ability damage). 5e 2024 has no
 // magical/silvered/cold-iron distinction, so RIV is purely by damage type.
+// Parse resistance/immunity-bypass markers out of a damage-modifier list.
+// A damageBonus/damagePenalty modifier whose (string) value reads like
+// "ignore acid resistance" or "ignore acid immunity" is not real damage — it
+// flags that this attack bypasses the target's acid defenses (the second word
+// is the damage type). This lets an EFFECT on the attacker drive the bypass:
+// while the effect is on, its rules surface here as these markers.
+// Returns the two comma-joined type strings the damage handler
+// (damage.js / getDamageMacro) expects, plus a `cleaned` list with the markers
+// removed so they don't leak into the roll as bogus damage terms. Mirrors the
+// inline parse in attack-list.html so all damage paths behave identically.
+function extractDamageBypass(damageModifiers) {
+  const mods = damageModifiers || [];
+  const typeOf = (v) => v.trim().split(/\s+/)[1] || "";
+  const collect = (predicate) =>
+    mods
+      .filter(
+        (m) =>
+          typeof m.value === "string" &&
+          predicate(m.value.trim().toLowerCase()),
+      )
+      .map((m) => typeOf(m.value))
+      .filter(Boolean)
+      .join(",");
+
+  const damageIgnoresResistances = collect(
+    (v) => v.startsWith("ignore") && v.includes("resistance"),
+  );
+  const damageIgnoresImmunities = collect(
+    (v) =>
+      v.startsWith("ignore") &&
+      (v.includes("immunity") || v.includes("immunities")),
+  );
+
+  const cleaned = mods.filter(
+    (m) => !String(m.value ?? "").toLowerCase().includes("ignore"),
+  );
+
+  return {
+    damageIgnoresResistances,
+    damageIgnoresImmunities,
+    cleaned,
+  };
+}
+
 function getDamageMacro(macroName, damageByType, options = {}) {
   const {
     isCritical = false,

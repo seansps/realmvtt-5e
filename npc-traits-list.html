@@ -141,7 +141,25 @@
     const name = trait?.name || "Trait";
     const damage = trait?.data?.damage || "1";
 
-    api.promptRoll(`${name} Damage`, damage, [], {}, "damage");
+    // Effect-driven resistance/immunity bypass (e.g. an effect that makes the
+    // creature's acid ignore acid resistance / immunity). Traits don't take
+    // normal damage bonuses, so we only pull the ignore-resistance /
+    // ignore-immunity markers off the creature's damage modifiers and forward
+    // them to the damage handler.
+    const _bypass = extractDamageBypass(
+      getEffectsAndModifiers(["damageBonus", "damagePenalty"], ""),
+    );
+
+    api.promptRoll(
+      `${name} Damage`,
+      damage,
+      [],
+      {
+        damageIgnoresResistances: _bypass.damageIgnoresResistances,
+        damageIgnoresImmunities: _bypass.damageIgnoresImmunities,
+      },
+      "damage",
+    );
   }
 
   function showHideSpellcasting(isSpellcasting) {
