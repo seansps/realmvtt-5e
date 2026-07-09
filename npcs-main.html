@@ -914,18 +914,7 @@
         <checkbox hideonlocked="true" field="hasLairActions" label="Has Lair Actions" size="sm" onchange="onHasLairActionsChange()"></checkbox>
       </div>
 
-      <!-- ===== Traits ===== -->
-      <box field="featuresDivider" hidden="true">
-        <div class="rvtt-npc-section" style="margin-top: 12px">Traits</div>
-      </box>
-      <div class="rvtt-npc-gap" style="width: 100%">
-        <list hidden="true" listtype="npc_traits_list" field="features"></list>
-      </div>
-
-      <!-- ===== Actions ===== -->
-      <box field="actionsDivider" hidden="true">
-        <div class="rvtt-npc-section" style="margin-top: 12px">Actions</div>
-      </box>
+      <!-- ===== Spell Slots ===== -->
       <div style="margin-top: 8px">
         <label hidden="true" variant="bold" field="spellSlotsLabel" label="Spell Slots" size="sm" textalign="center"></label>
       </div>
@@ -940,6 +929,19 @@
         <counter field="spellSlots8" hidden="true" maxvaluefield="numSpellSlots8" label="Level 8" size="xs" textalign="center" color="orange" editable="true"></counter>
         <counter field="spellSlots9" hidden="true" maxvaluefield="numSpellSlots9" label="Level 9" size="xs" textalign="center" color="red" editable="true"></counter>
       </div>
+
+      <!-- ===== Traits ===== -->
+      <box field="featuresDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Traits</div>
+      </box>
+      <div class="rvtt-npc-gap" style="width: 100%">
+        <list hidden="true" listtype="npc_traits_list" field="features"></list>
+      </div>
+
+      <!-- ===== Actions ===== -->
+      <box field="actionsDivider" hidden="true">
+        <div class="rvtt-npc-section" style="margin-top: 12px">Actions</div>
+      </box>
       <div style="width: 100%">
         <list hidden="true" listtype="npc_actions_list" field="actions"></list>
       </div>
