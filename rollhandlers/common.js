@@ -2021,6 +2021,39 @@ function getMinRollModifier(modifiers) {
   return minRoll;
 }
 
+// An effect "writes" the AC field when it carries a client-baked override/data
+// rule targeting ac (the client applies these to token.data.ac). Shapes:
+//   { type: "data",     value: { field: "ac", operation: "add", value: 2 } }
+//   { type: "override", value: { ac: 18, ... } }
+function _effectWritesAcField(effect) {
+  const isAcKey = (k) =>
+    (k || "").toString().toLowerCase().replace(/^data\./, "").trim() === "ac";
+  return (effect?.rules || []).some((rule) => {
+    // An override whose predicate failed was never applied to data.ac.
+    if (rule?.data && rule.data.active === false) return false;
+    if (rule?.type === "data") return isAcKey(rule?.value?.field);
+    if (rule?.type === "override") {
+      const v = rule?.value;
+      return !!v && typeof v === "object" && Object.keys(v).some(isAcKey);
+    }
+    return false;
+  });
+}
+
+// Names of the effects that write the AC field directly. For an NPC — whose base
+// AC IS the already-baked token.data.ac — a bonus/penalty modifier from one of
+// these is already reflected in that base, so it must be skipped to avoid
+// applying the same adjustment twice (e.g. an effect carrying BOTH
+// armorClassBonus +2 AND a data rule adding 2 to ac). A PC computes its base
+// fresh from armor/dex, so its modifiers are not redundant and are never skipped.
+function _acOverrideEffectNames(token) {
+  const names = new Set();
+  (token?.effects || []).forEach((effect) => {
+    if (_effectWritesAcField(effect)) names.add(effect?.name || "Effect");
+  });
+  return names;
+}
+
 // Used for getting the target's best AC (by calculation or what is set if that is higher)
 function getArmorClassForToken(token) {
   const record = token?.record;
@@ -2087,7 +2120,14 @@ function getArmorClassForToken(token) {
     "armorClassBonus",
     "armorClassPenalty",
   ]);
+  // For NPCs only: skip a bonus/penalty from an effect that also writes the AC
+  // field, since the NPC's base is the already-baked data.ac and would otherwise
+  // count that adjustment twice. PCs compute their base fresh, so their
+  // modifiers are additive (not redundant) and must all apply.
+  const isNpc = record?.recordType === "npcs";
+  const acOverrideNames = isNpc ? _acOverrideEffectNames(token) : null;
   acBonuses.forEach((mod) => {
+    if (isNpc && mod.name && acOverrideNames.has(mod.name)) return;
     if (mod.value) {
       const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
