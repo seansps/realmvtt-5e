@@ -63,7 +63,7 @@
       "emptyListText": "",
       "singleRow": false,
       "filters": {
-        "size": "tiny,small,medium,large,huge,gargantuan"
+        "size": "tiny,small,medium,large,huge,gargantuan,titanic"
       },
       "disableDrop": false,
       "wizard": {
@@ -158,7 +158,7 @@
       "emptyListText": "",
       "singleRow": false,
       "filters": {
-        "size": "tiny, small, medium, large, huge, gargantuan",
+        "size": "tiny, small, medium, large, huge, gargantuan, titanic",
         "type": "creature, vehicle, trap",
         "creatureType": "dynamic",
         "challengeRating": "dynamic"
@@ -1940,6 +1940,10 @@
       {
         "label": "Gargantuan",
         "size": 4
+      },
+      {
+        "label": "Titanic",
+        "size": 5
       }
     ],
     "calendars": [
