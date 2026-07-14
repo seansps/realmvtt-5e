@@ -241,6 +241,7 @@
         attackerToken: target?.token,
         targetToken: target?.token,
         targetCreatureType: target?.token?.data?.creatureType || "",
+        sourceName: attack?.name || "",
       };
       getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
@@ -351,6 +352,7 @@
         attackerToken: target?.token,
         targetToken: target?.token,
         targetCreatureType: target?.token?.data?.creatureType || "",
+        sourceName: attack?.name || "",
       };
       getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
