@@ -35,10 +35,17 @@
     const attackMod = parseInt(attack?.data?.attackMod || "0", 10);
 
     const atkRoll = "1d20";
+    // Thread the action name as sourceName so "source:<slug>" predicates can
+    // scope a modifier to one named attack (e.g. critical18 only on Gore). The
+    // crit range is resolved from these modifiers below, before target context
+    // exists, so it has to be threaded into this context-free pass.
+    const sourceCtx = { sourceName: name };
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       undefined,
       attack._id,
+      undefined,
+      sourceCtx,
     );
 
     let ranged = attack?.data?.isRanged || false;

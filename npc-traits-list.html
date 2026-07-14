@@ -146,8 +146,12 @@
     // normal damage bonuses, so we only pull the ignore-resistance /
     // ignore-immunity markers off the creature's damage modifiers and forward
     // them to the damage handler.
+    // Thread the trait name as sourceName so a bypass marker gated by
+    // "source:<slug>" can be scoped to this one trait.
     const _bypass = extractDamageBypass(
-      getEffectsAndModifiers(["damageBonus", "damagePenalty"], ""),
+      getEffectsAndModifiers(["damageBonus", "damagePenalty"], "", undefined, undefined, {
+        sourceName: name,
+      }),
     );
 
     api.promptRoll(

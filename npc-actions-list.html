@@ -355,10 +355,19 @@
       10,
     );
 
+    // Thread the action name as sourceName so "source:<slug>" predicates can
+    // scope a modifier to one named attack (e.g. critical18 only on Gore).
+    // Target-independent, so it belongs in this context-free pass — the crit
+    // range is resolved from these modifiers below, before any target context
+    // exists.
+    const sourceCtx = { sourceName: attack?.name || "" };
+
     let modifiers = getEffectsAndModifiers(
       ["attackBonus", "attackPenalty"],
       ranged ? "ranged" : "melee",
       attack._id,
+      undefined,
+      sourceCtx,
     );
 
     // If bloodied, look for bloodied modifiers
@@ -369,6 +378,8 @@
         ["attackBonus", "attackPenalty"],
         "bloodied",
         attack._id,
+        undefined,
+        sourceCtx,
       );
       bloodiedMods.forEach((mod) => {
         if (
@@ -567,6 +578,7 @@
         attackerToken: target?.token,
         targetToken: target?.token,
         targetCreatureType: target?.token?.data?.creatureType || "",
+        sourceName: attack?.name || "",
       };
       getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
@@ -700,6 +712,7 @@
         attackerToken: target?.token,
         targetToken: target?.token,
         targetCreatureType: target?.token?.data?.creatureType || "",
+        sourceName: attack?.name || "",
       };
       getEffectsAndModifiers(
         ["damageBonus", "damagePenalty"],
