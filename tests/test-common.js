@@ -82,6 +82,66 @@ section("attacker:effect: / target:effect: predicates");
     evaluateSinglePredicate("target:effect:look-at-me-chosen-enemy", undefined),
     false,
   );
+
+  // HP-derived pseudo-conditions: bloodied/wounded resolve from the target's
+  // current/max HP even when no matching effect token is present.
+  const tgtHalf = {
+    targetToken: { effects: [], data: { curhp: 10, hitpoints: 20 } },
+  };
+  const tgtFull = {
+    targetToken: { effects: [], data: { curhp: 20, hitpoints: 20 } },
+  };
+  const tgtScratch = {
+    targetToken: { effects: [], data: { curhp: 19, hitpoints: 20 } },
+  };
+  const tgtDown = {
+    targetToken: { effects: [], data: { curhp: 0, hitpoints: 20 } },
+  };
+  assert(
+    "target:effect:bloodied true at half HP with no effect",
+    evaluateSinglePredicate("target:effect:bloodied", tgtHalf),
+    true,
+  );
+  assert(
+    "target:effect:bloodied false at full HP",
+    evaluateSinglePredicate("target:effect:bloodied", tgtFull),
+    false,
+  );
+  assert(
+    "target:effect:bloodied false when downed (0 HP)",
+    evaluateSinglePredicate("target:effect:bloodied", tgtDown),
+    false,
+  );
+  assert(
+    "target:effect:wounded true when missing any HP",
+    evaluateSinglePredicate("target:effect:wounded", tgtScratch),
+    true,
+  );
+  assert(
+    "target:effect:wounded false at full HP",
+    evaluateSinglePredicate("target:effect:wounded", tgtFull),
+    false,
+  );
+  assert(
+    "target:effect:wounded true when downed (missing HP)",
+    evaluateSinglePredicate("target:effect:wounded", tgtDown),
+    true,
+  );
+  assert(
+    "target:effect:bloodied true via applied effect when no HP data",
+    evaluateSinglePredicate("target:effect:bloodied", {
+      targetToken: { effects: [{ name: "Bloodied" }] },
+    }),
+    true,
+  );
+  assert(
+    "attacker:effect:wounded true when attacker missing HP",
+    evaluateSinglePredicate("attacker:effect:wounded", {
+      attackerToken: { effects: [], data: { curhp: 5, hitpoints: 20 } },
+    }),
+    true,
+  );
+
   // spell:<slug> — matches the cast spell's NAME (in addition to school/lists/tags).
   assert(
     "spell:<slug> matches the cast spell name",

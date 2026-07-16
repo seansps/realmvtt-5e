@@ -3617,6 +3617,30 @@ function _slugifyName(name) {
     .replace(/^-+|-+$/g, "");
 }
 
+// HP-derived pseudo-conditions for effect predicates. "bloodied" and "wounded"
+// are computed from a token's current/max HP rather than requiring an applied
+// effect token, so predicates like "target:effect:bloodied" stay correct even
+// if the Bloodied effect was never added or got dropped.
+//   bloodied — alive and at or below half max HP (rounded down), matching the
+//              5e 2024 Bloodied condition threshold.
+//   wounded  — missing any hit points (below max).
+function _tokenIsBloodied(tok) {
+  const maxhp = tok?.data?.hitpoints || 0;
+  const curhp = tok?.data?.curhp || 0;
+  return maxhp > 0 && curhp > 0 && curhp <= Math.floor(maxhp / 2);
+}
+function _tokenIsWounded(tok) {
+  const maxhp = tok?.data?.hitpoints || 0;
+  const curhp = tok?.data?.curhp || 0;
+  return maxhp > 0 && curhp < maxhp;
+}
+// True if <slug> is an HP-derived pseudo-condition satisfied by tok's HP state.
+function _hpPseudoCondition(slug, tok) {
+  if (slug === "bloodied") return _tokenIsBloodied(tok);
+  if (slug === "wounded") return _tokenIsWounded(tok);
+  return false;
+}
+
 // Parse a creature-type string into a flat, lowercased list of types, treating
 // parenthetical sub-types as their own entries. So "Fey (Hag)" -> ["fey","hag"]
 // and "Humanoid (Elf, Human)" -> ["humanoid","elf","human"]. Comma-separated at
@@ -4020,6 +4044,10 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       if (!context?.attackerToken) return false;
       const slug = predicate.slice("attacker:effect:".length).trim().toLowerCase();
       if (!slug) return false;
+      // HP-derived pseudo-conditions ("bloodied"/"wounded") are true from the
+      // attacker's HP state even without an applied effect; fall through to
+      // effect-presence otherwise (so a manually applied effect still matches).
+      if (_hpPseudoCondition(slug, context.attackerToken)) return true;
       return (context.attackerToken.effects || []).some(
         (e) => _slugifyName(e?.name) === slug,
       );
@@ -4031,6 +4059,12 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       if (!context?.targetToken) return false;
       const slug = predicate.slice("target:effect:".length).trim().toLowerCase();
       if (!slug) return false;
+      // HP-derived pseudo-conditions ("bloodied"/"wounded") are true from the
+      // target's HP state even without an applied effect; fall through to
+      // effect-presence otherwise (so a manually applied effect still matches).
+      // e.g. sahuagin "advantage on melee attacks vs creatures that don't have
+      // all their hit points" → target:effect:wounded.
+      if (_hpPseudoCondition(slug, context.targetToken)) return true;
       return (context.targetToken.effects || []).some(
         (e) => _slugifyName(e?.name) === slug,
       );
