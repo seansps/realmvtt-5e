@@ -2903,6 +2903,34 @@ function getAnimationFor({
     }
   }
 
+  // Ray spells (Ray of Frost, Ray of Enfeeblement, Scorching Ray, etc.) and
+  // Disintegrate always fire a stretched bolt_2 beam. Runs after the damage
+  // block so it wins on the animation itself while keeping any damage-type
+  // tint (hue/contrast/brightness).
+  if (
+    isRanged &&
+    (abilityName.toLowerCase().match(/\bray\b/i) ||
+      abilityName.toLowerCase().match(/\bdisintegrate\b/i))
+  ) {
+    animation.animationName = "bolt_2";
+    animation.sound = "bolt_2";
+    animation.moveToDestination = true;
+    animation.stretchToDestination = true;
+    if (damage.includes("fire")) {
+      // Fire ray (e.g. Scorching Ray): the fire block above cleared the tint,
+      // so give bolt_2 an orange-red fire hue.
+      animation.hue = 16;
+      animation.contrast = 1.0;
+      animation.brightness = 0.6;
+    } else if (abilityName.toLowerCase().includes("enfeeblement")) {
+      // Ray of Enfeeblement deals no damage, so nothing above tints it — give
+      // it a deep green cast.
+      animation.hue = 128;
+      animation.contrast = 1.0;
+      animation.brightness = 0.3;
+    }
+  }
+
   if (!animation.animationName) {
     // If not a spell or ability, we can't determine an animation
     return null;
