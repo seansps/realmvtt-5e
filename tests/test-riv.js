@@ -145,4 +145,107 @@ section("getDamageMacro — half damage (save for half) with RIV");
   );
 }
 
+// Absorption: a damage type the target absorbs deals no damage and instead
+// heals it for that amount (capped at max HP). Sourced from an "absorption"
+// modifier on a feature (e.g. Shambling Mound's Lightning Absorption). Returns
+// the target's final curhp so both the no-damage and the healing are checked.
+function finalHpWithAbsorption(damageByType, options, { curhp, hitpoints, features }) {
+  const macro = getDamageMacro("Apply_Damage", damageByType, options);
+  const body = macro.replace(/^```[^\n]*\n/, "").replace(/\n```$/, "");
+
+  let captured = curhp;
+  const target = {
+    _id: "t1",
+    recordType: "npcs",
+    name: "Dummy",
+    record: { name: "Dummy" },
+    identified: true,
+    data: { curhp, hitpoints, tempHp: 0, features: features || [] },
+    effects: [],
+  };
+
+  ctx.api = {
+    getSelectedOrDroppedToken: () => [target],
+    getSelectedOwnedTokens: () => [],
+    setValueOnToken: (t, path, val) => {
+      if (path === "data.curhp") captured = val;
+    },
+    setValueOnTokenById: () => {},
+    floatText: () => {},
+    sendMessage: () => {},
+    addEffect: () => {},
+    addEffects: () => {},
+    removeEffectById: () => {},
+    editMessage: () => {},
+    showNotification: () => {},
+  };
+  ctx.record = null;
+  ctx.isGM = true;
+  ctx.userId = "u1";
+
+  new vm.Script(`(function(){\n${body}\n})();`, {
+    filename: "apply-damage-absorption.js",
+  }).runInContext(ctx);
+
+  return captured;
+}
+
+section("getDamageMacro — absorption heals instead of damaging");
+{
+  const lightningAbsorption = [
+    {
+      name: "Lightning Absorption",
+      data: {
+        modifiers: [
+          {
+            data: {
+              type: "absorption",
+              valueType: "string",
+              value: "lightning",
+              active: true,
+            },
+          },
+        ],
+      },
+    },
+  ];
+
+  assert(
+    "absorbed type heals: 100 curhp + 15 lightning → 115",
+    finalHpWithAbsorption(
+      { lightning: 15 },
+      {},
+      { curhp: 100, hitpoints: 200, features: lightningAbsorption },
+    ),
+    115,
+  );
+  assert(
+    "healing is capped at max HP",
+    finalHpWithAbsorption(
+      { lightning: 15 },
+      {},
+      { curhp: 195, hitpoints: 200, features: lightningAbsorption },
+    ),
+    200,
+  );
+  assert(
+    "non-absorbed type still damages while absorbed type heals: -20 fire +15 lightning → 95",
+    finalHpWithAbsorption(
+      { fire: 20, lightning: 15 },
+      {},
+      { curhp: 100, hitpoints: 200, features: lightningAbsorption },
+    ),
+    95,
+  );
+  assert(
+    "isHalf halves the absorbed healing: floor(15/2)=7 → 107",
+    finalHpWithAbsorption(
+      { lightning: 15 },
+      { isHalf: true },
+      { curhp: 100, hitpoints: 200, features: lightningAbsorption },
+    ),
+    107,
+  );
+}
+
 process.exit(summary());

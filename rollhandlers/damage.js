@@ -86,9 +86,20 @@ targets.forEach(target => {
       damageByType[damageType] = (damageByType[damageType] || 0) + type.value;
     });
 
+    // Damage the target absorbs is converted into healing instead of applied.
+    let absorbedHealing = 0;
+
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = damageByType[type];
+      // Absorption: the target regains HP equal to this type's damage instead
+      // of taking it (e.g. Shambling Mound + lightning).
+      if (RIV.absorptions.includes(type.toLowerCase())
+        || RIV.absorptions.includes('all')
+        || (${isSpell} && RIV.absorptions.includes('spell'))) {
+        absorbedHealing += thisDamage;
+        return;
+      }
       // If the damage type is in the ignore resistances list, we don't apply resistances
       if (!${JSON.stringify(
         damageIgnoresResistances
@@ -172,6 +183,11 @@ targets.forEach(target => {
       }
       curhp = 0;
     }
+    // Absorbed damage is regained as HP (capped at max HP), applied after damage.
+    if (absorbedHealing > 0) {
+      curhp += absorbedHealing;
+      api.floatText(target, \`+\$\{absorbedHealing\}\`, '#1bc91b');
+    }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
@@ -186,6 +202,9 @@ targets.forEach(target => {
     }
     if (dueToThreshold) {
       message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
+    }
+    if (absorbedHealing > 0) {
+      message += \`\nAbsorbed \$\{absorbedHealing\} damage and regained \$\{absorbedHealing\} HP.\`;
     }
 
     if (instantDeath && target.recordType === 'characters') {
@@ -259,17 +278,28 @@ targets.forEach(target => {
       damageByType[damageType] = (damageByType[damageType] || 0) + type.value;
     });
 
+    // Damage the target absorbs is converted into healing instead of applied.
+    let absorbedHealing = 0;
+
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = Math.floor(damageByType[type] / 2);
+      // Absorption: the target regains HP equal to this type's (halved) damage
+      // instead of taking it (e.g. Shambling Mound + lightning).
+      if (RIV.absorptions.includes(type.toLowerCase())
+        || RIV.absorptions.includes('all')
+        || (${isSpell} && RIV.absorptions.includes('spell'))) {
+        absorbedHealing += thisDamage;
+        return;
+      }
       // If the damage type is in the ignore resistances list, we don't apply resistances
       if (!${JSON.stringify(
         damageIgnoresResistances
       )}.includes(type.toLowerCase())) {
-        if (RIV.resistances.includes(type.toLowerCase() || '') 
+        if (RIV.resistances.includes(type.toLowerCase() || '')
           || (${isSpell} && RIV.resistances.includes('spell'))) {
           thisDamage = Math.floor(thisDamage * 0.5);
-        } 
+        }
       }
       // If the damage type is in the ignore immunities list, we don't apply immunities
       if (!${JSON.stringify(
@@ -345,6 +375,11 @@ targets.forEach(target => {
       }
       curhp = 0;
     }
+    // Absorbed damage is regained as HP (capped at max HP), applied after damage.
+    if (absorbedHealing > 0) {
+      curhp += absorbedHealing;
+      api.floatText(target, \`+\$\{absorbedHealing\}\`, '#1bc91b');
+    }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
@@ -359,6 +394,9 @@ targets.forEach(target => {
     }
     if (dueToThreshold) {
       message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
+    }
+    if (absorbedHealing > 0) {
+      message += \`\nAbsorbed \$\{absorbedHealing\} damage and regained \$\{absorbedHealing\} HP.\`;
     }
 
     if (instantDeath) {

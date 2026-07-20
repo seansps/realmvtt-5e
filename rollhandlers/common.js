@@ -2254,6 +2254,9 @@ function getRIV(target) {
   const resistances = [];
   const immunities = [];
   const vulnerabilities = [];
+  // Damage types the target absorbs — it regains HP equal to the damage that
+  // would have been dealt instead of taking it (e.g. Shambling Mound + lightning).
+  const absorptions = [];
 
   const patterns = [
     {
@@ -2391,6 +2394,7 @@ function getRIV(target) {
     "resistance",
     "vulnerability",
     "immunity",
+    "absorption",
   ]);
   modifiers.forEach((mod) => {
     if (
@@ -2411,6 +2415,12 @@ function getRIV(target) {
       mod.value
     ) {
       immunities.push(mod.value.toLowerCase());
+    } else if (
+      mod.modifierType === "absorption" &&
+      mod.valueType === "string" &&
+      mod.value
+    ) {
+      absorptions.push(mod.value.toLowerCase());
     }
   });
   // Get additional one-off resistances per damage type
@@ -2435,6 +2445,7 @@ function getRIV(target) {
     resistances,
     immunities,
     vulnerabilities,
+    absorptions,
     resistanceByDamage,
   };
 }
@@ -4592,10 +4603,21 @@ targets.forEach(target => {
     // First, just get the total of all damage for each type
     const damageByType = ${JSON.stringify(damageByType)};
 
+    // Damage the target absorbs is converted into healing instead of applied.
+    let absorbedHealing = 0;
+
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = damageByType[type];
       ${isHalf ? 'thisDamage = Math.floor(thisDamage / 2);' : ''}
+      // Absorption: the target regains HP equal to this type's damage instead
+      // of taking it (e.g. Shambling Mound + lightning).
+      if (RIV.absorptions.includes(type.toLowerCase())
+        || RIV.absorptions.includes('all')
+        || (${isSpell} && RIV.absorptions.includes('spell'))) {
+        absorbedHealing += thisDamage;
+        return;
+      }
       // If the damage type is in the ignore resistances list, we don't apply resistances
       if (!${JSON.stringify(
         damageIgnoresResistances
@@ -4679,10 +4701,15 @@ targets.forEach(target => {
       }
       curhp = 0;
     }
+    // Absorbed damage is regained as HP (capped at max HP), applied after damage.
+    if (absorbedHealing > 0) {
+      curhp += absorbedHealing;
+      api.floatText(target, \`+\$\{absorbedHealing\}\`, '#1bc91b');
+    }
     if (curhp > target.data?.hitpoints) { curhp = target.data?.hitpoints; }
     const oldHp = (target.data?.curhp || 0);
     api.setValueOnToken(target, "data.curhp", curhp);
-    
+
     const unIdentified = target.identified === false;
     let targetName = !unIdentified ? target.name || target.record.name : target.unidentifiedName || target.record.unidentifiedName;
     targetName = targetName.replace(/'/g, ''); // Just remove the single quotes
@@ -4693,6 +4720,9 @@ targets.forEach(target => {
     }
     if (dueToThreshold) {
       message = \`\$\{targetName\} took no damage due to the damage threshold.\`;
+    }
+    if (absorbedHealing > 0) {
+      message += \`\nAbsorbed \$\{absorbedHealing\} damage and regained \$\{absorbedHealing\} HP.\`;
     }
 
     if (instantDeath && target.recordType === 'characters') {
