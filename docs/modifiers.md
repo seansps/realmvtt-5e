@@ -146,13 +146,22 @@ rolls a larger die, that larger die is kept.
 
 | Modifier              | Field               | Value                     | Example                                                               |
 | --------------------- | ------------------- | ------------------------- | --------------------------------------------------------------------- |
-| **Add Resistance**    | blank, or `upgrade` | a damage type             | Resistance to fire; `upgrade` turns existing resistance into immunity |
-| **Add Immunity**      | —                   | a damage type             | Immunity to poison                                                    |
-| **Add Vulnerability** | —                   | a type, `all`, or `spell` | Vulnerability to radiant                                              |
+| **Add Resistance**       | blank, or `upgrade` | a damage type             | Resistance to fire; `upgrade` turns existing resistance into immunity |
+| **Add Immunity**         | —                   | a damage type             | Immunity to poison                                                    |
+| **Add Vulnerability**    | —                   | a type, `all`, or `spell` | Vulnerability to radiant                                              |
+| **Add Absorption (Heals)** | —                 | a type, `all`, or `spell` | Shambling Mound absorbs `lightning` — takes no damage, heals instead  |
 
 **Tip:** Resistance can also do **flat reduction** — set **Field** to a damage
 type and **Value** to a number (e.g. Heavy Armor Master: field
 `bludgeoning nonmagical`, value `3`).
+
+**Absorption** is "immunity that heals you." When the target is dealt a damage
+type it absorbs, it takes **no** damage from that type and instead **regains hit
+points equal to the amount that would have been dealt** (capped at its max HP),
+with a green `+N` float and a chat note. Other damage types in the same hit are
+unaffected. Put it on the creature's trait feature (or an effect) — e.g. a
+"Lightning Absorption" feature with an **Add Absorption (Heals)** modifier,
+Value `lightning`. A save-for-half hit halves the healing too.
 
 #### Bypassing resistance & immunity
 

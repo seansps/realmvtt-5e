@@ -3680,6 +3680,39 @@ function _hpPseudoCondition(slug, tok) {
   return false;
 }
 
+// NPCs derive their spellcasting level from CR (stored as data.level by
+// updateCR). But a Spellcasting action or trait may explicitly state a caster
+// level in its description — e.g. "The archmage is an 18th-level spellcaster."
+// or "casts spells as a 9th-level spellcaster." When present, that stated level
+// overrides the CR-based level for cantrip damage scaling. Scans every NPC
+// action/trait bucket for the first "<N>(st|nd|rd|th)-level spellcaster" phrase
+// and returns that number; falls back to the CR-derived data.level.
+function getNpcSpellcasterLevel(target) {
+  const crLevel = parseInt(target?.data?.level || "1", 10) || 1;
+  const re = /(\d+)\s*(?:st|nd|rd|th)?[-\s]*level[-\s]+spellcaster/i;
+  const buckets = [
+    "features",
+    "actions",
+    "bonusActions",
+    "reactions",
+    "legendaryActions",
+    "lairActions",
+  ];
+  for (const bucket of buckets) {
+    const list = target?.data?.[bucket];
+    if (!Array.isArray(list)) continue;
+    for (const entry of list) {
+      const desc = entry?.data?.description || "";
+      const m = desc.match(re);
+      if (m) {
+        const lvl = parseInt(m[1], 10);
+        if (lvl > 0) return lvl;
+      }
+    }
+  }
+  return crLevel;
+}
+
 // Parse a creature-type string into a flat, lowercased list of types, treating
 // parenthetical sub-types as their own entries. So "Fey (Hag)" -> ["fey","hag"]
 // and "Humanoid (Elf, Human)" -> ["humanoid","elf","human"]. Comma-separated at
