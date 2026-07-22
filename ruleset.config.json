@@ -3,6 +3,13 @@
   "description": "The 5th Edition of Dungeons and Dragons using the revised 2024 rules.",
   "version": 2,
   "published": true,
+  "compatibility": [
+    {
+      "rulesetId": "69821b7f1753cbd632cf4393",
+      "name": "Level Up: Advanced 5th Edition",
+      "typeMap": { "heritage": "species", "archetypes": "subclass" }
+    }
+  ],
   "records": [
     {
       "name": "Characters",
