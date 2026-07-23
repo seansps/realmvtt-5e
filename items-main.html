@@ -235,6 +235,14 @@
       valuesToSet[`${fieldsPath}.versatileDamage.hidden`] = true;
     }
 
+    // Curse box (GM only, identified only) — only for magic items
+    const isMagicItem = typeStr === "magic item";
+    if (isMagicItem && item.fields?.curseBox?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.curseBox.hidden`] = false;
+    } else if (!isMagicItem && item.fields?.curseBox?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.curseBox.hidden`] = true;
+    }
+
     if (Object.keys(valuesToSet).length > 0) {
       api.setValues(valuesToSet);
     }
@@ -692,6 +700,26 @@
     >
     </richtextfield>
   </div>
+
+  <!-- Curse — magic items only, GM only, and hidden while unidentified -->
+  <box
+    field="curseBox"
+    hidden="true"
+    hideforplayers="true"
+    hidewhenidentified="false"
+  >
+    <div style="margin-top: 8px">
+      <divider label="Curse (GM Only)"></divider>
+    </div>
+    <div style="margin-top: 8px">
+      <richtextfield
+        field="curse"
+        label="Curse"
+        placeholder="Enter curse details (visible to the GM only)..."
+      >
+      </richtextfield>
+    </div>
+  </box>
 
   <stringfield
     field="unidentifiedDescription"
