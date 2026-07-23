@@ -235,11 +235,16 @@
       valuesToSet[`${fieldsPath}.versatileDamage.hidden`] = true;
     }
 
-    // Curse box (GM only, identified only) — only for magic items
-    const isMagicItem = typeStr === "magic item";
-    if (isMagicItem && item.fields?.curseBox?.hidden !== false) {
+    // Curse box (GM only, identified only) — only for magic items.
+    // A weapon/armor/etc. can be magical without being Type "magic item"
+    // (e.g. a +1 or cursed sword). Rarity is the definitive signal: any rarity
+    // set — even "common" — means the item is magic; mundane gear leaves rarity
+    // blank. Also treat anything typed as a "magic item" as magic.
+    const rarityStr = (item.data?.rarity || "").toString().trim();
+    const isMagic = rarityStr !== "" || typeStr === "magic item";
+    if (isMagic && item.fields?.curseBox?.hidden !== false) {
       valuesToSet[`${fieldsPath}.curseBox.hidden`] = false;
-    } else if (!isMagicItem && item.fields?.curseBox?.hidden !== true) {
+    } else if (!isMagic && item.fields?.curseBox?.hidden !== true) {
       valuesToSet[`${fieldsPath}.curseBox.hidden`] = true;
     }
 
@@ -334,6 +339,7 @@
       label="Rarity"
       placeholder="--"
       hidewhenidentified="false"
+      onchange="showHideFields()"
       options='[{"label": "Common", "value": "common"}, {"label": "Uncommon", "value": "uncommon"}, {"label": "Rare", "value": "rare"}, {"label": "Very Rare", "value": "very rare"}, {"label": "Legendary", "value": "legendary"}, {"label": "Artifact", "value": "artifact"}]'
     >
     </dropdown>
