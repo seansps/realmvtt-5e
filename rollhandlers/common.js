@@ -4979,3 +4979,179 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     }
   }
 }
+
+// Apply an item's attribute modifiers (hitpoints / AC bonus/penalty) across all
+// six abilities. Shared by onItemEquippedFor / onItemAttunedFor.
+function updateAttributes(item, valuesToSet) {
+  const hasModifiers =
+    (item.data.modifiers || []).filter(
+      (modifier) =>
+        modifier.data.type === "hitpoints" ||
+        modifier.data.type === "armorClassBonus" ||
+        modifier.data.type === "armorClassPenalty",
+    ).length > 0;
+
+  if (!hasModifiers) {
+    return;
+  }
+
+  [
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ].forEach((attribute) => {
+    const value = record?.data?.[attribute] || 0;
+    setModifier(value, attribute, {}, valuesToSet);
+  });
+}
+
+// Shared equip/carry/drop handler. Recomputes weight, AC, per-item field
+// visibility (ammo row, range/melee toggles, use/attune buttons), equip effects,
+// one-time modifiers, attribute bonuses and speed. Shared by the item-row
+// carried dropdown (onItemEquipped) and the grid Equip/Carry/Drop actions
+// (equipGridItem). `itemDataPath` is the item path; `newValue` is the new
+// carried state ("equipped"/"carried"/"dropped").
+function onItemEquippedFor(itemDataPath, newValue) {
+  const item = api.getValue(itemDataPath);
+
+  const itemFields = api.getValue(`${itemDataPath}.fields`) || {};
+  const itemType = api.getValue(`${itemDataPath}.data.type`);
+  const weaponProperties =
+    api.getValue(`${itemDataPath}.data.weaponProperties`) || [];
+  const hasAttunement =
+    api.getValue(`${itemDataPath}.data.attunement`) || false;
+  const isConsumable =
+    api.getValue(`${itemDataPath}.data.consumable`) || false;
+  const hasUseBtn = api.getValue(`${itemDataPath}.data.hasUseBtn`) || false;
+  const isTwoHanded = weaponProperties.includes("Two-Handed");
+  const isThrown = weaponProperties.includes("Thrown");
+  const isMelee = (itemType || "").toLowerCase().includes("melee");
+
+  const equipEffect = api.getValue(`${itemDataPath}.data.equipEffect`);
+  const isEquipEffect = newValue === "equipped";
+
+  if (equipEffect) {
+    const effect = JSON.parse(equipEffect);
+    const effectId = effect?._id || "";
+    const ourToken = api.getToken();
+    if (effectId && isEquipEffect && ourToken) {
+      api.addEffectById(effectId, ourToken);
+    } else if (effectId && !isEquipEffect && ourToken) {
+      api.removeEffectById(effectId, ourToken);
+    }
+  }
+
+  const valuesToSet = {};
+  const totalWeight = setTotalWeight(false);
+  if (totalWeight !== record?.data?.totalWeight) {
+    valuesToSet["data.totalWeight"] = totalWeight;
+  }
+
+  updateAttributes(item, valuesToSet);
+
+  const bestEquippedArmor = getBestEquippedArmor();
+  if (
+    JSON.stringify(record?.data?.armor || "{}") !==
+    JSON.stringify(bestEquippedArmor)
+  ) {
+    valuesToSet["data.armor"] = bestEquippedArmor;
+  }
+
+  const totalAc = getArmorClass(bestEquippedArmor);
+  if (record?.data?.ac !== totalAc) {
+    valuesToSet["data.ac"] = totalAc;
+  }
+
+  valuesToSet[`${itemDataPath}.fields`] = {
+    ...itemFields,
+    attuned: { hidden: !hasAttunement },
+    useBtn: { hidden: !isConsumable && !hasUseBtn },
+    handBtn: { hidden: isTwoHanded },
+    rangeToggleBtn: {
+      hidden: !(isMelee && isThrown),
+    },
+    rangeToggleBtnDisabled: {
+      hidden: isMelee,
+    },
+    meleeToggleBtnDisabled: {
+      hidden: !isMelee || (isMelee && isThrown),
+    },
+    ammoRow: {
+      hidden: isMelee && !isThrown,
+    },
+    ammoSelect: {
+      hidden: isMelee || isThrown,
+    },
+  };
+
+  if (isThrown && item.data?.count !== item.data?.ammo) {
+    valuesToSet[`${itemDataPath}.data.ammo`] = item.data?.count || 0;
+  }
+
+  let needsHpRecalc = false;
+  if (newValue === "equipped") {
+    const result = applyOneTimeModifiers(item, valuesToSet);
+    needsHpRecalc = result.needsHpRecalc;
+  }
+  const pendingItems = extractAllPending(valuesToSet);
+
+  const afterPendingAll = () => {
+    if (needsHpRecalc) recalcHitPoints();
+  };
+  const applyPendingIfNeeded = (rec) => {
+    if (hasAnyPending(pendingItems)) {
+      applyAllPending(pendingItems, rec || record, afterPendingAll);
+    } else {
+      afterPendingAll();
+    }
+  };
+
+  const recompileBonuses = (rec) => {
+    const latest = rec || record;
+    const bonusFields = {};
+    recalcAttributeBonuses(bonusFields, latest);
+    const calculatedSpeed = calculateSpeed(latest);
+    if (calculatedSpeed !== latest?.data?.speed) {
+      bonusFields["data.speed"] = calculatedSpeed;
+    }
+    if (Object.keys(bonusFields).length > 0) {
+      api.setValues(bonusFields, (afterBonuses) =>
+        applyPendingIfNeeded(afterBonuses),
+      );
+    } else {
+      applyPendingIfNeeded(latest);
+    }
+  };
+
+  if (Object.keys(valuesToSet).length > 0) {
+    api.setValues(valuesToSet, (updatedRecord) =>
+      recompileBonuses(updatedRecord),
+    );
+  } else {
+    recompileBonuses(record);
+  }
+}
+
+// Shared attune/unattune handler. Re-derives attribute bonuses so attuning
+// applies (and un-attuning removes) an item's attributeBonus/attributeSet
+// modifiers. Shared by the item-row attuned toggle (onItemAttuned) and the grid
+// Attune/Break actions (attuneGridItem). The item's data.attuned must already be
+// set before calling.
+function onItemAttunedFor(itemDataPath) {
+  const item = api.getValue(itemDataPath);
+  const valuesToSet = {};
+
+  updateAttributes(item, valuesToSet);
+  valuesToSet[`${itemDataPath}.data.attuned`] = item?.data?.attuned;
+
+  api.setValues(valuesToSet, (updatedRecord) => {
+    const bonusFields = {};
+    recalcAttributeBonuses(bonusFields, updatedRecord);
+    if (Object.keys(bonusFields).length > 0) {
+      api.setValues(bonusFields);
+    }
+  });
+}

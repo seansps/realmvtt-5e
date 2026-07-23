@@ -20,6 +20,25 @@
     useInventoryItem("data.inventory." + index);
   }
 
+  // Equip/carry/drop from the grid: set the state, then run the shared equip
+  // handler (commonScript) so ammo/range fields, AC, weight and bonuses update
+  // exactly like the row's carried dropdown.
+  function equipGridItem(index, newValue) {
+    const itemDataPath = "data.inventory." + index;
+    api.setValue(itemDataPath + ".data.carried", newValue, function () {
+      onItemEquippedFor(itemDataPath, newValue);
+    });
+  }
+
+  // Attune/break attunement from the grid: set the flag, then run the shared
+  // attune handler so attribute bonuses re-derive.
+  function attuneGridItem(index, newValue) {
+    const itemDataPath = "data.inventory." + index;
+    api.setValue(itemDataPath + ".data.attuned", newValue, function () {
+      onItemAttunedFor(itemDataPath);
+    });
+  }
+
   function updateTotalWeight(record, setValue = true) {
     // Update total weight
     const items = record?.data?.inventory || [];
@@ -598,7 +617,7 @@
         descriptionfield="data.description"
         cellbadges='[{"field": "data.attunement", "eq": "true", "activeField": "data.attuned", "activeEq": "true", "icon": "IconDiamond", "inactiveIcon": "IconDiamondOff", "position": "bl", "label": "Attunement"}]'
         celltooltipfields='[{"label": "Type", "field": "data.type", "capitalize": true}, {"label": "Subtype", "field": "data.subtype", "capitalize": true}, {"label": "Location", "field": "data.location"}, {"label": "Weight", "field": "data.weight"}]'
-        cellactions='[{"label": "Equip", "setField": "data.carried", "setValue": "equipped", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "setField": "data.carried", "setValue": "carried", "icon": "IconBackpack"}, {"label": "Drop", "setField": "data.carried", "setValue": "dropped", "icon": "IconArrowDown"}, {"label": "Attune", "setField": "data.attuned", "setValue": "true", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "setField": "data.attuned", "setValue": "false", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
+        cellactions='[{"label": "Equip", "fn": "equipGridItem(data.itemIndex, \"equipped\")", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "fn": "equipGridItem(data.itemIndex, \"carried\")", "icon": "IconBackpack"}, {"label": "Drop", "fn": "equipGridItem(data.itemIndex, \"dropped\")", "icon": "IconArrowDown"}, {"label": "Attune", "fn": "attuneGridItem(data.itemIndex, \"true\")", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "fn": "attuneGridItem(data.itemIndex, \"false\")", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
         cellusefield="data.consumable,data.hasUseBtn"
         celluselabel="Use"
         celluse="useGridItem(data.itemIndex)"
