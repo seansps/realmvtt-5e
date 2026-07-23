@@ -39,6 +39,24 @@
     });
   }
 
+  // Zero-arg grid action wrappers. The state string lives here (JS), NOT in the
+  // cellactions JSON, so the attribute needs no nested quotes.
+  function gridEquip(index) {
+    equipGridItem(index, "equipped");
+  }
+  function gridCarry(index) {
+    equipGridItem(index, "carried");
+  }
+  function gridDrop(index) {
+    equipGridItem(index, "dropped");
+  }
+  function gridAttune(index) {
+    attuneGridItem(index, "true");
+  }
+  function gridUnattune(index) {
+    attuneGridItem(index, "false");
+  }
+
   function updateTotalWeight(record, setValue = true) {
     // Update total weight
     const items = record?.data?.inventory || [];
@@ -617,7 +635,7 @@
         descriptionfield="data.description"
         cellbadges='[{"field": "data.attunement", "eq": "true", "activeField": "data.attuned", "activeEq": "true", "icon": "IconDiamond", "inactiveIcon": "IconDiamondOff", "position": "bl", "label": "Attunement"}]'
         celltooltipfields='[{"label": "Type", "field": "data.type", "capitalize": true}, {"label": "Subtype", "field": "data.subtype", "capitalize": true}, {"label": "Location", "field": "data.location"}, {"label": "Weight", "field": "data.weight"}]'
-        cellactions='[{"label": "Equip", "fn": "equipGridItem(data.itemIndex, \"equipped\")", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "fn": "equipGridItem(data.itemIndex, \"carried\")", "icon": "IconBackpack"}, {"label": "Drop", "fn": "equipGridItem(data.itemIndex, \"dropped\")", "icon": "IconArrowDown"}, {"label": "Attune", "fn": "attuneGridItem(data.itemIndex, \"true\")", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "fn": "attuneGridItem(data.itemIndex, \"false\")", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
+        cellactions='[{"label": "Equip", "fn": "gridEquip(data.itemIndex)", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "fn": "gridCarry(data.itemIndex)", "icon": "IconBackpack"}, {"label": "Drop", "fn": "gridDrop(data.itemIndex)", "icon": "IconArrowDown"}, {"label": "Attune", "fn": "gridAttune(data.itemIndex)", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "fn": "gridUnattune(data.itemIndex)", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
         cellusefield="data.consumable,data.hasUseBtn"
         celluselabel="Use"
         celluse="useGridItem(data.itemIndex)"
