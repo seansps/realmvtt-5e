@@ -3,6 +3,23 @@
     updateTotalWeight(record);
   }
 
+  // Toggle between the row list and the grid of item tiles. The column-header
+  // row only makes sense for rows, so hide it in grid mode.
+  function onViewModeChange() {
+    const mode = api.getValue("data.inventoryViewMode") || "rows";
+    const headerFields = api.getValue("fields.listHeaderRow") || {};
+    api.setValues({
+      "fields.listHeaderRow": { ...headerFields, hidden: mode === "grid" },
+    });
+  }
+
+  // "Use" an inventory item from the grid popover. Delegates to the shared
+  // useInventoryItem (commonScript) so the grid and the item-row Use button run
+  // identical logic. `index` comes from the grid's celluse data context.
+  function useGridItem(index) {
+    useInventoryItem("data.inventory." + index);
+  }
+
   function updateTotalWeight(record, setValue = true) {
     // Update total weight
     const items = record?.data?.inventory || [];
@@ -512,8 +529,20 @@
         disablediflocked="false"
         optionsFunction="return getLocations();"
       ></dropdown>
+      <div style="display: flex; align-items: flex-end; margin-left: auto">
+        <iconbutton
+          size="md"
+          variant="default"
+          field="inventoryViewMode"
+          defaultvalue="rows"
+          disablediflocked="false"
+          options='[{"icon": "IconLayoutList", "label": "List View", "value": "rows"}, {"icon": "IconLayoutGrid", "label": "Grid View", "value": "grid"}]'
+          onchange="onViewModeChange()"
+        ></iconbutton>
+      </div>
     </div>
 
+    <box field="listHeaderRow">
     <div
       style="display: flex; flex-direction: row; margin-top: 4px; width: 100%"
     >
@@ -549,6 +578,7 @@
         <div style="width: 16px"></div>
       </box>
     </div>
+    </box>
 
     <div style="display: flex; flex-direction: column; flex-grow: 1">
       <list
@@ -558,6 +588,20 @@
         field="inventory"
         onchange="onItemDeleted()"
         onload="updateTotalWeight(record)"
+        layout="rows"
+        layoutfield="data.inventoryViewMode"
+        cellsize="56"
+        countfield="data.count"
+        equipfield="data.carried"
+        equippedvalue="equipped"
+        droppedvalue="dropped"
+        descriptionfield="data.description"
+        cellbadges='[{"field": "data.attunement", "eq": "true", "activeField": "data.attuned", "activeEq": "true", "icon": "IconDiamond", "inactiveIcon": "IconDiamondOff", "position": "bl", "label": "Attunement"}]'
+        celltooltipfields='[{"label": "Type", "field": "data.type", "capitalize": true}, {"label": "Subtype", "field": "data.subtype", "capitalize": true}, {"label": "Location", "field": "data.location"}, {"label": "Weight", "field": "data.weight"}]'
+        cellactions='[{"label": "Equip", "setField": "data.carried", "setValue": "equipped", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "setField": "data.carried", "setValue": "carried", "icon": "IconBackpack"}, {"label": "Drop", "setField": "data.carried", "setValue": "dropped", "icon": "IconArrowDown"}, {"label": "Attune", "setField": "data.attuned", "setValue": "true", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "setField": "data.attuned", "setValue": "false", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
+        cellusefield="data.consumable,data.hasUseBtn"
+        celluselabel="Use"
+        celluse="useGridItem(data.itemIndex)"
       >
       </list>
     </div>

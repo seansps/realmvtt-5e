@@ -4833,3 +4833,149 @@ function applyMinDamageRoll(roll, minDamageRoll) {
   }
   return { totalAdjustment, adjustedCount };
 }
+
+// Recompute the character's total carried weight from data.inventory. Shared by
+// the inventory row and the grid Use handler (commonScript). Skips dropped items
+// and (when the ignoreWornArmorWeight effect is active) equipped armor/shields;
+// optionally folds in coin weight. Pass setValues=false to get the number back
+// instead of writing data.totalWeight.
+function setTotalWeight(setValues = true) {
+  const items = record.data?.inventory || [];
+  let totalWeight = 0;
+
+  const ignoreWornArmor =
+    getEffectsAndModifiers(["ignoreWornArmorWeight"]).length > 0;
+
+  items.forEach((item) => {
+    if (item.data?.carried !== "dropped") {
+      const itemType = (item.data?.type || "").toLowerCase();
+      if (
+        ignoreWornArmor &&
+        item.data?.carried === "equipped" &&
+        (itemType.includes("armor") || itemType === "shield")
+      ) {
+        return;
+      }
+      let weight = parseFloat(item.data?.weight || "0");
+      let count = parseFloat(item.data?.count || "0");
+      if (count === undefined || isNaN(count)) {
+        count = 0;
+      }
+      if (weight !== undefined && !isNaN(weight)) {
+        totalWeight += weight * count;
+      }
+    }
+  });
+
+  const includeCoinage = api.getSetting("coinWeight") === "yes";
+  if (includeCoinage) {
+    const totalCoins =
+      (record?.data?.cp || 0) +
+      (record?.data?.sp || 0) +
+      (record?.data?.ep || 0) +
+      (record?.data?.gp || 0) +
+      (record?.data?.pp || 0);
+    totalWeight += totalCoins / 50;
+  }
+
+  totalWeight = Math.round(totalWeight * 100) / 100;
+
+  if (setValues) {
+    api.setValue("data.totalWeight", totalWeight);
+  } else {
+    return totalWeight;
+  }
+}
+
+// Shared inventory "Use" logic. Outputs the item's description (plus any linked
+// spell and effect/healing/damage macros) to chat, then, for consumables,
+// deducts count and removes the item at 0. Shared by the item-row Use button
+// (useItem) and the grid popover's Use button (useGridItem). `itemDataPath` is
+// the path to the item, e.g. "data.inventory.3".
+function useInventoryItem(itemDataPath) {
+  const itemName = api.getValue(`${itemDataPath}.name`);
+  const itemCount = api.getValue(`${itemDataPath}.data.count`);
+  const indexValue = parseInt(itemDataPath.split(".").pop());
+  const isConsumable =
+    api.getValue(`${itemDataPath}.data.consumable`) || false;
+
+  const description = api.getValue(`${itemDataPath}.data.description`) || "";
+  const effects = api.getValue(`${itemDataPath}.data.effects`) || [];
+  const healing = api.getValue(`${itemDataPath}.data.healing`);
+  const damage = api.getValue(`${itemDataPath}.data.useDamage`);
+  const rawPortrait = api.getValue(`${itemDataPath}.portrait`);
+  const itemIcon = rawPortrait
+    ? `![${itemName}](${assetUrl}${encodeURI(rawPortrait)}?width=40&height=40) `
+    : "";
+  const itemDescription = api.richTextToMarkdown(description || "");
+  let markdownDescription = `
+#### ${itemIcon}${itemName}
+
+---
+${itemDescription}
+`;
+
+  let recordLinks;
+  const spell = api.getValue(`${itemDataPath}.data.spell`);
+  if (spell) {
+    const spellName = JSON.parse(spell)?.name || "";
+    const spellId = JSON.parse(spell)?._id || "";
+    if (spellId) {
+      recordLinks = [
+        {
+          tooltip: spellName,
+          type: "records",
+          value: {
+            _id: spellId,
+            recordType: "spells",
+          },
+        },
+      ];
+    }
+  }
+
+  if (effects) {
+    let effectButtons = getEffectMacrosFor(effects);
+    markdownDescription += `\n${effectButtons}`;
+  }
+
+  if (healing) {
+    const escapedName = itemName.replace(/'/g, "\\'");
+    const escapedHealing = healing.replace(/'/g, "\\'");
+    const healingButton = `\`\`\`Roll_Healing
+api.promptRoll('${escapedName} Healing', '${escapedHealing}', [], {}, 'healing')
+\`\`\``;
+    markdownDescription += `\n${healingButton}`;
+  }
+
+  if (damage) {
+    const escapedName = itemName.replace(/'/g, "\\'");
+    const escapedDamage = damage.replace(/'/g, "\\'");
+    const damageButton = `\`\`\`Roll_Damage
+api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
+\`\`\``;
+    markdownDescription += `\n${damageButton}`;
+  }
+
+  api.sendMessage(markdownDescription, undefined, recordLinks);
+
+  // If consumable, deduct count by 1, delete item if count is 0
+  if (isConsumable) {
+    const count = parseFloat(itemCount || "0");
+    if (count - 1 > 0) {
+      api.setValue(`${itemDataPath}.data.count`, count - 1, function () {
+        api.getRecord(record.recordType, record._id, function (rec) {
+          record = rec;
+          setTotalWeight();
+        });
+      });
+    } else if (!isNaN(indexValue)) {
+      api.removeValue(`data.inventory`, indexValue, function () {
+        api.getRecord(record.recordType, record._id, function (rec) {
+          record = rec;
+          setTotalWeight();
+        });
+      });
+    }
+  }
+}
