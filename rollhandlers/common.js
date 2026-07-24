@@ -2154,6 +2154,17 @@ function getArmorClass(bestEquippedArmor) {
     return parseInt(record?.data?.ac || "0", 10);
   }
 
+  // Sync the in-memory record's equipped-armor snapshot to the armor we're about
+  // to score BEFORE collecting armorClassBonus modifiers. Callers stage the fresh
+  // data.armor into valuesToSet but haven't persisted it yet, so without this an
+  // armorClassBonus predicate that reads data.armor (e.g. Bracers of Defense's
+  // self:data.armor.ac:eq:0 / shieldAc:eq:0) would evaluate against the pre-equip
+  // snapshot — wrongly granting the unarmored bonus when equipping the bracers
+  // before the armor. Keeping it in sync makes equip order irrelevant.
+  if (record?.data && bestEquippedArmor) {
+    record.data.armor = bestEquippedArmor;
+  }
+
   const acCalculationMods = getEffectsAndModifiers(["armorClassCalculation"]);
 
   // If this is a character, we use their dexterity modifier
