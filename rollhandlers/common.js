@@ -3750,6 +3750,27 @@ function _parseCreatureTypes(raw) {
   return types;
 }
 
+// Normalizes a creature's alignment into a lowercase token list so alignment
+// predicates can test a single trait (e.g. "evil"). Splits the data.alignment
+// string ("lawful evil" → ["lawful","evil"]), and also accepts a
+// data.alignmentTraits array if one is present.
+function _parseAlignmentTraits(rec) {
+  const traits = [];
+  const push = (v) => {
+    const x = String(v || "")
+      .toLowerCase()
+      .trim();
+    if (x && !traits.includes(x)) traits.push(x);
+  };
+  const arr = rec?.data?.alignmentTraits;
+  if (Array.isArray(arr)) arr.forEach(push);
+  else if (arr) String(arr).split(/[\s,]+/).forEach(push);
+  String(rec?.data?.alignment || "")
+    .split(/[\s,]+/)
+    .forEach(push);
+  return traits;
+}
+
 // Evaluates predicates on a rule. Supports strings, arrays (AND), and objects (not/or/and/nand/nor).
 // Evaluate a toggle predicate against a set of active toggle field names.
 // Supports:
@@ -4109,6 +4130,33 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       return _parseCreatureTypes(
         context.attackerToken?.data?.creatureType,
       ).includes(requiredType);
+    }
+    // "<scope>:alignment:<trait>" — true if the creature has the given alignment
+    // trait (evil, good, lawful, chaotic). Lets an item scope to alignment the
+    // same way creature_type does, e.g. armor giving fiends, undead, aberrations
+    // AND evil-aligned creatures disadvantage to attack the wearer.
+    if (predicate.startsWith("self:alignment:")) {
+      const required = predicate
+        .slice("self:alignment:".length)
+        .toLowerCase()
+        .trim();
+      return _parseAlignmentTraits(target).includes(required);
+    }
+    if (predicate.startsWith("target:alignment:")) {
+      if (!context?.targetToken) return false;
+      const required = predicate
+        .slice("target:alignment:".length)
+        .toLowerCase()
+        .trim();
+      return _parseAlignmentTraits(context.targetToken).includes(required);
+    }
+    if (predicate.startsWith("attacker:alignment:")) {
+      if (!context?.attackerToken) return false;
+      const required = predicate
+        .slice("attacker:alignment:".length)
+        .toLowerCase()
+        .trim();
+      return _parseAlignmentTraits(context.attackerToken).includes(required);
     }
     if (predicate.startsWith("attacker:senses:")) {
       if (!context) return false;
