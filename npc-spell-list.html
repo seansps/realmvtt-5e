@@ -681,7 +681,7 @@ selectedTokens.forEach(token => {
     }
   }
 
-  const _saveSrcCtx = { sourceName: ${JSON.stringify(spellName)} };
+  const _saveSrcCtx = { sourceName: ${JSON.stringify(spellName)}, attackerToken: ${JSON.stringify(buildSourceAttackerContext(api.getToken()))} };
   const saveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], '${savingThrow}', undefined, undefined, _saveSrcCtx);
   // Also get modifiers specific to spells
   const spellSaveMods = getEffectsAndModifiersForToken(token, ['saveBonus', 'savePenalty'], 'spell', undefined, undefined, _saveSrcCtx);
