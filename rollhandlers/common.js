@@ -1779,20 +1779,39 @@ function getEffectsAndModifiersForToken(
   [...features, ...equippedItems, ...ammoEffects].forEach((feature) => {
     const modifiers = feature.data?.modifiers || [];
     modifiers.forEach((modifier) => {
-      // Skip modifiers with a predicate if it doesn't pass
+      // Skip modifiers with a predicate if it doesn't pass.
+      //
+      // Exception — retracting an optimistic add. Callers collect twice: once
+      // with no target context, then again with it. A predicate that needs the
+      // target is indeterminate on the first pass, and a negated one such as
+      // {"not":"target:creature_type:giant"} resolves TRUE there, so the
+      // modifier gets added on speculation. The merge in the callers only
+      // updates `active` for modifiers this function RETURNS, so silently
+      // dropping it on the second pass would leave the speculative add applied
+      // (a Dwarven Thrower would deal 3d8 to a giant instead of 2d8). So when a
+      // predicate fails WITH context but would have passed WITHOUT it, return
+      // the modifier flagged inactive instead of omitting it, letting the merge
+      // turn it off. Predicates that fail both ways (ordinary positive target
+      // predicates) are skipped exactly as before, so no new inactive entries
+      // appear in roll prompts. Only ever reached when a predicate is defined.
       const predicate = (modifier.data?.predicate || "").trim();
-      if (
-        predicate &&
-        !_evaluateTogglePredicate(
-          predicate,
-          activeToggles,
-          effectSlugs,
-          featureSlugs,
-          effectiveContext,
-          target,
-        )
-      )
-        return;
+      let predicateRetracted = false;
+      if (predicate) {
+        const evalPredicate = (ctx) =>
+          _evaluateTogglePredicate(
+            predicate,
+            activeToggles,
+            effectSlugs,
+            featureSlugs,
+            ctx,
+            target,
+          );
+        if (!evalPredicate(effectiveContext)) {
+          if (!effectiveContext) return;
+          if (!evalPredicate(undefined)) return;
+          predicateRetracted = true;
+        }
+      }
 
       const ruleType = modifier.data?.type || "";
       const isPenalty = ruleType.toLowerCase().includes("penalty");
@@ -1830,7 +1849,7 @@ function getEffectsAndModifiersForToken(
         results.push({
           name: feature?.name || "Feature",
           value: value,
-          active: modifier.data?.active === true,
+          active: predicateRetracted ? false : modifier.data?.active === true,
           modifierType: ruleType,
           field: modifier.data?.field || "",
           valueType: modifier.data?.valueType,
