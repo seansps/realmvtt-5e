@@ -4239,11 +4239,21 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
     // slugified name matching. context.sourceName is threaded by rollSavingThrow
     // (ability saves) and the spell save macros (spell name). Lets an effect
     // grant a bonus/penalty on saves vs a specific named feature.
+    // "source:contains:<text>" matches a family of similarly-named abilities by
+    // case-insensitive substring instead of an exact slug — e.g. every dragon
+    // breath ("Fire Breath", "Cold Breath", "Breath Weapon") via
+    // source:contains:breath. Pair it with attacker:creature_type: to scope the
+    // family to one kind of creature.
     if (predicate.startsWith("source:")) {
       if (!context?.sourceName) return false;
-      const slug = predicate.slice("source:".length).trim().toLowerCase();
-      if (!slug) return false;
-      return _slugifyName(context.sourceName) === slug;
+      const rest = predicate.slice("source:".length).trim().toLowerCase();
+      if (!rest) return false;
+      if (rest.startsWith("contains:")) {
+        const needle = rest.slice("contains:".length).trim();
+        if (!needle) return false;
+        return String(context.sourceName).toLowerCase().includes(needle);
+      }
+      return _slugifyName(context.sourceName) === rest;
     }
     if (predicate.startsWith("self:senses:")) {
       const requiredSense = predicate
