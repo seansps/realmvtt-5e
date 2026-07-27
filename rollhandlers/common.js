@@ -3021,7 +3021,16 @@ function rollSavingThrow(save, dc, options) {
   // options.sourceName — the spell/ability that forced the save, so effects
   // gated by the "source:<slug>" predicate resolve.
   const sourceName = options?.sourceName;
-  const saveContext = sourceName ? { sourceName } : undefined;
+  // options.attackerToken — a slim snapshot of the creature forcing the save
+  // (see buildSourceAttackerContext), so attacker:* predicates such as
+  // attacker:creature_type:dragon resolve here too.
+  const attackerToken = options?.attackerToken;
+  let saveContext;
+  if (sourceName || attackerToken) {
+    saveContext = {};
+    if (sourceName) saveContext.sourceName = sourceName;
+    if (attackerToken) saveContext.attackerToken = attackerToken;
+  }
   const selectedTokens = api.getSelectedOrDroppedToken();
   selectedTokens.forEach((token) => {
     save = save.toLowerCase();
@@ -3769,6 +3778,32 @@ function _parseAlignmentTraits(rec) {
     .split(/[\s,]+/)
     .forEach(push);
   return traits;
+}
+
+// Builds a slim, JSON-serializable stand-in for the creature that forced a save,
+// to be baked into a save macro as context.attackerToken. Save macros are built
+// on the source creature's sheet but run later on the defender's client, where
+// the real source token is out of scope — so the existing attacker:* predicates
+// (creature_type / alignment / senses / effect) would see no attacker and always
+// return false. Snapshotting just the fields those predicates read keeps the
+// macro string small (serializing a whole NPC token would bloat every button).
+function buildSourceAttackerContext(src) {
+  const s = src || record;
+  return {
+    _id: s?._id,
+    curhp: s?.data?.curhp,
+    hitpoints: s?.data?.hitpoints,
+    effects: (s?.effects || []).map((e) => ({ _id: e?._id, name: e?.name })),
+    data: {
+      creatureType: s?.data?.creatureType || "",
+      alignment: s?.data?.alignment || "",
+      alignmentTraits: s?.data?.alignmentTraits || [],
+      senses: s?.data?.senses || "",
+      size: s?.data?.size || "",
+      curhp: s?.data?.curhp,
+      hitpoints: s?.data?.hitpoints,
+    },
+  };
 }
 
 // Evaluates predicates on a rule. Supports strings, arrays (AND), and objects (not/or/and/nand/nor).

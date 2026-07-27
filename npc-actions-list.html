@@ -816,8 +816,13 @@
       // context (6th arg) so effects gated by source:<slug> (e.g. "disadvantage
       // on saves against the banshee's Baleful Wail" → source:baleful-wail)
       // resolve.
+      // attackerToken is a slim snapshot of this creature so attacker:* predicates
+      // (e.g. a charm's "advantage on saves vs a dragon's fear" →
+      // attacker:creature_type:dragon) resolve on the defender's client, where
+      // the real source token is out of scope.
       const saveCtxArg = `, undefined, undefined, ${JSON.stringify({
         sourceName: action?.name || "",
+        attackerToken: buildSourceAttackerContext(api.getToken()),
       })}`;
       savingThrows.forEach((savingThrow) => {
         // Look up saves of selected tokens and prompt roll for each
