@@ -1282,66 +1282,11 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
     }
   });
 
-  // Process senses modifiers — merge sense entries into data.senses string,
-  // keeping the higher distance if the same sense type already exists.
-  // Value formats:
-  //   "Darkvision 60"        — set if higher than existing (or add if new)
-  //   "Darkvision 120/60"    — set to 120 if sense exists; else add at 60 (fallback)
-  //   "Darkvision +30"       — add 30 to existing range; else add at 30
-  //   "Darkvision +30/30"    — add 30 to existing range; else add at 30 (explicit fallback)
-  modifiers.forEach((mod) => {
-    if (mod?.data?.type === "senses") {
-      const newSense = (mod?.data?.value || "").trim();
-      if (!newSense) return;
-      // Parse sense name and distance, with optional + prefix (additive) and optional /fallback
-      const match = newSense.match(/^(.+?)\s+(\+?)(\d+)(?:\/(\d+))?$/);
-      const newName = match ? match[1].trim() : newSense;
-      const isAdditive = match ? match[2] === "+" : false;
-      const primaryDist = match ? parseInt(match[3], 10) : 0;
-      const fallbackDist = match && match[4] ? parseInt(match[4], 10) : null;
-      // Get current senses (may already be partially built up in fieldsToSet)
-      const currentSenses =
-        fieldsToSet["data.senses"] !== undefined
-          ? fieldsToSet["data.senses"]
-          : rec?.data?.senses || "";
-      // Parse existing senses into entries
-      const entries = currentSenses
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s !== "");
-      // Check if this sense type already exists
-      const existingIdx = entries.findIndex((e) => {
-        const eMatch = e.match(/^(.+?)\s+(\d+)$/);
-        const eName = eMatch ? eMatch[1].trim() : e;
-        return eName.toLowerCase() === newName.toLowerCase();
-      });
-      if (existingIdx >= 0) {
-        // Same sense type exists
-        if (isAdditive) {
-          // Additive: add primary distance to existing
-          const eMatch = entries[existingIdx].match(/^(.+?)\s+(\d+)$/);
-          const existingDist = eMatch ? parseInt(eMatch[2], 10) : 0;
-          entries[existingIdx] = `${newName} ${existingDist + primaryDist}`;
-        } else if (primaryDist === 0) {
-          // No range specified = unlimited, always overwrite
-          entries[existingIdx] = `${newName} ${primaryDist}`;
-        } else {
-          // Set-if-higher
-          const eMatch = entries[existingIdx].match(/^(.+?)\s+(\d+)$/);
-          const existingDist = eMatch ? parseInt(eMatch[2], 10) : 0;
-          if (existingDist > 0 && primaryDist > existingDist) {
-            entries[existingIdx] = `${newName} ${primaryDist}`;
-          }
-        }
-      } else {
-        // New sense type — use fallback distance if provided, otherwise primary
-        // (for additive form without explicit fallback, primary doubles as the base)
-        const dist = fallbackDist !== null ? fallbackDist : primaryDist;
-        entries.push(dist > 0 ? `${newName} ${dist}` : newName);
-      }
-      fieldsToSet["data.senses"] = entries.join(", ");
-    }
-  });
+  // Senses are NOT applied here. They are re-derived from data.sensesBase plus
+  // every currently-eligible source by recalcSenses(), so that unequipping or
+  // un-attuning an item takes its grant away again. Writing them one-time here
+  // would bake an item's bonus into the character permanently (and re-applying
+  // an additive "+60" on each equip would compound it).
 
   // Process skillSpecialty modifiers — collect entries to add via safeAddValue later.
   // Deferred like tool proficiencies to avoid overwriting specialties added by other paths.
@@ -1863,6 +1808,117 @@ function applySlugFeaturesForFeatures(features, characterRecord, callback) {
 //   data.{ability} = base + bonus
 // Calls setModifier for each changed ability to update derived values.
 // Call this after features/items change (add, remove, equip, unequip).
+// Merges one senses modifier value into a list of "Name Dist" entries.
+// Value formats:
+//   "Darkvision 60"        — set if higher than existing (or add if new)
+//   "Darkvision 120/60"    — set to 120 if sense exists; else add at 60 (fallback)
+//   "Darkvision +30"       — add 30 to existing range; else add at 30
+//   "Darkvision +30/30"    — add 30 to existing range; else add at 30 (explicit fallback)
+// Returns a new array; the input is not mutated.
+function _mergeSenseEntry(entries, rawValue) {
+  const newSense = (rawValue || "").trim();
+  if (!newSense) return entries;
+  const out = entries.slice();
+  const match = newSense.match(/^(.+?)\s+(\+?)(\d+)(?:\/(\d+))?$/);
+  const newName = match ? match[1].trim() : newSense;
+  const isAdditive = match ? match[2] === "+" : false;
+  const primaryDist = match ? parseInt(match[3], 10) : 0;
+  const fallbackDist = match && match[4] ? parseInt(match[4], 10) : null;
+  const existingIdx = out.findIndex((e) => {
+    const eMatch = e.match(/^(.+?)\s+(\d+)$/);
+    const eName = eMatch ? eMatch[1].trim() : e;
+    return eName.toLowerCase() === newName.toLowerCase();
+  });
+  if (existingIdx >= 0) {
+    const eMatch = out[existingIdx].match(/^(.+?)\s+(\d+)$/);
+    const existingDist = eMatch ? parseInt(eMatch[2], 10) : 0;
+    if (isAdditive) {
+      out[existingIdx] = `${newName} ${existingDist + primaryDist}`;
+    } else if (primaryDist === 0) {
+      // No range specified = unlimited, always overwrite
+      out[existingIdx] = `${newName} ${primaryDist}`;
+    } else if (existingDist > 0 && primaryDist > existingDist) {
+      out[existingIdx] = `${newName} ${primaryDist}`;
+    }
+  } else {
+    // New sense type — use fallback distance if provided, otherwise primary
+    // (for additive form without explicit fallback, primary doubles as the base)
+    const dist = fallbackDist !== null ? fallbackDist : primaryDist;
+    out.push(dist > 0 ? `${newName} ${dist}` : newName);
+  }
+  return out;
+}
+
+const _parseSenseEntries = (s) =>
+  (s || "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => x !== "");
+
+// Collects every senses modifier that currently applies: all features, plus
+// equipped inventory items (attunement-gated exactly like attributeBonus).
+function _collectSenseGrants(rec) {
+  const grants = [];
+  const scan = (src) =>
+    (src?.data?.modifiers || []).forEach((m) => {
+      if (m?.data?.type === "senses" && m?.data?.active !== false) {
+        const v = (m?.data?.value || "").trim();
+        if (v) grants.push(v);
+      }
+    });
+  (rec?.data?.features || []).forEach(scan);
+  (rec?.data?.inventory || []).forEach((item) => {
+    if (item?.data?.carried !== "equipped") return;
+    if (item?.data?.attunement && item?.data?.attuned !== "true") return;
+    scan(item);
+  });
+  return grants;
+}
+
+// Re-derives data.senses from data.sensesBase plus every currently-eligible
+// grant, so removing a source removes its contribution. Mirrors how
+// recalcAttributeBonuses re-derives ability scores rather than tracking deltas.
+//
+// data.sensesBase is the character's innate senses. It is initialised on first
+// run from the current data.senses with the ADDITIVE grants of already-eligible
+// sources subtracted — those are the only form that compounds when re-applied.
+// The set-style forms ("Darkvision 60", "Darkvision 120/60") are idempotent, so
+// leaving them in the base and re-applying them changes nothing.
+function recalcSenses(fieldsToSet, recordOverride) {
+  const rec = recordOverride || record;
+  const grants = _collectSenseGrants(rec);
+
+  let base = rec?.data?.sensesBase;
+  if (base === undefined || base === null) {
+    let entries = _parseSenseEntries(rec?.data?.senses);
+    grants.forEach((v) => {
+      const m = v.match(/^(.+?)\s+\+(\d+)/);
+      if (!m) return; // only additive grants need unwinding
+      const name = m[1].trim();
+      const amount = parseInt(m[2], 10) || 0;
+      const idx = entries.findIndex((e) => {
+        const em = e.match(/^(.+?)\s+(\d+)$/);
+        return (em ? em[1].trim() : e).toLowerCase() === name.toLowerCase();
+      });
+      if (idx < 0) return;
+      const em = entries[idx].match(/^(.+?)\s+(\d+)$/);
+      const dist = em ? parseInt(em[2], 10) : 0;
+      const reduced = dist - amount;
+      if (reduced > 0) entries[idx] = `${name} ${reduced}`;
+      else entries.splice(idx, 1);
+    });
+    base = entries.join(", ");
+    fieldsToSet["data.sensesBase"] = base;
+  }
+
+  let entries = _parseSenseEntries(base);
+  grants.forEach((v) => {
+    entries = _mergeSenseEntry(entries, v);
+  });
+  const next = entries.join(", ");
+  if ((rec?.data?.senses || "") !== next) fieldsToSet["data.senses"] = next;
+}
+
 function recalcAttributeBonuses(fieldsToSet, recordOverride) {
   const rec = recordOverride || record;
   const abilities = [
@@ -2056,6 +2112,12 @@ function recalcAttributeBonuses(fieldsToSet, recordOverride) {
       fieldsToSet["data.dragLiftPush"] = dragLiftPush;
     }
   }
+
+  // Senses re-derive off exactly the same triggers as attribute bonuses — any
+  // change to features or to equipped/attuned inventory. Driving it from here
+  // keeps the two in lockstep instead of having to add a parallel call at all
+  // the recalc sites (and silently missing one).
+  recalcSenses(fieldsToSet, rec);
 }
 
 // Recalculate HP from all feature/item modifiers and update if changed.
