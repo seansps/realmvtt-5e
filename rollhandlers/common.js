@@ -4354,11 +4354,22 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
         if (context.weapon?.data?.isPactWeapon === true) return true;
         return (context.weapon?.name || "").toLowerCase().includes("pact");
       }
-      // weapon:name:<substring> — case-insensitive substring match on name
+      // weapon:name:<substring> — case-insensitive substring match on name.
+      // Matched raw first, then slug-tolerantly, so a needle written in the
+      // hyphenated style used by the rest of the predicate vocabulary
+      // (source:<slug>, effect:<slug>, feature:<slug>) still matches a
+      // human-spaced name: weapon:name:flame-tongue hits every
+      // "Flame Tongue (Bastard sword)" variant. Punctuation and apostrophes
+      // collapse the same way on both sides.
       if (rest.startsWith("name:")) {
         const needle = rest.slice("name:".length).trim();
         if (!needle) return false;
-        return (context.weapon?.name || "").toLowerCase().includes(needle);
+        const weaponName = (context.weapon?.name || "").toLowerCase();
+        if (weaponName.includes(needle)) return true;
+        const needleSlug = _slugifyName(needle);
+        return (
+          !!needleSlug && _slugifyName(weaponName).includes(needleSlug)
+        );
       }
       // weapon:type:<exact> — exact (ci) match against data.weaponType
       if (rest.startsWith("type:")) {
