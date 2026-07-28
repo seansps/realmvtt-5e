@@ -1887,13 +1887,21 @@ function _collectSenseGrants(rec) {
 function recalcSenses(fieldsToSet, recordOverride) {
   const rec = recordOverride || record;
   const grants = _collectSenseGrants(rec);
-
+  const currentSenses = rec?.data?.senses || "";
+  // The last value THIS function produced. Anything else in data.senses means
+  // it was written elsewhere and must win over our stored base.
+  const lastDerived = rec?.data?.sensesDerived;
   let base = rec?.data?.sensesBase;
+
   if (base === undefined || base === null) {
-    let entries = _parseSenseEntries(rec?.data?.senses);
+    // First run on a character that predates this system: data.senses may have
+    // grants already baked in by the old one-time application. Unwind the
+    // ADDITIVE ones (the only form that compounds when re-applied) to recover
+    // the innate value; set-style grants are idempotent and can stay.
+    let entries = _parseSenseEntries(currentSenses);
     grants.forEach((v) => {
       const m = v.match(/^(.+?)\s+\+(\d+)/);
-      if (!m) return; // only additive grants need unwinding
+      if (!m) return;
       const name = m[1].trim();
       const amount = parseInt(m[2], 10) || 0;
       const idx = entries.findIndex((e) => {
@@ -1909,6 +1917,15 @@ function recalcSenses(fieldsToSet, recordOverride) {
     });
     base = entries.join(", ");
     fieldsToSet["data.sensesBase"] = base;
+  } else if (currentSenses !== (lastDerived ?? currentSenses)) {
+    // data.senses changed without us doing it — a species/ancestry writing the
+    // field directly (how 5e grants darkvision), a sheet edit, or an import.
+    // data.senses stays authoritative: adopt it as the new innate base instead
+    // of overwriting it from a stale one. Without this, a base captured while
+    // the field was still empty would wipe an elf's Darkvision 120 down to
+    // whatever the equipped items grant.
+    base = currentSenses;
+    fieldsToSet["data.sensesBase"] = base;
   }
 
   let entries = _parseSenseEntries(base);
@@ -1916,7 +1933,9 @@ function recalcSenses(fieldsToSet, recordOverride) {
     entries = _mergeSenseEntry(entries, v);
   });
   const next = entries.join(", ");
-  if ((rec?.data?.senses || "") !== next) fieldsToSet["data.senses"] = next;
+  // Always record what we derived so the next run can spot outside writes.
+  if (lastDerived !== next) fieldsToSet["data.sensesDerived"] = next;
+  if (currentSenses !== next) fieldsToSet["data.senses"] = next;
 }
 
 function recalcAttributeBonuses(fieldsToSet, recordOverride) {
