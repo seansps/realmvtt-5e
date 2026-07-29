@@ -1938,8 +1938,43 @@ function recalcSenses(fieldsToSet, recordOverride) {
   if (currentSenses !== next) fieldsToSet["data.senses"] = next;
 }
 
+// Re-derives data.proficiencyBonus as the level-based value plus every active
+// proficiencyBonus modifier (Ioun Stone of Mastery: "your proficiency bonus is
+// increased by 1"). Items only count while equipped, and while attuned if the
+// item requires it, so removing the source drops the bonus again.
+//
+// Mutates rec.data.proficiencyBonus as well as writing fieldsToSet, because
+// setModifier() reads the value off the record — without that, saves and skills
+// recalculated in the same pass would still use the old bonus.
+function recalcProficiencyBonus(fieldsToSet, recordOverride) {
+  const rec = recordOverride || record;
+  const level = parseInt(rec?.data?.level ?? "1", 10) || 1;
+  let bonus = 0;
+  const scan = (src) =>
+    (src?.data?.modifiers || []).forEach((m) => {
+      if (m?.data?.type !== "proficiencyBonus") return;
+      if (m?.data?.active === false) return;
+      const v = parseInt(resolveModifierValue(m, rec), 10);
+      if (!isNaN(v)) bonus += v;
+    });
+  (rec?.data?.features || []).forEach(scan);
+  (rec?.data?.inventory || []).forEach((item) => {
+    if (item?.data?.carried !== "equipped") return;
+    if (item?.data?.attunement && item?.data?.attuned !== "true") return;
+    scan(item);
+  });
+
+  const next = getProficiencyBonus(level) + bonus;
+  if (parseInt(rec?.data?.proficiencyBonus ?? "0", 10) !== next) {
+    fieldsToSet["data.proficiencyBonus"] = next;
+    if (rec?.data) rec.data.proficiencyBonus = next;
+  }
+}
+
 function recalcAttributeBonuses(fieldsToSet, recordOverride) {
   const rec = recordOverride || record;
+  // Proficiency bonus first: setModifier() below folds it into saves and skills.
+  recalcProficiencyBonus(fieldsToSet, rec);
   const abilities = [
     "strength",
     "dexterity",
