@@ -2851,14 +2851,17 @@ function getAnimationFor({
     animation.brightness = 0.2;
   } else if (damage.includes("piercing")) {
     animation.sound = isRanged ? "arrow_1" : "slash_1";
-    // If this is a ranged bow use arrow_1 animationName
-    if (
-      (isRanged &&
-        (abilityName.toLowerCase().match(/\bbow\b/i) ||
-          abilityName.toLowerCase().match(/\bcrossbow\b/i))) ||
-      abilityName.toLowerCase().match(/\longbow\b/i) ||
-      abilityName.toLowerCase().match(/\bshortbow\b/i)
-    ) {
+    // If this is a ranged bow use arrow_1 animationName.
+    // Matches ANY word ending in "bow", not just the literal word — a magic
+    // item named "Oathbow" is one word, so \bbow\b finds no boundary before
+    // "bow" and the weapon fell through to the generic arrow_2. This catches
+    // bow / longbow / shortbow / crossbow / greatbow / Oathbow alike.
+    // "elbow" and "rainbow" are excluded so a creature's elbow strike doesn't
+    // fire arrows.
+    const bowWord = abilityName.toLowerCase().match(/\b(\w*bow)\b/);
+    const isBowName =
+      !!bowWord && bowWord[1] !== "elbow" && bowWord[1] !== "rainbow";
+    if (isRanged && isBowName) {
       animation.animationName = "arrow_1";
     } else if (isRanged) {
       animation.animationName = "arrow_2";

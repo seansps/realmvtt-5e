@@ -593,6 +593,27 @@
 
       // If the target is beyond normal range, and normal range is > 0, add a disadvantage modifier
       // and if it was greater than the max, make it apparent in the roll prompt
+      // "No Long Range Disadvantage" (e.g. Sharpshooter) is collected with the
+      // weapon id so an item-only modifier on the weapon itself matches, and
+      // with target + weapon context so it can be gated by a predicate — e.g.
+      // ignoring long-range disadvantage only against a marked target and only
+      // with a bow: {"and": ["target:effect:sworn-enemy", "weapon:name:bow"]}
+      const rangePredicateContext = {
+        attackerToken: ourToken,
+        targetToken: target?.token,
+        targetCreatureType: target?.token?.data?.creatureType || "",
+        weapon: attack,
+        isRangedAttack: ranged,
+      };
+      // A modifier whose predicate failed comes back with active === false
+      // (retracted) rather than being dropped, so presence alone isn't enough.
+      const hasNoLongRangeDis = getEffectsAndModifiers(
+        ["noLongRangeDisadvantage"],
+        undefined,
+        attack._id,
+        undefined,
+        rangePredicateContext,
+      ).some((m) => m.active !== false);
       if (ranged && targetDistance > maxRange && maxRange > 0) {
         modifiers.push({
           name: "Target is Beyond Max Range",
@@ -603,7 +624,7 @@
         ranged &&
         targetDistance > normalRange &&
         normalRange > 0 &&
-        getEffectsAndModifiers(["noLongRangeDisadvantage"]).length === 0
+        !hasNoLongRangeDis
       ) {
         modifiers.push({
           name: "Target is Beyond Normal Range",
