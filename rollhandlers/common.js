@@ -2426,33 +2426,85 @@ function getRIV(target) {
     "immunity",
     "absorption",
   ]);
+  // field "upgrade" / "downgrade" on a resistance rule don't grant anything —
+  // they re-rank what the creature already has. Both are deferred to a second
+  // pass after the loop so a resistance granted by a LATER modifier in this
+  // same list is still visible to them.
+  const pendingUpgrades = [];
+  const pendingDowngrades = [];
   modifiers.forEach((mod) => {
     if (
       mod.modifierType === "resistance" &&
       mod.valueType === "string" &&
+      typeof mod.value === "string" &&
       mod.value
     ) {
-      resistances.push(mod.value.toLowerCase());
+      // An unresolved @record.data reference means the Input backing it has no
+      // value yet (nothing chosen). Drop it rather than treating the literal
+      // path string as a damage type.
+      const modValue = mod.value.toLowerCase();
+      if (modValue.includes("@")) return;
+      if (mod.field === "upgrade") {
+        pendingUpgrades.push(modValue);
+      } else if (mod.field === "downgrade") {
+        pendingDowngrades.push(modValue);
+      } else {
+        resistances.push(modValue);
+      }
     } else if (
       mod.modifierType === "vulnerability" &&
       mod.valueType === "string" &&
+      typeof mod.value === "string" &&
       mod.value
     ) {
       vulnerabilities.push(mod.value.toLowerCase());
     } else if (
       mod.modifierType === "immunity" &&
       mod.valueType === "string" &&
+      typeof mod.value === "string" &&
       mod.value
     ) {
       immunities.push(mod.value.toLowerCase());
     } else if (
       mod.modifierType === "absorption" &&
       mod.valueType === "string" &&
+      typeof mod.value === "string" &&
       mod.value
     ) {
       absorptions.push(mod.value.toLowerCase());
     }
   });
+
+  // Re-rank pass. Runs after every grant above so it sees the creature's full
+  // set, whether a defense came from its stat block or from another modifier.
+  // Removes EVERY occurrence of a type, since the same one can arrive from both
+  // the base string and a modifier.
+  const removeAll = (list, dmgType) => {
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (list[i] === dmgType) list.splice(i, 1);
+    }
+  };
+  // Upgrade: resistance -> immunity (or grant the resistance if it has none).
+  pendingUpgrades.forEach((dmgType) => {
+    if (resistances.includes(dmgType)) {
+      removeAll(resistances, dmgType);
+      if (!immunities.includes(dmgType)) immunities.push(dmgType);
+    } else if (!resistances.includes(dmgType)) {
+      resistances.push(dmgType);
+    }
+  });
+  // Downgrade: immunity -> resistance, or a plain resistance is lost outright.
+  // Applied after upgrades so a debuff that strips a defense wins over a buff
+  // that raised it in the same instant. A creature with neither is unaffected.
+  pendingDowngrades.forEach((dmgType) => {
+    if (immunities.includes(dmgType)) {
+      removeAll(immunities, dmgType);
+      if (!resistances.includes(dmgType)) resistances.push(dmgType);
+    } else if (resistances.includes(dmgType)) {
+      removeAll(resistances, dmgType);
+    }
+  });
+
   // Get additional one-off resistances per damage type
   const resistanceByDamage = {};
   modifiers.forEach((mod) => {
