@@ -1486,10 +1486,35 @@ function getDamageEffectsForTarget(ourToken, target) {
 }
 
 // In this call, we look for effects that are relevant to the caller and the target for attack rolls
-function getAttackModifiersForTarget(target, distance) {
+// An `attackTargeting` modifier on a creature affects attacks made AGAINST it.
+// Its field narrows which attacks:
+//   ""       every attack
+//   "melee"  melee attacks only
+//   "ranged" ranged attacks only
+//   "spell"  SPELL attacks only — "spell attacks against you have disadvantage"
+// "spell" is not a melee/ranged axis (a spell attack can be either), so it is
+// checked on its own rather than folded into that filter. An undefined
+// `isRanged` means the caller didn't say, and no melee/ranged filtering happens
+// — which is how every call site behaved before the filter existed.
+function getAttackModifiersForTarget(
+  target,
+  distance,
+  attackerToken,
+  isRanged,
+  isSpellAttack,
+) {
   if (!target) {
     return [];
   }
+
+  // Returns true when a modifier's field excludes it from this attack.
+  const fieldExcludes = (field) => {
+    const f = (field || "").toLowerCase();
+    if (f === "spell") return isSpellAttack !== true;
+    if (isRanged === true && f === "melee") return true;
+    if (isRanged === false && f === "ranged") return true;
+    return false;
+  };
 
   let results = [];
 
@@ -1503,11 +1528,24 @@ function getAttackModifiersForTarget(target, distance) {
   if (distance !== undefined && distance > 5) {
     effectsToCheck.push("attackTargetingGreaterFive");
   }
+  // Attacker context so attacker:/target: predicates on these modifiers resolve
+  // (e.g. "attacks against you from fiends have disadvantage").
+  const predicateContext = attackerToken
+    ? {
+        attackerToken: attackerToken,
+        targetCreatureType: target?.data?.creatureType || "",
+      }
+    : undefined;
   const attackTargetingEffects = getEffectsAndModifiersForToken(
     target,
     effectsToCheck,
+    "",
+    undefined,
+    undefined,
+    predicateContext,
   );
   attackTargetingEffects.forEach((r) => {
+    if (fieldExcludes(r.field)) return;
     results.push({
       ...r,
       name: r.isEffect ? `Target Has the ${r.name} Effect` : r.name,

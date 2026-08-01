@@ -519,7 +519,7 @@ targets.forEach(target => {
 
   // Get effects and modifiers for the target
   let hasNoAdvantage = false;
-  const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance);
+  const targetEffects = getAttackModifiersForTarget(target?.token, targetDistance, ourToken, ${rangedSpell}, true);
   targetEffects.forEach(r => {
     if (r.value === "critical") {
       autoCritical = true;

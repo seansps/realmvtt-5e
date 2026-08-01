@@ -637,6 +637,8 @@
       const targetEffects = getAttackModifiersForTarget(
         target?.token,
         targetDistance,
+        ourToken,
+        ranged,
       );
       let hasNoAdvantage = false;
       targetEffects.forEach((r) => {
