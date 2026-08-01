@@ -1,0 +1,133 @@
+<script>
+  // Spells tab for items. Only reachable while "Has Spells" is checked on the
+  // Main tab (which drives tabs.Spells.hidden).
+  //
+  // Which numbers a cast uses:
+  //   "Use the holder's spellcasting" CHECKED  → the holder's own spell save DC
+  //       and spell attack bonus (best ability across their spellcasting
+  //       classes, + proficiency, + any spellDCBonus / spellAttackBonus
+  //       modifiers), falling back to the defaults below if they cannot cast.
+  //   UNCHECKED → always the defaults below.
+  // Spells are dropped onto the TAB, not the list (the list has disableDrop set),
+  // so the row can be built here with the cast level pinned to the spell's own
+  // level. Mirrors how the character actions list fixes a dropped spell's level
+  // rather than leaving it editable.
+  // recordtype="spells" on the list below makes every row open as a spell,
+  // however it was created — so an Action row added with the list's own button
+  // gets the spell window rather than a generic record one. Rows also carry
+  // recordType "spells" in their data for the same reason, which is why nothing
+  // downstream can use recordType to tell a spell from an action: see
+  // isItemSpellRow() in common.js, which keys on data.actionText instead.
+  function onDrop(type, recordLink) {
+    if (type !== "spells") return;
+    const spell = recordLink?.value;
+    if (!spell) return;
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const listPath = itemDataPath
+      ? `${itemDataPath}.data.itemSpells`
+      : "data.itemSpells";
+
+    const rawLevel = spell?.data?.level;
+    const level = rawLevel === "Cantrip" ? 0 : parseInt(rawLevel, 10) || 0;
+
+    const spellToAdd = {
+      ...spell,
+      data: {
+        ...spell?.data,
+        // Pinned to the spell's own level and shown read-only by the row's
+        // level button, which only ever offers this one value.
+        castLevel: level,
+        // Charges default to the spell's level; 0 is legitimate (a cantrip, or
+        // an at-will item power) and is allowed through when using the item.
+        charges: level,
+      },
+    };
+    api.addValue(listPath, spellToAdd);
+  }
+
+  function onItemSpellsLoad() {
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const item = itemDataPath ? api.getValue(itemDataPath) : record;
+    const fieldsPath = itemDataPath ? `${itemDataPath}.fields` : "fields";
+    // The defaults are always editable — they double as the fallback when the
+    // holder has no spellcasting — so nothing to toggle here beyond keeping the
+    // hint text in step with the checkbox.
+    const useOwn = item?.data?.useOwnSpellcasting === true;
+    const label = useOwn
+      ? "Fallback (used only if the holder has no spellcasting)"
+      : "Always used for this item's spells";
+    if (item?.data?.spellDefaultsLabel !== label) {
+      const dataPrefix = itemDataPath ? `${itemDataPath}.data` : "data";
+      api.setValue(`${dataPrefix}.spellDefaultsLabel`, label);
+    }
+  }
+</script>
+
+<div
+  style="display: flex; flex-direction: column; gap: 8px; padding: 4px"
+  ondrop="onDrop(type, recordLink)"
+>
+  <checkbox
+    field="useOwnSpellcasting"
+    label="Use the holder's spellcasting DC and attack bonus"
+    textalign="left"
+    size="sm"
+    hidewhenidentified="false"
+    onchange="onItemSpellsLoad()"
+  ></checkbox>
+
+  <label
+    field="spellDefaultsLabel"
+    size="xs"
+    variant="dimmed"
+    textalign="left"
+    onload="onItemSpellsLoad()"
+  ></label>
+
+  <div style="display: flex; flex-direction: row; width: 100%; gap: 8px">
+    <numberfield
+      field="defaultSpellDC"
+      label="Default Spell Save DC"
+      placeholder="0"
+      min="0"
+      width="100%"
+      size="sm"
+      hidewhenidentified="false"
+    ></numberfield>
+    <numberfield
+      field="defaultSpellAttack"
+      label="Default Spell Attack Bonus"
+      placeholder="0"
+      width="100%"
+      size="sm"
+      hidewhenidentified="false"
+    ></numberfield>
+  </div>
+
+  <divider label="Spells &amp; Actions"></divider>
+
+  <div style="display: flex; flex-direction: row; margin-left: 36px">
+    <div style="flex-grow: 1">
+      <label variant="bold" size="xs" textalign="left" label="Spell / Action"></label>
+    </div>
+    <div style="width: 62px; min-width: 62px">
+      <label variant="bold" size="xs" textalign="left" label="Charges"></label>
+    </div>
+    <div style="width: 62px; min-width: 62px">
+      <label variant="bold" size="xs" textalign="left" label="Max"></label>
+    </div>
+    <div style="width: 40px; min-width: 40px">
+      <label variant="bold" size="xs" textalign="left" label="Level"></label>
+    </div>
+  </div>
+
+  <list
+    listtype="item_spell_list"
+    field="itemSpells"
+    variant="striped"
+    radius="none"
+    allowadd=""
+    hidewhenidentified="false"
+    recordtype="spells"
+  ></list>
+</div>

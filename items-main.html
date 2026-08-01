@@ -1,4 +1,95 @@
 <script>
+  // Every handler in this file follows the same rule as showHideFields():
+  // collect only the keys whose value would actually CHANGE, then skip the API
+  // call entirely when nothing did. Writes are what re-render the sheet, and a
+  // re-render re-fires onload — an unconditional write is how a handler turns
+  // into a loop, and how a list of rows turns into a write storm that trips the
+  // client's per-record rate limit.
+  function onMaxUsesChanged(value) {
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const item = itemDataPath ? api.getValue(itemDataPath) : record;
+    const dataPrefix = itemDataPath ? `${itemDataPath}.data` : "data";
+    const fieldsPath = itemDataPath ? `${itemDataPath}.fields` : "fields";
+    const maxUses = parseInt(value, 10);
+    const showLabel = !isNaN(maxUses) && maxUses > 1;
+    const uses = parseInt(item.data?.usesRemaining, 10);
+    const valuesToSet = {};
+    if (item.fields?.usesRemainingLabel?.hidden !== !showLabel) {
+      valuesToSet[`${fieldsPath}.usesRemainingLabel.hidden`] = !showLabel;
+    }
+    if (showLabel) {
+      const label = `Uses: ${!isNaN(uses) ? uses : maxUses}`;
+      if (item.data?.usesRemainingLabel !== label) {
+        valuesToSet[`${dataPrefix}.usesRemainingLabel`] = label;
+      }
+    }
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+
+  function onUsesRemainingChanged(value) {
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const item = itemDataPath ? api.getValue(itemDataPath) : record;
+    const dataPrefix = itemDataPath ? `${itemDataPath}.data` : "data";
+    const maxUses = parseInt(item.data?.maxUses, 10);
+    if (!isNaN(maxUses) && maxUses > 1) {
+      const uses = parseInt(value, 10);
+      if (!isNaN(uses)) {
+        const label = `Uses: ${uses}`;
+        if (item.data?.usesRemainingLabel !== label) {
+          api.setValue(`${dataPrefix}.usesRemainingLabel`, label);
+        }
+      }
+    }
+  }
+
+  // Spell scrolls: choosing the spell, or changing the level it is scribed at,
+  // re-derives the scroll's rarity / save DC / attack bonus from
+  // TABLE: SPELL SCROLLS and rebuilds its Spells tab to hold that one spell.
+  // applyScrollDefaults (commonScript) writes only what actually differs, so
+  // these are safe to fire on every change.
+  function onScrollSpellChanged(value) {
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    let picked = null;
+    try {
+      picked = value ? JSON.parse(value) : null;
+    } catch (e) {
+      picked = null;
+    }
+    // The dropdown stores only { _id, name } — no level, no description. The
+    // Spells-tab row needs the WHOLE spell record (a row IS the spell), so
+    // re-fetch it before deriving anything. Without this the row lands with no
+    // data and its level button renders blank.
+    if (!picked?._id) {
+      const valuesToSet = applyScrollDefaults(itemDataPath, {});
+      if (Object.keys(valuesToSet).length > 0) api.setValues(valuesToSet);
+      return;
+    }
+    api.getRecord("spells", picked._id, (spell) => {
+      if (!spell) return;
+      // The newly chosen spell's level drives everything, so a stale one can't
+      // survive a swap. Handing it to applyScrollDefaults rather than writing it
+      // here keeps the whole derivation on one level AND keeps the handler
+      // silent when nothing actually changed.
+      const raw = spell?.data?.level;
+      const lvl = raw === "Cantrip" ? 0 : parseInt(raw, 10);
+      const valuesToSet = applyScrollDefaults(
+        itemDataPath,
+        {},
+        spell,
+        isNaN(lvl) ? undefined : lvl,
+      );
+      if (Object.keys(valuesToSet).length > 0) api.setValues(valuesToSet);
+    });
+  }
+
+  function onScrollLevelChanged() {
+    const itemDataPath = getNearestParentDataPath(dataPath);
+    const valuesToSet = applyScrollDefaults(itemDataPath, {});
+    if (Object.keys(valuesToSet).length > 0) api.setValues(valuesToSet);
+  }
+
   function showHideFields(recordOverride = undefined) {
     record = recordOverride || record;
     const itemDataPath = getNearestParentDataPath(dataPath);
@@ -160,6 +251,44 @@
       valuesToSet[`${fieldsPath}.hasUseBtn.hidden`] = true;
     }
 
+    // Show usesRemaining and maxUses when Consumable OR "Has Use" is checked.
+    // "Has Use" (not consumable) is used for magic items with charges.
+    const showUses = isConsumable || hasUseBtn;
+    if (showUses && item.fields?.usesRemaining?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.usesRemaining.hidden`] = false;
+    } else if (!showUses && item.fields?.usesRemaining?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.usesRemaining.hidden`] = true;
+    }
+
+    if (showUses && item.fields?.maxUses?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.maxUses.hidden`] = false;
+    } else if (!showUses && item.fields?.maxUses?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.maxUses.hidden`] = true;
+    }
+
+    // "Prompt Charges" only makes sense alongside tracked uses.
+    if (showUses && item.fields?.promptCharges?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.promptCharges.hidden`] = false;
+    } else if (!showUses && item.fields?.promptCharges?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.promptCharges.hidden`] = true;
+    }
+
+    // "Has Spells" likewise only applies to a charged item, and it gates the
+    // Spells tab (the same tabs.<Name>.hidden mechanism used elsewhere).
+    if (showUses && item.fields?.hasSpells?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.hasSpells.hidden`] = false;
+    } else if (!showUses && item.fields?.hasSpells?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.hasSpells.hidden`] = true;
+    }
+
+    const hasSpells = showUses && item.data?.hasSpells === true;
+    const tabsPath = itemDataPath ? `${itemDataPath}.tabs` : "tabs";
+    if (hasSpells && item.tabs?.Spells?.hidden !== false) {
+      valuesToSet[`${tabsPath}.Spells.hidden`] = false;
+    } else if (!hasSpells && item.tabs?.Spells?.hidden !== true) {
+      valuesToSet[`${tabsPath}.Spells.hidden`] = true;
+    }
+
     if (isScroll && item.fields?.spell?.hidden !== false) {
       valuesToSet[`${fieldsPath}.spell.hidden`] = false;
     } else if (!isScroll && item.fields?.spell?.hidden !== true) {
@@ -246,6 +375,14 @@
       valuesToSet[`${fieldsPath}.curseBox.hidden`] = false;
     } else if (!isMagic && item.fields?.curseBox?.hidden !== true) {
       valuesToSet[`${fieldsPath}.curseBox.hidden`] = true;
+    }
+
+    // Recharge field — only for magic items with charges (Has Use, not Consumable)
+    const showRecharge = isMagic && hasUseBtn && !isConsumable;
+    if (showRecharge && item.fields?.recharge?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.recharge.hidden`] = false;
+    } else if (!showRecharge && item.fields?.recharge?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.recharge.hidden`] = true;
     }
 
     if (Object.keys(valuesToSet).length > 0) {
@@ -383,6 +520,73 @@
       onchange="showHideFields()"
     ></checkbox>
   </div>
+
+  <!-- Charges / uses (Consumable or "Has Use") -->
+
+  <div
+    style="
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      gap: 8px;
+      align-items: center;
+    "
+  >
+    <numberfield
+      hidden="true"
+      field="usesRemaining"
+      label="Uses Remaining"
+      placeholder="1"
+      width="100%"
+      min="0"
+      size="sm"
+      hidewhenidentified="false"
+      onchange="onUsesRemainingChanged(value)"
+    ></numberfield>
+    <numberfield
+      hidden="true"
+      field="maxUses"
+      label="Max Uses"
+      width="100%"
+      placeholder="1"
+      min="0"
+      size="sm"
+      hidewhenidentified="false"
+      onchange="onMaxUsesChanged(value)"
+    ></numberfield>
+    <div style="width: 100%">
+      <checkbox
+        hidden="true"
+        field="promptCharges"
+        label="Prompt for Charges"
+        textalign="left"
+        size="sm"
+        width="100%"
+        hidewhenidentified="false"
+      ></checkbox>
+      <checkbox
+        hidden="true"
+        field="hasSpells"
+        label="Has Spells"
+        textalign="left"
+        size="sm"
+        width="100%"
+        hidewhenidentified="false"
+        onchange="showHideFields()"
+      ></checkbox>
+    </div>
+  </div>
+
+  <stringfield
+    hidden="true"
+    field="recharge"
+    label="Recharge"
+    description="How many charges recover when recharged. A dice value (e.g. 1d6) is rolled and added; a fixed number (e.g. 1) adds exactly that many; leave blank to recharge to full."
+    placeholder="e.g. 1d6, 1, or blank for full"
+    width="100%"
+    size="sm"
+    hidewhenidentified="false"
+  ></stringfield>
 
   <!-- Weapon Properties -->
 
@@ -617,6 +821,7 @@
       placeholder="Select Spell..."
       optionsquery='{"type": "spells", "query": {}}'
       hidewhenidentified="false"
+      onchange="onScrollSpellChanged(value)"
     >
     </dropdown>
     <numberfield
@@ -625,7 +830,10 @@
       field="spellLevel"
       label="Level"
       placeholder="Enter Level..."
+      min="0"
+      max="9"
       hidewhenidentified="false"
+      onchange="onScrollLevelChanged()"
     ></numberfield>
   </div>
 

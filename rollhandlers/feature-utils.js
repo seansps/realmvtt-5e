@@ -41,6 +41,47 @@ function getBestSpellcastingAbility(characterRecord) {
   return getHighestAbilityOf(characterRecord, abilities);
 }
 
+// Returns true if any of the character's classes is a spellcaster, i.e. has a
+// spellcastingAbility configured. getBestSpellcastingAbility() falls back to
+// charisma unconditionally, so callers that need to know whether the character
+// can cast at all must ask this instead.
+function hasSpellcastingClass(characterRecord) {
+  return (characterRecord?.data?.classes || []).some(
+    (c) => !!c?.data?.spellcastingAbility,
+  );
+}
+
+// The character's own spell save DC and spell attack bonus, for items that cast
+// "using your spell save DC and spell attack bonus" (e.g. a Staff of Power).
+// Uses the best ability across their spellcasting classes, then:
+//   DC     = 8 + abilityMod + proficiencyBonus + spellDCBonus modifiers
+//   attack =     abilityMod + proficiencyBonus + spellAttackBonus/Penalty mods
+// Returns null when the character has no spellcasting class, so the caller can
+// fall back to the item's own defaults.
+function getCharacterSpellcastingNumbers(characterRecord) {
+  const rec = characterRecord || record;
+  if (!hasSpellcastingClass(rec)) return null;
+  const ability = getBestSpellcastingAbility(rec);
+  const abilityMod = parseInt(rec?.data?.[`${ability}Mod`] ?? "0", 10) || 0;
+  const profBonus = parseInt(rec?.data?.proficiencyBonus ?? "2", 10) || 0;
+  const sumMods = (types) =>
+    getEffectsAndModifiersForToken(rec, types).reduce((total, mod) => {
+      if (mod.active === false) return total;
+      const v = parseInt(mod.value, 10);
+      return isNaN(v) ? total : total + v;
+    }, 0);
+  const dcBonus = sumMods(["spellDCBonus"]);
+  const atkBonus = sumMods(["spellAttackBonus", "spellAttackPenalty"]);
+  const flatDcBonus = parseInt(rec?.data?.spellDCBonus ?? "0", 10) || 0;
+  return {
+    ability,
+    abilityMod,
+    proficiencyBonus: profBonus,
+    saveDc: 8 + abilityMod + profBonus + dcBonus + flatDcBonus,
+    attackBonus: abilityMod + profBonus + atkBonus,
+  };
+}
+
 // Resolves an attackCalculation modifier's field. Normally the field IS the
 // ability name; the sentinel "Spellcasting Ability" (case/space-insensitive)
 // instead resolves to the character's best class spellcasting ability.

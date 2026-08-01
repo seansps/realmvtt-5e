@@ -7,7 +7,10 @@
     {
       "rulesetId": "69821b7f1753cbd632cf4393",
       "name": "Level Up: Advanced 5th Edition",
-      "typeMap": { "heritage": "species", "archetypes": "subclass" }
+      "typeMap": {
+        "heritage": "species",
+        "archetypes": "subclass"
+      }
     }
   ],
   "records": [
@@ -378,6 +381,10 @@
         {
           "name": "Rules",
           "file": "items-rules.html"
+        },
+        {
+          "name": "Spells",
+          "file": "items-spells.html"
         }
       ],
       "isList": false,
@@ -557,7 +564,9 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Ability",
-      "allowedListTypes": ["abilities"],
+      "allowedListTypes": [
+        "abilities"
+      ],
       "newItemName": "New Ability",
       "newItemUnidentifiedName": "New Ability",
       "stackDuplicates": false,
@@ -874,7 +883,9 @@
           ]
         }
       ],
-      "allowedListTypes": ["items"],
+      "allowedListTypes": [
+        "items"
+      ],
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
@@ -941,7 +952,9 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
-      "allowedListTypes": ["items"],
+      "allowedListTypes": [
+        "items"
+      ],
       "newItemName": "New Item",
       "newItemUnidentifiedName": "Unidentified Item",
       "stackDuplicates": true,
@@ -1069,7 +1082,12 @@
       "showAddButton": false,
       "showDeleteButton": true,
       "addButtonText": "",
-      "allowedListTypes": ["items", "spells", "feats", "abilities"],
+      "allowedListTypes": [
+        "items",
+        "spells",
+        "feats",
+        "abilities"
+      ],
       "newItemName": "",
       "newItemUnidentifiedName": "",
       "stackDuplicates": false,
@@ -1158,7 +1176,9 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Item",
-      "allowedListTypes": ["items"],
+      "allowedListTypes": [
+        "items"
+      ],
       "newItemName": "New Item",
       "newItemUnidentifiedName": "Unidentified Item",
       "stackDuplicates": true,
@@ -1225,7 +1245,9 @@
       "showAddButton": false,
       "showDeleteButton": true,
       "addButtonText": "Add Spell",
-      "allowedListTypes": ["spells"],
+      "allowedListTypes": [
+        "spells"
+      ],
       "newItemName": "New Spell",
       "newItemUnidentifiedName": "Spell",
       "stackDuplicates": false,
@@ -1404,7 +1426,9 @@
       "showAddButton": true,
       "showDeleteButton": true,
       "addButtonText": "Add Spell",
-      "allowedListTypes": ["spells"],
+      "allowedListTypes": [
+        "spells"
+      ],
       "newItemName": "New Spell",
       "newItemUnidentifiedName": "New Spell",
       "stackDuplicates": false,
@@ -1425,6 +1449,38 @@
       "singleRow": false,
       "disableDrop": true,
       "hideFromCompendium": false
+    },
+    {
+      "name": "Item Spell List",
+      "type": "item_spell_list",
+      "isList": true,
+      "minX": 500,
+      "minY": 200,
+      "tabs": [
+        {
+          "name": "Main",
+          "file": "item-spell-list.html",
+          "fields": []
+        }
+      ],
+      "hideFromCompendium": false,
+      "icon": "",
+      "showAddButton": true,
+      "showDeleteButton": true,
+      "addButtonText": "Add Action",
+      "allowedListTypes": [
+        "spells"
+      ],
+      "newItemName": "New Action",
+      "newItemUnidentifiedName": "Spell",
+      "stackDuplicates": false,
+      "disableDrop": true,
+      "countFieldName": "",
+      "emptyListText": "Drag Spells Here",
+      "orderCriteria": [],
+      "maxLength": 0,
+      "filterCriteria": [],
+      "singleRow": false
     }
   ],
   "settings": {
@@ -1649,6 +1705,10 @@
       {
         "name": "wizardAttributes",
         "file": "rollhandlers/wizardAttributes.js"
+      },
+      {
+        "name": "itemRecharge",
+        "file": "rollhandlers/itemRecharge.js"
       }
     ],
     "partySheet": {
@@ -3112,7 +3172,9 @@
       }
     ],
     "otherSettings": {
-      "advDisRolls": ["d20"],
+      "advDisRolls": [
+        "d20"
+      ],
       "advName": "Advantage",
       "advShortName": "ADV",
       "disName": "Disadvantage",
@@ -3123,6 +3185,9 @@
       "scripts": {
         "feature-utils": {
           "file": "rollhandlers/feature-utils.js"
+        },
+        "spells": {
+          "file": "rollhandlers/spells.js"
         }
       },
       "defaultDice": "default",

@@ -27,15 +27,23 @@ const api = {
   addValue: () => {},
   removeValue: () => {},
   setHidden: () => {},
+  getOtherTokens: () => [],
+  getSelectedOrDroppedToken: () => [],
+  promptRollForToken: () => {},
+  removeEffectById: () => {},
+  playAnimation: () => {},
+  richTextToMarkdown: (v) => v || "",
 };
 
 function createSandbox() {
-  const record = { data: {}, fields: {}, type: "characters", _id: "test" };
+  // Each sandbox gets its own api stub object so a test that overrides a method
+  // can't leak into another sandbox.
   const sandbox = {
-    api,
-    record,
+    api: { ...api },
+    record: { data: {}, fields: {}, type: "characters", _id: "test" },
     console,
     dataPath: "",
+    assetUrl: "https://assets.test/",
     getNearestParentDataPath: () => "",
   };
   const ctx = vm.createContext(sandbox);

@@ -5114,17 +5114,533 @@ function setTotalWeight(setValues = true) {
   }
 }
 
+// Resolves the spell save DC / spell attack bonus an item's spells should use.
+//   "Use the holder's spellcasting" CHECKED → the holder's own numbers (best
+//       ability across their spellcasting classes + proficiency), falling back
+//       to the item's defaults if they cannot cast.
+//   UNCHECKED → always the item's defaults.
+// The holder path returns BASE numbers (8 + mod + proficiency, mod +
+// proficiency); spellDCBonus / spellAttackBonus effects are layered on by
+// castSpellShared the same way they are for the character's own spell list, so
+// they must not be pre-summed here. `applyCasterModifiers` tells the caller
+// which of the two it got.
+function getItemSpellcasting(itemDataPath) {
+  const useOwn =
+    api.getValue(`${itemDataPath}.data.useOwnSpellcasting`) === true;
+  const defaultDc =
+    parseInt(api.getValue(`${itemDataPath}.data.defaultSpellDC`), 10) || 0;
+  const defaultAttack =
+    parseInt(api.getValue(`${itemDataPath}.data.defaultSpellAttack`), 10) || 0;
+
+  if (useOwn) {
+    const own = getCharacterSpellcastingNumbers(record);
+    if (own) {
+      return {
+        saveDc: 8 + own.abilityMod + own.proficiencyBonus,
+        attackBonus: own.abilityMod + own.proficiencyBonus,
+        abilityMod: own.abilityMod,
+        proficiencyBonus: own.proficiencyBonus,
+        ability: own.ability,
+        applyCasterModifiers: true,
+        source: "holder",
+      };
+    }
+  }
+  return {
+    saveDc: defaultDc,
+    attackBonus: defaultAttack,
+    abilityMod: 0,
+    proficiencyBonus: 0,
+    ability: null,
+    applyCasterModifiers: false,
+    source: "item",
+  };
+}
+
+// A row on an item's Spells tab is either a SPELL or an ACTION.
+//
+// Dropping a spell copies the whole spell record into the row, so the row IS the
+// spell — data.level / data.description / recordType come with it. A row created
+// with the list's Add button has none of that, and is an action instead: an
+// ability the item grants that isn't a spell (a Ring of Shooting Stars' Ball
+// Lightning, say), whose body lives in data.actionText.
+//
+// Nothing distinguishes them but the spell's own fields, so every row authored
+// before actions existed still reads as a spell. No migration needed.
+//
+// The test is deliberately NOT recordType: rows carry recordType "spells" so the
+// list renders them (portrait, name field) whichever kind they are, so it can't
+// tell them apart. A dropped spell always brings data.level and data.description
+// with it; an action row has neither, and carries data.actionText instead.
+function isItemSpellRow(row) {
+  if ((row?.data?.actionText || "").trim()) return false;
+  return row?.data?.description !== undefined || row?.data?.level !== undefined;
+}
+
+// A row's charge cost. `charges` is the cost, or the LOW end when the row also
+// carries a `chargesMax` above it — "expend 1 to 3 charges" is one row, not
+// three. Returns {min, max, isRange}; a row with no chargesMax is a flat cost,
+// exactly as before.
+function getItemRowCharges(row) {
+  const parsed = parseInt(row?.data?.charges, 10);
+  const min = isNaN(parsed) ? 1 : Math.max(0, parsed);
+  const parsedMax = parseInt(row?.data?.chargesMax, 10);
+  const max = isNaN(parsedMax) ? min : Math.max(min, parsedMax);
+  return { min, max, isRange: max > min };
+}
+
+// Posts an action row's card to chat. `amount` is how many charges the player
+// chose to spend; every "{charges}" in the body is replaced with it, so an
+// author can scale text or a damage button off the choice.
+function useItemAction(itemDataPath, row, amount) {
+  const itemName = api.getValue(`${itemDataPath}.name`) || "Item";
+  const rawPortrait = api.getValue(`${itemDataPath}.portrait`);
+  const icon = rawPortrait
+    ? `![${itemName}](${assetUrl}${encodeURI(rawPortrait)}?width=40&height=40) `
+    : "";
+  const actionName = row?.name || "Action";
+  const body = api
+    .richTextToMarkdown(row?.data?.actionText || "")
+    .replace(/\{charges\}/g, String(amount));
+
+  const tags = [{ tooltip: `From ${itemName}`, name: itemName }];
+  if (amount > 0) {
+    tags.push({
+      tooltip: `Expended ${amount} charge${amount === 1 ? "" : "s"}`,
+      name: `${amount} charge${amount === 1 ? "" : "s"}`,
+    });
+  }
+
+  api.sendMessage(
+    `#### ${icon}${actionName}\n\n---\n${body}\n`,
+    undefined,
+    [],
+    tags,
+  );
+}
+
+// Casts one spell from an item's Spells tab. Delegates to castSpellShared() so
+// the chat card is built exactly like a character's own cast — level scaling,
+// effect macros, saving throws, alternate damage, tags, concentration and
+// animations all included — differing only in where the DC and attack bonus come
+// from (getItemSpellcasting) and in that no slot is spent (the charge was
+// already deducted by useInventoryItem).
+// `row` is the item_spell_list entry (its data carries the linked spell, the
+// charge cost, and the level to cast at).
+function castItemSpell(itemDataPath, row) {
+  const casting = getItemSpellcasting(itemDataPath);
+  const itemName = api.getValue(`${itemDataPath}.name`) || "Item";
+
+  // Two row shapes are possible. Dropping a spell onto the list copies the whole
+  // spell record into the row, so the row IS the spell (its data carries level,
+  // description, savingThrow, damage...) with `charges`/`castLevel` added
+  // alongside. Rows created by our own ondrop instead store a {_id,name} ref in
+  // data.spell. Use the inline record when it's there and only fetch otherwise.
+  const isInlineSpell = isItemSpellRow(row);
+
+  let spellRef = null;
+  if (!isInlineSpell) {
+    try {
+      spellRef = row?.data?.spell ? JSON.parse(row.data.spell) : null;
+    } catch (e) {
+      spellRef = null;
+    }
+    if (!spellRef?._id) {
+      api.showNotification(
+        `${row?.name || "That entry"} has no spell attached.`,
+        "yellow",
+        itemName,
+      );
+      return;
+    }
+  }
+
+  const withSpell = (spell) => {
+    if (!spell) return;
+    // Cast level falls back to the spell's own level.
+    let castLevel = parseInt(row?.data?.castLevel, 10);
+    if (isNaN(castLevel) || castLevel <= 0) {
+      castLevel = parseInt(spell?.data?.level, 10) || 0;
+    }
+
+    const usesHolder = casting.source === "holder";
+    const sourceText = usesHolder
+      ? `using your spellcasting (${capitalize(casting.ability)})`
+      : `using ${itemName}'s own spellcasting`;
+
+    // Holder path: seed the attack roll with their ability + proficiency and let
+    // castSpellShared layer the spellDCBonus / spellAttackBonus effects on, the
+    // same as the character spell list. Item path: the item's fixed numbers are
+    // final — the holder's spellcasting modifiers must not touch them.
+    const attackFlatModifiers = usesHolder
+      ? [
+          {
+            name: capitalize(casting.ability),
+            value: casting.abilityMod,
+            active: true,
+          },
+          {
+            name: "Spellcasting Proficiency",
+            value: casting.proficiencyBonus,
+            active: true,
+          },
+        ]
+      : [
+          {
+            name: `${itemName} Spell Attack`,
+            value: casting.attackBonus,
+            active: true,
+          },
+        ];
+
+    return castSpellShared(spell, {
+      ability: casting.ability || undefined,
+      casterLevel: parseInt(api.getValue("data.level") || "1", 10),
+      consumeResource: makeFixedLevelResource(castLevel),
+      // Holder: omit baseSaveDc so the DC is computed as 8 + mod + proficiency +
+      // the sheet's flat spellDCBonus, then modified. Item: use its fixed DC.
+      baseSaveDc: usesHolder ? undefined : casting.saveDc,
+      applyDcModifiers: usesHolder,
+      collectAttackEffects: usesHolder,
+      // The item's Spells tab owns the level and numbers; a spell row's own
+      // saveDc / attackMod overrides belong to a caster's spell list.
+      allowSpellOverrides: false,
+      attackFlatModifiers,
+      subHeader: `_${itemName}_ — _${sourceText}_`,
+    });
+  };
+
+  if (isInlineSpell) withSpell(row);
+  else api.getRecord("spells", spellRef._id, withSpell);
+}
+
+// ─── Spell scrolls ───────────────────────────────────────────────────────────
+
+// TABLE: SPELL SCROLLS (2024 DMG). The level of the spell stored in a scroll
+// determines its save DC, attack bonus and rarity. Cantrips are level 0.
+// The 2024 table prints no cost column, so cost is left to the GM.
+const SPELL_SCROLL_TABLE = {
+  0: { rarity: "common", dc: 13, attack: 5 },
+  1: { rarity: "common", dc: 13, attack: 5 },
+  2: { rarity: "uncommon", dc: 13, attack: 5 },
+  3: { rarity: "uncommon", dc: 15, attack: 7 },
+  4: { rarity: "rare", dc: 15, attack: 7 },
+  5: { rarity: "rare", dc: 17, attack: 9 },
+  6: { rarity: "very rare", dc: 17, attack: 9 },
+  7: { rarity: "very rare", dc: 18, attack: 10 },
+  8: { rarity: "very rare", dc: 18, attack: 10 },
+  9: { rarity: "legendary", dc: 19, attack: 11 },
+};
+
+// Re-derives a scroll's numbers from the spell it holds and the level it is
+// scribed at, and rebuilds its Spells tab to hold exactly that one spell.
+//
+// Called when either the Spell dropdown or the Level field changes. Collects
+// into `valuesToSet` and writes only what differs, so it is safe on load and
+// can't loop. Deliberately does NOT touch the description: the printed DC,
+// attack bonus and crafting components are publisher prose.
+//
+// `spellRecord` is optional — pass the freshly chosen spell when handling the
+// dropdown's onchange, since the record may not carry it yet. `levelOverride`
+// goes with it: choosing a NEW spell must re-derive from that spell's level, and
+// the item record still carries the level of the one it replaced.
+function applyScrollDefaults(
+  itemDataPath,
+  valuesToSet = {},
+  spellRecord,
+  levelOverride,
+) {
+  const dataPrefix = itemDataPath ? `${itemDataPath}.data` : "data";
+  const item = itemDataPath ? api.getValue(itemDataPath) : record;
+  const d = item?.data || {};
+
+  // The spell the scroll holds. `spellRecord` is the FULL record when the caller
+  // re-fetched it; d.spell is only the dropdown's { _id, name } stub, which has
+  // no level and no description and must never be used to build a row.
+  const spell = spellRecord?.data ? spellRecord : null;
+  let stub = null;
+  if (!spell && d.spell) {
+    try {
+      stub = JSON.parse(d.spell);
+    } catch (e) {
+      stub = null;
+    }
+  }
+
+  // Level: a caller-supplied level wins (a spell was just chosen), then the
+  // scroll's own spellLevel, then the spell's level. A cantrip is level 0 — the
+  // scroll's cheapest row, not "no level".
+  let level = parseInt(levelOverride, 10);
+  if (isNaN(level)) level = parseInt(d.spellLevel, 10);
+  if (isNaN(level)) {
+    const raw = spell?.data?.level;
+    level = raw === "Cantrip" ? 0 : parseInt(raw, 10);
+  }
+  if (isNaN(level)) return valuesToSet; // nothing to derive from yet
+  level = Math.max(0, Math.min(9, level));
+
+  const row = SPELL_SCROLL_TABLE[level];
+  const set = (key, value) => {
+    if (JSON.stringify(d[key]) !== JSON.stringify(value)) {
+      valuesToSet[`${dataPrefix}.${key}`] = value;
+    }
+  };
+
+  set("spellLevel", level);
+  set("rarity", row.rarity);
+  // A scroll casts on ITS numbers, never the reader's — that is the whole point
+  // of the table.
+  set("defaultSpellDC", row.dc);
+  set("defaultSpellAttack", row.attack);
+  set("useOwnSpellcasting", false);
+  // One use, and the scroll crumbles to dust.
+  set("hasUseBtn", true);
+  set("consumable", true);
+  set("maxUses", 1);
+  set("usesRemaining", 1);
+
+  // The Spells tab holds exactly the scribed spell, cast at the scroll's level.
+  // It costs 1 charge — the scroll has exactly one, so casting the spell spends
+  // it and the scroll (being consumable) crumbles away, which is the rule. A
+  // 0-charge row would let the spell be cast over and over.
+  const SCROLL_SPELL_CHARGES = 1;
+  const current = d.itemSpells || [];
+  if (spell?._id) {
+    // Full record in hand — (re)build the row. A row IS the spell record, so
+    // everything the cast path needs (damage, save, scaling) comes with it.
+    const rowRecord = {
+      ...spell,
+      recordType: "spells",
+      data: { ...spell.data, castLevel: level, charges: SCROLL_SPELL_CHARGES },
+    };
+    const same =
+      current.length === 1 &&
+      current[0]?._id === spell._id &&
+      current[0]?.data?.castLevel === level &&
+      current[0]?.data?.charges === SCROLL_SPELL_CHARGES &&
+      current[0]?.data?.level !== undefined;
+    if (!same) {
+      valuesToSet[`${dataPrefix}.itemSpells`] = [rowRecord];
+      valuesToSet[`${dataPrefix}.hasSpells`] = true;
+    }
+  } else if (current.length === 1 && current[0]?.data?.level !== undefined) {
+    // Level-only change: the existing row already holds the whole spell, so
+    // just move what changed. Never rebuild from the dropdown stub.
+    if (current[0]?.data?.castLevel !== level) {
+      valuesToSet[`${dataPrefix}.itemSpells.0.data.castLevel`] = level;
+    }
+    if (current[0]?.data?.charges !== SCROLL_SPELL_CHARGES) {
+      valuesToSet[`${dataPrefix}.itemSpells.0.data.charges`] =
+        SCROLL_SPELL_CHARGES;
+    }
+  } else if (stub?._id && current.length === 0) {
+    // A spell is selected but the row was never built (or was built from a
+    // stub before this was fixed). Fetch the real record and build it.
+    api.getRecord("spells", stub._id, (full) => {
+      if (!full?.data) return;
+      api.setValues({
+        [`${dataPrefix}.itemSpells`]: [
+          {
+            ...full,
+            recordType: "spells",
+            data: {
+              ...full.data,
+              castLevel: level,
+              charges: SCROLL_SPELL_CHARGES,
+            },
+          },
+        ],
+        [`${dataPrefix}.hasSpells`]: true,
+      });
+    });
+  }
+
+  return valuesToSet;
+}
+
+// Copy a scroll's spell into a spellbook: an Intelligence (Arcana) check against
+// DC 10 + the spell's level. Whether it succeeds or not, the attempt destroys
+// the scroll — so this only rolls; removing the scroll is the player's to do.
+//
+// Takes either the scroll's LEVEL (a number) or its item data path (a string).
+// A macro embedded in an item description has no data path to work from — the
+// record-link macro runs with dataPath "" — so those pass the level, which is
+// fixed per scroll anyway. Callers with a path get the spell's name in the card
+// as well.
+function copyScrollToSpellbook(levelOrItemPath) {
+  let level;
+  let spellName = "";
+  let itemName = "Spell Scroll";
+
+  if (typeof levelOrItemPath === "number" || /^\d+$/.test(levelOrItemPath)) {
+    level = parseInt(levelOrItemPath, 10);
+  } else {
+    const item = levelOrItemPath ? api.getValue(levelOrItemPath) : record;
+    const d = item?.data || {};
+    itemName = item?.name || itemName;
+    level = parseInt(d.spellLevel, 10);
+    try {
+      spellName = d.spell ? JSON.parse(d.spell)?.name || "" : "";
+    } catch (e) {
+      spellName = "";
+    }
+  }
+  if (isNaN(level)) level = 0;
+  const dc = 10 + level;
+
+  api.sendMessage(
+    `**${itemName}** — copying ${spellName || "the stored spell"} into a spellbook ` +
+      `requires a DC ${dc} Intelligence (Arcana) check. The attempt destroys the ` +
+      `scroll whether it succeeds or not.`,
+    undefined,
+    [],
+    [],
+  );
+  rollSkillCheck("arcana", dc);
+}
+
+// 2024 rule: reading a scroll whose spell is above the level you can normally
+// cast requires an ability check with your spellcasting ability against
+// DC 10 + the spell's level; on a failure the spell is lost with no other
+// effect. Posts the check alongside the cast — the scroll is spent either way,
+// so the result is the table's to adjudicate.
+function rollScrollCastCheck(itemDataPath) {
+  const isScroll = (api.getValue(`${itemDataPath}.data.subtype`) || "")
+    .toLowerCase()
+    .includes("scroll");
+  if (!isScroll) return;
+
+  const level = parseInt(api.getValue(`${itemDataPath}.data.spellLevel`), 10);
+  if (isNaN(level) || level <= 0) return;
+
+  const maxRaw = record?.data?.maxSpellLevel;
+  const maxLevel = maxRaw === "Cantrip" ? 0 : parseInt(maxRaw || "0", 10) || 0;
+  if (level <= maxLevel) return;
+
+  const ability = getBestSpellcastingAbility(record);
+  const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || "0", 10) || 0;
+  const dc = 10 + level;
+  const itemName = api.getValue(`${itemDataPath}.name`) || "Spell Scroll";
+
+  api.sendMessage(
+    `**${itemName}** holds a level ${level} spell, above what you can normally ` +
+      `cast. Make a DC ${dc} ${capitalize(ability)} check — on a failure the ` +
+      `spell disappears from the scroll with no other effect.`,
+    undefined,
+    [],
+    [],
+  );
+  api.promptRoll(
+    `${capitalize(ability)} Check`,
+    "1d20",
+    [{ name: capitalize(ability), value: abilityMod, active: true }],
+    { dc: dc, rollName: `${capitalize(ability)} Check` },
+    "ability",
+  );
+}
+
 // Shared inventory "Use" logic. Outputs the item's description (plus any linked
-// spell and effect/healing/damage macros) to chat, then, for consumables,
-// deducts count and removes the item at 0. Shared by the item-row Use button
-// (useItem) and the grid popover's Use button (useGridItem). `itemDataPath` is
-// the path to the item, e.g. "data.inventory.3".
-function useInventoryItem(itemDataPath) {
+// spell and effect/healing/damage macros) to chat, then depletes a use/charge:
+//  - Consumables deduct their count and are removed at 0 (uses reset to max on
+//    each deduction if uses are tracked).
+//  - "Has Use" charged magic items deduct usesRemaining but are never removed.
+// Shared by the item-row Use button (useItem) and the grid popover's Use button
+// (useGridItem). `itemDataPath` is the path to the item, e.g. "data.inventory.3".
+function useInventoryItem(itemDataPath, options = {}) {
   const itemName = api.getValue(`${itemDataPath}.name`);
   const itemCount = api.getValue(`${itemDataPath}.data.count`);
   const indexValue = parseInt(itemDataPath.split(".").pop());
   const isConsumable =
     api.getValue(`${itemDataPath}.data.consumable`) || false;
+  const hasUseBtn = api.getValue(`${itemDataPath}.data.hasUseBtn`) || false;
+
+  // "Has Spells" items prompt for one of their spells instead of a charge count.
+  // Handled up here, BEFORE the item's own description is built, because casting
+  // from an item should put the SPELL card in chat, not the item — the item only
+  // goes to chat if the player explicitly picks "Send Item to Chat".
+  const hasSpells = api.getValue(`${itemDataPath}.data.hasSpells`) === true;
+  const itemSpells = api.getValue(`${itemDataPath}.data.itemSpells`) || [];
+  if (hasSpells && itemSpells.length > 0 && !options.skipSpellPrompt) {
+    const remaining =
+      parseInt(api.getValue(`${itemDataPath}.data.usesRemaining`), 10) || 0;
+    const spellOptions = [];
+    itemSpells.forEach((row, index) => {
+      const { min, max, isRange } = getItemRowCharges(row);
+      // A 0-charge entry is always available — it costs nothing, so an empty
+      // item can still use it. Only paid entries are gated on what's left, and
+      // a range only needs its LOW end to be affordable.
+      if (min > 0 && min > remaining) return;
+      const costText = isRange
+        ? `${min}–${max} charges`
+        : `${min} charge${min === 1 ? "" : "s"}`;
+      let suffix = "";
+      if (isItemSpellRow(row)) {
+        let level = parseInt(row?.data?.castLevel, 10);
+        if (isNaN(level) || level <= 0) {
+          level = parseInt(row?.data?.level, 10) || 0;
+        }
+        if (level > 0) suffix = ` — level ${level}`;
+      }
+      spellOptions.push({
+        label: `${row?.name || "Spell"} (${costText})${suffix}`,
+        value: `${index}`,
+      });
+    });
+    spellOptions.push({ label: "Send Item to Chat", value: "__item__" });
+
+    api.showPrompt(
+      itemName || "Use Item",
+      "Action",
+      `Choose what to use. (${remaining} charge${remaining === 1 ? "" : "s"} remaining)`,
+      spellOptions,
+      null,
+      (values) => {
+        if (!values || values.length === 0) return; // cancelled
+        const choice = values[0]?.value ?? values[0];
+        if (choice === "__item__") {
+          // Fall through to the normal behaviour: item card to chat, one charge.
+          useInventoryItem(`${itemDataPath}`, { skipSpellPrompt: true });
+          return;
+        }
+        const index = parseInt(choice, 10);
+        const row = itemSpells[index];
+        if (!row) return;
+
+        const { min, max, isRange } = getItemRowCharges(row);
+        const run = (amount) => {
+          if (isItemSpellRow(row)) {
+            rollScrollCastCheck(itemDataPath);
+            castItemSpell(itemDataPath, row);
+          } else useItemAction(itemDataPath, row, amount);
+          applyDeduction(Math.max(0, amount));
+        };
+
+        // A range asks how much to spend, capped at what the item has left.
+        if (isRange) {
+          const affordable = Math.min(max, Math.max(min, remaining));
+          const amountOptions = [];
+          for (let i = min; i <= affordable; i++) {
+            amountOptions.push({ label: `${i}`, value: `${i}` });
+          }
+          api.showPrompt(
+            row?.name || "Action",
+            "Charges",
+            `How many charges do you want to spend? (${remaining} remaining)`,
+            amountOptions,
+            null,
+            (picked) => {
+              if (!picked || picked.length === 0) return; // cancelled — spend nothing
+              const n = parseInt(picked[0]?.value ?? picked[0], 10);
+              run(isNaN(n) ? min : Math.max(min, Math.min(affordable, n)));
+            },
+          );
+          return;
+        }
+        run(min);
+      },
+    );
+    return;
+  }
 
   const description = api.getValue(`${itemDataPath}.data.description`) || "";
   const effects = api.getValue(`${itemDataPath}.data.effects`) || [];
@@ -5186,25 +5702,165 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
 
   api.sendMessage(markdownDescription, undefined, recordLinks);
 
-  // If consumable, deduct count by 1, delete item if count is 0
-  if (isConsumable) {
-    const count = parseFloat(itemCount || "0");
-    if (count - 1 > 0) {
-      api.setValue(`${itemDataPath}.data.count`, count - 1, function () {
-        api.getRecord(record.recordType, record._id, function (rec) {
-          record = rec;
-          setTotalWeight();
-        });
-      });
-    } else if (!isNaN(indexValue)) {
-      api.removeValue(`data.inventory`, indexValue, function () {
-        api.getRecord(record.recordType, record._id, function (rec) {
-          record = rec;
-          setTotalWeight();
-        });
-      });
+  // Deduct a use when the item is used.
+  // - Consumable items deplete their count and are removed when they hit 0.
+  // - "Has Use" (charged magic items) deduct a use but are NEVER removed;
+  //   they simply sit at 0 uses until recharged.
+  if (isConsumable || hasUseBtn) {
+    const usesRemaining = api.getValue(`${itemDataPath}.data.usesRemaining`);
+    const hasUses =
+      usesRemaining !== undefined &&
+      usesRemaining !== null &&
+      usesRemaining !== "";
+
+    const availableUses = parseInt(usesRemaining, 10);
+
+    // Items flagged "Prompt Charges" can spend several charges on a single use
+    // (e.g. a Ring of Spell Storing releasing a 4th-level spell costs 4 of its
+    // 5 levels). Ask how many, then deduct that amount. Everything else keeps
+    // the original behaviour of deducting exactly 1.
+    const promptCharges =
+      api.getValue(`${itemDataPath}.data.promptCharges`) === true;
+    if (hasUses && promptCharges && availableUses > 1) {
+      const chargeOptions = [];
+      for (let i = 1; i <= availableUses; i++) {
+        chargeOptions.push({ label: `${i}`, value: `${i}` });
+      }
+      api.showPrompt(
+        itemName || "Use Item",
+        "Charges",
+        `How many charges do you want to spend? (${availableUses} remaining)`,
+        chargeOptions,
+        null,
+        (values) => {
+          if (!values || values.length === 0) return; // cancelled — spend nothing
+          const picked = parseInt(values[0]?.value ?? values[0], 10);
+          applyDeduction(
+            isNaN(picked) ? 1 : Math.max(1, Math.min(availableUses, picked)),
+          );
+        },
+      );
+      return;
     }
+    applyDeduction(1);
   }
+
+  // Deducts `amount` charges (or one count for an uncharged consumable) using
+  // the original depletion rules. Re-reads the values because it also runs from
+  // the "Prompt Charges" callback, after the prompt has been answered.
+  function applyDeduction(amount) {
+    const usesRemaining = api.getValue(`${itemDataPath}.data.usesRemaining`);
+    const maxUses = api.getValue(`${itemDataPath}.data.maxUses`);
+    const hasUses =
+      usesRemaining !== undefined &&
+      usesRemaining !== null &&
+      usesRemaining !== "";
+
+    const refreshWeight = function () {
+      api.getRecord(record.recordType, record._id, function (rec) {
+        record = rec;
+        setTotalWeight();
+      });
+    };
+
+    if (hasUses) {
+      const uses = parseInt(usesRemaining, 10);
+      const newUses = uses - amount;
+      if (newUses > 0) {
+        api.setValue(`${itemDataPath}.data.usesRemaining`, newUses);
+      } else if (!isConsumable) {
+        // Charged magic item depleted — deplete to 0 but KEEP the item.
+        api.setValue(`${itemDataPath}.data.usesRemaining`, Math.max(newUses, 0));
+      } else {
+        // Consumable depleted — deduct count or remove item, reset uses to max
+        const count = parseFloat(itemCount || "1");
+        if (count - 1 > 0) {
+          const resetUses = parseInt(maxUses || usesRemaining, 10);
+          api.setValues(
+            {
+              [`${itemDataPath}.data.count`]: count - 1,
+              [`${itemDataPath}.data.usesRemaining`]: resetUses,
+            },
+            refreshWeight,
+          );
+        } else if (!isNaN(indexValue)) {
+          api.removeValue(`data.inventory`, indexValue, refreshWeight);
+        }
+      }
+    } else if (isConsumable) {
+      // No uses set — treat as single-use consumable, deduct count
+      const count = parseFloat(itemCount || "1");
+      if (count - 1 > 0) {
+        api.setValue(`${itemDataPath}.data.count`, count - 1, refreshWeight);
+      } else if (!isNaN(indexValue)) {
+        api.removeValue(`data.inventory`, indexValue, refreshWeight);
+      }
+    }
+    // "Has Use" with no uses configured: nothing to deduct.
+  }
+}
+
+// Shared inventory recharge logic (Has Use, not Consumable). Shared by the item
+// row's Recharge button (rechargeItem) and the grid popover's Recharge button
+// (rechargeGridItem). `itemDataPath` is the path to the item, e.g.
+// "data.inventory.3".
+//  - A dice recharge value (e.g. "1d6") is rolled via the itemRecharge handler
+//    and added to current uses, capped at Max Uses.
+//  - A fixed number (e.g. "1") adds exactly that many uses, capped at Max Uses.
+//  - No value recharges the item to full.
+function rechargeInventoryItem(itemDataPath) {
+  const itemName = api.getValue(`${itemDataPath}.name`) || "Item";
+  const rechargeFormula = (
+    api.getValue(`${itemDataPath}.data.recharge`) || ""
+  ).trim();
+  const maxUses = parseInt(api.getValue(`${itemDataPath}.data.maxUses`), 10);
+  const current =
+    parseInt(api.getValue(`${itemDataPath}.data.usesRemaining`), 10) || 0;
+
+  if (isNaN(maxUses) || maxUses <= 0) {
+    api.showNotification(
+      `${itemName} has no Max Uses set.`,
+      "yellow",
+      "Cannot Recharge",
+    );
+    return;
+  }
+
+  // Dice formula → roll to determine how many charges recover
+  const hasDice = /\d*d\d+/i.test(rechargeFormula);
+  if (rechargeFormula && hasDice) {
+    api.promptRoll(
+      `${itemName} Recharge`,
+      rechargeFormula,
+      [],
+      {
+        itemDataPath: itemDataPath,
+        itemName: itemName,
+        maxUses: maxUses,
+      },
+      "itemRecharge",
+    );
+    return;
+  }
+
+  // Fixed amount (e.g. "1") → recharge by exactly that many, capped at max
+  const fixedAmount = parseInt(rechargeFormula, 10);
+  if (rechargeFormula && !isNaN(fixedAmount)) {
+    const newUses = Math.max(0, Math.min(maxUses, current + fixedAmount));
+    if (newUses !== current) {
+      api.setValue(`${itemDataPath}.data.usesRemaining`, newUses);
+    }
+    api.sendMessage(
+      `**${itemName}** recharges ${fixedAmount} (${current} → ${newUses}/${maxUses}).`,
+    );
+    return;
+  }
+
+  // No formula → recharge to full
+  if (current !== maxUses) {
+    api.setValue(`${itemDataPath}.data.usesRemaining`, maxUses);
+  }
+  api.sendMessage(`**${itemName}** recharges to full (${maxUses}/${maxUses}).`);
 }
 
 // Apply an item's attribute modifiers (hitpoints / AC bonus/penalty) across all

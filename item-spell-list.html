@@ -1,0 +1,120 @@
+<script>
+  // One entry on an item's Spells tab. A row is either:
+  //
+  //   SPELL  — created by dropping a spell on the tab, which copies the whole
+  //            spell record in. The level button pins/upcasts it.
+  //   ACTION — created with the list's Add button. An ability the item grants
+  //            that isn't a spell (Ball Lightning on a Ring of Shooting Stars).
+  //            Its body lives in data.actionText and is posted to chat on use.
+  //
+  // Nothing but the spell's own fields tells them apart, so every row authored
+  // before actions existed still reads as a spell — no migration needed.
+  function isActionRow() {
+    const row = api.getValue(getNearestParentDataPath(dataPath));
+    return !isItemSpellRow(row);
+  }
+
+  // The level button offers every level at or above the spell's own, so an item
+  // can grant a spell cast higher. A cantrip gets the single level-0 option.
+  // The floor is the SPELL's level, not the current castLevel — otherwise
+  // raising it would ratchet the minimum up and it could never come back down.
+  function getItemSpellLevelOptions() {
+    const iconButtonOptions = [
+      { icon: "IconCircleNumber0", label: "Cantrip", value: 0 },
+      { icon: "IconCircleNumber1", label: "Level 1", value: 1 },
+      { icon: "IconCircleNumber2", label: "Level 2", value: 2 },
+      { icon: "IconCircleNumber3", label: "Level 3", value: 3 },
+      { icon: "IconCircleNumber4", label: "Level 4", value: 4 },
+      { icon: "IconCircleNumber5", label: "Level 5", value: 5 },
+      { icon: "IconCircleNumber6", label: "Level 6", value: 6 },
+      { icon: "IconCircleNumber7", label: "Level 7", value: 7 },
+      { icon: "IconCircleNumber8", label: "Level 8", value: 8 },
+      { icon: "IconCircleNumber9", label: "Level 9", value: 9 },
+    ];
+    const row = api.getValue(getNearestParentDataPath(dataPath));
+    const raw = row?.data?.level;
+    const spellLevel = raw === "Cantrip" ? 0 : parseInt(raw, 10) || 0;
+    if (spellLevel === 0) {
+      return iconButtonOptions.filter((o) => o.value === 0);
+    }
+    return iconButtonOptions.filter((o) => o.value >= spellLevel);
+  }
+
+  // Shows the action body editor on action rows and the level button on spell
+  // rows. Writes only what actually changed — this runs on load, and a write
+  // re-renders the row, which would re-fire it.
+  function onItemSpellRowLoad() {
+    const rowDataPath = getNearestParentDataPath(dataPath);
+    const row = api.getValue(rowDataPath);
+    const fieldsPath = rowDataPath ? `${rowDataPath}.fields` : "fields";
+    const isAction = !isItemSpellRow(row);
+    const valuesToSet = {};
+    if (row?.fields?.actionBox?.hidden !== !isAction) {
+      valuesToSet[`${fieldsPath}.actionBox.hidden`] = !isAction;
+    }
+    if (row?.fields?.castLevel?.hidden !== isAction) {
+      valuesToSet[`${fieldsPath}.castLevel.hidden`] = isAction;
+    }
+    if (Object.keys(valuesToSet).length > 0) {
+      api.setValues(valuesToSet);
+    }
+  }
+</script>
+
+<div style="display: flex; flex-direction: column; width: 100%">
+  <div style="height: 34px; display: flex; gap: 6px; align-items: center">
+    <div style="width: 30px; min-width: 30px">
+      <portrait width="30px" height="30px" name="portrait"></portrait>
+    </div>
+    <div style="flex-grow: 1">
+      <namefield
+        size="xs"
+        variant="standard"
+        placeholder="Spell or Action"
+        field="namefield"
+        onload="onItemSpellRowLoad()"
+      ></namefield>
+    </div>
+    <div style="width: 62px; min-width: 62px">
+      <numberfield
+        size="xs"
+        variant="tooltip"
+        label="Charges"
+        field="charges"
+        placeholder="0"
+        min="0"
+        hidewhenidentified="false"
+      ></numberfield>
+    </div>
+    <!-- Optional upper bound. Leave blank for a flat cost; set it above Charges
+         for "expend 1 to 3 charges", which prompts for the amount on use. -->
+    <div style="width: 62px; min-width: 62px">
+      <numberfield
+        size="xs"
+        variant="tooltip"
+        label="Max"
+        field="chargesMax"
+        placeholder="—"
+        min="0"
+        hidewhenidentified="false"
+      ></numberfield>
+    </div>
+    <div style="margin-top: auto; margin-bottom: auto">
+      <iconbutton
+        size="sm"
+        field="castLevel"
+        color="pink"
+        getoptions="return getItemSpellLevelOptions();"
+      ></iconbutton>
+    </div>
+  </div>
+
+  <box field="actionBox" hidden="true">
+    <richtextfield
+      field="actionText"
+      label="Action Text"
+      placeholder="What this action does. Use {charges} for the number spent."
+      hidewhenidentified="false"
+    ></richtextfield>
+  </box>
+</div>

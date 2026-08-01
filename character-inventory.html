@@ -20,6 +20,14 @@
     useInventoryItem("data.inventory." + index);
   }
 
+  // "Recharge" an inventory item from the grid popover. Delegates to the shared
+  // rechargeInventoryItem (commonScript) so it matches the item-row Recharge
+  // button exactly (dice/fixed/full recharge). Only wired for items that can be
+  // recharged (see the Recharge action's showField in the <list> below).
+  function rechargeGridItem(index) {
+    rechargeInventoryItem("data.inventory." + index);
+  }
+
   // Equip/carry/drop from the grid: set the state, then run the shared equip
   // handler (commonScript) so ammo/range fields, AC, weight and bonuses update
   // exactly like the row's carried dropdown.
@@ -105,6 +113,17 @@
     const isThrown = item.data?.weaponProperties?.includes("Thrown"); // Only thrown weapons can be toggled melee/range
     const isMelee = (item.data?.type || "").toLowerCase().includes("melee"); // Melee shown only melee icon
 
+    // Uses tracking (consumables + charged "Has Use" magic items)
+    const maxUsesNum = parseInt(item.data?.maxUses, 10);
+    const usesTracked =
+      (isConsumable || hasUseBtn) && !isNaN(maxUsesNum) && maxUsesNum > 0;
+    const curUses = item.data?.usesRemaining;
+    const defaultedUses =
+      usesTracked &&
+      (curUses === undefined || curUses === null || curUses === "")
+        ? maxUsesNum
+        : curUses;
+
     // Add the item and set the attunement hidden field to visible if requires attunement
     const itemToAdd = {
       ...item,
@@ -115,11 +134,18 @@
         fromId: item._id,
         // Default count to 1 unless otherwise specified
         count: item.data?.count || 1,
+        // Uses row: default current uses to max, and set the "/ N" label
+        usesRemaining: defaultedUses,
+        usesMaxLabel: usesTracked ? `/ ${maxUsesNum}` : item.data?.usesMaxLabel,
       },
       fields: {
         ...item?.fields,
         attuned: { hidden: !hasAttunement },
         useBtn: { hidden: !isConsumable && !hasUseBtn },
+        // Uses counter shows only for tracked items; Recharge only for charged
+        // magic items (Has Use, not consumable).
+        usesGroup: { hidden: !usesTracked },
+        rechargeBtn: { hidden: !(hasUseBtn && !isConsumable && usesTracked) },
         handBtn: { hidden: isTwoHanded },
         // Show toggle button only for melee throwing weapons
         rangeToggleBtn: {
@@ -160,12 +186,22 @@
           const itemCount = parseFloat(item?.data?.count || "0");
           const hasAttunement = item.data?.attunement || false;
           const isConsumable = item.data?.consumable || false;
+          const hasUseBtn = item.data?.hasUseBtn || false;
           const isTwoHanded =
             item.data?.weaponProperties?.includes("Two-Handed");
           const isThrown = item.data?.weaponProperties?.includes("Thrown"); // Only thrown weapons can be toggled melee/range
           const isMelee = (item.data?.type || "")
             .toLowerCase()
             .includes("melee"); // Melee shown only melee icon
+          const maxUsesNum = parseInt(item.data?.maxUses, 10);
+          const usesTracked =
+            (isConsumable || hasUseBtn) && !isNaN(maxUsesNum) && maxUsesNum > 0;
+          const curUses = item.data?.usesRemaining;
+          const defaultedUses =
+            usesTracked &&
+            (curUses === undefined || curUses === null || curUses === "")
+              ? maxUsesNum
+              : curUses;
           let curCount = parseFloat(existingItem?.data?.count || "0");
           if (!existingItem) {
             return {
@@ -175,11 +211,19 @@
                 ...item.data,
                 fromId: item._id,
                 count: itemCount,
+                usesRemaining: defaultedUses,
+                usesMaxLabel: usesTracked
+                  ? `/ ${maxUsesNum}`
+                  : item.data?.usesMaxLabel,
               },
               fields: {
                 ...item?.fields,
                 attuned: { hidden: !hasAttunement },
-                useBtn: { hidden: !isConsumable },
+                useBtn: { hidden: !isConsumable && !hasUseBtn },
+                usesGroup: { hidden: !usesTracked },
+                rechargeBtn: {
+                  hidden: !(hasUseBtn && !isConsumable && usesTracked),
+                },
                 handBtn: { hidden: isTwoHanded },
                 rangeToggleBtn: { hidden: !(isMelee && isThrown) },
                 rangeToggleBtnDisabled: { hidden: isMelee },
@@ -635,7 +679,9 @@
         descriptionfield="data.description"
         cellbadges='[{"field": "data.attunement", "eq": "true", "activeField": "data.attuned", "activeEq": "true", "icon": "IconDiamond", "inactiveIcon": "IconDiamondOff", "position": "bl", "label": "Attunement"}]'
         celltooltipfields='[{"label": "Type", "field": "data.type", "capitalize": true}, {"label": "Subtype", "field": "data.subtype", "capitalize": true}, {"label": "Location", "field": "data.location"}, {"label": "Weight", "field": "data.weight"}]'
-        cellactions='[{"label": "Equip", "fn": "gridEquip(data.itemIndex)", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "fn": "gridCarry(data.itemIndex)", "icon": "IconBackpack"}, {"label": "Drop", "fn": "gridDrop(data.itemIndex)", "icon": "IconArrowDown"}, {"label": "Attune", "fn": "gridAttune(data.itemIndex)", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "fn": "gridUnattune(data.itemIndex)", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}]'
+        cellactions='[{"label": "Equip", "fn": "gridEquip(data.itemIndex)", "icon": "IconShirt"}, {"label": "Carry (Unequip)", "fn": "gridCarry(data.itemIndex)", "icon": "IconBackpack"}, {"label": "Drop", "fn": "gridDrop(data.itemIndex)", "icon": "IconArrowDown"}, {"label": "Attune", "fn": "gridAttune(data.itemIndex)", "icon": "IconDiamond", "showField": "data.attunement", "showEq": "true"}, {"label": "Break Attunement", "fn": "gridUnattune(data.itemIndex)", "icon": "IconDiamondOff", "showField": "data.attunement", "showEq": "true"}, {"label": "Recharge", "fn": "rechargeGridItem(data.itemIndex)", "icon": "IconBolt", "showField": "fields.rechargeBtn.hidden", "showEq": "false"}]'
+        usesfield="data.usesRemaining"
+        maxusesfield="data.maxUses"
         cellusefield="data.consumable,data.hasUseBtn"
         celluselabel="Use"
         celluse="useGridItem(data.itemIndex)"

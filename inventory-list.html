@@ -9,6 +9,32 @@
     useInventoryItem(itemDataPath);
   }
 
+  // Clamp a manually-edited uses value to [0, maxUses]
+  function onUsesEdited(value) {
+    const itemDataPath = dataPath.replace(".data.usesRemaining", "");
+    const maxUses = parseInt(api.getValue(`${itemDataPath}.data.maxUses`), 10);
+    const uses = parseInt(value, 10);
+    if (isNaN(uses)) return;
+    let clamped = uses;
+    if (clamped < 0) clamped = 0;
+    if (!isNaN(maxUses) && clamped > maxUses) clamped = maxUses;
+    if (clamped !== uses) {
+      api.setValue(`${itemDataPath}.data.usesRemaining`, clamped);
+    }
+  }
+
+  // Recharge a charged item's uses (Has Use, not Consumable).
+  // - A dice recharge value (e.g. "1d6") is rolled via the itemRecharge
+  //   handler and added to current uses, capped at Max Uses.
+  // - A fixed number (e.g. "1") adds exactly that many uses, capped at Max Uses.
+  // - No value recharges the item to full.
+  function rechargeItem() {
+    // Shared with the grid popover's Recharge button; implementation lives in
+    // commonScript (rechargeInventoryItem).
+    const itemDataPath = dataPath.replace(".data.rechargeBtn", "");
+    rechargeInventoryItem(itemDataPath);
+  }
+
   // Update attributes if needed
   // updateAttributes / onItemEquippedFor / onItemAttunedFor now live in
   // commonScript (rollhandlers/common.js) so the item row and the grid
@@ -59,9 +85,20 @@
   }
 </script>
 
+<!-- The use controls (Use / Uses / Recharge) live in TWO slots: inline between
+     the attune button and Location on a wide window, and on a second line when
+     the record window is <= 600px (the `md` tier). The client's ambient
+     rvtt-hide-md / rvtt-show-md utilities pick which slot renders — they query
+     the record window's own width via the `sheet` container, so no JS is
+     involved. Both slots bind the same field names, so the existing
+     usesGroup / rechargeBtn hidden writes in character-inventory.html drive
+     both. The tier classes go on plain wrapper divs, never on the <box> itself:
+     rvtt-show-md resolves to `display: revert !important`, which would override
+     the box's own hidden state and force an empty box visible. -->
+<div style="display: flex; flex-direction: column; width: 100%; gap: 2px">
 <div
   style="
-    height: 30px;
+    min-height: 30px;
     display: flex;
     gap: 4px;
     align-items: center;
@@ -101,16 +138,57 @@
     onchange="onItemAttuned()"
     onclick=""
   ></iconbutton>
-  <div style="max-width: 60px">
-    <button
-      hidden="true"
-      size="xxs"
-      radius="xs"
-      width="40px"
-      field="useBtn"
-      onclick="useItem()"
-      label="Use"
-    ></button>
+  <!-- Use button: ALWAYS inline, immediately left of Location. It costs only
+       ~46px, so it fits at any width a sheet is usable at, and it's the piece
+       nearly every consumable shows. The button sits directly in the flex row
+       rather than in a wrapper div, so when it's hidden (display:none) the row
+       contributes no stray gap. -->
+  <button
+    hidden="true"
+    size="xxs"
+    radius="xs"
+    width="40px"
+    field="useBtn"
+    onclick="useItem()"
+    label="Use"
+  ></button>
+  <!-- Uses counter + Recharge: the ~150px cluster that genuinely can't share a
+       narrow row. Inline above the md tier, second line at/below it. -->
+  <div class="rvtt-hide-md" style="display: contents">
+    <box field="usesGroup" hidden="true">
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          gap: 4px;
+          align-items: center;
+        "
+      >
+        <div style="width: 52px">
+          <numberfield
+            size="xs"
+            variant="tooltip"
+            label="Uses"
+            width="100%"
+            field="usesRemaining"
+            placeholder="0"
+            min="0"
+            onchange="onUsesEdited(value)"
+          ></numberfield>
+        </div>
+        <label field="usesMaxLabel" size="xxs" color="dimmed"></label>
+        <button
+          hidden="true"
+          size="xxs"
+          radius="xs"
+          width="70px"
+          field="rechargeBtn"
+          onclick="rechargeItem()"
+          label="Recharge"
+          color="secondary"
+        ></button>
+      </div>
+    </box>
   </div>
   <div style="width: 100px; min-width: 100px">
     <stringfield
@@ -136,4 +214,56 @@
       onchange="onItemEquipped()"
     ></dropdown>
   </div>
+</div>
+
+<!-- Second line: ONLY the counter + Recharge cluster, and only for charged
+     items on a narrow window. The <box> is outermost so that items with no
+     charges drop out entirely (display:none) rather than leaving an empty
+     block behind. The tier class sits on a bare wrapper with no layout of its
+     own: rvtt-show-md resolves to `display: revert !important`, which would
+     clobber a display:flex on that same element, so the flex row is a child. -->
+<box field="usesGroup" hidden="true">
+  <div class="rvtt-show-md">
+    <div
+      style="
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        align-items: center;
+        justify-content: flex-end;
+      "
+    >
+      <!-- Plain bold text, not an rvtt sheet label. Only the second-line slot
+           carries it: inline, the row is tight and the numberfield's own
+           tooltip label already covers it. -->
+      <span
+        style="font-weight: 700; font-size: var(--mantine-font-size-xs, 12px)"
+        >Uses</span
+      >
+      <div style="width: 52px">
+        <numberfield
+          size="xs"
+          variant="tooltip"
+          label="Uses"
+          width="100%"
+          field="usesRemaining"
+          placeholder="0"
+          min="0"
+          onchange="onUsesEdited(value)"
+        ></numberfield>
+      </div>
+      <label field="usesMaxLabel" size="xxs" color="dimmed"></label>
+      <button
+        hidden="true"
+        size="xxs"
+        radius="xs"
+        width="70px"
+        field="rechargeBtn"
+        onclick="rechargeItem()"
+        label="Recharge"
+        color="secondary"
+      ></button>
+    </div>
+  </div>
+</box>
 </div>
