@@ -5499,46 +5499,6 @@ function copyScrollToSpellbook(levelOrItemPath) {
   rollSkillCheck("arcana", dc);
 }
 
-// 2024 rule: reading a scroll whose spell is above the level you can normally
-// cast requires an ability check with your spellcasting ability against
-// DC 10 + the spell's level; on a failure the spell is lost with no other
-// effect. Posts the check alongside the cast — the scroll is spent either way,
-// so the result is the table's to adjudicate.
-function rollScrollCastCheck(itemDataPath) {
-  const isScroll = (api.getValue(`${itemDataPath}.data.subtype`) || "")
-    .toLowerCase()
-    .includes("scroll");
-  if (!isScroll) return;
-
-  const level = parseInt(api.getValue(`${itemDataPath}.data.spellLevel`), 10);
-  if (isNaN(level) || level <= 0) return;
-
-  const maxRaw = record?.data?.maxSpellLevel;
-  const maxLevel = maxRaw === "Cantrip" ? 0 : parseInt(maxRaw || "0", 10) || 0;
-  if (level <= maxLevel) return;
-
-  const ability = getBestSpellcastingAbility(record);
-  const abilityMod = parseInt(record?.data?.[`${ability}Mod`] || "0", 10) || 0;
-  const dc = 10 + level;
-  const itemName = api.getValue(`${itemDataPath}.name`) || "Spell Scroll";
-
-  api.sendMessage(
-    `**${itemName}** holds a level ${level} spell, above what you can normally ` +
-      `cast. Make a DC ${dc} ${capitalize(ability)} check — on a failure the ` +
-      `spell disappears from the scroll with no other effect.`,
-    undefined,
-    [],
-    [],
-  );
-  api.promptRoll(
-    `${capitalize(ability)} Check`,
-    "1d20",
-    [{ name: capitalize(ability), value: abilityMod, active: true }],
-    { dc: dc, rollName: `${capitalize(ability)} Check` },
-    "ability",
-  );
-}
-
 // Shared inventory "Use" logic. Outputs the item's description (plus any linked
 // spell and effect/healing/damage macros) to chat, then depletes a use/charge:
 //  - Consumables deduct their count and are removed at 0 (uses reset to max on
@@ -5608,10 +5568,8 @@ function useInventoryItem(itemDataPath, options = {}) {
 
         const { min, max, isRange } = getItemRowCharges(row);
         const run = (amount) => {
-          if (isItemSpellRow(row)) {
-            rollScrollCastCheck(itemDataPath);
-            castItemSpell(itemDataPath, row);
-          } else useItemAction(itemDataPath, row, amount);
+          if (isItemSpellRow(row)) castItemSpell(itemDataPath, row);
+          else useItemAction(itemDataPath, row, amount);
           applyDeduction(Math.max(0, amount));
         };
 

@@ -9,9 +9,33 @@
   //
   // Nothing but the spell's own fields tells them apart, so every row authored
   // before actions existed still reads as a spell — no migration needed.
+
+  // The path to THIS row. getNearestParentDataPath alone is not enough: on a
+  // compendium item record it can resolve to "", and every helper here then
+  // reads the ITEM instead of the row. The item has a data.description, so
+  // isItemSpellRow() says "spell", the action editor is hidden, and an action
+  // row renders empty — with fields.actionBox.hidden written onto the item.
+  // Anchoring on the list segment makes the row unambiguous wherever it renders.
+  function getRowDataPath() {
+    const match = String(dataPath || "").match(/^(.*\bitemSpells\.\d+)(?:\.|$)/);
+    if (match) return match[1];
+    return getNearestParentDataPath(dataPath);
+  }
+
+  // True only for something that actually is a row. Guards against a resolution
+  // miss handing us the item record, which would otherwise be classified.
+  function getRow() {
+    const rowDataPath = getRowDataPath();
+    const row = api.getValue(rowDataPath);
+    // An item carries data.type / data.rarity; a row never does.
+    if (row?.data?.type !== undefined || row?.data?.itemSpells !== undefined) {
+      return null;
+    }
+    return row;
+  }
+
   function isActionRow() {
-    const row = api.getValue(getNearestParentDataPath(dataPath));
-    return !isItemSpellRow(row);
+    return !isItemSpellRow(getRow());
   }
 
   // The level button offers every level at or above the spell's own, so an item
@@ -31,7 +55,7 @@
       { icon: "IconCircleNumber8", label: "Level 8", value: 8 },
       { icon: "IconCircleNumber9", label: "Level 9", value: 9 },
     ];
-    const row = api.getValue(getNearestParentDataPath(dataPath));
+    const row = getRow();
     const raw = row?.data?.level;
     const spellLevel = raw === "Cantrip" ? 0 : parseInt(raw, 10) || 0;
     if (spellLevel === 0) {
@@ -44,9 +68,13 @@
   // rows. Writes only what actually changed — this runs on load, and a write
   // re-renders the row, which would re-fire it.
   function onItemSpellRowLoad() {
-    const rowDataPath = getNearestParentDataPath(dataPath);
-    const row = api.getValue(rowDataPath);
-    const fieldsPath = rowDataPath ? `${rowDataPath}.fields` : "fields";
+    const rowDataPath = getRowDataPath();
+    const row = getRow();
+    // No row resolved — writing to "fields" here would stamp the row's UI state
+    // onto the ITEM record, which is how an action row ends up with its editor
+    // hidden and the item ends up carrying a stray fields.actionBox.
+    if (!row || !rowDataPath) return;
+    const fieldsPath = `${rowDataPath}.fields`;
     const isAction = !isItemSpellRow(row);
     const valuesToSet = {};
     if (row?.fields?.actionBox?.hidden !== !isAction) {
