@@ -44,6 +44,38 @@ function isRangedSpell(spell) {
   return ranged;
 }
 
+// How a spell reaches its area, independent of whether it rolls a ranged
+// attack. Self-originating area spells (Lightning Bolt, Burning Hands, Cone of
+// Cold) have a range of "Self", so isRangedSpell — which answers a different
+// question, "is this a ranged spell attack?" — reports false for them and the
+// animation used to play parked on the caster instead of projecting outward.
+//
+// Returns "line" | "cone" | "emanation" | null. Areas centered on a distant
+// point (Fireball's sphere at 150 feet) return null: they already deliver
+// correctly off the ranged flag.
+function getSpellShape(spell) {
+  const rangeStr = spell?.data?.range || "";
+  const text = [
+    rangeStr,
+    spell?.data?.area || "",
+    spell?.data?.description || "",
+  ]
+    .join(" ")
+    // "line of sight" / "line of effect" are prose, not the Line shape.
+    .replace(/\bline\s+of\s+(sight|effect)\b/gi, " ");
+
+  if (/\bline\b/i.test(text)) return "line";
+  if (/\bcone\b/i.test(text)) return "cone";
+
+  // Cubes, spheres and radii are only self-centered when the range says so.
+  const selfRange = /^\s*self\b/i.test(rangeStr);
+  if (/\bemanation\b/i.test(text)) return "emanation";
+  if (selfRange && /\b(cube|sphere|cylinder|radius|aura)\b/i.test(text)) {
+    return "emanation";
+  }
+  return null;
+}
+
 // Builds the attack-roll modifier list for a spell attack.
 //
 // `flatModifiers` is the caster-specific part — for a character that's their
@@ -312,7 +344,10 @@ function consumeNpcSpellResource(info) {
       api.getValue(`data.${fieldToUse}`) || "0",
       10,
     );
-    const numMaxSpellSlots = parseInt(api.getValue(`data.${maxField}`) || "0", 10);
+    const numMaxSpellSlots = parseInt(
+      api.getValue(`data.${maxField}`) || "0",
+      10,
+    );
     if (numSpellSlots < numMaxSpellSlots) {
       api.setValue(`data.${fieldToUse}`, numSpellSlots + 1);
     }
@@ -460,7 +495,9 @@ function castSpellShared(spell, opts = {}) {
       damageModifiers.push({
         ...modifier,
         // Only set type if the modifier does not carry its own
-        type: modifier.value.toString().split(" ")?.[1] ? "" : primaryDamageType,
+        type: modifier.value.toString().split(" ")?.[1]
+          ? ""
+          : primaryDamageType,
       });
     });
   } else if (spell?.data?.healing) {
@@ -1077,9 +1114,7 @@ ${effectButtons}
   if (castingTime) {
     tags.push({
       tooltip: "Casting Time",
-      name: castingTime.includes(",")
-        ? castingTime.split(",")[0]
-        : castingTime,
+      name: castingTime.includes(",") ? castingTime.split(",")[0] : castingTime,
     });
   }
 
@@ -1220,6 +1255,7 @@ ${effectButtons}
       damage: spellDamage,
       healing: spellHealing,
       isRanged: rangedSpell,
+      shape: getSpellShape(spell),
     });
   }
 

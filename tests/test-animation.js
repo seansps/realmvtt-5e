@@ -109,6 +109,78 @@ assert(
   "bullet_1",
 );
 
+// ── Area shape drives delivery ───────────────────────────────────────────────
+//
+// Lightning Bolt is the reported bug: its range is "Self" (a 100-foot Line), so
+// isRangedSpell reports false and the animation used to play parked on the
+// caster instead of stretching down the line.
+
+section("getAnimationFor — a line projects even when not ranged");
+{
+  const bolt = getAnimationFor({
+    abilityName: "Lightning Bolt",
+    damage: "8d6 lightning",
+    isRanged: false,
+    shape: "line",
+  });
+  assert(
+    "line keeps the lightning animation",
+    bolt.animationName,
+    "lightning_1",
+  );
+  assert("line moves to destination", bolt.moveToDestination, true);
+  assert("line stretches to destination", bolt.stretchToDestination, true);
+  assert("line is not destination-only", bolt.destinationOnly, false);
+}
+
+// A cone reads fine as the melee/self variant of the animation, so it is
+// deliberately NOT projected — only the Line shape overrides delivery.
+section("getAnimationFor — cones keep the melee variant");
+{
+  const cone = getAnimationFor({
+    abilityName: "Cone of Cold",
+    damage: "8d8 cold",
+    isRanged: false,
+    shape: "cone",
+  });
+  assert("cone keeps the ice animation", cone.animationName, "ice_1");
+  assert("cone does not travel", cone.moveToDestination, false);
+  assert("cone does not stretch", cone.stretchToDestination, false);
+
+  // A cone on a spell that IS a ranged attack still delivers as ranged.
+  const rangedCone = getAnimationFor({
+    abilityName: "Scorching Cone",
+    damage: "4d6 fire",
+    isRanged: true,
+    shape: "cone",
+  });
+  assert("a ranged cone still travels", rangedCone.moveToDestination, true);
+}
+
+section("getAnimationFor — emanations stay centered on the caster");
+{
+  const wave = getAnimationFor({
+    abilityName: "Thunderwave",
+    damage: "2d8 thunder",
+    isRanged: false,
+    shape: "emanation",
+  });
+  assert("emanation does not travel", wave.moveToDestination, false);
+  assert("emanation does not stretch", wave.stretchToDestination, false);
+  assert("emanation starts at center", wave.startAtCenter, true);
+}
+
+section("getAnimationFor — no shape leaves melee delivery untouched");
+{
+  const melee = getAnimationFor({
+    abilityName: "Longsword",
+    damage: "1d8 slashing",
+    isRanged: false,
+  });
+  assert("melee still does not travel", melee.moveToDestination, false);
+  assert("melee still does not stretch", melee.stretchToDestination, false);
+}
+
 section("getAnimationFor — no name or no damage yields no animation");
 assert("missing name", getAnimationFor({ abilityName: "" }), null);
 assert(

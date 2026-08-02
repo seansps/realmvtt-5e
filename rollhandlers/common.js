@@ -64,14 +64,18 @@ function processDeferredAbilityGroups(groups, rec, done) {
       return;
     }
     const ag = groups[idx++];
-    const existingGroup = (Array.isArray(currentRec?.data?.abilityGroups) ? currentRec.data.abilityGroups : []).find(
-      (g) => g?.name === ag.abilityGroupName,
-    );
+    const existingGroup = (
+      Array.isArray(currentRec?.data?.abilityGroups)
+        ? currentRec.data.abilityGroups
+        : []
+    ).find((g) => g?.name === ag.abilityGroupName);
 
     const afterGroupExists = (recWithGroup) => {
-      const groupIdx = (Array.isArray(recWithGroup?.data?.abilityGroups) ? recWithGroup.data.abilityGroups : []).findIndex(
-        (g) => g?.name === ag.abilityGroupName,
-      );
+      const groupIdx = (
+        Array.isArray(recWithGroup?.data?.abilityGroups)
+          ? recWithGroup.data.abilityGroups
+          : []
+      ).findIndex((g) => g?.name === ag.abilityGroupName);
       if (groupIdx === -1) {
         processNext(recWithGroup);
         return;
@@ -223,7 +227,13 @@ function getAbilityFromSkill(skill) {
 // override only wins if its ability modifier is HIGHER than the skill's
 // currently-configured ability, matching effects like "you can use your
 // spellcasting ability for Athletics checks". Returns { ability, abilityMod }.
-function resolveSkillCheckAbility(rec, skill, baseAbility, baseAbilityMod, context) {
+function resolveSkillCheckAbility(
+  rec,
+  skill,
+  baseAbility,
+  baseAbilityMod,
+  context,
+) {
   const overrides = getEffectsAndModifiersForToken(
     rec,
     ["skillAbility"],
@@ -240,10 +250,12 @@ function resolveSkillCheckAbility(rec, skill, baseAbility, baseAbilityMod, conte
     if (!raw) return;
     // resolveAttackCalculationAbility handles the "Spellcasting Ability" sentinel
     // and passes literal ability names through unchanged.
-    const candidate = (resolveAttackCalculationAbility(raw, rec) || "")
-      .toLowerCase();
+    const candidate = (
+      resolveAttackCalculationAbility(raw, rec) || ""
+    ).toLowerCase();
     if (!candidate) return;
-    const candidateMod = parseInt(rec?.data?.[`${candidate}Mod`] || "0", 10) || 0;
+    const candidateMod =
+      parseInt(rec?.data?.[`${candidate}Mod`] || "0", 10) || 0;
     if (candidateMod > abilityMod) {
       ability = candidate;
       abilityMod = candidateMod;
@@ -264,8 +276,8 @@ function calcPassiveSkillFromMod(rec, skillField, skillMod) {
   const r = rec || record;
   // passiveProficiency: treat as proficient for the passive score only (+prof)
   if (
-    getEffectsAndModifiersForToken(r, ["passiveProficiency"], skillField).length >
-    0
+    getEffectsAndModifiersForToken(r, ["passiveProficiency"], skillField)
+      .length > 0
   ) {
     passive += parseInt(r?.data?.proficiencyBonus || "0", 10);
   }
@@ -2084,7 +2096,11 @@ function getMinRollModifier(modifiers) {
 //   { type: "override", value: { ac: 18, ... } }
 function _effectWritesAcField(effect) {
   const isAcKey = (k) =>
-    (k || "").toString().toLowerCase().replace(/^data\./, "").trim() === "ac";
+    (k || "")
+      .toString()
+      .toLowerCase()
+      .replace(/^data\./, "")
+      .trim() === "ac";
   return (effect?.rules || []).some((rule) => {
     // An override whose predicate failed was never applied to data.ac.
     if (rule?.data && rule.data.active === false) return false;
@@ -2132,19 +2148,21 @@ function getArmorClassForToken(token) {
   // An optional value restricts it to a specific armor category. Capped by the
   // armor's max-dex like the normal DEX bonus.
   let acAbilityMod = dexMod;
-  getEffectsAndModifiersForToken(token, ["armorClassAbilitySwap"]).forEach((mod) => {
-    const targetAbility = (mod.field || "").toLowerCase();
-    if (!targetAbility) return;
-    const categoryRestriction = (mod.value || "").toString().toLowerCase();
-    const armorCategory = (
-      bestEquippedArmor?.category ||
-      bestEquippedArmor?.armorCategory ||
-      ""
-    ).toLowerCase();
-    if (categoryRestriction && categoryRestriction !== armorCategory) return;
-    const m = parseInt(token?.data?.[`${targetAbility}Mod`] || "0", 10);
-    if (!isNaN(m)) acAbilityMod = m;
-  });
+  getEffectsAndModifiersForToken(token, ["armorClassAbilitySwap"]).forEach(
+    (mod) => {
+      const targetAbility = (mod.field || "").toLowerCase();
+      if (!targetAbility) return;
+      const categoryRestriction = (mod.value || "").toString().toLowerCase();
+      const armorCategory = (
+        bestEquippedArmor?.category ||
+        bestEquippedArmor?.armorCategory ||
+        ""
+      ).toLowerCase();
+      if (categoryRestriction && categoryRestriction !== armorCategory) return;
+      const m = parseInt(token?.data?.[`${targetAbility}Mod`] || "0", 10);
+      if (!isNaN(m)) acAbilityMod = m;
+    },
+  );
   // Else, we use the armor class value (for tokens)
   if (record?.recordType === "npcs") {
     armorClass = parseInt(token?.data?.ac || "0", 10);
@@ -2833,15 +2851,22 @@ function getAnimationFor({
   damage = "",
   healing = "",
   isRanged = false,
+  shape = null,
 }) {
   if (!abilityName) return null;
 
+  // A Line starts at the caster but travels away from them, so it delivers like
+  // a ranged effect even though isRanged — an attack-type signal — is false for
+  // a "Self" range. Cones are deliberately excluded: they read fine as the
+  // melee/self variant of the animation. See getSpellShape in spells.js.
+  const projected = isRanged || shape === "line";
+
   const animation = {
-    animationName: isRanged ? "bolt_1" : "slash_1",
-    sound: isRanged ? "bolt_1" : "slash_1",
-    moveToDestination: isRanged,
+    animationName: projected ? "bolt_1" : "slash_1",
+    sound: projected ? "bolt_1" : "slash_1",
+    moveToDestination: projected,
     stretchToDestination:
-      isRanged &&
+      projected &&
       (abilityName.toLowerCase().match(/\bray\b/i) ||
         abilityName.toLowerCase().match(/\bspray\b/i) ||
         abilityName.toLowerCase().match(/\bbeam\b/i) ||
@@ -3065,6 +3090,23 @@ function getAnimationFor({
     }
   }
 
+  // Delivery by area shape, applied last so it wins over the name and damage
+  // heuristics above — those guess at travel from a weapon's range, while the
+  // shape states it outright. "cone" is intentionally absent: a cone keeps
+  // whatever delivery the melee/ranged path already gave it.
+  if (shape === "line") {
+    animation.moveToDestination = true;
+    animation.stretchToDestination = true;
+    animation.destinationOnly = false;
+    animation.startAtCenter = false;
+  } else if (shape === "emanation") {
+    // Centered on the caster and expanding outward — never travels.
+    animation.moveToDestination = false;
+    animation.stretchToDestination = false;
+    animation.destinationOnly = false;
+    animation.startAtCenter = true;
+  }
+
   if (!animation.animationName) {
     // If not a spell or ability, we can't determine an animation
     return null;
@@ -3148,8 +3190,7 @@ function rollSavingThrow(save, dc, options) {
     save = save.toLowerCase();
     let modifiers = [];
 
-    const isNpc =
-      token?.linked === false || token?.recordType === "npcs";
+    const isNpc = token?.linked === false || token?.recordType === "npcs";
 
     if (isNpc) {
       // NPCs store a flat save total in data.{save}Save — use it directly.
@@ -3324,10 +3365,7 @@ function rollOtherSkillCheckForToken(token, otherSkill, dc) {
 
   let abilityMod = parseInt(token?.data?.[`${ability}Mod`] || "0", 10);
   if (isNaN(abilityMod)) abilityMod = 0;
-  const proficiencyBonus = parseInt(
-    token?.data?.proficiencyBonus || "0",
-    10,
-  );
+  const proficiencyBonus = parseInt(token?.data?.proficiencyBonus || "0", 10);
 
   let modifiers = [{ name: ability, value: abilityMod, active: true }];
 
@@ -3636,7 +3674,6 @@ function rollSkillCheck(skill, dc) {
   });
 }
 
-
 // ===== Ported from Level Up common.js (generic helpers needed by feature-utils) =====
 
 function _isWeaponPropertyCondition(field) {
@@ -3885,7 +3922,10 @@ function _parseAlignmentTraits(rec) {
   };
   const arr = rec?.data?.alignmentTraits;
   if (Array.isArray(arr)) arr.forEach(push);
-  else if (arr) String(arr).split(/[\s,]+/).forEach(push);
+  else if (arr)
+    String(arr)
+      .split(/[\s,]+/)
+      .forEach(push);
   String(rec?.data?.alignment || "")
     .split(/[\s,]+/)
     .forEach(push);
@@ -4320,7 +4360,10 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
     // context (threaded by the attack flows).
     if (predicate.startsWith("attacker:effect:")) {
       if (!context?.attackerToken) return false;
-      const slug = predicate.slice("attacker:effect:".length).trim().toLowerCase();
+      const slug = predicate
+        .slice("attacker:effect:".length)
+        .trim()
+        .toLowerCase();
       if (!slug) return false;
       // HP-derived pseudo-conditions ("bloodied"/"wounded") are true from the
       // attacker's HP state even without an applied effect; fall through to
@@ -4335,7 +4378,10 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
     // marked target (e.g. a taunt that grants advantage attacking the chosen creature).
     if (predicate.startsWith("target:effect:")) {
       if (!context?.targetToken) return false;
-      const slug = predicate.slice("target:effect:".length).trim().toLowerCase();
+      const slug = predicate
+        .slice("target:effect:".length)
+        .trim()
+        .toLowerCase();
       if (!slug) return false;
       // HP-derived pseudo-conditions ("bloodied"/"wounded") are true from the
       // target's HP state even without an applied effect; fall through to
@@ -4460,9 +4506,7 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
         const weaponName = (context.weapon?.name || "").toLowerCase();
         if (weaponName.includes(needle)) return true;
         const needleSlug = _slugifyName(needle);
-        return (
-          !!needleSlug && _slugifyName(weaponName).includes(needleSlug)
-        );
+        return !!needleSlug && _slugifyName(weaponName).includes(needleSlug);
       }
       // weapon:type:<exact> — exact (ci) match against data.weaponType
       if (rest.startsWith("type:")) {
@@ -4779,8 +4823,6 @@ function getEffectiveMaxDex(rec, bestEquippedArmor) {
 
 // Gets the best equipped armor for the context of the current PC
 
-
-
 // Builds an Apply-Damage macro (triple-backtick block) from a PRE-BUILT
 // damageByType map (e.g. {"fire": 12}). Mirrors damage.js's inline Apply_Damage
 // macro (RIV by type, threshold, temp HP, death, concentration, undo) for
@@ -4820,7 +4862,10 @@ function extractDamageBypass(damageModifiers) {
   );
 
   const cleaned = mods.filter(
-    (m) => !String(m.value ?? "").toLowerCase().includes("ignore"),
+    (m) =>
+      !String(m.value ?? "")
+        .toLowerCase()
+        .includes("ignore"),
   );
 
   return {
@@ -4869,7 +4914,7 @@ targets.forEach(target => {
     // We need to go through each damage type and check if the target has resistance, immunity, or vulnerability to it.
     Object.keys(damageByType).forEach(type => {
       let thisDamage = damageByType[type];
-      ${isHalf ? 'thisDamage = Math.floor(thisDamage / 2);' : ''}
+      ${isHalf ? "thisDamage = Math.floor(thisDamage / 2);" : ""}
       // Absorption: the target regains HP equal to this type's damage instead
       // of taking it (e.g. Shambling Mound + lightning).
       if (RIV.absorptions.includes(type.toLowerCase())
@@ -4880,7 +4925,7 @@ targets.forEach(target => {
       }
       // If the damage type is in the ignore resistances list, we don't apply resistances
       if (!${JSON.stringify(
-        damageIgnoresResistances
+        damageIgnoresResistances,
       )}.includes(type.toLowerCase())) {
         if (RIV.resistances.includes(type.toLowerCase() || '')
           || (${isSpell} && RIV.resistances.includes('spell'))) {
@@ -4889,7 +4934,7 @@ targets.forEach(target => {
       }
       // If the damage type is in the ignore immunities list, we don't apply immunities
       if (!${JSON.stringify(
-        damageIgnoresImmunities
+        damageIgnoresImmunities,
       )}.includes(type.toLowerCase())) {
         if (RIV.immunities.includes(type.toLowerCase() || '')
           || (${isSpell} && RIV.immunities.includes('spell'))) {
@@ -5510,8 +5555,7 @@ function useInventoryItem(itemDataPath, options = {}) {
   const itemName = api.getValue(`${itemDataPath}.name`);
   const itemCount = api.getValue(`${itemDataPath}.data.count`);
   const indexValue = parseInt(itemDataPath.split(".").pop());
-  const isConsumable =
-    api.getValue(`${itemDataPath}.data.consumable`) || false;
+  const isConsumable = api.getValue(`${itemDataPath}.data.consumable`) || false;
   const hasUseBtn = api.getValue(`${itemDataPath}.data.hasUseBtn`) || false;
 
   // "Has Spells" items prompt for one of their spells instead of a charge count.
@@ -5728,7 +5772,10 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
         api.setValue(`${itemDataPath}.data.usesRemaining`, newUses);
       } else if (!isConsumable) {
         // Charged magic item depleted — deplete to 0 but KEEP the item.
-        api.setValue(`${itemDataPath}.data.usesRemaining`, Math.max(newUses, 0));
+        api.setValue(
+          `${itemDataPath}.data.usesRemaining`,
+          Math.max(newUses, 0),
+        );
       } else {
         // Consumable depleted — deduct count or remove item, reset uses to max
         const count = parseFloat(itemCount || "1");
@@ -5864,8 +5911,7 @@ function onItemEquippedFor(itemDataPath, newValue) {
     api.getValue(`${itemDataPath}.data.weaponProperties`) || [];
   const hasAttunement =
     api.getValue(`${itemDataPath}.data.attunement`) || false;
-  const isConsumable =
-    api.getValue(`${itemDataPath}.data.consumable`) || false;
+  const isConsumable = api.getValue(`${itemDataPath}.data.consumable`) || false;
   const hasUseBtn = api.getValue(`${itemDataPath}.data.hasUseBtn`) || false;
   const isTwoHanded = weaponProperties.includes("Two-Handed");
   const isThrown = weaponProperties.includes("Thrown");

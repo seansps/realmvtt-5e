@@ -107,7 +107,11 @@ section("isRangedSpell — range field and description overrides");
 {
   const { ctx } = makeCtx();
   const { isRangedSpell } = ctx;
-  assert("no range is melee", isRangedSpell(spellFixture({ range: "0" })), false);
+  assert(
+    "no range is melee",
+    isRangedSpell(spellFixture({ range: "0" })),
+    false,
+  );
   assert(
     "a numeric range is ranged",
     isRangedSpell(spellFixture({ range: "120" })),
@@ -129,6 +133,100 @@ section("isRangedSpell — range field and description overrides");
     false,
   );
   assert("no range field at all", isRangedSpell(spellFixture({})), false);
+}
+
+// ── getSpellShape ────────────────────────────────────────────────────────────
+
+section("getSpellShape — self-originating areas are detected from the text");
+{
+  const { ctx } = makeCtx();
+  const { getSpellShape, isRangedSpell } = ctx;
+
+  const lightningBolt = spellFixture({
+    range: "Self",
+    description:
+      "<p>A stroke of lightning forming a 100-foot-long, 5-foot-wide <strong>Line</strong> blasts out from you in a direction you choose.</p>",
+  });
+  assert("Lightning Bolt is a line", getSpellShape(lightningBolt), "line");
+  assert(
+    "Lightning Bolt is still not a ranged attack",
+    isRangedSpell(lightningBolt),
+    false,
+  );
+
+  assert(
+    "Burning Hands is a cone",
+    getSpellShape(
+      spellFixture({
+        range: "Self",
+        description: "A 15-foot <strong>Cone</strong> of flame erupts.",
+      }),
+    ),
+    "cone",
+  );
+  assert(
+    "Thunderwave is an emanation",
+    getSpellShape(
+      spellFixture({
+        range: "Self",
+        description:
+          "Each creature in a 15-foot <strong>Cube</strong> from you.",
+      }),
+    ),
+    "emanation",
+  );
+  assert(
+    "an explicit Emanation is one at any range",
+    getSpellShape(
+      spellFixture({
+        range: "Self",
+        description: "A 10-foot <strong>Emanation</strong> surrounds you.",
+      }),
+    ),
+    "emanation",
+  );
+  assert(
+    "the Area field is read when present",
+    getSpellShape(spellFixture({ range: "Self", area: "60-foot cone" })),
+    "cone",
+  );
+}
+
+section("getSpellShape — distant areas and prose are not shapes");
+{
+  const { ctx } = makeCtx();
+  const { getSpellShape } = ctx;
+
+  assert(
+    "Fireball's sphere at range has no self-shape",
+    getSpellShape(
+      spellFixture({
+        range: "150 feet",
+        description: "A 20-foot-radius <strong>Sphere</strong> of flame.",
+      }),
+    ),
+    null,
+  );
+  assert(
+    "'line of sight' is prose, not a Line",
+    getSpellShape(
+      spellFixture({
+        range: "60 feet",
+        description: "Choose a creature you can see within line of sight.",
+      }),
+    ),
+    null,
+  );
+  assert(
+    "a plain single-target spell has no shape",
+    getSpellShape(
+      spellFixture({
+        range: "60 feet",
+        description: "One creature you can see makes a Wisdom saving throw.",
+      }),
+    ),
+    null,
+  );
 }
 
 // ── getSpellPredicateContext ─────────────────────────────────────────────────
@@ -249,11 +347,7 @@ section("consumeCharacterSpellResource — no resource at all aborts the cast");
   assert("does not proceed", result.proceed, false);
   assert("nothing spent", Object.keys(writes).length, 0);
   assert("the player is told why", notifications.length, 1);
-  assertIncludes(
-    "names the spell",
-    notifications[0].text,
-    "Fireball",
-  );
+  assertIncludes("names the spell", notifications[0].text, "Fireball");
 }
 
 // ── consumeCharacterSpellResource: spell points (2014 variant) ───────────────
@@ -317,7 +411,11 @@ section("consumeCharacterSpellResource — 6th+ points are once per long rest");
   });
   assert("the first level 6 cast proceeds", ok.proceed, true);
   assert("costs 9 points", first.writes["data.spellPoints"], 31);
-  assert("and marks the slot used", first.writes["data.spellPointSlot6Used"], true);
+  assert(
+    "and marks the slot used",
+    first.writes["data.spellPointSlot6Used"],
+    true,
+  );
 
   const data = base();
   data.spellPointSlot6Used = true;
@@ -421,7 +519,12 @@ section("consumeCharacterSpellResource — daily uses");
 {
   const { ctx, writes } = makeCtx(slotsAtEveryLevel());
   const result = ctx.consumeCharacterSpellResource({
-    spell: spellFixture({ level: "3", prepared: "daily", dailyUses: 0, maxDailyUses: 2 }),
+    spell: spellFixture({
+      level: "3",
+      prepared: "daily",
+      dailyUses: 0,
+      maxDailyUses: 2,
+    }),
     spellName: "Fireball",
     casterRecord: ctx.record,
     actualSpellLevel: 3,
@@ -437,7 +540,12 @@ section("consumeCharacterSpellResource — daily uses stops at the max");
 {
   const { ctx, writes } = makeCtx(slotsAtEveryLevel());
   ctx.consumeCharacterSpellResource({
-    spell: spellFixture({ level: "3", prepared: "daily", dailyUses: 2, maxDailyUses: 2 }),
+    spell: spellFixture({
+      level: "3",
+      prepared: "daily",
+      dailyUses: 2,
+      maxDailyUses: 2,
+    }),
     spellName: "Fireball",
     casterRecord: ctx.record,
     actualSpellLevel: 3,
@@ -488,7 +596,9 @@ section("consumeNpcSpellResource — a plain slot at the spell's level");
   assert("spends the level 3 slot", writes["data.spellSlots3"], 1);
 }
 
-section("consumeNpcSpellResource — exhausted slots still cast (NPCs don't gate)");
+section(
+  "consumeNpcSpellResource — exhausted slots still cast (NPCs don't gate)",
+);
 {
   const { ctx, writes } = makeCtx(slotsAtEveryLevel(0), { recordType: "npcs" });
   const result = ctx.consumeNpcSpellResource({
@@ -606,7 +716,11 @@ section("castSpellShared — leveled spell scales damage to the cast level");
 {
   const base = castAt(3);
   assert("one message sent", base.messages.length, 1);
-  assertIncludes("level 3 uses base damage", base.messages[0].message, "8d6 fire");
+  assertIncludes(
+    "level 3 uses base damage",
+    base.messages[0].message,
+    "8d6 fire",
+  );
 
   const four = castAt(4);
   assertIncludes("level 4 damage", four.messages[0].message, "9d6 fire");
@@ -628,11 +742,21 @@ section("castSpellShared — healing scales to the cast level");
 
 section("castSpellShared — alternate damage scales to the cast level");
 {
-  assertIncludes("level 3 alt damage", castAt(3).messages[0].message, "1d4 cold");
-  assertIncludes("level 5 alt damage", castAt(5).messages[0].message, "2d4 cold");
+  assertIncludes(
+    "level 3 alt damage",
+    castAt(3).messages[0].message,
+    "1d4 cold",
+  );
+  assertIncludes(
+    "level 5 alt damage",
+    castAt(5).messages[0].message,
+    "2d4 cold",
+  );
 }
 
-section("castSpellShared — cantrips scale off the caster's level, not the slot");
+section(
+  "castSpellShared — cantrips scale off the caster's level, not the slot",
+);
 {
   const cantrip = () =>
     spellFixture(
@@ -674,7 +798,11 @@ section("castSpellShared — save spell emits save and damage buttons");
 
 section("castSpellShared — additional saving throws each get a button");
 {
-  const h = makeCtx({ level: "5", intelligenceMod: "4", proficiencyBonus: "3" });
+  const h = makeCtx({
+    level: "5",
+    intelligenceMod: "4",
+    proficiencyBonus: "3",
+  });
   h.ctx.castSpellShared(
     scalingSpell({ additionalSavingThrows: ["wisdom", "constitution"] }),
     { consumeResource: h.ctx.makeFixedLevelResource(3) },
@@ -685,9 +813,15 @@ section("castSpellShared — additional saving throws each get a button");
   assertIncludes("constitution", message, "Roll_Constitution_Save");
 }
 
-section("castSpellShared — attack spell emits an attack button, not a damage one");
+section(
+  "castSpellShared — attack spell emits an attack button, not a damage one",
+);
 {
-  const h = makeCtx({ level: "5", intelligenceMod: "4", proficiencyBonus: "3" });
+  const h = makeCtx({
+    level: "5",
+    intelligenceMod: "4",
+    proficiencyBonus: "3",
+  });
   h.ctx.castSpellShared(
     spellFixture(
       { level: "1", isAttack: true, damage: "4d6 radiant", range: "120 feet" },
@@ -697,7 +831,11 @@ section("castSpellShared — attack spell emits an attack button, not a damage o
   );
   const { message } = h.messages[0];
   assertIncludes("attack button", message, "Roll_Attack");
-  assertNotIncludes("no standalone damage button", message, "Roll_Radiant_Damage");
+  assertNotIncludes(
+    "no standalone damage button",
+    message,
+    "Roll_Radiant_Damage",
+  );
   assertIncludes("damage rides on the attack", message, "4d6 radiant");
 }
 
@@ -705,9 +843,17 @@ section("castSpellShared — attack spell emits an attack button, not a damage o
 
 section("castSpellShared — computed DC is 8 + ability mod + proficiency");
 {
-  const h = makeCtx({ level: "5", intelligenceMod: "4", proficiencyBonus: "3" });
+  const h = makeCtx({
+    level: "5",
+    intelligenceMod: "4",
+    proficiencyBonus: "3",
+  });
   h.ctx.castSpellShared(
-    spellFixture({ isSave: true, savingThrow: "dexterity", damage: "1d6 fire" }),
+    spellFixture({
+      isSave: true,
+      savingThrow: "dexterity",
+      damage: "1d6 fire",
+    }),
     { consumeResource: h.ctx.makeFixedLevelResource(1) },
   );
   assertIncludes("DC 15", h.messages[0].message, '"dc": 15');
@@ -722,7 +868,11 @@ section("castSpellShared — flat spellDCBonus on the sheet raises the DC");
     spellDCBonus: "2",
   });
   h.ctx.castSpellShared(
-    spellFixture({ isSave: true, savingThrow: "dexterity", damage: "1d6 fire" }),
+    spellFixture({
+      isSave: true,
+      savingThrow: "dexterity",
+      damage: "1d6 fire",
+    }),
     { consumeResource: h.ctx.makeFixedLevelResource(1) },
   );
   assertIncludes("DC 17", h.messages[0].message, '"dc": 17');
@@ -737,14 +887,22 @@ section("castSpellShared — baseSaveDc overrides the computation (NPC / item)")
     spellDCBonus: "2",
   });
   h.ctx.castSpellShared(
-    spellFixture({ isSave: true, savingThrow: "dexterity", damage: "1d6 fire" }),
+    spellFixture({
+      isSave: true,
+      savingThrow: "dexterity",
+      damage: "1d6 fire",
+    }),
     {
       consumeResource: h.ctx.makeFixedLevelResource(1),
       baseSaveDc: 13,
       applyDcModifiers: false,
     },
   );
-  assertIncludes("the fixed DC is used verbatim", h.messages[0].message, '"dc": 13');
+  assertIncludes(
+    "the fixed DC is used verbatim",
+    h.messages[0].message,
+    '"dc": 13',
+  );
 }
 
 section("castSpellShared — the spell row's saveDc override wins when allowed");
@@ -778,11 +936,18 @@ section("castSpellShared — the spell row's saveDc override wins when allowed")
 section("castSpellShared — cast level tag reflects the effective level");
 {
   const five = castAt(5);
-  assert("level tag", tagNamed(five.messages[0].tags, "Level 5") !== undefined, true);
+  assert(
+    "level tag",
+    tagNamed(five.messages[0].tags, "Level 5") !== undefined,
+    true,
+  );
 
   const h = makeCtx({ level: "5", intelligenceMod: "4" });
   h.ctx.castSpellShared(
-    spellFixture({ level: "Cantrip", damage: "1d10 fire" }, { name: "Fire Bolt" }),
+    spellFixture(
+      { level: "Cantrip", damage: "1d10 fire" },
+      { name: "Fire Bolt" },
+    ),
     { consumeResource: h.ctx.makeFixedLevelResource(0), casterLevel: 5 },
   );
   assert(
@@ -847,8 +1012,16 @@ section("castSpellShared — concentration is tagged and the prefix stripped");
     { consumeResource: h.ctx.makeFixedLevelResource(2) },
   );
   const { tags } = h.messages[0];
-  assert("concentration tag", tagNamed(tags, "Concentration") !== undefined, true);
-  assert("duration without the prefix", tagNamed(tags, "10 minutes") !== undefined, true);
+  assert(
+    "concentration tag",
+    tagNamed(tags, "Concentration") !== undefined,
+    true,
+  );
+  assert(
+    "duration without the prefix",
+    tagNamed(tags, "10 minutes") !== undefined,
+    true,
+  );
 }
 
 section("castSpellShared — upcast duration is used for the duration tag");
@@ -887,7 +1060,11 @@ section("castSpellShared — subHeader is inserted under the spell name");
   plain.ctx.castSpellShared(spellFixture({ level: "1", damage: "1d6 fire" }), {
     consumeResource: plain.ctx.makeFixedLevelResource(1),
   });
-  assertIncludes("header then rule", plain.messages[0].message, "Test Spell\n\n---");
+  assertIncludes(
+    "header then rule",
+    plain.messages[0].message,
+    "Test Spell\n\n---",
+  );
 }
 
 // ── castSpellShared: guards ─────────────────────────────────────────────────
@@ -971,7 +1148,11 @@ section("getItemSpellcasting — holder branch returns base, unmodified numbers"
   assert("ability", casting.ability, "intelligence");
   assert("base DC is 8 + 4 + 3", casting.saveDc, 15);
   assert("base attack is 4 + 3", casting.attackBonus, 7);
-  assert("caster modifiers get applied downstream", casting.applyCasterModifiers, true);
+  assert(
+    "caster modifiers get applied downstream",
+    casting.applyCasterModifiers,
+    true,
+  );
 }
 
 section("getItemSpellcasting — item branch uses the item's fixed numbers");
@@ -1051,7 +1232,13 @@ section("castItemSpell — item numbers are used verbatim, not the holder's");
 section("castItemSpell — the holder's spellcasting is used when asked for");
 {
   const spellRow = spellFixture(
-    { level: "1", isSave: true, savingThrow: "dexterity", damage: "3d6 fire", castLevel: 1 },
+    {
+      level: "1",
+      isSave: true,
+      savingThrow: "dexterity",
+      damage: "3d6 fire",
+      castLevel: 1,
+    },
     { name: "Burning Hands" },
   );
   const { ctx, messages } = makeItemCtx(
