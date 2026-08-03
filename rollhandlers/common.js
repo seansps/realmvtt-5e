@@ -5721,11 +5721,15 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
     // (e.g. a Ring of Spell Storing releasing a 4th-level spell costs 4 of its
     // 5 levels). Ask how many, then deduct that amount. Everything else keeps
     // the original behaviour of deducting exactly 1.
+    //
+    // The prompt appears whenever the flag is set, including on a one-charge
+    // item: 0 is always offered, so a property that costs nothing can be used
+    // without spending the item's only charge.
     const promptCharges =
       api.getValue(`${itemDataPath}.data.promptCharges`) === true;
-    if (hasUses && promptCharges && availableUses > 1) {
+    if (hasUses && promptCharges) {
       const chargeOptions = [];
-      for (let i = 1; i <= availableUses; i++) {
+      for (let i = 0; i <= Math.max(0, availableUses); i++) {
         chargeOptions.push({ label: `${i}`, value: `${i}` });
       }
       api.showPrompt(
@@ -5738,7 +5742,7 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
           if (!values || values.length === 0) return; // cancelled — spend nothing
           const picked = parseInt(values[0]?.value ?? values[0], 10);
           applyDeduction(
-            isNaN(picked) ? 1 : Math.max(1, Math.min(availableUses, picked)),
+            isNaN(picked) ? 1 : Math.max(0, Math.min(availableUses, picked)),
           );
         },
       );
@@ -5751,6 +5755,10 @@ api.promptRoll('${escapedName} Damage', '${escapedDamage}', [], {}, 'damage')
   // the original depletion rules. Re-reads the values because it also runs from
   // the "Prompt Charges" callback, after the prompt has been answered.
   function applyDeduction(amount) {
+    // Spending nothing changes nothing. Without this, a 0 pick on an item
+    // already at 0 uses falls through to the depletion branch and destroys a
+    // consumable that was never actually spent.
+    if (!(amount > 0)) return;
     const usesRemaining = api.getValue(`${itemDataPath}.data.usesRemaining`);
     const maxUses = api.getValue(`${itemDataPath}.data.maxUses`);
     const hasUses =
