@@ -409,11 +409,38 @@
         margin-bottom: 4px;
       "
     >
+      <!-- 125px, not 100%: the percentage resolves against this column, whose
+           own height is stretched rather than definite, so the panel came up
+           short of the portrait beside it. Matching the portrait's fixed size
+           keeps the two flush. The box itself collapses when identified, so a
+           wrapper div would leave dead space instead. -->
+      <box height="125px" field="unidBox" hidewhenidentified="true">
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background-color: var(--mantine-color-tertiary-light);
+          "
+        >
+          <label
+            hidewhenidentified="true"
+            label="Unidentified Item"
+            variant="bold"
+            textalign="center"
+          ></label>
+        </div>
+      </box>
       <dropdown
         multiselect="1"
         placeholder="Select Type"
         onchange="showHideFields()"
         onload="showHideFields()"
+        hidewhenidentified="false"
         field="type"
         label="Type"
         options='[{"label": "Adventuring Gear", "value": "gear"}, {"label": "Melee Weapon", "value": "melee weapon"},
@@ -593,6 +620,7 @@
   <stringfield
     width="100%"
     hidden="true"
+    hidewhenidentified="false"
     field="damage"
     label="Damage"
     placeholder="Enter Damage for attacks..."
@@ -602,6 +630,7 @@
     <dropdown
       width="50%"
       hidden="true"
+      hidewhenidentified="false"
       field="weaponType"
       label="Weapon Type"
       placeholder="Select Weapon Type"
@@ -631,6 +660,7 @@
     <dropdown
       width="50%"
       hidden="true"
+      hidewhenidentified="false"
       field="weaponMastery"
       label="Mastery"
       placeholder="Select Mastery Property"
@@ -647,6 +677,7 @@
     <dropdown
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="weaponProperties"
       label="Weapon Properties"
       onchange="showHideFields()"
@@ -674,15 +705,17 @@
     <numberfield
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="normalRange"
       label="Normal Range"
       placeholder="Enter Range..."
     >
     </numberfield>
-    <label hidden="true" field="rangeLabel" label="/" variable="bold"></label>
+    <label hidden="true" hidewhenidentified="false" field="rangeLabel" label="/" variable="bold"></label>
     <numberfield
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="maxRange"
       label="Max Range"
       placeholder="Enter Max Range..."
@@ -691,6 +724,7 @@
     <stringfield
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="ammoType"
       label="Ammo Type"
       placeholder="Enter Ammo Type..."
@@ -701,6 +735,7 @@
   <stringfield
     width="100%"
     hidden="true"
+    hidewhenidentified="false"
     field="versatileDamage"
     label="Versatile Damage"
     placeholder="Enter damage for two-handed attacks..."
@@ -712,6 +747,7 @@
     <numberfield
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="armorClass"
       label="AC (Armor Class)"
       placeholder="Enter AC..."
@@ -720,6 +756,7 @@
     <dropdown
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="armorCategory"
       label="Armor Category"
       placeholder="Select Armor Category"
@@ -741,6 +778,7 @@
     <checkbox
       hidden="true"
       width="170px"
+      hidewhenidentified="false"
       field="addDex"
       label="Add Dex Mod"
       textalign="left"
@@ -749,6 +787,7 @@
     <numberfield
       hidden="true"
       width="100%"
+      hidewhenidentified="false"
       field="maxDex"
       label="Max Dex Mod"
       placeholder="Enter Max Dex Mod..."
@@ -760,6 +799,7 @@
     <numberfield
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="strength"
       label="Strength"
       placeholder="--"
@@ -768,6 +808,7 @@
     <dropdown
       width="100%"
       hidden="true"
+      hidewhenidentified="false"
       field="stealth"
       label="Stealth"
       placeholder="--"

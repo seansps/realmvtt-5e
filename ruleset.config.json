@@ -1484,6 +1484,44 @@
     }
   ],
   "settings": {
+    "unidentifiedImages": {
+      "recordTypes": [
+        "items"
+      ],
+      "fields": [
+        "subtype",
+        "consumable",
+        "type"
+      ],
+      "default": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/adventuring_gear.webp",
+      "map": {
+        "consumable:true": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/potions.webp",
+        "ammunition": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/ammunition.webp",
+        "potion": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/potions.webp",
+        "scroll": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/infernal-contracts.webp",
+        "trade goods": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/material-chunk.webp",
+        "art object": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/material-chunk.webp",
+        "treasure": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/material-chunk.webp",
+        "staff": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/staves.webp",
+        "wand": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/wands.webp",
+        "rod": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/wands.webp",
+        "wondrous item": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/artifact.webp",
+        "ring": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/artifact.webp",
+        "light armor": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/armor.webp",
+        "medium armor": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/armor.webp",
+        "heavy armor": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/armor.webp",
+        "simple melee weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "simple ranged weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "martial melee weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "martial ranged weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "rare melee weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "rare ranged weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "armor": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/armor.webp",
+        "shield": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/shields.webp",
+        "melee weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp",
+        "ranged weapon": "https://assets.realmvtt.com/icons/fantasy/unidentified_item_icons/weapon.webp"
+      }
+    },
     "healthIndicator": {
       "disabled": false,
       "maxHealthField": "hitpoints",
