@@ -2901,8 +2901,71 @@ function getAnimationFor({
     return animation;
   }
 
+  // Matches ANY word ending in "bow", not just the literal word — a magic item
+  // named "Oathbow" is one word, so \bbow\b finds no boundary before "bow".
+  // This catches bow / longbow / shortbow / crossbow / greatbow / Oathbow
+  // alike. "elbow" and "rainbow" are excluded so a creature's elbow strike
+  // doesn't fire arrows.
+  const bowWord = abilityName.toLowerCase().match(/\b(\w*bow)\b/);
+  const isBowName =
+    !!bowWord && bowWord[1] !== "elbow" && bowWord[1] !== "rainbow";
+
+  // A weapon that also deals elemental damage is still a weapon: a shortbow
+  // dealing poison should fire an arrow tinted green, not the elemental
+  // animation. The chain below is ordered elemental-first, so without this the
+  // elemental branch won the animation and — for types that only set a tint
+  // (poison, force, psychic) — left animationName at the "bolt_1" default,
+  // which is where the green magic-missile look came from.
+  //
+  // So when the damage carries a physical type, the physical branch picks the
+  // animation and the elemental type only contributes its colour.
+  const physicalType = ["piercing", "bludgeoning", "slashing"].find((t) =>
+    damage.includes(t),
+  );
+  const TINTS = {
+    fire: { hue: undefined, contrast: undefined, brightness: undefined },
+    cold: { hue: 180, contrast: 1.0, brightness: 0.5 },
+    acid: { hue: 100, contrast: 1.0, brightness: 0.8 },
+    lightning: { hue: 244, contrast: 1.0, brightness: 0.5 },
+    poison: { hue: 128, contrast: 1.0, brightness: 0.1 },
+    necrotic: { hue: 240, contrast: 0.1, brightness: 0.1 },
+    radiant: { hue: 50, contrast: 1.0, brightness: 0.8 },
+    thunder: { hue: 244, contrast: 1.0, brightness: 0.8 },
+    force: { hue: 284, contrast: 1.0, brightness: 0.2 },
+    psychic: { hue: 330, contrast: 1.0, brightness: 0.2 },
+  };
+  const elementalType = physicalType
+    ? Object.keys(TINTS).find((t) => damage.includes(t))
+    : null;
+
   // Based on the damage, set the animation name and props
-  if (damage.includes("fire")) {
+  if (physicalType) {
+    if (physicalType === "piercing") {
+      animation.sound = isRanged ? "arrow_1" : "slash_1";
+      if (isRanged && isBowName) {
+        animation.animationName = "arrow_1";
+      } else if (isRanged) {
+        animation.animationName = "arrow_2";
+      } else {
+        animation.animationName = "pierce_1";
+      }
+    } else if (physicalType === "bludgeoning") {
+      animation.sound = isRanged ? "bolt_1" : "bludgeon_1";
+      animation.animationName = isRanged ? "bullet_1" : "bludgeon_1";
+    } else {
+      animation.sound = isRanged ? "bolt_1" : "slash_1";
+    }
+    if (elementalType) {
+      const tint = TINTS[elementalType];
+      animation.hue = tint.hue;
+      animation.contrast = tint.contrast;
+      animation.brightness = tint.brightness;
+      if (elementalType === "force" &&
+          abilityName.toLowerCase().includes("disintegrate")) {
+        animation.hue = 128;
+      }
+    }
+  } else if (damage.includes("fire")) {
     animation.animationName = "fire_1";
     animation.sound = "bolt_2";
     animation.hue = undefined;
@@ -2964,39 +3027,32 @@ function getAnimationFor({
     animation.hue = 330;
     animation.contrast = 1.0;
     animation.brightness = 0.2;
-  } else if (damage.includes("piercing")) {
-    animation.sound = isRanged ? "arrow_1" : "slash_1";
-    // If this is a ranged bow use arrow_1 animationName.
-    // Matches ANY word ending in "bow", not just the literal word — a magic
-    // item named "Oathbow" is one word, so \bbow\b finds no boundary before
-    // "bow" and the weapon fell through to the generic arrow_2. This catches
-    // bow / longbow / shortbow / crossbow / greatbow / Oathbow alike.
-    // "elbow" and "rainbow" are excluded so a creature's elbow strike doesn't
-    // fire arrows.
-    const bowWord = abilityName.toLowerCase().match(/\b(\w*bow)\b/);
-    const isBowName =
-      !!bowWord && bowWord[1] !== "elbow" && bowWord[1] !== "rainbow";
-    if (isRanged && isBowName) {
-      animation.animationName = "arrow_1";
-    } else if (isRanged) {
-      animation.animationName = "arrow_2";
-    } else if (!isRanged) {
-      animation.animationName = "pierce_1";
-    }
-  } else if (damage.includes("bludgeoning")) {
-    animation.sound = isRanged ? "bolt_1" : "bludgeon_1";
-    if (isRanged) {
-      animation.animationName = "bullet_1";
-    } else {
-      animation.animationName = "bludgeon_1";
-    }
-  } else if (damage.includes("slashing")) {
-    animation.sound = isRanged ? "bolt_1" : "slash_1";
   }
 
   // Alternatively, if the ability name includes something that indicates a metallic weapon, we use slash_2
   // or a whip, use whip_1, or guns use gun_1
-  if (
+  if (damage && isRanged && abilityName.toLowerCase().match(/\barrows?\b/)) {
+    // A conjured arrow — Melf's Acid Arrow and friends. arrow_2 is the magical
+    // arrow, as distinct from arrow_1's fired-from-a-bow one. This wins over
+    // the damage type's own animation, so an acid arrow is an arrow rather than
+    // a splash; the tint stays, so it is still green.
+    animation.animationName = "arrow_2";
+    animation.sound = "arrow_1";
+  } else if (
+    damage &&
+    isRanged &&
+    isBowName &&
+    (animation.animationName === "bolt_1" ||
+      animation.animationName === "slash_1")
+  ) {
+    // A bow whose damage type contributed no animation of its own. poison,
+    // force and psychic only set a tint, so the generic "bolt_1" default
+    // survived and a poison-tipped shortbow read as a green magic missile.
+    // Only the untouched default is replaced — a Flaming Bow dealing fire keeps
+    // fire_1, which already looks right.
+    animation.animationName = "arrow_1";
+    animation.sound = "arrow_1";
+  } else if (
     (abilityName.toLowerCase().includes("sword") ||
       abilityName.toLowerCase().includes("axe")) &&
     damage.includes("slashing")
