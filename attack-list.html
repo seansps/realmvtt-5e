@@ -584,7 +584,7 @@
 
     targets.forEach((target) => {
       // Get calculated AC from modifiers - use if any
-      const targetAc = getArmorClassForToken(target?.token);
+      const targetAc = getArmorClassForToken(target?.token, { ranged });
       const targetName =
         target?.token?.identified === false
           ? target?.token?.record?.unidentifiedName

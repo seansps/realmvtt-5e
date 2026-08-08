@@ -844,6 +844,8 @@ function setModifier(
   const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
   acBonuses.forEach((mod) => {
     if (mod.value) {
+      // Melee/ranged-only bonuses never apply here — no attack to test against
+      if (!_acModifierMatchesAttackType(mod.field, undefined)) return;
       const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
@@ -2127,8 +2129,27 @@ function _acOverrideEffectNames(token) {
   return names;
 }
 
+// An armorClassBonus/armorClassPenalty whose field is "melee" or "ranged"
+// applies only against attacks of that type (e.g. +2 AC against melee attacks).
+// attackType is "melee"/"ranged" during attack resolution and undefined
+// everywhere else (sheet display, out-of-combat AC lookups) — with no attack to
+// test against, a conditional modifier never applies.
+function _acModifierMatchesAttackType(modField, attackType) {
+  const f = (modField || "").trim().toLowerCase();
+  if (f !== "melee" && f !== "ranged") return true;
+  return f === attackType;
+}
+
 // Used for getting the target's best AC (by calculation or what is set if that is higher)
-function getArmorClassForToken(token) {
+// options.ranged: true for a ranged attack, false for melee. Gates melee/ranged
+//   conditional armorClassBonus modifiers. Omit outside of attack resolution.
+function getArmorClassForToken(token, options = {}) {
+  const attackType =
+    options.ranged === undefined
+      ? undefined
+      : options.ranged
+        ? "ranged"
+        : "melee";
   const record = token?.record;
   const acCalculationMods = getEffectsAndModifiersForToken(token, [
     "armorClassCalculation",
@@ -2204,6 +2225,8 @@ function getArmorClassForToken(token) {
   acBonuses.forEach((mod) => {
     if (isNpc && mod.name && acOverrideNames.has(mod.name)) return;
     if (mod.value) {
+      // Attack-type conditional: field "melee" / "ranged"
+      if (!_acModifierMatchesAttackType(mod.field, attackType)) return;
       const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
@@ -2279,6 +2302,8 @@ function getArmorClass(bestEquippedArmor) {
   ]);
   acBonuses.forEach((mod) => {
     if (mod.value) {
+      // Melee/ranged-only bonuses never apply here — no attack to test against
+      if (!_acModifierMatchesAttackType(mod.field, undefined)) return;
       const acBonus = parseInt(mod.value || "0", 10);
       if (!isNaN(acBonus)) {
         calcBonus += acBonus;
@@ -2960,8 +2985,10 @@ function getAnimationFor({
       animation.hue = tint.hue;
       animation.contrast = tint.contrast;
       animation.brightness = tint.brightness;
-      if (elementalType === "force" &&
-          abilityName.toLowerCase().includes("disintegrate")) {
+      if (
+        elementalType === "force" &&
+        abilityName.toLowerCase().includes("disintegrate")
+      ) {
         animation.hue = 128;
       }
     }

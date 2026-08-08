@@ -2418,12 +2418,38 @@
       {
         "label": "Armor Class Bonus",
         "type": "armorClassBonus",
-        "fields": []
+        "fields": [
+          {
+            "label": "Against All Attacks",
+            "field": "all"
+          },
+          {
+            "label": "Against Melee Attacks Only",
+            "field": "melee"
+          },
+          {
+            "label": "Against Ranged Attacks Only",
+            "field": "ranged"
+          }
+        ]
       },
       {
         "label": "Armor Class Penalty",
         "type": "armorClassPenalty",
-        "fields": []
+        "fields": [
+          {
+            "label": "Against All Attacks",
+            "field": "all"
+          },
+          {
+            "label": "Against Melee Attacks Only",
+            "field": "melee"
+          },
+          {
+            "label": "Against Ranged Attacks Only",
+            "field": "ranged"
+          }
+        ]
       },
       {
         "label": "Attack Bonus",

@@ -20,10 +20,20 @@ const { getArmorClassForToken } = ctx;
 
 // ── Fixture builders ─────────────────────────────────────────────────────────
 function acBonusRule(v) {
-  return { type: "armorClassBonus", valueType: "number", value: String(v), field: "" };
+  return {
+    type: "armorClassBonus",
+    valueType: "number",
+    value: String(v),
+    field: "",
+  };
 }
 function acPenaltyRule(v) {
-  return { type: "armorClassPenalty", valueType: "number", value: String(v), field: "" };
+  return {
+    type: "armorClassPenalty",
+    valueType: "number",
+    value: String(v),
+    field: "",
+  };
 }
 // Client-handled rules that bake into data.ac.
 function acDataRule(field, operation, value) {
@@ -50,10 +60,16 @@ function acToken({
     : rules.length
       ? [{ name: "Test Effect", rules }]
       : [];
-  return { record: { recordType }, data, effects, effectIds: [], effectValues: {} };
+  return {
+    record: { recordType },
+    data,
+    effects,
+    effectIds: [],
+    effectValues: {},
+  };
 }
 
-const acOf = (tok) => getArmorClassForToken(tok);
+const acOf = (tok, opts) => getArmorClassForToken(tok, opts);
 
 // ── NPC double-count fix (the reported bug) ──────────────────────────────────
 section("getArmorClassForToken — NPC writing-effect counted once");
@@ -62,21 +78,39 @@ section("getArmorClassForToken — NPC writing-effect counted once");
 // the modifier must NOT add another +2 → stays 17 (previously 19).
 assert(
   "NPC AC Bonus +2 (bonus + data add), baked 17 → 17 (not 19)",
-  acOf(acToken({ ac: 17, dex: 0, rules: [acBonusRule(2), acDataRule("ac", "add", 2)] })),
+  acOf(
+    acToken({
+      ac: 17,
+      dex: 0,
+      rules: [acBonusRule(2), acDataRule("ac", "add", 2)],
+    }),
+  ),
   17,
 );
 
 // "AC Penalty -2": armorClassPenalty 2 AND data subtract 2. Client baked 15→13.
 assert(
   "NPC AC Penalty -2 (penalty + data subtract), baked 13 → 13",
-  acOf(acToken({ ac: 13, dex: 0, rules: [acPenaltyRule(2), acDataRule("ac", "subtract", 2)] })),
+  acOf(
+    acToken({
+      ac: 13,
+      dex: 0,
+      rules: [acPenaltyRule(2), acDataRule("ac", "subtract", 2)],
+    }),
+  ),
   13,
 );
 
 // Bloodied Haste shape: armorClassBonus +2 AND override ac = data.ac + 2.
 assert(
   "NPC Bloodied Haste (bonus + override), baked 16 → 16",
-  acOf(acToken({ ac: 16, dex: 0, rules: [acBonusRule(2), acOverrideRule({ ac: "@record.data.ac + 2" })] })),
+  acOf(
+    acToken({
+      ac: 16,
+      dex: 0,
+      rules: [acBonusRule(2), acOverrideRule({ ac: "@record.data.ac + 2" })],
+    }),
+  ),
   16,
 );
 
@@ -88,7 +122,10 @@ assert(
       ac: 17,
       dex: 0,
       effectsList: [
-        { name: "AC Bonus +2", rules: [acBonusRule(2), acDataRule("ac", "add", 2)] },
+        {
+          name: "AC Bonus +2",
+          rules: [acBonusRule(2), acDataRule("ac", "add", 2)],
+        },
         { name: "Cover", rules: [acBonusRule(2)] },
       ],
     }),
@@ -120,14 +157,20 @@ assert(
 // Wild-shaped NPC short-circuits to its current AC.
 assert(
   "wild-shaped NPC → flat ac",
-  acOf(acToken({ ac: 14, dex: 0, wildShapeNpc: true, rules: [acBonusRule(5)] })),
+  acOf(
+    acToken({ ac: 14, dex: 0, wildShapeNpc: true, rules: [acBonusRule(5)] }),
+  ),
   14,
 );
 
 // ── PCs are untouched: base is fresh, modifiers always apply ─────────────────
 section("getArmorClassForToken — PC (modifiers never skipped)");
 
-assert("PC unarmored dex 3 → 13", acOf(acToken({ recordType: "characters", dex: 3 })), 13);
+assert(
+  "PC unarmored dex 3 → 13",
+  acOf(acToken({ recordType: "characters", dex: 3 })),
+  13,
+);
 
 assert(
   "PC unarmored dex 3 + bonus 2 → 15",
@@ -135,7 +178,12 @@ assert(
   15,
 );
 
-const plate = (extra = {}) => ({ ac: 16, maxDex: 2, category: "heavy", ...extra });
+const plate = (extra = {}) => ({
+  ac: 16,
+  maxDex: 2,
+  category: "heavy",
+  ...extra,
+});
 assert(
   "PC plate 16 (maxDex 2), dex 4 → 18",
   acOf(acToken({ recordType: "characters", dex: 4, armor: plate() })),
@@ -182,11 +230,60 @@ assert(
       recordType: "characters",
       ac: 15,
       dex: 0,
-      rules: [acOverrideRule({ ac: "13 + floor((@record.data.dexterity - 10) / 2)" })],
+      rules: [
+        acOverrideRule({ ac: "13 + floor((@record.data.dexterity - 10) / 2)" }),
+      ],
     }),
   ),
   15,
 );
+
+// ── Melee/ranged-conditional AC bonuses ──────────────────────────────────────
+// field "melee"/"ranged" scopes an armorClassBonus to that attack type. With no
+// options.ranged (sheet display, out-of-combat lookups) it never applies.
+section("getArmorClassForToken — melee/ranged conditional bonuses");
+{
+  const meleeBonus = (v) => ({
+    type: "armorClassBonus",
+    valueType: "number",
+    value: String(v),
+    field: "melee",
+  });
+  const rangedBonus = (v) => ({
+    type: "armorClassBonus",
+    valueType: "number",
+    value: String(v),
+    field: "ranged",
+  });
+  const pc = (rules) => acToken({ recordType: "characters", dex: 0, rules });
+
+  assert(
+    "melee +2 vs a melee attack → 12",
+    acOf(pc([meleeBonus(2)]), { ranged: false }),
+    12,
+  );
+  assert(
+    "melee +2 vs a ranged attack → 10",
+    acOf(pc([meleeBonus(2)]), { ranged: true }),
+    10,
+  );
+  assert("melee +2 with no attack context → 10", acOf(pc([meleeBonus(2)])), 10);
+  assert(
+    "ranged +2 vs a ranged attack → 12",
+    acOf(pc([rangedBonus(2)]), { ranged: true }),
+    12,
+  );
+  assert(
+    "ranged +2 vs a melee attack → 10",
+    acOf(pc([rangedBonus(2)]), { ranged: false }),
+    10,
+  );
+  assert(
+    "plain +2 vs a ranged attack still applies → 12",
+    acOf(pc([acBonusRule(2)]), { ranged: true }),
+    12,
+  );
+}
 
 // ── Summary ──────────────────────────────────────────────────────────────────
 if (summary() > 0) process.exit(1);

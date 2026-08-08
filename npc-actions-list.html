@@ -503,8 +503,6 @@
 
     const targets = api.getTargets();
     targets.forEach((target) => {
-      // Get calculated AC from modifiers - use if any
-      const targetAc = getArmorClassForToken(target?.token);
       const targetName =
         target?.token?.identified === false
           ? target?.token?.record?.unidentifiedName
@@ -520,6 +518,10 @@
           icon = "IconSword";
         }
       }
+
+      // Get calculated AC (after the ranged flip so melee/ranged-only AC
+      // bonuses are measured against the attack type actually being made)
+      const targetAc = getArmorClassForToken(target?.token, { ranged });
 
       // Only add the disadvantage if it's ranged and an enemy is within 5 feet
       if (ranged && disDueToProximity) {

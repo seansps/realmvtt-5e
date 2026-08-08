@@ -1228,6 +1228,8 @@
           const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
           acBonuses.forEach((mod) => {
             if (mod.value) {
+              // Melee/ranged-only bonuses never apply to the sheet AC
+              if (!_acModifierMatchesAttackType(mod.field, undefined)) return;
               const acBonus = parseInt(mod.value || "0", 10);
               if (!isNaN(acBonus)) {
                 calcBonus += acBonus;
@@ -2105,6 +2107,8 @@
         const acBonuses = getEffectsAndModifiers(["armorClassBonus"]);
         acBonuses.forEach((mod) => {
           if (mod.value) {
+            // Melee/ranged-only bonuses never apply to the sheet AC
+            if (!_acModifierMatchesAttackType(mod.field, undefined)) return;
             const acBonus = parseInt(mod.value || "0", 10);
             if (!isNaN(acBonus)) {
               calcBonus += acBonus;

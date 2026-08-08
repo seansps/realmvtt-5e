@@ -810,7 +810,7 @@ attackModifiers = attackModifiers.filter(
 
 targets.forEach(target => {
   // Get calculated AC from modifiers - use if any
-  const targetAc = getArmorClassForToken(target?.token);
+  const targetAc = getArmorClassForToken(target?.token, { ranged: ${rangedSpell} });
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;
   const targetDistance = api.getDistance(ourToken, target?.token);
   const diceRoll = '1d20';
