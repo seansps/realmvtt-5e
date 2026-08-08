@@ -3411,9 +3411,12 @@ function rollAbilityCheck(ability, dc) {
   });
 }
 
-function rollOtherSkillCheckForToken(token, otherSkill, dc) {
+function rollOtherSkillCheckForToken(token, otherSkill, dc, abilityOverride) {
   const skillName = (otherSkill?.name || "New Skill").toString();
-  const ability = otherSkill?.data?.ability || "strength";
+  const ability =
+    normalizeAbilityName(abilityOverride) ||
+    otherSkill?.data?.ability ||
+    "strength";
   const proficiency = otherSkill?.data?.skillProf || "false";
   const isHalfProficient = proficiency === "half";
   const isExpertise = proficiency === "expertise";
@@ -3500,9 +3503,40 @@ function rollOtherSkillCheckForToken(token, otherSkill, dc) {
   );
 }
 
-function rollSkillCheck(skill, dc) {
+const ABILITY_NAMES = [
+  "strength",
+  "dexterity",
+  "constitution",
+  "intelligence",
+  "wisdom",
+  "charisma",
+];
+
+/**
+ * Normalize an ability name to its full lowercase form.
+ * Accepts "str", "Strength", "strength", etc. Returns null if unrecognized.
+ */
+function normalizeAbilityName(ability) {
+  if (!ability) return null;
+  const normalized = ability.toString().trim().toLowerCase();
+  return (
+    ABILITY_NAMES.find(
+      (a) => a === normalized || a.substring(0, 3) === normalized,
+    ) || null
+  );
+}
+
+/**
+ * Roll a skill check.
+ * @param {string} skill - Skill name (display or camelCase field name)
+ * @param {number} [dc] - Optional DC for the check
+ * @param {string} [abilityOverride] - Optional ability to use instead of the
+ *   skill's default (e.g. "strength" for a Strength (Intimidation) check)
+ */
+function rollSkillCheck(skill, dc, abilityOverride) {
   // Normalize the skill name to camelCase field format
   skill = normalizeSkillName(skill);
+  const overrideAbility = normalizeAbilityName(abilityOverride);
 
   // Get the display name for this skill (e.g., "Sleight of Hand" from "sleightOfHand")
   const skillInfo = getSkills().find((s) => s.field === skill);
@@ -3548,6 +3582,24 @@ function rollSkillCheck(skill, dc) {
       if (isNaN(modValue)) {
         modValue = 0;
       }
+
+      // Swap in the overriding ability's modifier. When the NPC has a listed
+      // skill bonus, only the ability portion is swapped so proficiency and any
+      // other baked-in bonuses are preserved.
+      if (overrideAbility) {
+        const overrideMod =
+          parseInt(token?.data?.[`${overrideAbility}Mod`] || "0", 10) || 0;
+        if (npcSkill) {
+          const defaultAbility =
+            skillInfo?.ability || getAbilityFromSkill(skill);
+          const defaultMod =
+            parseInt(token?.data?.[`${defaultAbility}Mod`] || "0", 10) || 0;
+          modValue = modValue - defaultMod + overrideMod;
+        } else {
+          modValue = overrideMod;
+        }
+      }
+
       // Roll the check
       const modifiers = [
         {
@@ -3559,9 +3611,14 @@ function rollSkillCheck(skill, dc) {
 
       // Get any bonus or penalties for abilities and skills
       // Try to guess the ability from the skill name
-      const ability = getAbilityFromSkill(
-        skillNameWithoutMod.split(" ")[0].toLowerCase(),
-      );
+      const ability =
+        overrideAbility ||
+        getAbilityFromSkill(skillNameWithoutMod.split(" ")[0].toLowerCase());
+      const checkLabel = overrideAbility
+        ? `${capitalize(overrideAbility)} (${capitalize(
+            skillNameWithoutMod,
+          )}) Check`
+        : `${capitalize(skillNameWithoutMod)} Check`;
       const checkModifiers = getEffectsAndModifiersForToken(
         token,
         ["abilityBonus", "abilityPenalty"],
@@ -3582,12 +3639,12 @@ function rollSkillCheck(skill, dc) {
 
       const metadata = {
         rollName: `${capitalize(skillNameWithoutMod)}`,
-        tooltip: `${capitalize(skillNameWithoutMod)} Check`,
+        tooltip: checkLabel,
         dc: dc,
       };
       api.promptRollForToken(
         token,
-        `${capitalize(skillNameWithoutMod)} Check`,
+        checkLabel,
         "1d20",
         modifiers,
         metadata,
@@ -3602,12 +3659,13 @@ function rollSkillCheck(skill, dc) {
           (s) => (s?.name || "").trim().toLowerCase() === lookupName,
         );
         if (otherSkill) {
-          rollOtherSkillCheckForToken(token, otherSkill, dc);
+          rollOtherSkillCheckForToken(token, otherSkill, dc, abilityOverride);
           return;
         }
       }
       // skill is already normalized to camelCase field format (e.g., "sleightOfHand")
       let ability =
+        overrideAbility ||
         token?.data?.[`${skill}Ability`] ||
         skillInfo?.ability ||
         getAbilityFromSkill(skill);
@@ -3620,13 +3678,15 @@ function rollSkillCheck(skill, dc) {
       }
 
       // Effect-driven skill-ability override (e.g. "use spellcasting ability for
-      // Athletics, if higher").
-      ({ ability, abilityMod } = resolveSkillCheckAbility(
-        token,
-        skill,
-        ability,
-        abilityMod,
-      ));
+      // Athletics, if higher"). An explicit caller-supplied ability wins.
+      if (!overrideAbility) {
+        ({ ability, abilityMod } = resolveSkillCheckAbility(
+          token,
+          skill,
+          ability,
+          abilityMod,
+        ));
+      }
 
       const proficiencyBonus = parseInt(
         token?.data?.proficiencyBonus || "0",
