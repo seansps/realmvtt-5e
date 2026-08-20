@@ -1344,8 +1344,13 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
     }
   });
 
-  // Process speed modifiers — apply bonus/penalty to current speed string
-  const hasSpeedMod = modifiers.some(
+  // Process speed modifiers — apply bonus/penalty to current speed string.
+  // Predicated ones are skipped here: this block re-derives speed from the
+  // species plus THIS feature's modifiers alone, at a point where the toggle
+  // that gates them may not exist yet. The full calculateSpeed pass that runs
+  // after the drop is predicate-aware and picks them up correctly.
+  const speedModifiers = modifiers.filter((m) => !m?.data?.predicate);
+  const hasSpeedMod = speedModifiers.some(
     (m) =>
       m?.data?.type === "speedBonus" ||
       m?.data?.type === "speedPenalty" ||
@@ -1361,7 +1366,7 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
       const unit = speciesSpeed.replace(match[1], "").trim() || "ft";
       const additionalModes = [];
       // Apply baseSpeed modifiers first — sets the base (only upgrades, never downgrades)
-      modifiers.forEach((mod) => {
+      speedModifiers.forEach((mod) => {
         if (mod?.data?.active === false) return;
         if (mod?.data?.type === "baseSpeed") {
           const newBase = parseInt(mod?.data?.value, 10) || 0;
@@ -1371,7 +1376,7 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
         }
       });
       // Then apply bonuses and penalties on top
-      modifiers.forEach((mod) => {
+      speedModifiers.forEach((mod) => {
         if (mod?.data?.active === false) return;
         if (mod?.data?.type === "speedPenalty") {
           speedValue -= Math.abs(parseInt(mod?.data?.value, 10) || 0);

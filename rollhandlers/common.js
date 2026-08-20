@@ -4841,6 +4841,46 @@ function recalcPassiveSkills(rec, fieldsToSet) {
 
 // Known weapon properties for conditional AC bonus checks
 
+// Predicate gate for the derived-value recalcs that walk features/items
+// directly instead of going through getEffectsAndModifiersForToken (speed
+// today). Mirrors the toggle / effect / feature sets that collector builds, but
+// not its `active` semantics — those recalcs treat a modifier as on unless
+// data.active is explicitly false, while the collector treats it as off unless
+// explicitly true.
+//
+// No roll context exists here, so weapon:/target:/attacker: predicates resolve
+// false and their modifiers simply never apply — a static sheet value can't
+// depend on an in-flight attack anyway.
+function evaluateStaticModifierPredicate(rec, mod) {
+  const predicate = (mod?.data?.predicate || "").trim();
+  if (!predicate) return true;
+  const activeToggles = new Set();
+  (rec?.data?.toggles || []).forEach((t) => {
+    if (!t?.data?.active) return;
+    const f = t?.data?.field;
+    if (!f) return;
+    activeToggles.add(f);
+    const slug = _slugifyName(f);
+    if (slug) activeToggles.add(slug);
+  });
+  const effectSlugs = new Set(
+    (rec?.effects || []).map((e) => _slugifyName(e?.name)).filter(Boolean),
+  );
+  const featureSlugs = new Set(
+    (rec?.data?.features || [])
+      .map((f) => _slugifyName(f?.name))
+      .filter(Boolean),
+  );
+  return _evaluateTogglePredicate(
+    predicate,
+    activeToggles,
+    effectSlugs,
+    featureSlugs,
+    undefined,
+    rec,
+  );
+}
+
 function calculateSpeed(rec) {
   // Base speed comes from the heritage (biological trait), default 30 ft
   const heritage = (rec?.data?.heritages || [])[0];
@@ -4874,7 +4914,11 @@ function calculateSpeed(rec) {
   features.forEach((feature) => {
     const modifiers = feature?.data?.modifiers || [];
     modifiers.forEach((mod) => {
-      if (mod?.data?.active !== false && mod?.data?.type === "baseSpeed") {
+      if (
+        mod?.data?.active !== false &&
+        mod?.data?.type === "baseSpeed" &&
+        evaluateStaticModifierPredicate(rec, mod)
+      ) {
         const newBase = parseInt(mod?.data?.value, 10) || 0;
         if (newBase > speedValue) {
           speedValue = newBase;
@@ -4885,7 +4929,10 @@ function calculateSpeed(rec) {
   features.forEach((feature) => {
     const modifiers = feature?.data?.modifiers || [];
     modifiers.forEach((mod) => {
-      if (mod?.data?.active !== false) {
+      if (
+        mod?.data?.active !== false &&
+        evaluateStaticModifierPredicate(rec, mod)
+      ) {
         if (mod?.data?.type === "speedPenalty") {
           const penaltyValue = Math.abs(parseInt(mod?.data?.value, 10) || 0);
           speedValue -= penaltyValue;
@@ -4911,7 +4958,10 @@ function calculateSpeed(rec) {
     if (item?.data?.carried === "equipped") {
       const modifiers = item?.data?.modifiers || [];
       modifiers.forEach((mod) => {
-        if (mod?.data?.active !== false) {
+        if (
+          mod?.data?.active !== false &&
+          evaluateStaticModifierPredicate(rec, mod)
+        ) {
           if (mod?.data?.type === "speedPenalty") {
             const penaltyValue = Math.abs(parseInt(mod?.data?.value, 10) || 0);
             speedValue -= penaltyValue;
