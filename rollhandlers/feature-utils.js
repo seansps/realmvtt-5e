@@ -1907,7 +1907,11 @@ function _collectSenseGrants(rec) {
   const grants = [];
   const scan = (src) =>
     (src?.data?.modifiers || []).forEach((m) => {
-      if (m?.data?.type === "senses" && m?.data?.active !== false) {
+      if (
+        m?.data?.type === "senses" &&
+        m?.data?.active !== false &&
+        evaluateStaticModifierPredicate(rec, m)
+      ) {
         const v = (m?.data?.value || "").trim();
         if (v) grants.push(v);
       }
@@ -2308,6 +2312,11 @@ function recalcACAndHP(characterRecord, callback) {
     // dice, senses that grant advantage/disadvantage, skillProficiency-driven
     // skill mod changes, etc. Covers add paths; delete path calls this itself.
     recalcPassiveSkills(rec, fieldsToSet);
+
+    // Senses — a toggle flip can enable or disable a predicated senses grant,
+    // and recalcSenses re-derives data.senses from data.sensesBase plus whatever
+    // currently applies, so calling it here is enough to add or remove it.
+    recalcSenses(fieldsToSet, rec);
 
     // Toggle reconcile — self-heals against parallel applyOneTimeModifiers
     // calls that each read a stale data.toggles and overwrite each other's
