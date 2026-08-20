@@ -34,6 +34,13 @@
   function equipGridItem(index, newValue) {
     const itemDataPath = "data.inventory." + index;
     api.setValue(itemDataPath + ".data.carried", newValue, function () {
+      // The in-memory `record` this script closes over is a snapshot — unlike a
+      // component onchange (which re-renders against a fresh one), this callback
+      // still sees the PREVIOUS carried state. getBestEquippedArmor() reads
+      // record.data.inventory directly, so without this the AC would be derived
+      // one step behind: still counting armor just unequipped, or missing armor
+      // just equipped. Mirror the new value across before handing off.
+      syncInventoryItemValue(itemDataPath, "carried", newValue);
       onItemEquippedFor(itemDataPath, newValue);
     });
   }
@@ -43,6 +50,9 @@
   function attuneGridItem(index, newValue) {
     const itemDataPath = "data.inventory." + index;
     api.setValue(itemDataPath + ".data.attuned", newValue, function () {
+      // Same stale-snapshot problem as equipGridItem — attunement gates whether
+      // an item's modifiers count, so the recalc has to see the new state.
+      syncInventoryItemValue(itemDataPath, "attuned", newValue);
       onItemAttunedFor(itemDataPath);
     });
   }

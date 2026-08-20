@@ -2320,6 +2320,22 @@ function getArmorClass(bestEquippedArmor) {
   return armorClass;
 }
 
+// Mirrors a just-changed item field onto the in-memory record's inventory entry.
+// getBestEquippedArmor() reads record.data.inventory, which a handler running
+// from an api.setValue callback may reach before the client has folded the new
+// value in — so AC would be computed from the PREVIOUS state. api.getValue is
+// always fresh, so sync the fresh value across before re-deriving. No-op for
+// items that aren't inventory rows (a compendium item record has no parent
+// inventory).
+function syncInventoryItemValue(itemDataPath, key, value) {
+  if (!itemDataPath || !itemDataPath.startsWith("data.inventory.")) return;
+  const index = parseInt(itemDataPath.split(".")[2], 10);
+  if (isNaN(index)) return;
+  const entry = record?.data?.inventory?.[index];
+  if (!entry) return;
+  entry.data = { ...(entry.data || {}), [key]: value };
+}
+
 // Gets the best equipped armor for the context of the current PC
 function getBestEquippedArmor() {
   // Get the current ac due to armor
