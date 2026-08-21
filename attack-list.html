@@ -791,7 +791,15 @@
   // Fighting: 1d6 + STR, becoming 1d8 with both hands free. A value with no "/"
   // is used verbatim, exactly as before.
   function applyUnarmedDamageOverride(damage, attack) {
-    const overrideMods = getEffectsAndModifiers(["unarmedDamageOverride"]);
+    // attack._id is threaded through so weapon:name:/weapon:type: predicates
+    // resolve against the specific natural weapon being rolled — lets an
+    // override be scoped to one unarmed attack (e.g. "Bite Attack") instead of
+    // hitting every unarmed strike on the sheet.
+    const overrideMods = getEffectsAndModifiers(
+      ["unarmedDamageOverride"],
+      undefined,
+      attack?._id,
+    ).filter((m) => m.active !== false);
     if (overrideMods.length === 0) return damage;
     let override = (overrideMods[overrideMods.length - 1].value ?? "")
       .toString()
