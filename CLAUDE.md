@@ -121,3 +121,11 @@ Fields such as `onload` and `onchange` only work on Realm VTT field HTML, not on
 ## Realm VTT API Reference
 
 See the `realm-vtt-api` skill for the API surface (data management, dice rolling, token management), the roll-type and metadata rules, and recipes for adding character options, calculations, and UI components.
+
+## Language
+
+All writing uses **American English**. This covers UI copy, marketing text, docs,
+comments, commit messages, and anything else that ships. No British English:
+write "color" not "colour", "organization" not "organisation", "math" not
+"maths", "license" not "licence", "traveling" not "travelling", "gray" not
+"grey". No em dashes in user-facing copy either.
