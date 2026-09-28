@@ -1862,7 +1862,7 @@ function applySlugFeaturesForFeatures(features, characterRecord, callback) {
 //   "Darkvision +30/30"    — add 30 to existing range; else add at 30 (explicit fallback)
 // Returns a new array; the input is not mutated.
 function _mergeSenseEntry(entries, rawValue) {
-  const newSense = (rawValue || "").trim();
+  const newSense = String(rawValue ?? "").trim();
   if (!newSense) return entries;
   const out = entries.slice();
   const match = newSense.match(/^(.+?)\s+(\+?)(\d+)(?:\/(\d+))?$/);
@@ -1896,10 +1896,31 @@ function _mergeSenseEntry(entries, rawValue) {
 }
 
 const _parseSenseEntries = (s) =>
-  (s || "")
+  String(s ?? "")
     .split(",")
     .map((x) => x.trim())
     .filter((x) => x !== "");
+
+// Sense modifiers support either the full display value in `value`
+// ("Darkvision 60") or a sense name in `field` with a numeric/range-only
+// value (`field: "darkvision", value: 60`). Normalize both representations
+// before merging them into data.senses.
+function _getSenseGrantValue(modifier) {
+  const value = String(modifier?.data?.value ?? "").trim();
+  if (!value) return "";
+
+  const field = String(modifier?.data?.field ?? "").trim();
+  if (!field || !/^\+?\d+(?:\/\d+)?$/.test(value)) return value;
+
+  const senseName = field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replaceAll("_", " ")
+    .replaceAll("-", " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!senseName) return value;
+  return `${senseName.charAt(0).toUpperCase()}${senseName.slice(1)} ${value}`;
+}
 
 // Collects every senses modifier that currently applies: all features, plus
 // equipped inventory items (attunement-gated exactly like attributeBonus).
@@ -1912,7 +1933,7 @@ function _collectSenseGrants(rec) {
         m?.data?.active !== false &&
         evaluateStaticModifierPredicate(rec, m)
       ) {
-        const v = (m?.data?.value || "").trim();
+        const v = _getSenseGrantValue(m);
         if (v) grants.push(v);
       }
     });

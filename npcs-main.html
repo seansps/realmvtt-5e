@@ -299,6 +299,27 @@
     );
   }
 
+  function mergeConditionImmunities(immunities, conditionImmunities) {
+    const condition = String(conditionImmunities || "").trim();
+    if (!condition) return String(immunities || "");
+
+    const conditionKey = condition.toLowerCase();
+    let foundCondition = false;
+    const sections = String(immunities || "")
+      .split(";")
+      .map((section) => section.trim())
+      .filter(Boolean)
+      .filter((section) => {
+        if (section.toLowerCase() !== conditionKey) return true;
+        if (foundCondition) return false;
+        foundCondition = true;
+        return true;
+      });
+
+    if (!foundCondition) sections.push(condition);
+    return sections.join("; ");
+  }
+
   // On load of an NPC unhide any fields that may have been set by the Generator
   // or otheriwse
   function onLoadNPC() {
@@ -399,9 +420,7 @@
     const conditionImmunities = record?.data?.conditionImmunities || "";
     if (conditionImmunities) {
       const immunities = record?.data?.immunities || "";
-      const merged = immunities
-        ? `${immunities}; ${conditionImmunities}`
-        : conditionImmunities;
+      const merged = mergeConditionImmunities(immunities, conditionImmunities);
       if (merged !== immunities) {
         valuesToSet["data.immunities"] = merged;
       }

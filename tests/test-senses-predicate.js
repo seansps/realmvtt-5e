@@ -55,6 +55,70 @@ assert(
   "Darkvision 60, Tremorsense 30",
 );
 
+section("senses — field-based numeric values");
+
+assert(
+  "numeric range is normalized with its sense field",
+  derive({
+    effects: [],
+    data: {
+      sensesBase: "",
+      senses: "",
+      toggles: [],
+      features: [
+        {
+          name: "Lesser Darkvision",
+          data: {
+            modifiers: [
+              {
+                data: {
+                  type: "senses",
+                  field: "darkvision",
+                  valueType: "number",
+                  value: 30,
+                },
+              },
+            ],
+          },
+        },
+      ],
+      inventory: [],
+    },
+  }),
+  "Darkvision 30",
+);
+
+assert(
+  "range-only string is normalized with its camel-case sense field",
+  derive({
+    effects: [],
+    data: {
+      sensesBase: "Darkvision 30",
+      senses: "Darkvision 30",
+      toggles: [],
+      features: [
+        {
+          name: "Enhanced Vision",
+          data: {
+            modifiers: [
+              {
+                data: {
+                  type: "senses",
+                  field: "trueSight",
+                  valueType: "string",
+                  value: "60",
+                },
+              },
+            ],
+          },
+        },
+      ],
+      inventory: [],
+    },
+  }),
+  "Darkvision 30, True Sight 60",
+);
+
 section("senses — removal is a re-derive, not a delta");
 
 // data.senses already carries the grant from when the toggle was on; flipping it
