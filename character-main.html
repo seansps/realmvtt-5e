@@ -2993,73 +2993,83 @@
       api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
     }
 
+    const inventory = record?.data?.inventory || [];
     // Give characters a built-in, equipped Unarmed Strike so it always appears
     // in the Attacks list (and works with Martial Arts / unarmed damage bonuses).
     // For backwards compatibility, only add it if the character doesn't already
-    // have one of the known unarmed-strike weapons equipped. Guarded by
-    // data.initialized so it is only evaluated once.
+    // have one of the known unarmed-strike weapons equipped. data.initialized
+    // is written BEFORE the add: it used to be written in the add's callback,
+    // so whenever that second write was lost or the Main tab re-activated
+    // before it landed, every later load added another copy.
     if (!record?.data?.initialized) {
       const UNARMED_NAMES = [
         "Martial Arts Unarmed Strike",
         "Unarmed Strike",
         "Enhanced Unarmed Strike",
       ];
-      const hasUnarmed = (record?.data?.inventory || []).some(
+      const hasUnarmed = inventory.some(
         (item) =>
-          item?.data?.carried === "equipped" &&
-          UNARMED_NAMES.includes(item?.name),
+          isAutoUnarmedStrike(item) ||
+          (item?.data?.carried === "equipped" &&
+            UNARMED_NAMES.includes(item?.name)),
       );
-      if (hasUnarmed) {
-        api.setValue("data.initialized", true);
-      } else {
-        api.addValue(
-          "data.inventory",
-          {
-            _id: generateId(),
-            name: "Unarmed Strike",
-            recordType: "items",
-            identified: true,
-            unidentifiedName: "Unarmed Strike",
-            locked: true,
-            portrait: "/images/f370c7cf-0927-4dcb-ba9a-667c79b1ccf8_29.webp",
-            fields: {
-              addDex: { hidden: true },
-              armorCategory: { hidden: true },
-              armorClass: { hidden: true },
-              consumable: { hidden: true },
-              itemListLabel: { hidden: true },
-              items: { hidden: true },
-              maxDex: { hidden: true },
-              stealth: { hidden: true },
-              strength: { hidden: true },
-              attunement: { hidden: false },
-              damage: { hidden: false },
-              rarity: { hidden: false },
-              weaponMastery: { hidden: false },
-              weaponProperties: { hidden: false },
-              weaponType: { hidden: false },
-              spell: { hidden: true },
-              spellLevel: { hidden: true },
-            },
-            data: {
-              description:
-                "<p>You can make an Unarmed Strike to deal damage, attempt a grapple, or shove an enemy.</p><p>Add the Finesse property above if you are able to use Dexterity for the Attack Roll.</p>",
-              type: "melee weapon",
-              subtype: "Simple Melee Weapons",
-              weaponType: "Unarmed",
-              cost: "",
-              weight: 0,
-              damage: "1 bludgeoning",
-              carried: "equipped",
-              unarmedStrike: "true",
-            },
-          },
-          () => {
-            api.setValue("data.initialized", true);
-          },
-        );
-      }
+      api.setValue("data.initialized", true, () => {
+        if (!hasUnarmed) addUnarmedStrike();
+      });
     }
+  }
+
+  // The Unarmed Strike onLoadCharacter adds is tagged data.unarmedStrike.
+  function isAutoUnarmedStrike(item) {
+    return (
+      item?.data?.unarmedStrike === "true" && item?.name === "Unarmed Strike"
+    );
+  }
+
+  function addUnarmedStrike() {
+    api.addValue(
+      "data.inventory",
+      {
+        _id: generateId(),
+        name: "Unarmed Strike",
+        recordType: "items",
+        identified: true,
+        unidentifiedName: "Unarmed Strike",
+        locked: true,
+        portrait: "/images/f370c7cf-0927-4dcb-ba9a-667c79b1ccf8_29.webp",
+        fields: {
+          addDex: { hidden: true },
+          armorCategory: { hidden: true },
+          armorClass: { hidden: true },
+          consumable: { hidden: true },
+          itemListLabel: { hidden: true },
+          items: { hidden: true },
+          maxDex: { hidden: true },
+          stealth: { hidden: true },
+          strength: { hidden: true },
+          attunement: { hidden: false },
+          damage: { hidden: false },
+          rarity: { hidden: false },
+          weaponMastery: { hidden: false },
+          weaponProperties: { hidden: false },
+          weaponType: { hidden: false },
+          spell: { hidden: true },
+          spellLevel: { hidden: true },
+        },
+        data: {
+          description:
+            "<p>You can make an Unarmed Strike to deal damage, attempt a grapple, or shove an enemy.</p><p>Add the Finesse property above if you are able to use Dexterity for the Attack Roll.</p>",
+          type: "melee weapon",
+          subtype: "Simple Melee Weapons",
+          weaponType: "Unarmed",
+          cost: "",
+          weight: 0,
+          damage: "1 bludgeoning",
+          carried: "equipped",
+          unarmedStrike: "true",
+        },
+      },
+    );
   }
 
   function showHideLevelUp() {

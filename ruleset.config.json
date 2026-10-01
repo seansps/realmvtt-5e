@@ -594,7 +594,7 @@
       ],
       "icon": "",
       "showAddButton": false,
-      "showDeleteButton": false,
+      "showDeleteButton": true,
       "addButtonText": "",
       "allowedListTypes": [],
       "newItemName": "",
