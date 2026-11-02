@@ -1,0 +1,85 @@
+# Test every push and PR; deploy main to Realm VTT with a per-ruleset deploy token.
+#
+# Setup (repo Settings > Environments > "realm-deploy"):
+#   - Deployment branches: Selected branches, `main` only
+#   - Required reviewers: optional (adds a manual approval before each deploy)
+#   - Environment secret REALM_DEPLOY_TOKEN: generate it in the Realm VTT
+#     ruleset editor under Deploy
+#
+# PRs (including forks) run the test job only; they never see the token.
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REALM_RULESET_ID: 66e37156b49c73d33593dbfd
+  # Pinned ruleset-compiler commit. Bump deliberately after reviewing changes.
+  RULESET_COMPILER_REF: a60275ff2f23a62993209515b1f772faa613dd2c
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Run ruleset tests
+        run: node tests/run-all.js
+
+      - name: Install ruleset-compiler
+        run: |
+          git clone --quiet https://github.com/seansps/ruleset-compiler.git "$RUNNER_TEMP/ruleset-compiler"
+          git -C "$RUNNER_TEMP/ruleset-compiler" checkout --quiet "$RULESET_COMPILER_REF"
+          npm ci --omit=dev --prefix "$RUNNER_TEMP/ruleset-compiler"
+
+      - name: Compile ruleset
+        run: node "$RUNNER_TEMP/ruleset-compiler/src/cli.js" rulesets . --output "$RUNNER_TEMP/ruleset.json"
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: realm-deploy
+    # One deploy at a time; a newer push waits for the current deploy to finish.
+    concurrency:
+      group: realm-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Install ruleset-compiler
+        run: |
+          git clone --quiet https://github.com/seansps/ruleset-compiler.git "$RUNNER_TEMP/ruleset-compiler"
+          git -C "$RUNNER_TEMP/ruleset-compiler" checkout --quiet "$RULESET_COMPILER_REF"
+          npm ci --omit=dev --prefix "$RUNNER_TEMP/ruleset-compiler"
+
+      - name: Deploy to Realm VTT
+        env:
+          REALM_DEPLOY_TOKEN: ${{ secrets.REALM_DEPLOY_TOKEN }}
+        # GITHUB_SHA is sent as the deploy ref and shows in Deploy history.
+        # Without the token the compiler would fall back to its interactive
+        # login, so fail fast instead.
+        run: |
+          if [ -z "$REALM_DEPLOY_TOKEN" ]; then
+            echo "::error::REALM_DEPLOY_TOKEN is not set on the realm-deploy environment"
+            exit 1
+          fi
+          node "$RUNNER_TEMP/ruleset-compiler/src/cli.js" rulesets . --id "$REALM_RULESET_ID"
