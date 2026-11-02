@@ -191,5 +191,111 @@ function processNextGroup(currentRec) {
   }, recAfterAdd);
 }
 
-// Kick off processing
-processNextGroup(record);
+// ===== Item spells =====
+// The import script stashes each item's DDB spells on it as data.ddbItemSpells
+// ({ name, data } with castLevel/charges set). Resolve them into the item's
+// data.itemSpells: copy the compendium spell when one exists (keeping DDB's cast
+// level and charge cost), otherwise add a placeholder built from the DDB data.
+// Spells the matched compendium item already lists are left as they are.
+function lookupSpell(name, callback) {
+  api.getRecordByTypeAndName("spells", name, function (found) {
+    if (found) {
+      callback(found);
+      return;
+    }
+    var escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    api.getRecordsByQuery(
+      "spells",
+      { name: { $regex: "^" + escaped + "$", $options: "i" } },
+      function (results) {
+        callback(results && results.length > 0 ? results[0] : null);
+      },
+      1,
+    );
+  });
+}
+
+var processedItemSpellIds = {};
+function processItemSpells(currentRec, done) {
+  var inventory = currentRec?.data?.inventory || [];
+  // Tracked by item _id so a callback record that still shows the stash can't
+  // send us around the same item twice.
+  var itemIdx = inventory.findIndex(function (item) {
+    return (
+      (item?.data?.ddbItemSpells || []).length > 0 &&
+      !processedItemSpellIds[item._id]
+    );
+  });
+  if (itemIdx === -1) {
+    done(currentRec);
+    return;
+  }
+
+  var item = inventory[itemIdx];
+  processedItemSpellIds[item._id] = true;
+  var pending = item.data.ddbItemSpells;
+  var itemSpells = (item.data.itemSpells || []).slice();
+  var haveNames = {};
+  itemSpells.forEach(function (sp) {
+    if (sp?.name) haveNames[sp.name.toLowerCase()] = true;
+  });
+
+  var sIdx = 0;
+  function nextSpell() {
+    if (sIdx >= pending.length) {
+      var prefix = "data.inventory." + itemIdx;
+      var valuesToSet = {};
+      valuesToSet[prefix + ".data.itemSpells"] = itemSpells;
+      valuesToSet[prefix + ".data.ddbItemSpells"] = null;
+      valuesToSet[prefix + ".tabs.Spells.hidden"] = false;
+      valuesToSet[prefix + ".fields.hasSpells.hidden"] = false;
+      if (item.data.hasUseBtn) {
+        valuesToSet[prefix + ".fields.usesRemaining.hidden"] = false;
+        valuesToSet[prefix + ".fields.maxUses.hidden"] = false;
+        valuesToSet[prefix + ".fields.recharge.hidden"] = false;
+      }
+      api.setValues(valuesToSet, function (r) {
+        processItemSpells(r, done);
+      });
+      return;
+    }
+
+    var entry = pending[sIdx++];
+    if (!entry?.name || haveNames[entry.name.toLowerCase()]) {
+      nextSpell();
+      return;
+    }
+    haveNames[entry.name.toLowerCase()] = true;
+
+    lookupSpell(entry.name, function (found) {
+      if (found) {
+        itemSpells.push({
+          ...found,
+          _id: generateId(),
+          data: {
+            ...(found.data || {}),
+            castLevel: entry.data.castLevel,
+            charges: entry.data.charges,
+          },
+        });
+      } else {
+        itemSpells.push({
+          _id: generateId(),
+          name: entry.name,
+          unidentifiedName: entry.name,
+          recordType: "spells",
+          identified: true,
+          data: entry.data,
+        });
+      }
+      nextSpell();
+    });
+  }
+  nextSpell();
+}
+
+// Kick off processing: item spells first, then ability groups, one at a time so
+// their writes don't race on the same record.
+processItemSpells(record, function (rec) {
+  processNextGroup(rec);
+});

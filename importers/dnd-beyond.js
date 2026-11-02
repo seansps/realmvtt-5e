@@ -82,29 +82,60 @@ var abilityScores = {};
   abilityScores[name] = val;
 });
 
+// Item modifiers come from the inventory rather than ddb.modifiers.item, which
+// also lists items that aren't equipped (e.g. a Potion of Healing in the pack).
+// A granted modifier is live while its item is equipped, and attuned if the
+// modifier requires attunement — the same gate Realm applies to item modifiers.
+var activeItemModifiers = [];
+(ddb.inventory || []).forEach(function (item) {
+  if (!item.equipped) return;
+  ((item.definition && item.definition.grantedModifiers) || []).forEach(
+    function (gm) {
+      if (!gm) return;
+      if (gm.requiresAttunement && !item.isAttuned) return;
+      activeItemModifiers.push(gm);
+    },
+  );
+});
+
 // Gather all modifiers from all sources
 var allModifiers = [].concat(
   ddb.modifiers && ddb.modifiers.race ? ddb.modifiers.race : [],
   ddb.modifiers && ddb.modifiers.class ? ddb.modifiers.class : [],
   ddb.modifiers && ddb.modifiers.background ? ddb.modifiers.background : [],
   ddb.modifiers && ddb.modifiers.feat ? ddb.modifiers.feat : [],
-  ddb.modifiers && ddb.modifiers.item ? ddb.modifiers.item : [],
+  activeItemModifiers,
   ddb.modifiers && ddb.modifiers.condition ? ddb.modifiers.condition : [],
 );
 
-// Apply ability score bonuses from modifiers
+// Apply ability score bonuses from modifiers. Item bonuses/sets are NOT baked
+// into the base score: the item carries them as attributeBonus/attributeSet
+// modifiers, and Realm re-derives score = base + bonus (floored by any set), so
+// baking them in too would double them on the next recalc.
+var abilityBaseScores = {};
+var itemAbilityBonus = {};
+var itemAbilitySet = {};
 allModifiers.forEach(function (mod) {
-  if (
-    mod.type === "bonus" &&
-    mod.subType &&
-    mod.subType.indexOf("-score") !== -1 &&
-    mod.value
-  ) {
-    var ability = mod.subType.replace("-score", "");
-    if (abilityScores[ability] !== undefined) {
+  if (!mod.subType || mod.subType.indexOf("-score") === -1) return;
+  var ability = mod.subType.replace("-score", "");
+  if (abilityScores[ability] === undefined) return;
+  var isItemMod = activeItemModifiers.indexOf(mod) !== -1;
+  if (mod.type === "bonus" && mod.value) {
+    if (isItemMod) {
+      itemAbilityBonus[ability] = (itemAbilityBonus[ability] || 0) + mod.value;
+    } else {
       abilityScores[ability] += mod.value;
     }
+  } else if (mod.type === "set" && mod.value && isItemMod) {
+    itemAbilitySet[ability] = Math.max(itemAbilitySet[ability] || 0, mod.value);
   }
+});
+Object.keys(abilityScores).forEach(function (ability) {
+  abilityBaseScores[ability] = abilityScores[ability];
+  abilityScores[ability] = Math.max(
+    abilityScores[ability] + (itemAbilityBonus[ability] || 0),
+    itemAbilitySet[ability] || 0,
+  );
 });
 
 // ===== 2. Build Character Data =====
@@ -135,7 +166,8 @@ Object.keys(abilityScores).forEach(function (name) {
   var val = abilityScores[name];
   charData[name] = val;
   charData[name + "Mod"] = statMod(val);
-  charData[name + "Base"] = val;
+  charData[name + "Base"] = abilityBaseScores[name];
+  charData[name + "Bonus"] = itemAbilityBonus[name] || 0;
 });
 
 // Core stats
@@ -180,11 +212,27 @@ var baseAc = 10 + dexMod;
 if (isMonk) baseAc = 10 + dexMod + wisMod;
 if (isBarbarian) baseAc = 10 + dexMod + conMod;
 
+// DDB marks shields with armorTypeId 4; magic shields (Sentinel Shield) leave
+// def.type null, so the type string alone misses them.
+function isShieldDef(def) {
+  return (
+    def.filterType === "Armor" &&
+    (def.type === "Shield" ||
+      def.armorTypeId === 4 ||
+      def.baseArmorName === "Shield")
+  );
+}
+
 // Check for equipped armor in inventory
 var hasEquippedArmor = false;
 (ddb.inventory || []).forEach(function (item) {
   var def = item.definition || {};
-  if (item.equipped && def.armorClass && def.filterType === "Armor") {
+  if (
+    item.equipped &&
+    def.armorClass &&
+    def.filterType === "Armor" &&
+    !isShieldDef(def)
+  ) {
     hasEquippedArmor = true;
     var armorAc = def.armorClass;
     var maxDex = def.armorTypeId === 1 ? 999 : def.armorTypeId === 2 ? 2 : 0;
@@ -196,18 +244,15 @@ var hasEquippedArmor = false;
     baseAc = armorAc + acDex;
   }
 });
-// Check for equipped shield
+// Check for equipped shield — only one counts, even if DDB has several equipped
+var bestShieldAc = 0;
 (ddb.inventory || []).forEach(function (item) {
   var def = item.definition || {};
-  if (
-    item.equipped &&
-    def.armorClass &&
-    def.filterType === "Armor" &&
-    def.type === "Shield"
-  ) {
-    baseAc += def.armorClass;
+  if (item.equipped && def.armorClass && isShieldDef(def)) {
+    bestShieldAc = Math.max(bestShieldAc, def.armorClass);
   }
 });
+baseAc += bestShieldAc;
 // Apply AC bonuses from modifiers
 allModifiers.forEach(function (mod) {
   if (mod.type === "bonus" && mod.subType === "armor-class" && mod.value) {
@@ -216,17 +261,39 @@ allModifiers.forEach(function (mod) {
 });
 charData.ac = baseAc;
 
-// Senses — extract from modifiers (darkvision, blindsight, tremorsense, truesight)
-var senses = [];
+// Senses — extract from modifiers (darkvision, blindsight, tremorsense, truesight).
+// Written as "Name Dist" (the format recalcSenses parses). The highest range per
+// sense wins; an item that extends an existing sense ("plus 60 feet if the wearer
+// already has Darkvision", Goggles of Night) adds to it instead.
+function senseDisplayName(mod) {
+  var senseName = mod.friendlySubtypeName || mod.subType;
+  return senseName.charAt(0).toUpperCase() + senseName.slice(1);
+}
+function isAdditiveSense(mod) {
+  return /already/i.test(mod.restriction || "");
+}
+var senseRanges = {};
+var senseOrder = [];
 allModifiers.forEach(function (mod) {
-  if (mod.type === "sense" && mod.subType && mod.value) {
-    var senseName = mod.friendlySubtypeName || mod.subType;
-    senseName = senseName.charAt(0).toUpperCase() + senseName.slice(1);
-    senses.push(senseName + " " + mod.value + " ft.");
-  }
+  if (mod.type !== "sense" || !mod.subType || !mod.value) return;
+  if (isAdditiveSense(mod)) return;
+  var senseName = senseDisplayName(mod);
+  if (senseRanges[senseName] === undefined) senseOrder.push(senseName);
+  senseRanges[senseName] = Math.max(senseRanges[senseName] || 0, mod.value);
 });
-if (senses.length > 0) {
-  charData.senses = senses.join(", ");
+allModifiers.forEach(function (mod) {
+  if (mod.type !== "sense" || !mod.subType || !mod.value) return;
+  if (!isAdditiveSense(mod)) return;
+  var senseName = senseDisplayName(mod);
+  if (senseRanges[senseName] === undefined) senseOrder.push(senseName);
+  senseRanges[senseName] = (senseRanges[senseName] || 0) + mod.value;
+});
+if (senseOrder.length > 0) {
+  charData.senses = senseOrder
+    .map(function (senseName) {
+      return senseName + " " + senseRanges[senseName];
+    })
+    .join(", ");
 }
 
 // Size — from race sizeId (2=Tiny, 3=Small, 4=Medium, 5=Large, 6=Huge, 7=Gargantuan)
@@ -337,10 +404,21 @@ Object.keys(skillAbilities).forEach(function (skill) {
   charData[skill + "Mod"] = abilityMod + bonus;
 });
 
-// Passive scores
-charData.passivePerception = 10 + (charData.perceptionMod || 0);
-charData.passiveInsight = 10 + (charData.insightMod || 0);
-charData.passiveInvestigation = 10 + (charData.investigationMod || 0);
+// Passive scores (plus flat passive bonuses such as the Sentinel Shield's +5)
+function passiveBonusFor(skill) {
+  var total = 0;
+  allModifiers.forEach(function (mod) {
+    if (mod.type === "bonus" && mod.subType === "passive-" + skill && mod.value)
+      total += mod.value;
+  });
+  return total;
+}
+charData.passivePerception =
+  10 + (charData.perceptionMod || 0) + passiveBonusFor("perception");
+charData.passiveInsight =
+  10 + (charData.insightMod || 0) + passiveBonusFor("insight");
+charData.passiveInvestigation =
+  10 + (charData.investigationMod || 0) + passiveBonusFor("investigation");
 
 // ===== 4. Armor/weapon proficiencies =====
 
@@ -627,43 +705,271 @@ var characterEntityId = ddb.id;
 });
 
 // Translate a DDB item's grantedModifiers (the magic bonuses baked into the item
-// definition) into Realm item modifier records stored on data.modifiers. This covers
-// magic armor/shields (+1/+2/+3 AC) and protective wondrous items / rings like the
-// Cloak of Protection (which grants BOTH an AC bonus and a saving-throw bonus).
-// Realm needs these as data.modifiers so the bonus re-applies whenever the sheet
-// recalculates AC and saves — DDB's flat numbers alone wouldn't survive a recalc.
+// definition) into Realm item modifier records stored on data.modifiers. Realm
+// needs these as data.modifiers so the bonus applies at roll time and re-applies
+// whenever the sheet recalculates — DDB's flat numbers alone wouldn't survive.
+// Realm gates every item modifier on equipped (and attuned, for attunement items).
 //
-// Only AC and save bonuses are translated here; weapon/damage magic bonuses are
-// handled elsewhere via the weapon's own fields.
-var ITEM_MODIFIER_TYPE_MAP = {
-  "armor-class": "armorClassBonus",
-  "saving-throws": "saveBonus",
+// Covered: AC, saves, +N weapons ("magic" -> attack + damage on that weapon only),
+// spell attack / spell save DC (including class-scoped "druid-spell-attacks"),
+// melee/ranged attack bonuses, initiative, speed, skills, passives, ability score
+// bonus/set, HP per level, senses, resistances/immunities/vulnerabilities, and
+// advantage/disadvantage on skills, saves and initiative.
+
+// Lowercased names of the character's spellcasting classes (a subclass that casts,
+// like Eldritch Knight, counts as its class). Class-scoped spell bonuses only need
+// a spell-list predicate when the character casts from a class outside the item's.
+var casterClassNames = [];
+(ddb.classes || []).forEach(function (cls) {
+  var name = ((cls.definition && cls.definition.name) || "").toLowerCase();
+  var casts =
+    (cls.definition && cls.definition.canCastSpells) ||
+    (cls.subclassDefinition && cls.subclassDefinition.canCastSpells);
+  if (name && casts && casterClassNames.indexOf(name) === -1) {
+    casterClassNames.push(name);
+  }
+});
+
+var ABILITY_NAMES = [
+  "strength",
+  "dexterity",
+  "constitution",
+  "intelligence",
+  "wisdom",
+  "charisma",
+];
+var SENSE_SUBTYPES = ["darkvision", "blindsight", "tremorsense", "truesight"];
+var ATTACK_FIELD_MAP = {
+  "melee-attacks": "melee",
+  "melee-weapon-attacks": "melee",
+  "ranged-attacks": "ranged",
+  "ranged-weapon-attacks": "ranged",
+};
+var DEFENSE_TYPE_MAP = {
+  resistance: "resistance",
+  immunity: "immunity",
+  vulnerability: "vulnerability",
 };
 
-function translateItemModifiers(def, itemId) {
+function translateItemModifiers(def, itemId, isWeapon) {
   var out = [];
-  (def.grantedModifiers || []).forEach(function (gm, gIdx) {
-    if (!gm || gm.type !== "bonus") return;
-    var realmType = ITEM_MODIFIER_TYPE_MAP[gm.subType];
-    if (!realmType) return;
-    if (gm.value == null) return;
+  var classSpellGroups = {};
+  var classSpellGroupOrder = [];
+
+  function push(data, suffix, itemOnly) {
+    if (itemOnly) data.itemOnly = true;
+    if (data.active === undefined) data.active = true;
     out.push({
-      _id: "import-item-" + itemId + "-mod-" + gIdx,
+      _id: "import-item-" + itemId + "-mod-" + suffix,
       name: "New Modifier",
       unidentifiedName: "Modifier",
       recordType: "records",
       identified: true,
-      data: {
-        type: realmType,
-        valueType: "number",
-        value: "" + gm.value,
-        active: true,
-      },
+      data: data,
       fields: {
         itemOnly: { hidden: false },
       },
     });
+  }
+
+  (def.grantedModifiers || []).forEach(function (gm, gIdx) {
+    if (!gm || !gm.type || !gm.subType) return;
+    var sub = gm.subType;
+    var num = gm.value != null ? gm.value : gm.fixedValue;
+    var restriction = (gm.restriction || "").trim();
+    // A conditional advantage ("against being frightened") becomes a roll-time
+    // toggle instead of always-on. "While holding/wearing" is satisfied by the
+    // equip gate, so it stays on.
+    var conditional = restriction !== "" && !/^while\b/i.test(restriction);
+
+    if (gm.type === "bonus") {
+      if (num == null) return;
+      var value = "" + num;
+
+      if (sub === "armor-class") {
+        push({ type: "armorClassBonus", valueType: "number", value: value }, gIdx);
+      } else if (sub === "saving-throws") {
+        push({ type: "saveBonus", valueType: "number", value: value }, gIdx);
+      } else if (
+        ABILITY_NAMES.indexOf(sub.replace("-saving-throws", "")) !== -1 &&
+        /-saving-throws$/.test(sub)
+      ) {
+        push(
+          {
+            type: "saveBonus",
+            field: sub.replace("-saving-throws", ""),
+            valueType: "number",
+            value: value,
+          },
+          gIdx,
+        );
+      } else if (sub === "magic") {
+        // +N weapon: attack and damage on THIS weapon only (no field + itemOnly).
+        if (!isWeapon) return;
+        push(
+          { type: "attackBonus", valueType: "number", value: value },
+          gIdx + "-atk",
+          true,
+        );
+        push(
+          { type: "damageBonus", valueType: "number", value: value },
+          gIdx + "-dmg",
+          true,
+        );
+      } else if (sub === "spell-attacks") {
+        push({ type: "spellAttackBonus", valueType: "number", value: value }, gIdx);
+      } else if (sub === "spell-save-dc") {
+        push({ type: "spellDCBonus", valueType: "number", value: value }, gIdx);
+      } else if (/^[a-z]+-spell-(attacks|save-dc)$/.test(sub)) {
+        // Class-scoped ("druid-spell-attacks", "ranger-spell-save-dc"). DDB lists
+        // one modifier per class; group them so a Moon Sickle's druid + ranger
+        // +2 becomes a single +2 rather than +4.
+        var className = sub.split("-")[0];
+        var kind = /-attacks$/.test(sub) ? "spellAttackBonus" : "spellDCBonus";
+        var key = kind + ":" + value;
+        if (!classSpellGroups[key]) {
+          classSpellGroups[key] = {
+            kind: kind,
+            value: value,
+            classes: [],
+            idx: gIdx,
+          };
+          classSpellGroupOrder.push(key);
+        }
+        if (classSpellGroups[key].classes.indexOf(className) === -1) {
+          classSpellGroups[key].classes.push(className);
+        }
+      } else if (ATTACK_FIELD_MAP[sub]) {
+        push(
+          {
+            type: "attackBonus",
+            field: ATTACK_FIELD_MAP[sub],
+            valueType: "number",
+            value: value,
+          },
+          gIdx,
+        );
+      } else if (sub === "initiative") {
+        push({ type: "initiativeBonus", valueType: "number", value: value }, gIdx);
+      } else if (sub === "speed" || sub === "speed-walking") {
+        push({ type: "speedBonus", valueType: "number", value: value }, gIdx);
+      } else if (/^passive-/.test(sub) && SKILL_MAP[sub.replace("passive-", "")]) {
+        push(
+          {
+            type: "passiveBonus",
+            field: SKILL_MAP[sub.replace("passive-", "")],
+            valueType: "number",
+            value: value,
+          },
+          gIdx,
+        );
+      } else if (SKILL_MAP[sub]) {
+        push(
+          {
+            type: "skillBonus",
+            field: SKILL_MAP[sub],
+            valueType: "number",
+            value: value,
+          },
+          gIdx,
+        );
+      } else if (
+        /-score$/.test(sub) &&
+        ABILITY_NAMES.indexOf(sub.replace("-score", "")) !== -1
+      ) {
+        push(
+          {
+            type: "attributeBonus",
+            field: sub.replace("-score", ""),
+            valueType: "number",
+            value: value,
+          },
+          gIdx,
+        );
+      } else if (sub === "hit-points-per-level") {
+        // One "+level" hitpoints modifier per point. Never itemOnly: HP is
+        // recomputed without an itemId, which would drop an itemOnly modifier.
+        for (var h = 0; h < num; h++) {
+          push(
+            { type: "hitpoints", valueType: "field", value: "level" },
+            gIdx + "-hppl-" + h,
+          );
+        }
+      }
+    } else if (gm.type === "advantage" || gm.type === "disadvantage") {
+      var rollValue = gm.type;
+      var base = { valueType: "string", value: rollValue };
+      if (conditional) base.active = false;
+      if (sub === "initiative") {
+        base.type = "initiativeBonus";
+      } else if (SKILL_MAP[sub]) {
+        base.type = "skillBonus";
+        base.field = SKILL_MAP[sub];
+      } else if (sub === "saving-throws") {
+        base.type = "saveBonus";
+      } else if (
+        /-saving-throws$/.test(sub) &&
+        ABILITY_NAMES.indexOf(sub.replace("-saving-throws", "")) !== -1
+      ) {
+        base.type = "saveBonus";
+        base.field = sub.replace("-saving-throws", "");
+      } else {
+        return;
+      }
+      push(base, gIdx);
+    } else if (gm.type === "set") {
+      if (
+        num != null &&
+        /-score$/.test(sub) &&
+        ABILITY_NAMES.indexOf(sub.replace("-score", "")) !== -1
+      ) {
+        push(
+          {
+            type: "attributeSet",
+            field: sub.replace("-score", ""),
+            valueType: "number",
+            value: "" + num,
+          },
+          gIdx,
+        );
+      }
+    } else if (gm.type === "sense") {
+      if (num == null || SENSE_SUBTYPES.indexOf(sub) === -1) return;
+      var senseName = sub.charAt(0).toUpperCase() + sub.slice(1);
+      // "+N/N" extends an existing sense or grants it at N (Goggles of Night).
+      var senseValue = /already/i.test(restriction)
+        ? senseName + " +" + num + "/" + num
+        : senseName + " " + num;
+      push({ type: "senses", valueType: "string", value: senseValue }, gIdx);
+    } else if (DEFENSE_TYPE_MAP[gm.type]) {
+      push(
+        {
+          type: DEFENSE_TYPE_MAP[gm.type],
+          valueType: "string",
+          value: sub,
+        },
+        gIdx,
+      );
+    }
   });
+
+  classSpellGroupOrder.forEach(function (key) {
+    var group = classSpellGroups[key];
+    var data = { type: group.kind, valueType: "number", value: group.value };
+    var allCastersCovered = casterClassNames.every(function (c) {
+      return group.classes.indexOf(c) !== -1;
+    });
+    if (!allCastersCovered) {
+      // Multiclass with a class outside the item's: limit to that class's spells.
+      var preds = group.classes.map(function (c) {
+        return "spell:" + c;
+      });
+      data.predicate =
+        preds.length === 1 ? preds[0] : JSON.stringify({ or: preds });
+    }
+    push(data, group.idx + "-" + group.kind);
+  });
+
   return out;
 }
 
@@ -688,22 +994,43 @@ var WEAPON_PROPERTY_MAP = {
 // { ac, maxDex (0=heavy/none, 99=light/uncapped), shieldAc, stealthPenalty }.
 var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: false };
 
+// DDB item definition id -> [{ item, extraData }] for each inventory copy, so the
+// item's spells (ddb.spells.item, keyed by componentId = definition id) can be
+// attached to it in section 9b.
+var itemExtraDataByDefId = {};
+
 (ddb.inventory || []).forEach(function (item) {
   var def = item.definition || {};
   var filterType = def.filterType || "Other Gear";
+  // DDB files magic staves under filterType "Staff" with no weapon stats, but
+  // the ones that grant a weapon bonus are wielded as a magic Quarterstaff.
+  var isQuarterstaffStaff =
+    filterType === "Staff" &&
+    ((def.grantedModifiers || []).some(function (gm) {
+      return gm && gm.type === "bonus" && gm.subType === "magic";
+    }) ||
+      /quarterstaff/i.test(def.description || ""));
+  var isWeapon = filterType === "Weapon" || isQuarterstaffStaff;
+  var isShield = isShieldDef(def);
   var type = "gear";
-  if (filterType === "Weapon") type = "melee weapon";
+  if (isWeapon) type = "melee weapon";
   if (filterType === "Armor") {
-    type = def.type === "Shield" ? "shield" : "armor";
+    type = isShield ? "shield" : "armor";
   }
   if (def.attackType === 2) type = "ranged weapon";
 
   // Determine subtype from DDB type field
   var subtype = "";
-  if (def.type) {
+  if (filterType === "Weapon") {
+    // For weapons def.type is the base weapon ("Sickle"); Realm's subtype is the
+    // category. categoryId: 1 = simple, 2 = martial.
+    subtype =
+      (def.categoryId === 2 ? "Martial " : "Simple ") +
+      (def.attackType === 2 ? "Ranged" : "Melee") +
+      " Weapon";
+  } else if (def.type) {
     // DDB types like "Potion", "Ring", "Rod", "Scroll", "Staff", "Wand", "Wondrous Item"
     // Also "Light Armor", "Medium Armor", "Heavy Armor" for armor
-    // And "Simple Melee Weapon", "Martial Ranged Weapon", etc. for weapons
     subtype = def.type;
   }
   // For ammo, override subtype
@@ -717,22 +1044,33 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
     location = containerMap[item.containerEntityId] || "";
   }
 
+  // extraData is shallow-merged OVER a matched compendium record, so only send
+  // values DDB actually has. Empty placeholders (damage "", weight 0, "0 gp")
+  // would otherwise wipe the compendium's real stats (Staff of the Woodlands
+  // lost its 1d6 damage and 4 lb weight this way).
   var extraData = {
     count: item.quantity || 1,
     carried: item.equipped ? "equipped" : "",
-    weight: def.weight || 0,
-    damage:
-      def.damage && def.damage.diceString
-        ? def.damage.diceString + " " + (def.damageType || "")
-        : "",
     type: type,
-    cost: (def.cost || 0) + " gp",
-    description: def.description || "",
-    location: location,
   };
+  if (def.weight) extraData.weight = def.weight;
+  if (def.damage && def.damage.diceString) {
+    extraData.damage = def.damage.diceString + " " + (def.damageType || "");
+  }
+  if (def.cost) extraData.cost = def.cost + " gp";
+  if (def.description) extraData.description = def.description;
+  if (location) extraData.location = location;
 
   if (subtype) {
     extraData.subtype = subtype;
+  }
+
+  if (isQuarterstaffStaff) {
+    extraData.weaponType = "Quarterstaff";
+    extraData.weaponMastery = "Topple";
+    extraData.weaponProperties = ["Versatile"];
+    if (!extraData.damage) extraData.damage = "1d6 bludgeoning";
+    extraData.versatileDamage = "1d8 bludgeoning";
   }
 
   // Weapon-specific fields
@@ -740,7 +1078,8 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
     // Weapon type (base weapon name for mastery system, e.g., "Longsword", "Shortbow")
     // DDB provides baseItemName for the base weapon type (like baseArmorName for armor).
     // For non-magic items, def.name IS the weapon type.
-    // For magic items (e.g., "Flame Tongue"), baseItemName maps back to the base weapon.
+    // For magic items (e.g., "Flame Tongue"), baseItemName maps back to the base weapon,
+    // or def.type carries it ("Moon Sickle, +2" has type "Sickle").
     var weaponTypeName = def.baseItemName || def.name || "";
     // Validate against known weapon types — only set if it matches a Realm dropdown value
     var KNOWN_WEAPONS = [
@@ -783,16 +1122,35 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
       "Musket",
       "Pistol",
     ];
+    if (
+      KNOWN_WEAPONS.indexOf(weaponTypeName) === -1 &&
+      KNOWN_WEAPONS.indexOf(def.type) !== -1
+    ) {
+      weaponTypeName = def.type;
+    }
     if (KNOWN_WEAPONS.indexOf(weaponTypeName) !== -1) {
       extraData.weaponType = weaponTypeName;
     }
 
-    // Weapon properties (Finesse, Heavy, Light, etc.)
+    // Weapon properties (Finesse, Heavy, Light, etc.). DDB lists the 2024 mastery
+    // ("Nick", "Topple") alongside them.
+    var WEAPON_MASTERIES = [
+      "Cleave",
+      "Graze",
+      "Nick",
+      "Push",
+      "Sap",
+      "Slow",
+      "Topple",
+      "Vex",
+    ];
     var weaponProps = [];
     (def.properties || []).forEach(function (prop) {
       var name = prop.name || "";
       if (WEAPON_PROPERTY_MAP[name]) {
         weaponProps.push(WEAPON_PROPERTY_MAP[name]);
+      } else if (WEAPON_MASTERIES.indexOf(name) !== -1) {
+        extraData.weaponMastery = name;
       }
     });
     if (weaponProps.length > 0) {
@@ -829,7 +1187,7 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
     if (def.armorClass) {
       extraData.armorClass = def.armorClass;
     }
-    if (def.type !== "Shield") {
+    if (!isShield) {
       var ARMOR_CATEGORY_MAP = { 1: "Light", 2: "Medium", 3: "Heavy" };
       extraData.armorCategory = ARMOR_CATEGORY_MAP[def.armorTypeId] || "";
       // Light: full DEX, Medium: DEX capped at +2, Heavy: no DEX
@@ -859,26 +1217,18 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
     extraData.rarity = def.rarity.toLowerCase();
   }
 
-  // Attunement
+  // Attunement — mirror DDB. Realm applies the item's modifiers only while it is
+  // equipped and (for attunement items) attuned, same as DDB.
   if (def.canAttune) {
     extraData.attunement = true;
     extraData.attuned = item.isAttuned ? "true" : "false";
   }
 
-  // Magic-item modifiers (AC / save bonuses from grantedModifiers). When an item
-  // carries these, the bonus only counts while the item is equipped (and, for
-  // attunement items, attuned), so make sure those flags are set when DDB has the
-  // item equipped — otherwise the imported modifier would sit inert.
-  var itemModifiers = translateItemModifiers(def, item.id);
+  // Magic-item modifiers from grantedModifiers. These replace the compendium
+  // item's modifiers when it matches; DDB is the record of what this copy does.
+  var itemModifiers = translateItemModifiers(def, item.id, isWeapon);
   if (itemModifiers.length > 0) {
     extraData.modifiers = itemModifiers;
-    if (item.equipped) {
-      extraData.carried = "equipped";
-      if (def.canAttune) {
-        extraData.attunement = true;
-        extraData.attuned = "true";
-      }
-    }
   }
 
   // Roll this item into the derived data.armor object if it's equipped armor/shield.
@@ -898,6 +1248,13 @@ var bestEquippedArmorObj = { ac: 0, maxDex: 0, shieldAc: 0, stealthPenalty: fals
     if (extraData.armorClass > bestEquippedArmorObj.shieldAc) {
       bestEquippedArmorObj.shieldAc = extraData.armorClass;
     }
+  }
+
+  if (def.id != null) {
+    (itemExtraDataByDefId[def.id] = itemExtraDataByDefId[def.id] || []).push({
+      item: item,
+      extraData: extraData,
+    });
   }
 
   _pendingRecords.push({
@@ -1376,10 +1733,12 @@ function translateFeatModifier(ddbMod, featName, idx) {
 
 // ===== 9. Build spells from all sources =====
 
-// Collect all spells from spells.class, spells.race, spells.feat, and classSpells
+// Collect all spells from spells.class, spells.race, spells.feat, and classSpells.
+// spells.item is NOT the character's own spells — those are cast from the item and
+// are attached to it in section 9b.
 var allSpells = [];
 var spellSources = ddb.spells || {};
-["class", "race", "feat", "item", "background"].forEach(function (source) {
+["class", "race", "feat", "background"].forEach(function (source) {
   if (spellSources[source]) {
     spellSources[source].forEach(function (s) {
       if (s.definition) allSpells.push(s);
@@ -1420,14 +1779,12 @@ var spellcastingAbility = "intelligence"; // default
   }
 });
 
-// Group spells by level into _pendingRecords
-// Cantrips (level 0) -> data.cantrips
-// Level 1 spells -> data.spells1, level 2 -> data.spells2, etc.
-allSpells.forEach(function (s) {
-  var def = s.definition;
+// Build a Realm spell's data from a DDB spell definition. Used both as the
+// extraData merged onto a compendium match and as the full data of a placeholder
+// when the spell isn't in the compendium.
+function buildSpellExtraData(def) {
   var spellLevel = def.level || 0;
   var isCantrip = spellLevel === 0;
-  var targetPath = isCantrip ? "data.cantrips" : "data.spells" + spellLevel;
 
   // Extract damage from modifiers
   var baseDamage = "";
@@ -1555,7 +1912,9 @@ allSpells.forEach(function (s) {
     isAttack: def.requiresAttackRoll || false,
     isSave: def.requiresSavingThrow || false,
     ability: spellcastingAbility,
-    spellLists: def.tags || [],
+    // No spellLists: DDB's def.tags are categories ("Damage", "Buff"), not class
+    // lists, and sending them would overwrite a matched compendium spell's real
+    // lists — which "spell:druid" predicates (Moon Sickle) depend on.
   };
 
   // Add damage if present
@@ -1582,11 +1941,72 @@ allSpells.forEach(function (s) {
     extraData.damageHigher = higherSlotDamage;
   }
 
+  return extraData;
+}
+
+// Group spells by level into _pendingRecords
+// Cantrips (level 0) -> data.cantrips
+// Level 1 spells -> data.spells1, level 2 -> data.spells2, etc.
+allSpells.forEach(function (s) {
+  var def = s.definition;
+  var spellLevel = def.level || 0;
   _pendingRecords.push({
     recordType: "spells",
-    targetPath: targetPath,
+    targetPath: spellLevel === 0 ? "data.cantrips" : "data.spells" + spellLevel,
     name: def.name || "Unknown Spell",
-    extraData: extraData,
+    extraData: buildSpellExtraData(def),
+  });
+});
+
+// ===== 9b. Item spells -> the item's data.itemSpells =====
+// _pendingRecords can only push onto the character, and a matched compendium item
+// may already carry some of these spells, so they're stashed on the item as
+// data.ddbItemSpells and resolved by the post-import script: each one is copied
+// from the compendium when it exists, otherwise built from this placeholder data.
+// Missing ones are added; ones the compendium item already has are left alone.
+(spellSources.item || []).forEach(function (s) {
+  if (!s.definition) return;
+  var copies = itemExtraDataByDefId[s.componentId] || [];
+  if (copies.length === 0) return;
+  var def = s.definition;
+  var castLevel = s.castAtLevel || def.level || 0;
+  var lu = s.limitedUse || {};
+  // DDB's charge cost for this spell; at-will item spells have no cost.
+  var charges = lu.minNumberConsumed != null ? lu.minNumberConsumed : castLevel;
+  var spellData = buildSpellExtraData(def);
+  spellData.castLevel = castLevel;
+  spellData.charges = charges;
+  copies.forEach(function (copy) {
+    var ed = copy.extraData;
+    (ed.ddbItemSpells = ed.ddbItemSpells || []).push({
+      name: def.name || "Unknown Spell",
+      data: spellData,
+    });
+    ed.hasSpells = true;
+    if (s.overrideSaveDc) {
+      // The item casts at a fixed DC instead of the holder's.
+      ed.useOwnSpellcasting = false;
+      ed.defaultSpellDC = s.overrideSaveDc;
+    } else {
+      ed.useOwnSpellcasting = true;
+    }
+    // Charges live on the inventory item's limitedUse.
+    var itemUses = copy.item.limitedUse || {};
+    if (itemUses.maxUses > 0) {
+      ed.hasUseBtn = true;
+      ed.maxUses = itemUses.maxUses;
+      ed.usesRemaining = Math.max(
+        0,
+        itemUses.maxUses - (itemUses.numberUsed || 0),
+      );
+      // "regains 1d6 expended charges" -> recharge "1d6"
+      var rechargeMatch = (itemUses.resetTypeDescription || "").match(
+        /regains?\s+(\d+d\d+(?:\s*\+\s*\d+)?|\d+)/i,
+      );
+      if (rechargeMatch) {
+        ed.recharge = rechargeMatch[1].replace(/\s+/g, "");
+      }
+    }
   });
 });
 
