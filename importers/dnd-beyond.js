@@ -730,14 +730,7 @@ var casterClassNames = [];
   }
 });
 
-var ABILITY_NAMES = [
-  "strength",
-  "dexterity",
-  "constitution",
-  "intelligence",
-  "wisdom",
-  "charisma",
-];
+// ABILITY_NAMES is the common.js global (the six ability names, lowercase).
 var SENSE_SUBTYPES = ["darkvision", "blindsight", "tremorsense", "truesight"];
 var ATTACK_FIELD_MAP = {
   "melee-attacks": "melee",
