@@ -191,6 +191,44 @@ function processNextGroup(currentRec) {
   }, recAfterAdd);
 }
 
+// ===== Icons for records the compendium didn't have =====
+// The import script picks a stock icon for every item/spell/feature it sends and
+// stashes it as data.ddbIcon. A compendium match already has its own art, so the
+// icon is only applied where the resolved record has no portrait; the stash is
+// cleared either way.
+var ICON_LIST_PATHS = [
+  "inventory",
+  "features",
+  "cantrips",
+  "spells1",
+  "spells2",
+  "spells3",
+  "spells4",
+  "spells5",
+  "spells6",
+  "spells7",
+  "spells8",
+  "spells9",
+];
+function applyImportIcons(currentRec, done) {
+  var valuesToSet = {};
+  ICON_LIST_PATHS.forEach(function (listName) {
+    (currentRec?.data?.[listName] || []).forEach(function (entry, idx) {
+      if (!entry?.data?.ddbIcon) return;
+      var prefix = "data." + listName + "." + idx;
+      if (!entry.portrait) valuesToSet[prefix + ".portrait"] = entry.data.ddbIcon;
+      valuesToSet[prefix + ".data.ddbIcon"] = null;
+    });
+  });
+  if (Object.keys(valuesToSet).length === 0) {
+    done(currentRec);
+    return;
+  }
+  api.setValues(valuesToSet, function (r) {
+    done(r);
+  });
+}
+
 // ===== Item spells =====
 // The import script stashes each item's DDB spells on it as data.ddbItemSpells
 // ({ name, data } with castLevel/charges set). Resolve them into the item's
@@ -279,14 +317,16 @@ function processItemSpells(currentRec, done) {
           },
         });
       } else {
-        itemSpells.push({
+        var placeholder = {
           _id: generateId(),
           name: entry.name,
           unidentifiedName: entry.name,
           recordType: "spells",
           identified: true,
           data: entry.data,
-        });
+        };
+        if (entry.icon) placeholder.portrait = entry.icon;
+        itemSpells.push(placeholder);
       }
       nextSpell();
     });
@@ -294,8 +334,10 @@ function processItemSpells(currentRec, done) {
   nextSpell();
 }
 
-// Kick off processing: item spells first, then ability groups, one at a time so
-// their writes don't race on the same record.
-processItemSpells(record, function (rec) {
-  processNextGroup(rec);
+// Kick off processing: icons, then item spells, then ability groups, one at a
+// time so their writes don't race on the same record.
+applyImportIcons(record, function (iconRec) {
+  processItemSpells(iconRec, function (rec) {
+    processNextGroup(rec);
+  });
 });
