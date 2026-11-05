@@ -1499,6 +1499,87 @@ function getDamageEffectsForTarget(ourToken, target) {
   return results;
 }
 
+// Cover from the map (api.getCover: walls, closed doors/windows, terrain, and
+// on 3D scenes floors and vision-blocking props) and from creatures in the way,
+// per the 5e cover rules (Level Up uses the same rules):
+//   - Grid rule: trace lines from the attacker's clearest corner to the corners
+//     of a target square. Some lines blocked = half cover, more than half =
+//     three-quarters, none get through = total. A creature is an obstacle,
+//     friend or foe, the same as a wall.
+//   - A creature never gives total cover, since an attack can still get past it,
+//     so it gives at most three-quarters.
+//   - When there are several sources of cover, only the most protective one
+//     applies; the degrees aren't added together.
+// Skipped when the target already has an effect whose name starts with
+// "Cover", since the GM applied cover by hand.
+// Returns an attack-roll modifier that starts toggled OFF: detection is a hint
+// and the GM decides whether cover applies. Half cover is +2 AC and
+// three-quarters +5 AC, applied as -2/-5 to the attack roll (the prompt's dc is
+// the target's AC, so the math is the same). Total cover adds no modifier,
+// because the target can't be targeted. When the "Cover Notice" campaign
+// setting is on, the detected cover floats over the target.
+const COVER_LEVELS = {
+  standard: { label: "Half Cover", ac: 2, rank: 1 },
+  greater: { label: "Three-Quarters Cover", ac: 5, rank: 2 },
+  full: { label: "Total Cover", ac: 0, rank: 3 },
+};
+
+// Degree from the share of corner lines blocked, using the grid-rule thresholds
+// getCover uses for walls.
+function _coverDegreeFromFraction(fraction) {
+  if (!(fraction > 0)) return "none";
+  if (fraction >= 1) return "full";
+  return fraction > 0.5 ? "greater" : "standard";
+}
+
+function getCoverAttackModifier(attackerToken, targetToken) {
+  if (!attackerToken || !targetToken) return null;
+  // The GM can apply cover by hand with an effect named "Cover ..." (e.g.
+  // "Cover (Half)"); that effect's own modifiers take over, so skip detection.
+  const hasCoverEffect = (targetToken.effects || []).some((effect) =>
+    /^cover/i.test((effect?.name || "").trim()),
+  );
+  if (hasCoverEffect) return null;
+  // null when cover can't be measured (e.g. a 3D scene still loading)
+  const cover = api.getCover(attackerToken, targetToken);
+  if (!cover) return null;
+
+  const rankOf = (degree) => COVER_LEVELS[degree]?.rank || 0;
+
+  // Cover from walls and other map obstacles
+  let degree = COVER_LEVELS[cover.degree] ? cover.degree : "none";
+  let source = "";
+
+  // Cover from creatures in the way, capped at three-quarters
+  (cover.creatures || []).forEach((creature) => {
+    let creatureDegree = _coverDegreeFromFraction(creature?.blockedFraction);
+    if (creatureDegree === "full") creatureDegree = "greater";
+    if (rankOf(creatureDegree) > rankOf(degree)) {
+      degree = creatureDegree;
+      source = creature?.name || "Creature";
+    }
+  });
+
+  const level = COVER_LEVELS[degree];
+  if (!level) return null;
+
+  if (api.getSetting("coverNotice") !== "no") {
+    api.floatText(
+      targetToken,
+      level.label,
+      degree === "full" ? "#e03131" : "#f59f00",
+    );
+  }
+  if (degree === "full") return null;
+
+  return {
+    name: `Target Has ${level.label}${source ? ` from ${source}` : ""} (+${level.ac} AC)`,
+    value: -level.ac,
+    active: false,
+    isCover: true,
+  };
+}
+
 // In this call, we look for effects that are relevant to the caller and the target for attack rolls
 // An `attackTargeting` modifier on a creature affects attacks made AGAINST it.
 // Its field narrows which attacks:
@@ -1565,6 +1646,10 @@ function getAttackModifiersForTarget(
       name: r.isEffect ? `Target Has the ${r.name} Effect` : r.name,
     });
   });
+
+  // Cover detected from the map, offered as an off-by-default toggle.
+  const coverModifier = getCoverAttackModifier(attackerToken, target);
+  if (coverModifier) results.push(coverModifier);
 
   return results;
 }

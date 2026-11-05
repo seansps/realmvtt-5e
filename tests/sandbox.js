@@ -23,6 +23,7 @@ const api = {
   getDistance: () => 5,
   addEffect: () => {},
   floatText: () => {},
+  getCover: () => null,
   openRecord: () => {},
   addValue: () => {},
   removeValue: () => {},

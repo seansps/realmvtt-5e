@@ -808,7 +808,13 @@ attackModifiers = attackModifiers.filter(
   (m) => !m.value.toString().startsWith("minroll")
 );
 
+// Each target gets its own copy, so target-specific modifiers (range, cover,
+// the target's effects) don't carry into the next target's prompt.
+const baseAttackModifiers = attackModifiers;
+const baseAutoCritical = autoCritical;
 targets.forEach(target => {
+  let attackModifiers = baseAttackModifiers.map((m) => ({ ...m }));
+  let autoCritical = baseAutoCritical;
   // Get calculated AC from modifiers - use if any
   const targetAc = getArmorClassForToken(target?.token, { ranged: ${rangedSpell} });
   const targetName = target?.token?.identified === false ? target?.token?.record?.unidentifiedName : target?.token?.record?.name;

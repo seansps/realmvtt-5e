@@ -502,7 +502,15 @@
     );
 
     const targets = api.getTargets();
+    // Each target gets its own copy, so target-specific modifiers (range, cover,
+    // the target's effects) don't carry into the next target's prompt.
+    const baseModifiers = modifiers;
+    const baseDamageModifiers = damageModifiers;
+    const baseAutoCritical = autoCritical;
     targets.forEach((target) => {
+      let modifiers = baseModifiers.map((m) => ({ ...m }));
+      let damageModifiers = baseDamageModifiers.map((m) => ({ ...m }));
+      let autoCritical = baseAutoCritical;
       const targetName =
         target?.token?.identified === false
           ? target?.token?.record?.unidentifiedName

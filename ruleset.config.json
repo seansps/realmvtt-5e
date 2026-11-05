@@ -3303,6 +3303,21 @@
             "value": "yes"
           }
         ]
+      },
+      {
+        "name": "Cover Notice",
+        "key": "coverNotice",
+        "description": "When an attack or spell attack targets a creature, float the cover detected between the attacker and the target (Half, Three-Quarters, or Total Cover) over the target token. The cover modifier is always offered in the attack prompt, toggled off.",
+        "values": [
+          {
+            "label": "Yes",
+            "value": "yes"
+          },
+          {
+            "label": "No",
+            "value": "no"
+          }
+        ]
       }
     ],
     "themes": [
