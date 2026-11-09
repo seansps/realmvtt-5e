@@ -1,0 +1,779 @@
+{
+  "name": "Grimoire",
+  "description": "Midnight vellum, violet arcana and gilded titles, built on Realm's Occult look.",
+  "colorScheme": "dark",
+  "radius": 3,
+  "palette": {
+    "colors": {
+      "primary": [
+        "#f5f0ff",
+        "#e8dfff",
+        "#d0bfff",
+        "#b59bff",
+        "#9b77ff",
+        "#8b6fc9",
+        "#7b5fb9",
+        "#6b4f9e",
+        "#5b3f8e",
+        "#4b2f7e"
+      ],
+      "secondary": [
+        "#fff8e1",
+        "#ffecb3",
+        "#ffe082",
+        "#ffd54f",
+        "#ffca28",
+        "#ffb347",
+        "#ffa726",
+        "#ff9800",
+        "#fb8c00",
+        "#f57c00"
+      ],
+      "dark": [
+        "#e6e9f0",
+        "#b9c2d5",
+        "#93a1be",
+        "#6c80a7",
+        "#3d4b66",
+        "#2e384c",
+        "#1d2330",
+        "#151a23",
+        "#0f131a",
+        "#0a0c10"
+      ],
+      "gray": [
+        "#f9fafb",
+        "#f0f2f4",
+        "#e1e4ea",
+        "#b6bcc8",
+        "#a8afbd",
+        "#8f96a3",
+        "#6a707c",
+        "#454a54",
+        "#393e46",
+        "#22252a"
+      ],
+      "red": [
+        "#ffe9ec",
+        "#f8c9d0",
+        "#eba0ac",
+        "#dc7486",
+        "#cf5268",
+        "#bf3b52",
+        "#a83246",
+        "#8e2a3c",
+        "#742233",
+        "#5a1a28"
+      ]
+    },
+    "primaryShade": 7,
+    "other": {
+      "windowBgColor": "#10131b",
+      "windowHeaderBgColor": "#0b0d14",
+      "windowHeaderFontColor": "#e3c27e",
+      "windowHeaderButtonHoverBgColor": "rgba(255,255,255,0.08)",
+      "windowBorderColor": "#000000",
+      "windowDividerColor": "rgba(150,140,210,0.12)",
+      "chatCardBgColor": "#12151f",
+      "chatCardFontColor": "#e6e3f0",
+      "chatCardBorderColor": "#272c40",
+      "chatCardDividerColor": "rgba(150,140,210,0.14)"
+    }
+  },
+  "tokens": {
+    "accent": "#b59bff",
+    "accent-glow": "rgba(155,119,255,0.35)",
+    "accent-subtle": "rgba(139,111,201,0.12)",
+    "bg": "#0b0d14",
+    "surface": "#12151f",
+    "surface-elev": "#1a1f2c",
+    "text": "#e6e3f0",
+    "text-dim": "#a7a6bd",
+    "text-muted": "rgba(167,166,189,0.65)",
+    "border": "rgba(150,140,210,0.16)",
+    "border-strong": "rgba(150,140,210,0.32)",
+    "divider": "rgba(150,140,210,0.12)",
+    "danger": "#d0566a",
+    "success": "#5fb37a",
+    "display-name": "#e3c27e"
+  },
+  "fonts": [
+    {
+      "family": "Cinzel",
+      "src": "fonts/Cinzel-wght.ttf",
+      "weight": 600
+    }
+  ],
+  "fontRoles": {
+    "windowTitle": "Cinzel",
+    "modalTitle": "Cinzel"
+  },
+  "frames": {
+    "appBar": {
+      "background": "#080a10",
+      "border": "#000000"
+    },
+    "drawer": {
+      "background": "#0c0e15",
+      "border": "#272c40",
+      "shadow": "rgba(0,0,0,0.8)"
+    },
+    "drawerTab": {
+      "border": "rgba(0,0,0,0)",
+      "radius": 3
+    },
+    "drawerTabActive": {
+      "background": "rgba(139,111,201,0.28)",
+      "border": "#b8924a",
+      "radius": 3,
+      "textColor": "#f3eefe"
+    },
+    "window": {
+      "texture": {
+        "src": "frames/header-night.png",
+        "scale": 2
+      },
+      "background": "#0b0d14",
+      "border": "#000000",
+      "radius": 6,
+      "shadow": "rgba(0,0,0,0.9)"
+    },
+    "windowHeader": {
+      "background": "rgba(0,0,0,0)",
+      "textColor": "#e3c27e"
+    },
+    "recordWindowHeader": {
+      "background": "rgba(0,0,0,0)",
+      "textColor": "#e3c27e"
+    },
+    "windowContent": {
+      "background": "#10131b",
+      "textColor": "#e6e3f0"
+    },
+    "recordBody": {
+      "texture": {
+        "src": "frames/vellum-night.png",
+        "scale": 2
+      },
+      "background": "#12151f",
+      "textColor": "#e6e3f0",
+      "tokens": {
+        "bg": "rgba(0,0,0,0)",
+        "surface": "rgba(255,255,255,0.025)",
+        "surface-elev": "rgba(255,255,255,0.05)"
+      }
+    },
+    "tabList": {
+      "background": "rgba(0,0,0,0)"
+    },
+    "tab": {
+      "textColor": "#a7a6bd",
+      "hover": {
+        "textColor": "#f3eefe"
+      }
+    },
+    "tabActive": {
+      "background": "#12151f",
+      "border": "rgba(0,0,0,0)",
+      "borderWidth": 0,
+      "radius": 0,
+      "textColor": "#e3c27e"
+    },
+    "sheetCorner": {
+      "hidden": true
+    },
+    "attributeCard": {
+      "padding": [
+        5,
+        4,
+        6,
+        4
+      ]
+    },
+    "chatCard": {
+      "texture": {
+        "src": "frames/vellum-night.png",
+        "scale": 2
+      },
+      "background": "#12151f",
+      "border": "#272c40",
+      "radius": 4,
+      "textColor": "#e6e3f0"
+    },
+    "chatCardWhisper": {
+      "texture": {
+        "src": "frames/vellum-night-whisper.png",
+        "scale": 2
+      },
+      "background": "#151324",
+      "border": "#4b3678",
+      "radius": 4,
+      "textColor": "#e6e3f0"
+    },
+    "chatCardPrivate": {
+      "texture": {
+        "src": "frames/vellum-night-private.png",
+        "scale": 2
+      },
+      "background": "#16141a",
+      "border": "#6b5222",
+      "radius": 4,
+      "textColor": "#e6e3f0"
+    },
+    "chatInput": {
+      "background": "#0e1119",
+      "border": "#272c40",
+      "radius": 4,
+      "textColor": "#e6e3f0"
+    },
+    "tooltip": {
+      "background": "#0a0c12",
+      "border": "#3a4060",
+      "radius": 3,
+      "padding": [
+        4,
+        8,
+        4,
+        8
+      ],
+      "textColor": "#e6e3f0"
+    },
+    "modal": {
+      "background": "#10131b",
+      "border": "#000000",
+      "radius": 6,
+      "shadow": "rgba(0,0,0,0.9)"
+    },
+    "panel": {
+      "background": "#0c0e15",
+      "border": "#272c40",
+      "radius": 4,
+      "shadow": "rgba(0,0,0,0.6)"
+    },
+    "toolbar": {
+      "background": "#0c0e15",
+      "border": "#272c40",
+      "radius": 4,
+      "gap": 3,
+      "padding": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "shadow": "rgba(0,0,0,0.6)"
+    },
+    "sceneButton": {
+      "size": 28,
+      "iconSize": 16,
+      "background": "#1a1f2c",
+      "border": "#000000",
+      "radius": 3,
+      "textColor": "#d6d3e6",
+      "shadow": "rgba(0,0,0,0.5)",
+      "hover": {
+        "border": "#8b6fc9",
+        "textColor": "#ffffff"
+      }
+    },
+    "sceneButtonActive": {
+      "background": "#4b2f7e",
+      "border": "#b8924a",
+      "textColor": "#ffffff",
+      "shadow": "rgba(139,111,201,0.55)"
+    },
+    "sceneTab": {
+      "background": "#10131b",
+      "border": "#000000",
+      "radius": 3,
+      "textColor": "#d6d3e6",
+      "hover": {
+        "border": "#8b6fc9",
+        "textColor": "#ffffff"
+      }
+    },
+    "sceneTabActive": {
+      "background": "#4b2f7e",
+      "border": "#b8924a",
+      "radius": 3,
+      "textColor": "#ffffff",
+      "shadow": "rgba(139,111,201,0.5)"
+    },
+    "hotbar": {
+      "background": "rgba(0,0,0,0)",
+      "border": "rgba(0,0,0,0)",
+      "gap": 0
+    },
+    "hotbarTabs": {
+      "background": "#0c0e15",
+      "border": "rgba(0,0,0,0)",
+      "radius": 0,
+      "padding": [
+        3,
+        4,
+        0,
+        4
+      ],
+      "gap": 2
+    },
+    "hotbarTab": {
+      "textColor": "#a7a6bd"
+    },
+    "hotbarTabActive": {
+      "background": "#4b2f7e",
+      "radius": 2,
+      "textColor": "#ffffff"
+    },
+    "hotbarRow": {
+      "background": "#0c0e15",
+      "border": "#272c40",
+      "radius": 4,
+      "padding": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "gap": 4,
+      "shadow": "rgba(0,0,0,0.6)"
+    },
+    "hotbarDivider": {
+      "hidden": true
+    },
+    "hotbarSlot": {
+      "background": "#1a1f2c",
+      "border": "#2c3148",
+      "radius": 3,
+      "hover": {
+        "border": "#8b6fc9"
+      }
+    },
+    "hotbarSlotFilled": {
+      "border": "#5a4a86"
+    },
+    "ctRowActive": {
+      "background": "rgba(139,111,201,0.25)",
+      "border": "#b8924a",
+      "radius": 3
+    },
+    "loadingCard": {
+      "texture": {
+        "src": "frames/vellum-night.png",
+        "scale": 2
+      },
+      "background": "#12151f",
+      "border": "#272c40",
+      "radius": 6,
+      "textColor": "#e6e3f0"
+    },
+    "pauseCard": {
+      "texture": {
+        "src": "frames/vellum-night.png",
+        "scale": 2
+      },
+      "background": "#12151f",
+      "border": "#272c40",
+      "radius": 6,
+      "textColor": "#e6e3f0"
+    },
+    "loadingLogo": {
+      "textColor": "#ffb347"
+    },
+    "pauseIcon": {
+      "background": "#4b2f7e",
+      "border": "#b8924a",
+      "textColor": "#f3eefe",
+      "radius": 3
+    },
+    "sceneDecal": {
+      "textColor": "#ffb347"
+    }
+  },
+  "recordTypes": {
+    "characters": {
+      "frames": {
+        "window": {
+          "texture": {
+            "src": "frames/header-violet.png",
+            "scale": 2
+          },
+          "background": "#191430",
+          "border": "#000000",
+          "radius": 6,
+          "shadow": "rgba(0,0,0,0.9)"
+        },
+        "windowHeader": {
+          "background": "rgba(0,0,0,0)",
+          "textColor": "#e3c27e"
+        },
+        "tabList": {
+          "background": "rgba(0,0,0,0)"
+        }
+      }
+    },
+    "npcs": {
+      "frames": {
+        "window": {
+          "texture": {
+            "src": "frames/header-violet.png",
+            "scale": 2
+          },
+          "background": "#191430",
+          "border": "#000000",
+          "radius": 6,
+          "shadow": "rgba(0,0,0,0.9)"
+        },
+        "windowHeader": {
+          "background": "rgba(0,0,0,0)",
+          "textColor": "#e3c27e"
+        },
+        "tabList": {
+          "background": "rgba(0,0,0,0)"
+        }
+      }
+    }
+  },
+  "tags": {
+    "base": {
+      "radius": 3,
+      "border": "rgba(0,0,0,0.45)",
+      "textColor": "#f3eefe",
+      "fontWeight": 600,
+      "uppercase": true
+    },
+    "variants": {
+      "trait": {
+        "background": "#2a2f45"
+      },
+      "action": {
+        "background": "#4b2f7e"
+      },
+      "damage": {
+        "background": "#5a1f2b"
+      },
+      "school": {
+        "background": "#3a2a5e"
+      },
+      "common": {
+        "background": "#3b4050"
+      },
+      "uncommon": {
+        "background": "#2f7d43"
+      },
+      "rare": {
+        "background": "#2a5fb0"
+      },
+      "very-rare": {
+        "background": "#6a3fb5"
+      },
+      "legendary": {
+        "background": "#b8661a"
+      },
+      "artifact": {
+        "background": "#a3263a"
+      }
+    },
+    "default": "trait",
+    "match": {
+      "action": [
+        "attack",
+        "melee *",
+        "ranged *",
+        "spell attack",
+        "* save",
+        "* saving throw",
+        "concentration",
+        "ritual",
+        "bonus action",
+        "reaction",
+        "action"
+      ],
+      "damage": [
+        "acid",
+        "bludgeoning",
+        "cold",
+        "fire",
+        "force",
+        "lightning",
+        "necrotic",
+        "piercing",
+        "poison",
+        "psychic",
+        "radiant",
+        "slashing",
+        "thunder",
+        "* damage"
+      ],
+      "school": [
+        "abjuration",
+        "conjuration",
+        "divination",
+        "enchantment",
+        "evocation",
+        "illusion",
+        "necromancy",
+        "transmutation"
+      ],
+      "common": [
+        "common"
+      ],
+      "uncommon": [
+        "uncommon"
+      ],
+      "rare": [
+        "rare"
+      ],
+      "very-rare": [
+        "very rare"
+      ],
+      "legendary": [
+        "legendary"
+      ],
+      "artifact": [
+        "artifact"
+      ]
+    }
+  },
+  "macroButtons": {
+    "style": {
+      "background": "#1d2232",
+      "border": "#3a4060",
+      "radius": 3,
+      "textColor": "#e6e3f0",
+      "hover": {
+        "background": "#262c40",
+        "border": "#8b6fc9",
+        "textColor": "#ffffff",
+        "shadow": "rgba(139,111,201,0.4)"
+      }
+    },
+    "layout": "stacked",
+    "row": true,
+    "kinds": {
+      "effect": {
+        "background": "#3a2a5e",
+        "border": "#b8924a",
+        "textColor": "#ffffff",
+        "hover": {
+          "background": "#4b3678",
+          "border": "#e3c27e",
+          "shadow": "rgba(227,194,126,0.45)"
+        },
+        "icon": "IconSparkles"
+      }
+    },
+    "variants": {
+      "effect": {
+        "background": "#3a2a5e",
+        "border": "#b8924a",
+        "textColor": "#ffffff",
+        "hover": {
+          "background": "#4b3678",
+          "border": "#e3c27e",
+          "shadow": "rgba(227,194,126,0.45)"
+        },
+        "icon": "IconSparkles"
+      },
+      "plain": {
+        "background": "#1d2232",
+        "border": "#3a4060",
+        "textColor": "#e6e3f0",
+        "hover": {
+          "background": "#262c40",
+          "border": "#8b6fc9",
+          "shadow": "rgba(139,111,201,0.4)"
+        }
+      },
+      "attack": {
+        "background": "#2b2147",
+        "border": "#8b6fc9",
+        "textColor": "#efeaff",
+        "hover": {
+          "background": "#382b5e",
+          "border": "#b59bff",
+          "shadow": "rgba(155,119,255,0.5)"
+        },
+        "icon": "d20"
+      },
+      "damage": {
+        "background": "#3a1620",
+        "border": "#9e3a4a",
+        "textColor": "#ffdfe4",
+        "hover": {
+          "background": "#4a1c29",
+          "border": "#d0566a",
+          "shadow": "rgba(208,86,106,0.45)"
+        },
+        "icon": "IconDice5"
+      },
+      "healing": {
+        "background": "#15301f",
+        "border": "#3f8a55",
+        "textColor": "#dcf5e3",
+        "hover": {
+          "background": "#1b3d28",
+          "border": "#5fb37a",
+          "shadow": "rgba(95,179,122,0.45)"
+        },
+        "icon": "IconHeartPlus"
+      },
+      "save": {
+        "background": "#16243d",
+        "border": "#3f6db5",
+        "textColor": "#dde8ff",
+        "hover": {
+          "background": "#1d2e4d",
+          "border": "#6a95db",
+          "shadow": "rgba(106,149,219,0.45)"
+        },
+        "icon": "IconShieldCheck"
+      }
+    },
+    "match": {
+      "effect": [
+        "apply_*"
+      ],
+      "damage": [
+        "*_damage",
+        "roll_damage*"
+      ],
+      "healing": [
+        "roll_healing*",
+        "*_healing"
+      ],
+      "attack": [
+        "roll_attack*"
+      ],
+      "save": [
+        "*_save",
+        "*_saving_throw"
+      ],
+      "plain": [
+        "apply_damage",
+        "apply_half_damage",
+        "apply_graze_damage",
+        "apply_healing",
+        "apply_temporary_hp",
+        "apply_temp_hp"
+      ]
+    },
+    "buttons": {
+      "Apply_Damage": {
+        "icon": "IconHeartBroken",
+        "label": "Damage"
+      },
+      "Apply_Half_Damage": {
+        "icon": "IconHeartMinus",
+        "label": "Half"
+      },
+      "Apply_Graze_Damage": {
+        "icon": "IconHeartMinus",
+        "label": "Graze"
+      },
+      "Apply_Healing": {
+        "icon": "IconHeartPlus",
+        "label": "Heal"
+      },
+      "Apply_Temporary_HP": {
+        "icon": "IconShieldPlus",
+        "label": "Temp HP"
+      },
+      "Apply_Temp_HP": {
+        "icon": "IconShieldPlus",
+        "label": "Temp HP"
+      },
+      "Roll_Attack": {
+        "icon": "d20",
+        "label": "Attack"
+      },
+      "Roll_Damage": {
+        "icon": "IconDice5"
+      },
+      "Roll_Critical_Damage": {
+        "icon": "IconBolt",
+        "label": "Critical"
+      },
+      "Roll_Spell_Damage": {
+        "icon": "IconWand"
+      },
+      "Roll_Ongoing_Damage": {
+        "icon": "IconHourglass",
+        "label": "Ongoing"
+      },
+      "Roll_Healing": {
+        "icon": "IconHeartPlus"
+      },
+      "Roll_Acid_Damage": {
+        "icon": "acid"
+      },
+      "Roll_Bludgeoning_Damage": {
+        "icon": "bludgeoning"
+      },
+      "Roll_Cold_Damage": {
+        "icon": "cold"
+      },
+      "Roll_Fire_Damage": {
+        "icon": "fire"
+      },
+      "Roll_Force_Damage": {
+        "icon": "force"
+      },
+      "Roll_Lightning_Damage": {
+        "icon": "lightning"
+      },
+      "Roll_Necrotic_Damage": {
+        "icon": "necrotic"
+      },
+      "Roll_Piercing_Damage": {
+        "icon": "piercing"
+      },
+      "Roll_Poison_Damage": {
+        "icon": "poison"
+      },
+      "Roll_Psychic_Damage": {
+        "icon": "psychic"
+      },
+      "Roll_Radiant_Damage": {
+        "icon": "radiant"
+      },
+      "Roll_Slashing_Damage": {
+        "icon": "slashing"
+      },
+      "Roll_Thunder_Damage": {
+        "icon": "thunder"
+      }
+    }
+  },
+  "sheetButtons": {
+    "base": {
+      "textColor": "#f3eefe",
+      "border": "rgba(0,0,0,0.5)",
+      "radius": 3,
+      "fontWeight": 500
+    },
+    "variants": {
+      "use": {
+        "background": "#4b2f7e",
+        "hover": {
+          "background": "#5b3f8e"
+        }
+      },
+      "damage": {
+        "background": "#5b3f8e",
+        "hover": {
+          "background": "#6b4f9e"
+        }
+      },
+      "critical": {
+        "background": "#b02a37",
+        "hover": {
+          "background": "#c63542"
+        }
+      }
+    }
+  },
+  "scrollbar": {
+    "thumb": "rgba(139,111,201,0.55)",
+    "thumbHover": "#8b6fc9"
+  }
+}
