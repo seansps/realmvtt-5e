@@ -1072,6 +1072,17 @@
           "shadow": "rgba(29,58,110,0.3)"
         },
         "icon": "IconShieldCheck"
+      },
+      "push": {
+        "background": "#f3e6cc",
+        "border": "#8a6420",
+        "textColor": "#4a3410",
+        "hover": {
+          "background": "#f8eedb",
+          "border": "#4a3410",
+          "shadow": "rgba(138,100,32,0.3)"
+        },
+        "icon": "IconRefresh"
       }
     },
     "match": {
@@ -1091,7 +1102,8 @@
       ],
       "save": [
         "*_save",
-        "*_saving_throw"
+        "*_saving_throw",
+        "*_check"
       ],
       "plain": [
         "apply_damage",
@@ -1099,7 +1111,12 @@
         "apply_graze_damage",
         "apply_healing",
         "apply_temporary_hp",
-        "apply_temp_hp"
+        "apply_temp_hp",
+        "apply_damage_*",
+        "apply_half_damage_*"
+      ],
+      "push": [
+        "push_*"
       ]
     },
     "buttons": {
@@ -1186,6 +1203,25 @@
       },
       "Roll_Thunder_Damage": {
         "icon": "thunder"
+      },
+      "Roll_Death_Timer": {
+        "icon": "IconHourglass",
+        "label": "Death Timer"
+      },
+      "Push_Casting": {
+        "label": "Push Casting"
+      },
+      "Roll_Improvement": {
+        "icon": "IconTrendingUp",
+        "label": "Improve"
+      },
+      "Roll_Luck_Improvement": {
+        "icon": "IconClover",
+        "label": "Luck"
+      },
+      "Roll_Extra_MP_Cost": {
+        "icon": "IconDroplet",
+        "label": "MP Cost"
       }
     }
   },
