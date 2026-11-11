@@ -6324,6 +6324,65 @@ function onItemEquippedFor(itemDataPath, newValue) {
   }
 }
 
+// ─── Attunement limit ────────────────────────────────────────────────────────
+//
+// A creature can be attuned to no more than three magic items at a time. "Max
+// Attuned Items" modifiers (maxAttunedItems) add to that limit, e.g. the
+// artificer's extra attunement slots. The count and limit live on the character
+// (data.attunedCount / data.maxAttunedItems) and show in the Encumbrance
+// section; fields.attunementOverLimit is the warning box under them.
+
+const BASE_ATTUNEMENT_LIMIT = 3;
+
+// How many attunement slots the character is using: an item counts when it
+// requires attunement and its attuned flag is "true". An attuned item uses one
+// slot plus its own "Additional Attunement Slots" modifiers (attunementSlots,
+// e.g. +1 for an item that takes two), or none when data.attunementExempt is
+// set (Resonant Bond). override: { index, value } for an inventory change not
+// yet written to rec.
+function getAttunementSlots(item) {
+  if (item?.data?.attunementExempt) return 0;
+  let slots = 1;
+  (item?.data?.modifiers || []).forEach((mod) => {
+    if (mod?.data?.type !== "attunementSlots" || mod.data.active === false) return;
+    const val = parseInt(mod.data.value, 10);
+    if (!isNaN(val)) slots += val;
+  });
+  return Math.max(0, slots);
+}
+
+function getAttunedCount(rec, override) {
+  const items = Array.isArray(rec?.data?.inventory) ? rec.data.inventory : [];
+  return items.reduce((total, item, index) => {
+    if (!item?.data?.attunement) return total;
+    const attuned =
+      override && override.index === index ? override.value : item.data.attuned;
+    return String(attuned) === "true" ? total + getAttunementSlots(item) : total;
+  }, 0);
+}
+
+// The character's attunement limit: 3 plus every active maxAttunedItems
+// modifier (feature, item, or effect).
+function getMaxAttunedItems(rec) {
+  let max = BASE_ATTUNEMENT_LIMIT;
+  getEffectsAndModifiersForToken(rec, ["maxAttunedItems"]).forEach((mod) => {
+    if (mod.active === false) return;
+    const val = parseInt(mod.value, 10);
+    if (!isNaN(val)) max += val;
+  });
+  return Math.max(0, max);
+}
+
+// Merge the attuned count, limit and over-limit warning into valuesToSet.
+function mergeAttunementFields(rec, valuesToSet, override) {
+  const count = getAttunedCount(rec, override);
+  const max = getMaxAttunedItems(rec);
+  valuesToSet["data.attunedCount"] = count;
+  valuesToSet["data.maxAttunedItems"] = max;
+  valuesToSet["fields.attunementOverLimit.hidden"] = count <= max;
+  return { count, max };
+}
+
 // Shared attune/unattune handler. Re-derives attribute bonuses so attuning
 // applies (and un-attuning removes) an item's attributeBonus/attributeSet
 // modifiers. Shared by the item-row attuned toggle (onItemAttuned) and the grid
@@ -6335,6 +6394,21 @@ function onItemAttunedFor(itemDataPath) {
 
   updateAttributes(item, valuesToSet);
   valuesToSet[`${itemDataPath}.data.attuned`] = item?.data?.attuned;
+
+  // Recount attuned items. `record` can still hold the pre-change flag, so the
+  // item being toggled is counted from its new value.
+  const indexMatch = (itemDataPath || "").match(/^data\.inventory\.(\d+)$/);
+  const override = indexMatch
+    ? { index: parseInt(indexMatch[1], 10), value: item?.data?.attuned }
+    : undefined;
+  const { count, max } = mergeAttunementFields(record, valuesToSet, override);
+  if (String(item?.data?.attuned) === "true" && count > max) {
+    api.showNotification(
+      `${item?.name || "This item"} is attuned item ${count}, but the attunement limit is ${max}.`,
+      "yellow",
+      "Attunement",
+    );
+  }
 
   api.setValues(valuesToSet, (updatedRecord) => {
     const bonusFields = {};

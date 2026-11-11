@@ -245,6 +245,12 @@
       valuesToSet[`${fieldsPath}.attunement.hidden`] = true;
     }
 
+    if (!isPack && item.fields?.attunementExempt?.hidden !== false) {
+      valuesToSet[`${fieldsPath}.attunementExempt.hidden`] = false;
+    } else if (isPack && item.fields?.attunementExempt?.hidden !== true) {
+      valuesToSet[`${fieldsPath}.attunementExempt.hidden`] = true;
+    }
+
     if (!isPack && item.fields?.hasUseBtn?.hidden !== false) {
       valuesToSet[`${fieldsPath}.hasUseBtn.hidden`] = false;
     } else if (isPack && item.fields?.hasUseBtn?.hidden !== true) {
@@ -526,6 +532,15 @@
       textalign="left"
       size="sm"
       hidewhenidentified="false"
+    >
+    </checkbox>
+    <!-- Resonant Bond, or a rightful wielder's Excalibur: attuned, but it
+         doesn't count toward the attunement limit. -->
+    <checkbox
+      field="attunementExempt"
+      label="Doesn't Use Attunement Slot"
+      textalign="left"
+      size="sm"
     >
     </checkbox>
     <checkbox

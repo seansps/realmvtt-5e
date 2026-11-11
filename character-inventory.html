@@ -107,7 +107,10 @@
     totalWeight = Math.round(totalWeight * 100) / 100;
 
     if (setValue) {
-      api.setValue("data.totalWeight", totalWeight);
+      // Attuned items / attunement limit refresh alongside the weight
+      const valuesToSet = { "data.totalWeight": totalWeight };
+      mergeAttunementFields(record, valuesToSet);
+      api.setValues(valuesToSet);
     } else {
       return totalWeight;
     }
@@ -322,6 +325,7 @@
       const valuesToSet = {};
       const totalWeight = updateTotalWeight(record2, false);
       valuesToSet["data.totalWeight"] = totalWeight;
+      mergeAttunementFields(record2, valuesToSet);
 
       // Get the current ac due to armor and set it on the
       // record
@@ -735,6 +739,42 @@
         label="Drag/Lift/Push"
       ></numberfield>
     </div>
+
+    <div style="display: flex; flex-direction: row; gap: 4px; margin-top: 4px">
+      <numberfield
+        width="50%"
+        placeholder="0"
+        field="attunedCount"
+        label="Attuned Items"
+      ></numberfield>
+      <numberfield
+        width="50%"
+        placeholder="3"
+        field="maxAttunedItems"
+        label="Attunement Limit"
+      ></numberfield>
+    </div>
+
+    <box field="attunementOverLimit" hidden="true">
+      <div
+        style="
+          margin-top: 4px;
+          padding: 4px 12px;
+          background: rgba(255, 0, 0, 0.15);
+          border: 1px solid rgba(255, 0, 0, 0.4);
+          border-radius: 6px;
+          text-align: center;
+        "
+      >
+        <label
+          label="Over Attunement Limit"
+          textalign="center"
+          color="red"
+          size="sm"
+          variant="bold"
+        ></label>
+      </div>
+    </box>
   </div>
 
   <div

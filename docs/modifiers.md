@@ -218,6 +218,8 @@ add a second one with `ignore fire immunity`.)
 | **Regeneration (Start/End of Turn)**                      | —                                 | number             | Troll-style regrowth                                      |
 | **Death Save Threshold**                                  | —                                 | number             | Adjust the death-save success target                      |
 | **Encumbrance Size Increase**                             | —                                 | `1` / `-1`         | Powerful Build (carry as one size larger)                 |
+| **Max Attuned Items**                                     | —                                 | number             | +1 to the 3-item attunement limit (Magic Item Adept)      |
+| **Additional Attunement Slots** (on an item)              | —                                 | number             | +1: the item uses two attunement slots while attuned      |
 | **Ignore Worn Armor Weight / Ignore Armor Skill Penalty** | —                                 | —                  | Remove armor weight or Stealth disadvantage               |
 | **Ability Group Uses Bonus**                              | a group name                      | number             | Extra uses of a limited feature                           |
 | **Set Value**                                             | a data field                      | any                | Write a raw field directly (advanced)                     |

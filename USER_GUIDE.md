@@ -292,6 +292,7 @@ Each item in your inventory shows:
 - **Weight**: Per item (total calculated automatically)
 - **Carried Status**: Carried, Dropped, or Stored
 - **Attunement**: For magic items requiring attunement
+  - The Encumbrance section shows **Attuned Items / Attunement Limit** (3, plus any **Max Attuned Items** modifiers). It updates when you attune or break attunement, and attuning past the limit shows a warning. Tick **Doesn't Use Attunement Slot** on an item that shouldn't count; an **Additional Attunement Slots** modifier on an item makes it use extra slots.
 - **Condition**: Note the item's condition
 
 ### Weapons in Inventory
