@@ -2422,6 +2422,46 @@ function syncInventoryItemValue(itemDataPath, key, value) {
 }
 
 // Gets the best equipped armor for the context of the current PC
+// Ability modifier used for an ability group's save DC. `saveDcAbility` is an
+// ability name or "strengthOrDexterity" (higher of the two, e.g. Battle Master
+// maneuvers); an optional alt ability also competes for the higher modifier.
+function getSaveDcAbilityModifier(rec, saveDcAbility, altSaveDcAbility) {
+  const abilities = [];
+  if (saveDcAbility === "strengthOrDexterity") {
+    abilities.push("strength", "dexterity");
+  } else if (saveDcAbility) {
+    abilities.push(saveDcAbility);
+  }
+  if (altSaveDcAbility) abilities.push(altSaveDcAbility);
+  if (abilities.length === 0) return 0;
+  return Math.max(
+    ...abilities.map((a) => parseInt(rec?.data?.[`${a}Mod`] || "0", 10) || 0),
+  );
+}
+
+// Equipped armor categories ("light"/"medium"/"heavy") and whether a shield is
+// equipped, read from a record's inventory. Used by the self:armor:* and
+// self:shield predicates.
+function _equippedArmorInfo(rec) {
+  const categories = [];
+  let shield = false;
+  (rec?.data?.inventory || []).forEach((item) => {
+    if (item?.data?.carried !== "equipped") return;
+    const type = String(item?.data?.type || "").toLowerCase();
+    if (type === "shield") {
+      shield = true;
+      return;
+    }
+    if (type !== "armor") return;
+    const raw = String(
+      item?.data?.armorCategory || item?.data?.subtype || "",
+    ).toLowerCase();
+    const cat = ["light", "medium", "heavy"].find((c) => raw.includes(c));
+    categories.push(cat || "light");
+  });
+  return { categories, shield };
+}
+
 function getBestEquippedArmor() {
   // Get the current ac due to armor
   let bestEquippedArmor = {
@@ -4665,6 +4705,23 @@ function evaluateSinglePredicate(predicate, context, effect, target) {
       const senses = (target?.data?.senses || "").toLowerCase();
       return senses.includes(requiredSense);
     }
+    // Worn-armor predicates, read from equipped inventory:
+    //   self:armor:none    → no armor equipped (a shield doesn't count)
+    //   self:armor:any     → any armor equipped
+    //   self:armor:light|medium|heavy → armor of that category equipped
+    //   self:shield        → a shield equipped
+    // e.g. Unarmored Movement: ["self:armor:none", {"not": "self:shield"}]
+    //      Fast Movement:      {"not": "self:armor:heavy"}
+    if (predicate === "self:shield") {
+      return _equippedArmorInfo(target).shield;
+    }
+    if (predicate.startsWith("self:armor:")) {
+      const want = predicate.slice("self:armor:".length).trim().toLowerCase();
+      const { categories } = _equippedArmorInfo(target);
+      if (want === "none") return categories.length === 0;
+      if (want === "any") return categories.length > 0;
+      return categories.includes(want);
+    }
     // Proficiency predicate: "self:proficient" or "self:proficient:<skill>"
     //   self:proficient            → proficient in the skill currently being
     //                                 rolled (uses context.rollField)
@@ -4983,9 +5040,13 @@ function evaluateStaticModifierPredicate(rec, mod) {
 }
 
 function calculateSpeed(rec) {
-  // Base speed comes from the heritage (biological trait), default 30 ft
+  // Base speed comes from the species (5e), falling back to a Level Up
+  // heritage for older records, default 30 ft
+  const species = (rec?.data?.species || [])[0];
   const heritage = (rec?.data?.heritages || [])[0];
-  const heritageSpeed = String(heritage?.data?.speed || "30 ft");
+  const heritageSpeed = String(
+    species?.data?.speed || heritage?.data?.speed || "30 ft",
+  );
 
   // Parse heritage speed (extract number from string like "30 ft" or "30")
   const match = heritageSpeed.match(/(\d+)/);

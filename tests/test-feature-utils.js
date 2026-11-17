@@ -278,6 +278,38 @@ section("skillExpertise choice — proficient skills only, sets 5e Expertise");
   assert("no proficient skills: flow continues", none.done, true);
 }
 
+section("levelByClass — per-class levels for effect expressions");
+{
+  const { getLevelByClass, levelByClassNeedsSync } = ctx;
+  assert(
+    "multiclass string parsed",
+    JSON.stringify(getLevelByClass("Fighter 5 / Paladin 18")),
+    JSON.stringify({ Fighter: 5, Paladin: 18 }),
+  );
+  assert("empty string → {}", JSON.stringify(getLevelByClass("")), "{}");
+  assert(
+    "missing levelByClass needs sync",
+    levelByClassNeedsSync({ data: { classLevels: "Paladin 6" } }),
+    true,
+  );
+  assert(
+    "matching levelByClass is in sync",
+    levelByClassNeedsSync({ data: { classLevels: "Paladin 6", levelByClass: { Paladin: 6 } } }),
+    false,
+  );
+  assert(
+    "stale level needs sync",
+    levelByClassNeedsSync({ data: { classLevels: "Paladin 7", levelByClass: { Paladin: 6 } } }),
+    true,
+  );
+  assert(
+    "removed class needs sync",
+    levelByClassNeedsSync({ data: { classLevels: "Paladin 7", levelByClass: { Paladin: 7, Fighter: 1 } } }),
+    true,
+  );
+  assert("no classes, no field → in sync", levelByClassNeedsSync({ data: {} }), false);
+}
+
 section("ASI prompts — each ability once, repeats allowed");
 {
   const capture = (abilityScores, firstPick) => {

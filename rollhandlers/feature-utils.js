@@ -4648,6 +4648,35 @@ function getTotalLevel(inputString) {
   return totalLevel;
 }
 
+// Per-class levels from a class levels string, e.g. "Fighter 5 / Cleric 3" →
+// { Fighter: 5, Cleric: 3 }. Stored as data.levelByClass so effect expressions
+// (aura ranges, scaling values) can read a class level with
+// @record.data.levelByClass.<Class>.
+function getLevelByClass(classLevels) {
+  const levelByClass = {};
+  String(classLevels || "")
+    .split("/")
+    .forEach((part) => {
+      const m = part.trim().match(/^(.+?)\s+(\d+)$/);
+      if (m) levelByClass[m[1].trim()] = parseInt(m[2], 10);
+    });
+  return levelByClass;
+}
+
+// True when data.levelByClass is missing or out of sync with data.classLevels.
+function levelByClassNeedsSync(rec) {
+  const expected = getLevelByClass(rec?.data?.classLevels);
+  const current = rec?.data?.levelByClass;
+  if (!current || typeof current !== "object") {
+    return Object.keys(expected).length > 0;
+  }
+  const keys = new Set([...Object.keys(expected), ...Object.keys(current)]);
+  for (const k of keys) {
+    if (parseInt(current[k], 10) !== expected[k]) return true;
+  }
+  return false;
+}
+
 // Collect features from heritage/culture/background/destiny that match a specific level
 // and aren't already on the character. Returns array of features to add.
 function collectMissingOriginFeatures(totalLevel, recordOverride) {

@@ -1128,7 +1128,9 @@
     subclass,
     newLevel,
     classLevels,
+    recordOverride,
   ) {
+    const rec = recordOverride || record;
     const additionalFieldsToSet = {};
     const featuresToAdd = [];
     const deferredAbilityGroups = [];
@@ -1189,6 +1191,11 @@
       }
       // If a feature was added and had an AC calc modifier, recalc AC
       if (featureAddedOrUpdated) {
+        // One-time grants on the feature (save/skill/tool proficiencies,
+        // languages, setValue). Uses the current record so merges append to
+        // proficiencies granted earlier in this level-up.
+        applyOneTimeModifiers(feature, additionalFieldsToSet, rec);
+
         // Check for AC Calc mods
         const acCalculationMods = (feature?.data?.modifiers || []).filter(
           (mod) => mod.data.type === "armorClassCalculation",
@@ -1292,6 +1299,13 @@
         }
       }
     });
+    // applyOneTimeModifiers can leave internal "_pending..." queues (tool
+    // proficiencies, skill specialties) that need async follow-up; this path
+    // writes fieldsToSet straight to the record, so drop them rather than
+    // persisting them as fields.
+    Object.keys(additionalFieldsToSet).forEach((key) => {
+      if (key.startsWith("_")) delete additionalFieldsToSet[key];
+    });
     return {
       fieldsToSet: additionalFieldsToSet,
       featuresToAdd,
@@ -1386,6 +1400,7 @@
     let valuesToSet = {
       "data.classLevels": classLevels,
       "data.className": classLevels,
+      "data.levelByClass": getLevelByClass(classLevels),
     };
 
     // Update the level total
@@ -2334,6 +2349,7 @@
             subclass,
             lvl,
             classLevels,
+            record,
           );
           Object.assign(allFieldsToSet, result.fieldsToSet);
           allFeaturesToAdd.push(...result.featuresToAdd);
@@ -2449,6 +2465,7 @@
     const valuesToSet = {
       "data.classLevels": classLevels,
       "data.className": classLevels,
+      "data.levelByClass": getLevelByClass(classLevels),
     };
 
     // Remove subclasses for this class from `data.subclasses`
@@ -3024,6 +3041,14 @@
     ) {
       const curLevel = parseInt(record?.data?.level || "1", 10);
       api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
+    }
+    // Backfill / resync data.levelByClass (per-class levels used by effect
+    // expressions such as aura ranges) for characters created before it existed.
+    if (levelByClassNeedsSync(record)) {
+      api.setValue(
+        "data.levelByClass",
+        getLevelByClass(record?.data?.classLevels),
+      );
     }
 
     const inventory = record?.data?.inventory || [];

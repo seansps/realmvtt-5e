@@ -169,4 +169,46 @@ assert(
   "30 ft, Fly (30 ft)",
 );
 
+section("base speed comes from the 5e species");
+{
+  const goliath = {
+    effects: [],
+    data: { species: [{ name: "Goliath", data: { speed: "35 ft" } }], features: [], inventory: [] },
+  };
+  assert("species speed used as base", calculateSpeed(goliath), "35 ft");
+  assert(
+    "no species falls back to 30 ft",
+    calculateSpeed({ effects: [], data: { features: [], inventory: [] } }),
+    "30 ft",
+  );
+}
+
+section("armor predicates gate speed bonuses (Unarmored / Fast Movement)");
+{
+  const plate = { name: "Plate Armor", data: { type: "armor", armorCategory: "Heavy", carried: "equipped" } };
+  const leather = { name: "Leather Armor", data: { type: "armor", armorCategory: "Light", carried: "equipped" } };
+  const shield = { name: "Shield", data: { type: "shield", carried: "equipped" } };
+  const packedPlate = { name: "Plate Armor", data: { type: "armor", armorCategory: "Heavy", carried: "carried" } };
+  const char = (mod, inventory) => ({
+    effects: [],
+    data: { features: [{ name: "F", data: { modifiers: [mod] } }], inventory },
+  });
+  const unarmored = {
+    data: {
+      type: "speedBonus",
+      value: "10",
+      predicate: JSON.stringify(["self:armor:none", { not: "self:shield" }]),
+    },
+  };
+  const notHeavy = {
+    data: { type: "speedBonus", value: "10", predicate: JSON.stringify({ not: "self:armor:heavy" }) },
+  };
+  assert("unarmored: no armor → +10", calculateSpeed(char(unarmored, [])), "40 ft");
+  assert("unarmored: armor carried, not worn → +10", calculateSpeed(char(unarmored, [packedPlate])), "40 ft");
+  assert("unarmored: light armor → no bonus", calculateSpeed(char(unarmored, [leather])), "30 ft");
+  assert("unarmored: shield only → no bonus", calculateSpeed(char(unarmored, [shield])), "30 ft");
+  assert("fast movement: light armor → +10", calculateSpeed(char(notHeavy, [leather])), "40 ft");
+  assert("fast movement: heavy armor → no bonus", calculateSpeed(char(notHeavy, [plate])), "30 ft");
+}
+
 summary();
