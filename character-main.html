@@ -1874,13 +1874,9 @@
       abilityIncrease.scores.forEach((score) => {
         options.push({ label: capitalize(score), value: score });
       });
-      // IF we allow more than one selection, add them again
-      if (abilityIncrease.count > 1) {
-        abilityIncrease.scores.forEach((score) => {
-          options.push({ label: `${capitalize(score)}`, value: `${score}-2` });
-        });
-      }
 
+      // allowRepeats lets the same score be picked twice (+2) instead of
+      // listing every score twice
       api.showPrompt(
         `Choose Ability Scores to Raise`,
         "Select Ability Scores",
@@ -1893,6 +1889,7 @@
         "OK",
         "Cancel",
         abilityIncrease.count,
+        abilityIncrease.count > 1,
       );
     } else if (abilityIncrease.scores.length > 0) {
       // Add all ASIs
@@ -1938,22 +1935,15 @@
       }
     };
 
-    // Prompt for Ability Scores to raise
+    // Prompt for Ability Scores to raise. Each ability is listed once; the
+    // prompt's allowRepeats lets one be picked twice (+2 / +1 split).
     let options = [];
     const abilityChoices = backgroundObj?.data?.abilityScores || [];
-    // We list each one twice since you can only pick one more than once twice
     abilityChoices.forEach((ability) => {
       options.push({
         label: capitalize(ability),
         // In code we use camelCase, so we need to convert from normal to camelCase
         value: normalToCamelCase(ability),
-      });
-    });
-    abilityChoices.forEach((ability) => {
-      options.push({
-        label: capitalize(ability),
-        // In code we use camelCase, so we need to convert from normal to camelCase
-        value: `${normalToCamelCase(ability)}-2`,
       });
     });
 
@@ -2010,17 +2000,40 @@
       });
     };
 
-    api.showPrompt(
-      `Choose Ability Scores to Raise`,
-      "Select Ability Scores",
-      `Select 3 Ability Scores to Raise (to a max of 20)...`,
-      options,
-      null,
-      abilityScoreSelection,
-      "OK",
-      "Cancel",
-      3,
-    );
+    // Three picks with repeats allowed, but no score may take more than two
+    // (+2 / +1 or +1 / +1 / +1). The prompt can't cap per-option repeats, so
+    // re-ask when a score was picked three times.
+    const promptBackgroundAbilityScores = () => {
+      api.showPrompt(
+        `Choose Ability Scores to Raise`,
+        "Select Ability Scores",
+        `Increase one score by 2 and another by 1, or three scores by 1 (to a max of 20)...`,
+        options,
+        null,
+        (values) => {
+          const counts = {};
+          (values || []).forEach((v) => {
+            const key = String(v).split("-")[0];
+            counts[key] = (counts[key] || 0) + 1;
+          });
+          if (Object.values(counts).some((n) => n > 2)) {
+            api.showNotification(
+              "You can raise a single ability score by at most 2.",
+              "red",
+              "Ability Scores",
+            );
+            promptBackgroundAbilityScores();
+            return;
+          }
+          abilityScoreSelection(values);
+        },
+        "OK",
+        "Cancel",
+        3,
+        true,
+      );
+    };
+    promptBackgroundAbilityScores();
 
     // Set the background name
     fieldsToSet["data.backgroundName"] = backgroundName;

@@ -1407,6 +1407,37 @@ function applyOneTimeModifiers(featureOrItem, fieldsToSet, recordOverride) {
 
 // ─── Provides Items ─────────────────────────────────────────────────────────
 
+// Resolve which class a feature's `source` belongs to: a class name maps to
+// itself, a subclass name maps to its parent class. Returns "" for species,
+// background, and feat sources.
+function _classNameForSource(source, characterRecord) {
+  if (!source) return "";
+  const classes = characterRecord?.data?.classes || [];
+  if (classes.some((c) => c?.name === source)) return source;
+  const sub = (characterRecord?.data?.subclasses || []).find(
+    (s) => s?.name === source,
+  );
+  return sub?.data?.class || "";
+}
+
+// The level a feature's levelRequirement is measured against. Class and
+// subclass features use that class's level (a Fighter 5 / Cleric 3 has Life
+// Domain's level-5 spells at Cleric 5, not at total level 5); everything else
+// uses total character level.
+function _providesItemsLevel(feature, characterRecord, className) {
+  const total = Math.max(
+    parseInt(characterRecord?.data?.level || "1", 10) || 1,
+    1,
+  );
+  const cls =
+    className || _classNameForSource(feature?.data?.source, characterRecord);
+  if (cls) {
+    const classLevel = _getClassLevel(cls, characterRecord);
+    if (classLevel > 0) return classLevel;
+  }
+  return total;
+}
+
 // Apply "Provides Items" from a feature — adds items, spells, abilities, or feats
 // to the character's appropriate lists. Chains async api.addValue calls sequentially.
 function applyProvidesItems(feature, characterRecord, callback) {
@@ -1440,13 +1471,11 @@ function applyProvidesItems(feature, characterRecord, callback) {
       const item = providesItems[index];
       index++;
 
-      // Level gating: skip items whose levelRequirement exceeds the character's current level
+      // Level gating: skip items whose levelRequirement exceeds the relevant
+      // level (class level for class/subclass features, else total level)
       const levelReq = parseInt(item?.data?.levelRequirement || "0", 10);
       if (levelReq > 0) {
-        const charLevel = Math.max(
-          parseInt(freshRec?.data?.level || "1", 10),
-          1,
-        );
+        const charLevel = _providesItemsLevel(feature, freshRec);
         if (charLevel < levelReq) {
           addNext();
           return;
@@ -1664,19 +1693,34 @@ function applyNewlyUnlockedProvidesItems(characterRecord, callback) {
     characterRecord?.recordType || "characters",
     characterRecord?._id,
     (freshRec) => {
-      const charLevel = Math.max(parseInt(freshRec?.data?.level || "1", 10), 1);
-      // Collect all features from all sources
+      // Collect all features from all sources, each paired with the level its
+      // levelRequirement is measured against (class level for class/subclass
+      // features, total level otherwise).
       const allFeatures = [];
-      const sources = [
+      const totalLevel = _providesItemsLevel(null, freshRec);
+      [
         ...(freshRec?.data?.species || []),
         ...(freshRec?.data?.backgrounds || []),
-        ...(freshRec?.data?.classes || []),
-        ...(freshRec?.data?.subclasses || []),
-      ];
-      sources.forEach((source) => {
-        (source?.data?.feature_list || []).forEach((f) => allFeatures.push(f));
+      ].forEach((source) => {
+        (source?.data?.feature_list || []).forEach((f) =>
+          allFeatures.push({ feature: f, level: totalLevel }),
+        );
       });
-      (freshRec?.data?.features || []).forEach((f) => allFeatures.push(f));
+      (freshRec?.data?.classes || []).forEach((cls) => {
+        const level = _providesItemsLevel(null, freshRec, cls?.name);
+        (cls?.data?.feature_list || []).forEach((f) =>
+          allFeatures.push({ feature: f, level }),
+        );
+      });
+      (freshRec?.data?.subclasses || []).forEach((sub) => {
+        const level = _providesItemsLevel(null, freshRec, sub?.data?.class);
+        (sub?.data?.feature_list || []).forEach((f) =>
+          allFeatures.push({ feature: f, level }),
+        );
+      });
+      (freshRec?.data?.features || []).forEach((f) =>
+        allFeatures.push({ feature: f, level: _providesItemsLevel(f, freshRec) }),
+      );
 
       // Collect existing spell/item names for duplicate detection
       const existingSpellNames = new Set();
@@ -1708,10 +1752,10 @@ function applyNewlyUnlockedProvidesItems(characterRecord, callback) {
       // appears in both origin sources (e.g. data.cultures) and data.features.
       const featuresToProcess = [];
       const seenItemNames = new Set();
-      allFeatures.forEach((feature) => {
+      allFeatures.forEach(({ feature, level }) => {
         const items = (feature?.data?.providesItems || []).filter((item) => {
           const levelReq = parseInt(item?.data?.levelRequirement || "0", 10);
-          if (levelReq !== charLevel) return false;
+          if (levelReq !== level) return false;
           // Check duplicates
           const name = (item?.name || "").toLowerCase();
           if (!name) return false;
@@ -2941,23 +2985,8 @@ function promptForChoices(
       { label: "Survival", value: "survival" },
     ];
 
-    // If we're prompting for Skill Specialities, we need to duplicate the list
-    // based on number of choices, because you can choose the same 1 more than once
-    if (choiceType === "skillSpecialty" && choiceCount > 1) {
-      const allSkillsCopy = [...allSkills];
-      var newAllSkills = [];
-      allSkillsCopy.forEach((skill) => {
-        for (var ii = 0; ii < choiceCount; ii++) {
-          const count = ii + 1;
-          const newSkillChoice = {
-            label: skill.label,
-            value: `${skill.value}-${count}`,
-          };
-          newAllSkills.push(newSkillChoice);
-        }
-      });
-      allSkills = newAllSkills;
-    }
+    // Skill Specialties can pick the same skill more than once; the prompt's
+    // allowRepeats (passed below) handles that without duplicating the list.
 
     // Filter to only skills listed in restrictTo if provided.
     // Supports both array and comma-separated string formats.
@@ -3121,6 +3150,7 @@ function promptForChoices(
       "OK",
       "Cancel",
       choiceCount > 1 ? choiceCount : undefined,
+      choiceType === "skillSpecialty" && choiceCount > 1,
     );
     return;
   }
@@ -5183,11 +5213,8 @@ function promptAbilityScoreIncrease(feature, rec, callback) {
     abilityIncrease.scores.forEach((score) => {
       options.push({ label: capitalize(score), value: score });
     });
-    if (abilityIncrease.count > 1) {
-      abilityIncrease.scores.forEach((score) => {
-        options.push({ label: capitalize(score), value: `${score}-2` });
-      });
-    }
+    // allowRepeats lets the same score be picked twice (+2) instead of listing
+    // every score twice; each pick arrives as its own entry in `values`.
     api.showPrompt(
       "Choose Ability Scores to Raise",
       "Select Ability Scores",
@@ -5206,6 +5233,7 @@ function promptAbilityScoreIncrease(feature, rec, callback) {
       "OK",
       "Cancel",
       abilityIncrease.count,
+      abilityIncrease.count > 1,
     );
   } else if (abilityIncrease.scores.length > 0) {
     _applyAsiScores(

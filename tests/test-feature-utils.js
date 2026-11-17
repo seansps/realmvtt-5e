@@ -155,4 +155,48 @@ section("resolveSkillCheckAbility — effect-driven skill ability override (use 
   assert("literal mod 4", r.abilityMod, 4);
 }
 
+section("providesItems level gating — class level for class/subclass features");
+{
+  const { _classNameForSource, _providesItemsLevel } = ctx;
+  const multi = {
+    data: {
+      level: 8,
+      classLevels: "Fighter 5 / Cleric 3",
+      classes: [{ name: "Fighter" }, { name: "Cleric" }],
+      subclasses: [{ name: "Life Domain", data: { class: "Cleric" } }],
+    },
+  };
+  assert("class source maps to itself", _classNameForSource("Cleric", multi), "Cleric");
+  assert("subclass source maps to parent", _classNameForSource("Life Domain", multi), "Cleric");
+  assert("species source has no class", _classNameForSource("Elf", multi), "");
+  assert("empty source has no class", _classNameForSource("", multi), "");
+
+  assert(
+    "subclass feature uses Cleric level, not total",
+    _providesItemsLevel({ data: { source: "Life Domain" } }, multi),
+    3,
+  );
+  assert(
+    "class feature uses its class level",
+    _providesItemsLevel({ data: { source: "Fighter" } }, multi),
+    5,
+  );
+  assert(
+    "explicit class name overrides source",
+    _providesItemsLevel(null, multi, "Cleric"),
+    3,
+  );
+  assert(
+    "non-class feature uses total level",
+    _providesItemsLevel({ data: { source: "Sage" } }, multi),
+    8,
+  );
+  assert(
+    "unknown class level falls back to total",
+    _providesItemsLevel(null, { data: { level: 4, classLevels: "" } }, "Wizard"),
+    4,
+  );
+  assert("missing record defaults to level 1", _providesItemsLevel(null, {}), 1);
+}
+
 process.exit(summary());
