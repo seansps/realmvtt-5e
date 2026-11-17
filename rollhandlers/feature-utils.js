@@ -3156,11 +3156,32 @@ function promptForChoices(
   }
 
   // ── Built-in choice type: skillExpertise / skillOrToolExpertise ──
-  // Prompts for a proficient skill (or skill/tool), then creates a one-off feature with an expertiseDie modifier.
+  // Prompts for skills (or skills/tools) the character is already proficient
+  // in and raises each to 5e Expertise (proficiency "expertise" = double
+  // proficiency bonus).
   if (
     choiceType === "skillExpertise" ||
     choiceType === "skillOrToolExpertise"
   ) {
+    // Proficiency decides what's eligible, so read it from a fresh record
+    // (skills chosen earlier in the same flow may not be on a cached copy).
+    if (!choice._expertiseFresh) {
+      choice._expertiseFresh = true;
+      api.getRecord(
+        characterRecord?.recordType || "characters",
+        characterRecord?._id,
+        function (fresh) {
+          promptForChoices(
+            fresh || characterRecord,
+            choicesToMake,
+            index,
+            callback,
+            depth,
+          );
+        },
+      );
+      return;
+    }
     var expertiseSkills = [
       { label: "Acrobatics", value: "acrobatics" },
       { label: "Animal Handling", value: "animalHandling" },
@@ -3205,59 +3226,41 @@ function promptForChoices(
     var hasSpecificSkillRestriction =
       restrictToExpertise.length > 0 && !allowAnySkill;
 
-    // Apply restrictTo if present — proficiency is NOT required to take expertise.
+    // Apply restrictTo, then keep only skills the character is proficient in
+    // (not already Expertise) — 5e Expertise requires proficiency.
     expertiseSkills = expertiseSkills.filter(function (s) {
-      if (!hasSpecificSkillRestriction) return true;
-      return (
-        restrictSetExpertise.includes(s.value.toLowerCase()) ||
-        restrictSetExpertise.includes(s.label.toLowerCase())
-      );
+      if (
+        hasSpecificSkillRestriction &&
+        !restrictSetExpertise.includes(s.value.toLowerCase()) &&
+        !restrictSetExpertise.includes(s.label.toLowerCase())
+      ) {
+        return false;
+      }
+      return (characterRecord?.data?.[s.value + "Prof"] || "false") === "true";
     });
 
-    // skillOrToolExpertise: also include tools (the player's own otherSkills
-    // entries plus, when relevant, the full tool catalog so they can pick
-    // tools they aren't yet proficient in).
+    // skillOrToolExpertise: also offer tools the character is proficient in
+    // (otherSkills entries), honoring restrictTo / "any tool".
+    var otherSkills = characterRecord?.data?.otherSkills || [];
     if (choiceType === "skillOrToolExpertise") {
-      var addToolEntry = function (name) {
-        if (!name) return;
-        var camel = name.toLowerCase().replace(/\s+(.)/g, function (_m, c) {
-          return c.toUpperCase();
-        });
-        if (
-          !expertiseSkills.some(function (es) {
-            return es.value === camel;
-          })
-        ) {
-          expertiseSkills.push({ label: name, value: camel });
-        }
-      };
-
-      // 1) Player's existing tool/other-skill entries — included whenever
-      //    restrictTo is unset or `any tool` / the tool name is allowed.
-      var otherSkills = characterRecord?.data?.otherSkills || [];
-      otherSkills.forEach(function (s) {
+      otherSkills.forEach(function (s, oIdx) {
         var name = s?.name;
         if (!name) return;
+        if ((s?.data?.skillProf || "false") !== "true") return;
         if (restrictToExpertise.length > 0 && !allowAnyTool) {
           if (!restrictSetExpertise.includes(name.toLowerCase())) return;
         }
-        addToolEntry(name);
-      });
-
-      // 2) Full tool catalog — include any tools the player isn't already
-      //    proficient in so they can take expertise without prerequisites.
-      //    With `any tool` we include the whole catalog; otherwise only the
-      //    tool names that appear in restrictTo.
-      ALL_KNOWN_TOOLS.forEach(function (toolName) {
-        if (restrictToExpertise.length === 0 || allowAnyTool) {
-          addToolEntry(toolName);
-        } else if (restrictSetExpertise.includes(toolName.toLowerCase())) {
-          addToolEntry(toolName);
-        }
+        expertiseSkills.push({ label: name, value: "otherSkill:" + oIdx });
       });
     }
 
     if (expertiseSkills.length === 0) {
+      api.showNotification(
+        featureName +
+          ": no proficient skills to choose from. Set Expertise on your Skills tab once you have the proficiencies.",
+        "orange",
+        featureName,
+      );
       storeChoiceAndContinue(
         choice,
         JSON.stringify({ name: "(no proficient skills)" }),
@@ -3288,7 +3291,6 @@ function promptForChoices(
         return typeof raw === "object" ? raw?.value || raw?.label || raw : raw;
       });
 
-      // Build label for the choice feature
       var selectionLabel = skillValues
         .map(function (v) {
           var match = expertiseSkills.find(function (s) {
@@ -3298,63 +3300,68 @@ function promptForChoices(
         })
         .join(", ");
 
-      // Create a one-off feature for each selected skill with an expertiseDie modifier
-      var featurePortrait = choice.feature?.portrait || "";
-      var idx = 0;
-      var addNextExpertiseFeature = function () {
-        if (idx >= skillValues.length) {
-          storeChoiceAndContinue(
-            choice,
-            JSON.stringify({ name: selectionLabel }),
-            characterRecord,
-            choicesToMake,
-            index,
-            callback,
-            depth,
+      // Raise each selection to Expertise: ability mod + 2x proficiency bonus.
+      var rec = characterRecord;
+      var profBonus = Math.max(
+        parseInt(rec?.data?.proficiencyBonus || "2", 10) || 2,
+        2,
+      );
+      var fieldsToSet = {};
+      skillValues.forEach(function (v) {
+        if (String(v).indexOf("otherSkill:") === 0) {
+          var oIdx = parseInt(String(v).split(":")[1], 10);
+          var tool = otherSkills[oIdx];
+          if (!tool) return;
+          var toolAbility = tool?.data?.ability || "";
+          var toolAbilityMod = parseInt(
+            rec?.data?.[toolAbility + "Mod"] || "0",
+            10,
           );
+          fieldsToSet["data.otherSkills." + oIdx + ".data.skillProf"] =
+            "expertise";
+          fieldsToSet["data.otherSkills." + oIdx + ".data.skillMod"] =
+            toolAbilityMod + profBonus * 2;
           return;
         }
-        var skillField = skillValues[idx];
-        var skillLabel = expertiseSkills.find(function (s) {
-          return s.value === skillField;
-        });
-        var displayName = skillLabel
-          ? skillLabel.label
-          : capitalize(skillField);
-        idx++;
+        var skillAbility =
+          rec?.data?.[v + "Ability"] || getAbilityFromSkill(v);
+        var abilityMod = parseInt(rec?.data?.[skillAbility + "Mod"] || "0", 10);
+        fieldsToSet["data." + v + "Prof"] = "expertise";
+        setSkillModAndPassive(fieldsToSet, rec, v, abilityMod + profBonus * 2);
+      });
+
+      api.setValues(fieldsToSet, function () {
+        // Record the pick on the character's feature list for reference.
         safeAddValue(
           "data.features",
           {
-            name: displayName + " (Choice for " + featureName + ")",
-            portrait: featurePortrait,
+            name: featureName + " (" + selectionLabel + ")",
+            portrait: choice.feature?.portrait || "",
             recordType: "feats",
             data: {
               source: sourceName,
               type: "feature",
               featureType: "choice",
-              prerequisites: "Bard",
               level: featureLevel || 1,
-              description: displayName + ", chosen from " + featureName + ".",
-              modifiers: [
-                {
-                  _id: generateId(),
-                  name: "Modifier",
-                  data: {
-                    type: "expertiseDie",
-                    field: skillField,
-                    valueType: "string",
-                    active: true,
-                    value: "1d4",
-                  },
-                },
-              ],
+              description:
+                "<p>Expertise in " + selectionLabel + ", chosen from " +
+                featureName + ".</p>",
             },
           },
-          addNextExpertiseFeature,
+          function () {
+            storeChoiceAndContinue(
+              choice,
+              JSON.stringify({ name: selectionLabel }),
+              characterRecord,
+              choicesToMake,
+              index,
+              callback,
+              depth,
+            );
+          },
           characterRecord,
         );
-      };
-      addNextExpertiseFeature();
+      });
     };
 
     api.showPrompt(

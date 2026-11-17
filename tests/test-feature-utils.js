@@ -199,4 +199,83 @@ section("providesItems level gating — class level for class/subclass features"
   assert("missing record defaults to level 1", _providesItemsLevel(null, {}), 1);
 }
 
+section("skillExpertise choice — proficient skills only, sets 5e Expertise");
+{
+  const runExpertise = (charData, pick) => {
+    const c = createSandbox();
+    loadScript(c, "feature-utils.js");
+    const charRec = { _id: "pc1", recordType: "characters", data: charData };
+    const writes = [];
+    const seen = { prompted: false, options: [], notified: false };
+    c.api.getRecord = (_t, _id, cb) => cb(charRec);
+    c.api.setValues = (fields, cb) => {
+      writes.push(fields);
+      if (cb) cb(charRec);
+    };
+    c.api.showNotification = () => {
+      seen.notified = true;
+    };
+    c.api.showPrompt = (_n, _l, _t, options, _q, cb) => {
+      seen.prompted = true;
+      seen.options = options.map((o) => o.value);
+      cb(pick);
+    };
+    let done = false;
+    c.promptForChoices(
+      charRec,
+      [
+        {
+          feature: { name: "Expertise", data: { level: 1 } },
+          featureName: "Expertise",
+          sourceName: "Rogue",
+          dataPath: "data.classes.0.data.feature_list.0",
+          choiceObj: { data: { choiceType: "skillExpertise", count: 2 } },
+          choiceIndex: 0,
+        },
+      ],
+      0,
+      () => {
+        done = true;
+      },
+    );
+    const merged = Object.assign({}, ...writes);
+    return { seen, merged, done };
+  };
+
+  const base = {
+    proficiencyBonus: 2,
+    dexterityMod: 3,
+    stealthProf: "true",
+    sleightOfHandProf: "true",
+    athleticsProf: "expertise",
+    perceptionProf: "false",
+  };
+  const r = runExpertise(base, ["stealth", "sleightOfHand"]);
+  assert("prompt shown", r.seen.prompted, true);
+  assert(
+    "only proficient, non-expertise skills offered",
+    JSON.stringify(r.seen.options.slice().sort()),
+    JSON.stringify(["sleightOfHand", "stealth"]),
+  );
+  assert("stealth set to expertise", r.merged["data.stealthProf"], "expertise");
+  assert("stealth mod = dex 3 + 2x PB 2", r.merged["data.stealthMod"], 7);
+  assert(
+    "sleight of hand set to expertise",
+    r.merged["data.sleightOfHandProf"],
+    "expertise",
+  );
+  const featureWrite = r.merged["data.features"] || [];
+  assert(
+    "no expertiseDie modifier added",
+    JSON.stringify(featureWrite).includes("expertiseDie"),
+    false,
+  );
+  assert("choice flow continues", r.done, true);
+
+  const none = runExpertise({ proficiencyBonus: 2 }, []);
+  assert("no proficient skills: no prompt", none.seen.prompted, false);
+  assert("no proficient skills: player notified", none.seen.notified, true);
+  assert("no proficient skills: flow continues", none.done, true);
+}
+
 process.exit(summary());

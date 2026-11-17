@@ -1682,56 +1682,76 @@
         }
       };
 
-      if (!promptSubclass) {
-        const subclass = (updatedRecord?.data?.subclasses || []).find(
-          (subclass) => subclass.data.class === className,
-        );
-        const result = addMissingClassFeatures(
-          className,
-          recordLink.value,
-          subclass,
-          newLevel,
-          classLevels,
-          // Pass the record AFTER class base proficiencies were set, so feature
-          // proficiency modifiers append to them instead of overwriting.
-          updatedRecord,
-        );
-
-        // Set synchronous fields first
-        const afterFieldsSet = (rec) => {
-          // Chain feature adds sequentially via safeAddValue
-          let fIdx = 0;
-          const addNextFeature = () => {
-            if (fIdx >= result.featuresToAdd.length) {
-              // Then process deferred ability groups, then the feature-utils
-              // cascade (attribute bonuses, provides items, slug feats, choices)
-              processDeferredAbilityGroups(
-                result.deferredAbilityGroups,
-                rec,
-                (recAfterGroups) =>
-                  runClassFeatureCascade(
-                    result.featuresToAdd,
-                    recAfterGroups || rec,
-                    () => reapplyProficiencies(() => proceedToPrompts()),
-                  ),
-              );
-              return;
-            }
-            safeAddValue(
-              "data.features",
-              result.featuresToAdd[fIdx++],
-              addNextFeature,
-              rec,
-            );
-          };
-          addNextFeature();
-        };
-
-        if (Object.keys(result.fieldsToSet).length > 0) {
-          api.setValues(result.fieldsToSet, afterFieldsSet);
-        } else {
-          afterFieldsSet(updatedRecord);
+      // Class skill proficiencies are chosen BEFORE features are added, so
+      // feature choices that depend on them (e.g. Rogue Expertise at level 1)
+      // see the chosen skills. Clearing promptSkillChoicesLater keeps
+      // proceedToPrompts from asking a second time.
+      const withSkillChoicesFirst = (next) => {
+        if (!promptSkillChoicesLater) {
+          next(updatedRecord);
+          return;
         }
+        const promptSkills = promptSkillChoicesLater;
+        promptSkillChoicesLater = null;
+        promptSkills(() => {
+          api.getRecord("characters", record._id, (fresh) =>
+            next(fresh || updatedRecord),
+          );
+        });
+      };
+
+      if (!promptSubclass) {
+        withSkillChoicesFirst((baseRecord) => {
+          const subclass = (baseRecord?.data?.subclasses || []).find(
+            (subclass) => subclass.data.class === className,
+          );
+          const result = addMissingClassFeatures(
+            className,
+            recordLink.value,
+            subclass,
+            newLevel,
+            classLevels,
+            // Pass the record AFTER class base proficiencies (and skill choices)
+            // were set, so feature proficiency modifiers append to them.
+            baseRecord,
+          );
+
+          // Set synchronous fields first
+          const afterFieldsSet = (rec) => {
+            // Chain feature adds sequentially via safeAddValue
+            let fIdx = 0;
+            const addNextFeature = () => {
+              if (fIdx >= result.featuresToAdd.length) {
+                // Then process deferred ability groups, then the feature-utils
+                // cascade (attribute bonuses, provides items, slug feats, choices)
+                processDeferredAbilityGroups(
+                  result.deferredAbilityGroups,
+                  rec,
+                  (recAfterGroups) =>
+                    runClassFeatureCascade(
+                      result.featuresToAdd,
+                      recAfterGroups || rec,
+                      () => reapplyProficiencies(() => proceedToPrompts()),
+                    ),
+                );
+                return;
+              }
+              safeAddValue(
+                "data.features",
+                result.featuresToAdd[fIdx++],
+                addNextFeature,
+                rec,
+              );
+            };
+            addNextFeature();
+          };
+
+          if (Object.keys(result.fieldsToSet).length > 0) {
+            api.setValues(result.fieldsToSet, afterFieldsSet);
+          } else {
+            afterFieldsSet(baseRecord);
+          }
+        });
       } else {
         proceedToPrompts();
       }
