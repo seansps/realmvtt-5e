@@ -278,4 +278,46 @@ section("skillExpertise choice — proficient skills only, sets 5e Expertise");
   assert("no proficient skills: flow continues", none.done, true);
 }
 
+section("ASI prompts — each ability once, repeats allowed");
+{
+  const capture = (abilityScores, firstPick) => {
+    const c = createSandbox();
+    loadScript(c, "feature-utils.js");
+    const prompts = [];
+    c.api.showPrompt = (...args) => {
+      prompts.push(args);
+      // Answer the first prompt (Feat-or-ASI) when asked; leave the rest open.
+      if (prompts.length === 1 && firstPick) args[5]([firstPick]);
+    };
+    c.promptAbilityScoreIncrease(
+      { name: "ASI", data: { abilityScores } },
+      { _id: "pc1", recordType: "characters", data: {} },
+      () => {},
+    );
+    return prompts;
+  };
+  const SIX = JSON.stringify([
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
+  ]);
+
+  const feat = capture(
+    "Increase one ability score of your choice by 2, or increase two ability scores of your choice by 1. This feat can’t increase an ability score above 20.",
+  );
+  const fp = feat[0];
+  assert("feat ASI: six options, no duplicates", JSON.stringify(fp[3].map((o) => o.value)), SIX);
+  assert("feat ASI: two picks", fp[8], 2);
+  assert("feat ASI: allowRepeats on", fp[9], true);
+
+  const choice = capture("Choice of Feat or ASI", "asi");
+  const cp = choice[1];
+  assert("feat-or-ASI → ASI: six options", JSON.stringify(cp[3].map((o) => o.value)), SIX);
+  assert("feat-or-ASI → ASI: two picks", cp[8], 2);
+  assert("feat-or-ASI → ASI: allowRepeats on", cp[9], true);
+}
+
 process.exit(summary());

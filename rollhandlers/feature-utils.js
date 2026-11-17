@@ -5118,11 +5118,12 @@ function promptAbilityScoreIncrease(feature, rec, callback) {
             "wisdom",
             "charisma",
           ];
-          const asiOptions = [];
-          allAbilities.forEach((score) => {
-            asiOptions.push({ label: capitalize(score), value: score });
-            asiOptions.push({ label: capitalize(score), value: `${score}-2` });
-          });
+          // Each ability listed once; allowRepeats (below) lets one be picked
+          // twice for +2.
+          const asiOptions = allAbilities.map((score) => ({
+            label: capitalize(score),
+            value: score,
+          }));
           api.showPrompt(
             "Choose Ability Scores to Raise",
             "Select Ability Scores",
@@ -5139,6 +5140,7 @@ function promptAbilityScoreIncrease(feature, rec, callback) {
             "OK",
             "Cancel",
             2,
+            true,
           );
         } else {
           // Show feat query, then add the chosen feat directly and process its choices.

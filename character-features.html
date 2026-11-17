@@ -142,13 +142,9 @@
       abilityIncrease.scores.forEach((score) => {
         options.push({ label: capitalize(score), value: score });
       });
-      // IF we allow more than one selection, add them again
-      if (abilityIncrease.count > 1) {
-        abilityIncrease.scores.forEach((score) => {
-          options.push({ label: `${capitalize(score)}`, value: `${score}-2` });
-        });
-      }
 
+      // allowRepeats lets the same score be picked twice (+2) instead of
+      // listing every score twice
       api.showPrompt(
         `Choose Ability Scores to Raise`,
         "Select Ability Scores",
@@ -161,6 +157,7 @@
         "OK",
         "Cancel",
         abilityIncrease.count,
+        abilityIncrease.count > 1,
       );
     } else if (abilityIncrease.scores.length > 0) {
       // Add all ASIs
