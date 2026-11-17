@@ -2422,23 +2422,6 @@ function syncInventoryItemValue(itemDataPath, key, value) {
 }
 
 // Gets the best equipped armor for the context of the current PC
-// Ability modifier used for an ability group's save DC. `saveDcAbility` is an
-// ability name or "strengthOrDexterity" (higher of the two, e.g. Battle Master
-// maneuvers); an optional alt ability also competes for the higher modifier.
-function getSaveDcAbilityModifier(rec, saveDcAbility, altSaveDcAbility) {
-  const abilities = [];
-  if (saveDcAbility === "strengthOrDexterity") {
-    abilities.push("strength", "dexterity");
-  } else if (saveDcAbility) {
-    abilities.push(saveDcAbility);
-  }
-  if (altSaveDcAbility) abilities.push(altSaveDcAbility);
-  if (abilities.length === 0) return 0;
-  return Math.max(
-    ...abilities.map((a) => parseInt(rec?.data?.[`${a}Mod`] || "0", 10) || 0),
-  );
-}
-
 // Equipped armor categories ("light"/"medium"/"heavy") and whether a shield is
 // equipped, read from a record's inventory. Used by the self:armor:* and
 // self:shield predicates.

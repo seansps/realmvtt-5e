@@ -295,21 +295,6 @@ section("effect-rule predicate — object shape (e.g. {not: ...}) is gated");
   );
 }
 
-section("getSaveDcAbilityModifier — ability group save DC ability");
-{
-  const { getSaveDcAbilityModifier } = ctx;
-  const rec = { data: { strengthMod: 1, dexterityMod: 4, wisdomMod: 2 } };
-  assert("single ability", getSaveDcAbilityModifier(rec, "wisdom", ""), 2);
-  assert("strengthOrDexterity → higher (dex)", getSaveDcAbilityModifier(rec, "strengthOrDexterity", ""), 4);
-  assert(
-    "strengthOrDexterity → higher (str)",
-    getSaveDcAbilityModifier({ data: { strengthMod: 5, dexterityMod: 0 } }, "strengthOrDexterity", ""),
-    5,
-  );
-  assert("alt ability still picks higher", getSaveDcAbilityModifier(rec, "strength", "dexterity"), 4);
-  assert("nothing set → 0", getSaveDcAbilityModifier(rec, "", ""), 0);
-}
-
 section("getMinRollModifier — active gating");
 assert("active minroll3 → 3", getMinRollModifier([{ value: "minroll3", active: true }]), 3);
 assert("inactive minroll3 → null", getMinRollModifier([{ value: "minroll3", active: false }]), null);
