@@ -3042,6 +3042,22 @@
       const curLevel = parseInt(record?.data?.level || "1", 10);
       api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
     }
+    // Backfill the Grapple / Shove buttons onto the auto-added Unarmed Strike.
+    const invForUnarmed = record?.data?.inventory || [];
+    const unarmedIdx = invForUnarmed.findIndex((item) =>
+      isAutoUnarmedStrike(item),
+    );
+    if (
+      unarmedIdx !== -1 &&
+      !String(invForUnarmed[unarmedIdx]?.data?.description || "").includes(
+        "unarmedStrikeOptionMacro",
+      )
+    ) {
+      api.setValue(
+        `data.inventory.${unarmedIdx}.data.description`,
+        unarmedStrikeDescription(),
+      );
+    }
     // Backfill / resync data.levelByClass (per-class levels used by effect
     // expressions such as aura ranges) for characters created before it existed.
     if (levelByClassNeedsSync(record)) {
@@ -3075,6 +3091,16 @@
         if (!hasUnarmed) addUnarmedStrike();
       });
     }
+  }
+
+  // Unarmed Strike description, with Grapple / Shove buttons that post the
+  // save DC and the condition to apply (2024 Unarmed Strike options).
+  function unarmedStrikeDescription() {
+    return (
+      "<p>You can make an Unarmed Strike to deal damage, attempt a grapple, or shove an enemy.</p><p>Add the Finesse property above if you are able to use Dexterity for the Attack Roll.</p>" +
+      macroButtonHtml("Grapple", 'unarmedStrikeOptionMacro("grapple");') +
+      macroButtonHtml("Shove", 'unarmedStrikeOptionMacro("shove");')
+    );
   }
 
   // The Unarmed Strike onLoadCharacter adds is tagged data.unarmedStrike.
@@ -3115,8 +3141,7 @@
           spellLevel: { hidden: true },
         },
         data: {
-          description:
-            "<p>You can make an Unarmed Strike to deal damage, attempt a grapple, or shove an enemy.</p><p>Add the Finesse property above if you are able to use Dexterity for the Attack Roll.</p>",
+          description: unarmedStrikeDescription(),
           type: "melee weapon",
           subtype: "Simple Melee Weapons",
           weaponType: "Unarmed",

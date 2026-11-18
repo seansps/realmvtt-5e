@@ -6462,3 +6462,471 @@ function onItemAttunedFor(itemDataPath) {
     }
   });
 }
+
+// ─── Class feature macros ────────────────────────────────────────────────────
+// Called from one-line macro buttons embedded in ability / item descriptions
+// (record-link type "macro"), e.g. `fontOfMagicMacro();`. Keeping the logic
+// here means fixes ship with the ruleset instead of needing campaign edits.
+//
+// Ability groups track SPENT uses in data.dailyUses (counts up); spell slots
+// track SPENT slots in data.spellSlotsN / data.pactMagicN (count up).
+
+const FONT_OF_MAGIC_SLOT_COST = { 1: 2, 2: 3, 3: 5, 4: 6, 5: 7 };
+const FONT_OF_MAGIC_MIN_LEVEL = { 1: 2, 2: 3, 3: 5, 4: 7, 5: 9 };
+
+function _normName(s) {
+  return String(s || "")
+    .replace(/[‘’]/g, "'")
+    .trim()
+    .toLowerCase();
+}
+
+// The creature running the macro: the selected / sheet token.
+function _macroActor() {
+  const tokens = api.getSelectedOrDroppedToken() || [];
+  return tokens.length > 0 ? tokens[0] : null;
+}
+
+function _macroClassLevel(rec, className) {
+  const byClass = rec?.data?.levelByClass || {};
+  const direct = parseInt(byClass[className], 10);
+  if (direct > 0) return direct;
+  const m = String(rec?.data?.classLevels || "").match(
+    new RegExp(`${className}\\s+(\\d+)`, "i"),
+  );
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+// { index, spent, max, remaining } for a named ability group, or null.
+function _abilityGroupUses(rec, groupName) {
+  const groups = Array.isArray(rec?.data?.abilityGroups)
+    ? rec.data.abilityGroups
+    : [];
+  const index = groups.findIndex(
+    (g) => _normName(g?.name) === _normName(groupName),
+  );
+  if (index === -1) return null;
+  const spent = parseInt(groups[index]?.data?.dailyUses || "0", 10) || 0;
+  const max = parseInt(groups[index]?.data?.maxDailyUses || "0", 10) || 0;
+  return { index, spent, max, remaining: Math.max(0, max - spent) };
+}
+
+function _slotState(rec, level, prefix = "spellSlots") {
+  const numField = prefix === "pactMagic" ? "numPactMagic" : "numSpellSlots";
+  const max = parseInt(rec?.data?.[`${numField}${level}`] || "0", 10) || 0;
+  const spent = parseInt(rec?.data?.[`${prefix}${level}`] || "0", 10) || 0;
+  return { max, spent, unspent: Math.max(0, max - spent) };
+}
+
+function _macroChat(title, body) {
+  api.sendMessage(`#### ${title}\n\n${body}`, undefined, [], []);
+}
+
+function _notify(msg, color, title) {
+  api.showNotification(msg, color, title);
+}
+
+// Spends one use of a once-per-rest feature group; returns false (and tells the
+// player) when the group is missing or used up.
+function _checkOncePerRest(rec, groupName, title) {
+  const g = _abilityGroupUses(rec, groupName);
+  if (!g) {
+    _notify(`No "${groupName}" ability group found.`, "red", title);
+    return null;
+  }
+  if (g.remaining <= 0) {
+    _notify(`${title} has already been used. It resets on a Long Rest.`, "yellow", title);
+    return null;
+  }
+  return g;
+}
+
+// ── Font of Magic (Sorcerer): Sorcery Points ⇄ spell slots ──────────────────
+function fontOfMagicOptions(rec) {
+  const g = _abilityGroupUses(rec, "Sorcery Points");
+  const sorcLevel = _macroClassLevel(rec, "Sorcerer");
+  const createSlot = [];
+  const gainPoints = [];
+  if (!g) return { group: null, createSlot, gainPoints };
+  for (let level = 1; level <= 5; level++) {
+    const cost = FONT_OF_MAGIC_SLOT_COST[level];
+    const s = _slotState(rec, level);
+    if (
+      s.spent > 0 &&
+      g.remaining >= cost &&
+      sorcLevel >= FONT_OF_MAGIC_MIN_LEVEL[level]
+    ) {
+      createSlot.push({
+        label: `Level ${level} slot for ${cost} points (${s.unspent}/${s.max} left)`,
+        value: `${level}`,
+      });
+    }
+  }
+  for (let level = 1; level <= 9; level++) {
+    const s = _slotState(rec, level);
+    if (s.unspent > 0 && g.spent > 0) {
+      gainPoints.push({
+        label: `Level ${level} slot for ${level} point${level > 1 ? "s" : ""} (${s.unspent}/${s.max} left)`,
+        value: `${level}`,
+      });
+    }
+  }
+  return { group: g, createSlot, gainPoints };
+}
+
+function fontOfMagicMacro() {
+  const title = "Font of Magic";
+  const rec = _macroActor();
+  if (!rec) return;
+  const opts = fontOfMagicOptions(rec);
+  if (!opts.group) {
+    _notify('No "Sorcery Points" ability group found.', "red", title);
+    return;
+  }
+  const g = opts.group;
+  api.showPrompt(
+    title,
+    "Conversion",
+    `Sorcery Points: ${g.remaining}/${g.max} available`,
+    [
+      { label: "Create a spell slot (spend Sorcery Points)", value: "slot" },
+      { label: "Gain Sorcery Points (expend a spell slot)", value: "points" },
+    ],
+    null,
+    (vals) => {
+      const choice = vals?.[0]?.value || vals?.[0];
+      const list = choice === "slot" ? opts.createSlot : opts.gainPoints;
+      if (!choice) return;
+      if (list.length === 0) {
+        _notify(
+          choice === "slot"
+            ? "No spent slot you can recover with your Sorcery Points (the sheet can't hold slots above your maximum)."
+            : "No unspent spell slot to expend, or your Sorcery Points are already full.",
+          "yellow",
+          title,
+        );
+        return;
+      }
+      api.showPrompt(title, "Spell Slot Level", "", list, null, (picked) => {
+        const level = parseInt(picked?.[0]?.value || picked?.[0], 10);
+        if (!level) return;
+        const fresh = _macroActor() || rec;
+        const cur = _abilityGroupUses(fresh, "Sorcery Points");
+        const s = _slotState(fresh, level);
+        const values = {};
+        if (choice === "slot") {
+          const cost = FONT_OF_MAGIC_SLOT_COST[level];
+          if (!cur || cur.remaining < cost || s.spent <= 0) return;
+          values[`data.abilityGroups.${cur.index}.data.dailyUses`] = cur.spent + cost;
+          values[`data.spellSlots${level}`] = s.spent - 1;
+          api.setValuesOnRecord(fresh, values);
+          _macroChat(title, `Spent **${cost} Sorcery Points** to create a **level ${level}** spell slot.`);
+        } else {
+          if (!cur || s.unspent <= 0) return;
+          const gained = Math.min(level, cur.spent);
+          values[`data.abilityGroups.${cur.index}.data.dailyUses`] = cur.spent - gained;
+          values[`data.spellSlots${level}`] = s.spent + 1;
+          api.setValuesOnRecord(fresh, values);
+          _macroChat(title, `Expended a **level ${level}** spell slot to gain **${gained} Sorcery Point${gained > 1 ? "s" : ""}**.`);
+        }
+      }, "Convert", "Cancel");
+    },
+    "Continue",
+    "Cancel",
+  );
+}
+
+// ── Arcane Recovery / Natural Recovery: regain slots up to half class level ──
+// Returns the slot levels (1–5) that are spent and fit in the remaining budget.
+function slotRecoveryChoices(rec, budget, picked) {
+  const used = {};
+  (picked || []).forEach((l) => (used[l] = (used[l] || 0) + 1));
+  const spentSoFar = (picked || []).reduce((a, l) => a + l, 0);
+  const left = budget - spentSoFar;
+  const out = [];
+  for (let level = 1; level <= 5; level++) {
+    const s = _slotState(rec, level);
+    if (level <= left && s.spent - (used[level] || 0) > 0) out.push(level);
+  }
+  return { left, levels: out };
+}
+
+function spellSlotRecoveryMacro(opts) {
+  const title = opts.name;
+  const rec = _macroActor();
+  if (!rec) return;
+  const g = _checkOncePerRest(rec, opts.groupName, title);
+  if (!g) return;
+  const classLevel = _macroClassLevel(rec, opts.className);
+  const budget = Math.ceil(classLevel / 2);
+  const picked = [];
+  const finish = () => {
+    if (picked.length === 0) return;
+    const fresh = _macroActor() || rec;
+    const cur = _abilityGroupUses(fresh, opts.groupName);
+    if (!cur || cur.remaining <= 0) return;
+    const values = {};
+    const counts = {};
+    picked.forEach((l) => (counts[l] = (counts[l] || 0) + 1));
+    Object.keys(counts).forEach((l) => {
+      const s = _slotState(fresh, l);
+      values[`data.spellSlots${l}`] = Math.max(0, s.spent - counts[l]);
+    });
+    values[`data.abilityGroups.${cur.index}.data.dailyUses`] = cur.spent + 1;
+    api.setValuesOnRecord(fresh, values);
+    const list = Object.keys(counts)
+      .sort()
+      .map((l) => `${counts[l]} × level ${l}`)
+      .join(", ");
+    _macroChat(title, `Recovered spell slots: **${list}**.`);
+  };
+  const step = () => {
+    const { left, levels } = slotRecoveryChoices(rec, budget, picked);
+    if (levels.length === 0) {
+      if (picked.length === 0) {
+        _notify("No spent spell slots of level 5 or lower that fit.", "yellow", title);
+      }
+      finish();
+      return;
+    }
+    const options = levels.map((l) => ({ label: `Level ${l} slot`, value: `${l}` }));
+    if (picked.length > 0) options.push({ label: "Done", value: "done" });
+    api.showPrompt(
+      title,
+      "Recover a slot",
+      `Choose a spent slot to recover (${left} of ${budget} slot levels left).`,
+      options,
+      null,
+      (vals) => {
+        const v = vals?.[0]?.value || vals?.[0];
+        if (!v) return;
+        if (v === "done") {
+          finish();
+          return;
+        }
+        picked.push(parseInt(v, 10));
+        step();
+      },
+      "Recover",
+      "Cancel",
+    );
+  };
+  step();
+}
+
+function arcaneRecoveryMacro() {
+  spellSlotRecoveryMacro({ name: "Arcane Recovery", className: "Wizard", groupName: "Arcane Recovery" });
+}
+
+function naturalRecoveryMacro() {
+  spellSlotRecoveryMacro({ name: "Natural Recovery", className: "Druid", groupName: "Natural Recovery" });
+}
+
+// ── Sorcerous Restoration: regain Sorcery Points up to half Sorcerer level ──
+function sorcerousRestorationMacro() {
+  const title = "Sorcerous Restoration";
+  const rec = _macroActor();
+  if (!rec) return;
+  const g = _checkOncePerRest(rec, "Sorcerous Restoration", title);
+  if (!g) return;
+  const sp = _abilityGroupUses(rec, "Sorcery Points");
+  if (!sp) {
+    _notify('No "Sorcery Points" ability group found.', "red", title);
+    return;
+  }
+  const regain = Math.min(sp.spent, Math.floor(_macroClassLevel(rec, "Sorcerer") / 2));
+  if (regain <= 0) {
+    _notify("No spent Sorcery Points to regain.", "yellow", title);
+    return;
+  }
+  const values = {};
+  values[`data.abilityGroups.${sp.index}.data.dailyUses`] = sp.spent - regain;
+  values[`data.abilityGroups.${g.index}.data.dailyUses`] = g.spent + 1;
+  api.setValuesOnRecord(rec, values);
+  _macroChat(title, `Regained **${regain} Sorcery Point${regain > 1 ? "s" : ""}**.`);
+}
+
+// ── Magical Cunning: regain half the Pact Magic slots (all at Warlock 20) ────
+function magicalCunningPlan(rec) {
+  for (let level = 1; level <= 9; level++) {
+    const s = _slotState(rec, level, "pactMagic");
+    if (s.max > 0) {
+      const all = _macroClassLevel(rec, "Warlock") >= 20;
+      const cap = all ? s.max : Math.ceil(s.max / 2);
+      return { level, regain: Math.min(s.spent, cap), spent: s.spent };
+    }
+  }
+  return null;
+}
+
+function magicalCunningMacro() {
+  const title = "Magical Cunning";
+  const rec = _macroActor();
+  if (!rec) return;
+  const plan = magicalCunningPlan(rec);
+  if (!plan) {
+    _notify("No Pact Magic slots found on this character.", "red", title);
+    return;
+  }
+  if (plan.regain <= 0) {
+    _notify("No expended Pact Magic slots to regain.", "yellow", title);
+    return;
+  }
+  const g = _checkOncePerRest(rec, "Magical Cunning", title);
+  if (!g) return;
+  const values = {};
+  values[`data.pactMagic${plan.level}`] = plan.spent - plan.regain;
+  values[`data.abilityGroups.${g.index}.data.dailyUses`] = g.spent + 1;
+  api.setValuesOnRecord(rec, values);
+  _macroChat(title, `Regained **${plan.regain}** Pact Magic slot${plan.regain > 1 ? "s" : ""} (level ${plan.level}).`);
+}
+
+// ── Wild Resurgence: slot → Wild Shape use, or (1/LR) Wild Shape → level 1 slot
+function wildResurgenceMacro() {
+  const title = "Wild Resurgence";
+  const rec = _macroActor();
+  if (!rec) return;
+  const ws = _abilityGroupUses(rec, "Wild Shape");
+  if (!ws) {
+    _notify('No "Wild Shape" ability group found.', "red", title);
+    return;
+  }
+  const options = [];
+  if (ws.remaining <= 0) {
+    for (let level = 1; level <= 9; level++) {
+      const s = _slotState(rec, level);
+      if (s.unspent > 0) {
+        options.push({ label: `Expend a level ${level} slot to regain one Wild Shape use`, value: `slot:${level}` });
+      }
+    }
+  }
+  const wr = _abilityGroupUses(rec, "Wild Resurgence");
+  const s1 = _slotState(rec, 1);
+  if (ws.remaining > 0 && wr && wr.remaining > 0 && s1.spent > 0) {
+    options.push({ label: "Expend one Wild Shape use to regain a level 1 slot (once per Long Rest)", value: "ws" });
+  }
+  if (options.length === 0) {
+    _notify(
+      "Nothing to convert: you need either no Wild Shape uses left (and an unspent slot), or a Wild Shape use plus a spent level 1 slot with your once-per-Long-Rest use available.",
+      "yellow",
+      title,
+    );
+    return;
+  }
+  api.showPrompt(title, "Option", "", options, null, (vals) => {
+    const v = vals?.[0]?.value || vals?.[0];
+    if (!v) return;
+    const fresh = _macroActor() || rec;
+    const curWs = _abilityGroupUses(fresh, "Wild Shape");
+    const values = {};
+    if (v.startsWith("slot:")) {
+      const level = parseInt(v.split(":")[1], 10);
+      const s = _slotState(fresh, level);
+      if (!curWs || s.unspent <= 0 || curWs.spent <= 0) return;
+      values[`data.spellSlots${level}`] = s.spent + 1;
+      values[`data.abilityGroups.${curWs.index}.data.dailyUses`] = curWs.spent - 1;
+      api.setValuesOnRecord(fresh, values);
+      _macroChat(title, `Expended a **level ${level}** spell slot to regain **one Wild Shape use**.`);
+    } else {
+      const curWr = _abilityGroupUses(fresh, "Wild Resurgence");
+      const cs1 = _slotState(fresh, 1);
+      if (!curWs || curWs.remaining <= 0 || !curWr || curWr.remaining <= 0 || cs1.spent <= 0) return;
+      values[`data.abilityGroups.${curWs.index}.data.dailyUses`] = curWs.spent + 1;
+      values[`data.abilityGroups.${curWr.index}.data.dailyUses`] = curWr.spent + 1;
+      values["data.spellSlots1"] = cs1.spent - 1;
+      api.setValuesOnRecord(fresh, values);
+      _macroChat(title, "Expended **one Wild Shape use** to regain a **level 1** spell slot.");
+    }
+  }, "Use", "Cancel");
+}
+
+// ── Save-or-condition chat cards (Grapple, Shove, Open Hand Technique) ──────
+function _saveButton(save, dc, sourceName) {
+  return "```Roll_" + capitalize(save) + "_Save\n" +
+    `rollSavingThrow('${save}', ${dc}, { sourceName: ${JSON.stringify(sourceName)} });\n` +
+    "```";
+}
+
+function _applyEffectButton(effectName, actor) {
+  const label = "Apply_" + effectName.replace(/[^A-Za-z0-9]+/g, "_").replace(/_+$/, "");
+  const caster = actor?._id
+    ? `{ _id: ${JSON.stringify(actor._id)}, name: ${JSON.stringify(actor?.name || "")} }`
+    : "undefined";
+  return "```" + label + "\n" +
+    "api.getSelectedOrDroppedToken().forEach((t) => " +
+    `api.addEffect(${JSON.stringify(effectName)}, t, undefined, ${caster}));\n` +
+    "```";
+}
+
+function unarmedStrikeSaveDc(rec) {
+  const str = parseInt(rec?.data?.strengthMod || "0", 10) || 0;
+  const pb = parseInt(rec?.data?.proficiencyBonus || "0", 10) || 0;
+  return 8 + str + pb;
+}
+
+// option: "grapple" | "shove"
+function unarmedStrikeOptionMacro(option) {
+  const rec = _macroActor();
+  if (!rec) return;
+  const dc = unarmedStrikeSaveDc(rec);
+  const name = option === "shove" ? "Shove" : "Grapple";
+  const body =
+    option === "shove"
+      ? `The target makes a **Strength or Dexterity saving throw** (its choice) against **DC ${dc}**. On a failure, you push it 5 feet away or it has the **Prone** condition (your choice). The target must be no more than one size larger than you.`
+      : `The target makes a **Strength or Dexterity saving throw** (its choice) against **DC ${dc}**. On a failure, it has the **Grappled** condition (escape DC ${dc}). The target must be no more than one size larger than you, and you need a free hand.`;
+  const buttons = [
+    _saveButton("strength", dc, name),
+    _saveButton("dexterity", dc, name),
+    _applyEffectButton(option === "shove" ? "Prone" : "Grappled", rec),
+  ].join("\n");
+  _macroChat(`${name} (Unarmed Strike)`, `${body}\n${buttons}`);
+}
+
+// Open Hand Technique (Warrior of the Open Hand): Addle / Push / Topple
+function openHandTechniqueMacro() {
+  const rec = _macroActor();
+  if (!rec) return;
+  const wis = parseInt(rec?.data?.wisdomMod || "0", 10) || 0;
+  const pb = parseInt(rec?.data?.proficiencyBonus || "0", 10) || 0;
+  const dc = 8 + wis + pb;
+  api.showPrompt(
+    "Open Hand Technique",
+    "Technique",
+    "Choose an effect for the creature you hit with Flurry of Blows.",
+    [
+      { label: "Addle — it can't make Opportunity Attacks until its next turn", value: "addle" },
+      { label: "Push — Strength save or pushed up to 15 feet", value: "push" },
+      { label: "Topple — Dexterity save or Prone", value: "topple" },
+    ],
+    null,
+    (vals) => {
+      const v = vals?.[0]?.value || vals?.[0];
+      if (v === "addle") {
+        _macroChat("Open Hand Technique: Addle", `The target can't make Opportunity Attacks until the start of its next turn.\n${_applyEffectButton("Addle", rec)}`);
+      } else if (v === "push") {
+        _macroChat("Open Hand Technique: Push", `The target makes a **Strength saving throw** against **DC ${dc}**. On a failure, you push it up to 15 feet away from you.\n${_saveButton("strength", dc, "Open Hand Technique")}`);
+      } else if (v === "topple") {
+        _macroChat("Open Hand Technique: Topple", `The target makes a **Dexterity saving throw** against **DC ${dc}**. On a failure, it has the **Prone** condition.\n${_saveButton("dexterity", dc, "Open Hand Technique")}\n${_applyEffectButton("Prone (Topple)", rec)}`);
+      }
+    },
+    "Use",
+    "Cancel",
+  );
+}
+
+// Embeddable HTML for a macro button that runs `code` (a record-link of type
+// "macro"), as rich-text descriptions store it.
+function macroButtonHtml(name, code) {
+  const link = {
+    value: { type: "macro", code, dataPath: "", name, tooltip: name, fromLink: true },
+    tooltip: name,
+    type: "macro",
+    dataPath: "",
+  };
+  const attr = JSON.stringify(link)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return `<p><record-link recordlink="${attr}"></record-link></p>`;
+}
