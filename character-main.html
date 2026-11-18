@@ -3042,32 +3042,6 @@
       const curLevel = parseInt(record?.data?.level || "1", 10);
       api.setValue("data.xpMinForLevel", getNextLevelXp(curLevel - 1));
     }
-    // Backfill the Grapple / Shove buttons onto the auto-added Unarmed Strike.
-    const invForUnarmed = record?.data?.inventory || [];
-    const unarmedIdx = invForUnarmed.findIndex((item) =>
-      isAutoUnarmedStrike(item),
-    );
-    if (unarmedIdx !== -1) {
-      const unarmed = invForUnarmed[unarmedIdx];
-      const unarmedFields = {};
-      if (
-        !String(unarmed?.data?.description || "").includes(
-          "unarmedStrikeOptionMacro",
-        )
-      ) {
-        unarmedFields[`data.inventory.${unarmedIdx}.data.description`] =
-          unarmedStrikeDescription();
-      }
-      // Show its Use button so the Grapple / Shove buttons can go to chat.
-      if (!unarmed?.data?.hasUseBtn) {
-        unarmedFields[`data.inventory.${unarmedIdx}.data.hasUseBtn`] = true;
-        unarmedFields[`data.inventory.${unarmedIdx}.fields.useBtn.hidden`] =
-          false;
-      }
-      if (Object.keys(unarmedFields).length > 0) {
-        api.setValues(unarmedFields);
-      }
-    }
     // Backfill / resync data.levelByClass (per-class levels used by effect
     // expressions such as aura ranges) for characters created before it existed.
     if (levelByClassNeedsSync(record)) {
