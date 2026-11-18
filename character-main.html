@@ -3047,16 +3047,26 @@
     const unarmedIdx = invForUnarmed.findIndex((item) =>
       isAutoUnarmedStrike(item),
     );
-    if (
-      unarmedIdx !== -1 &&
-      !String(invForUnarmed[unarmedIdx]?.data?.description || "").includes(
-        "unarmedStrikeOptionMacro",
-      )
-    ) {
-      api.setValue(
-        `data.inventory.${unarmedIdx}.data.description`,
-        unarmedStrikeDescription(),
-      );
+    if (unarmedIdx !== -1) {
+      const unarmed = invForUnarmed[unarmedIdx];
+      const unarmedFields = {};
+      if (
+        !String(unarmed?.data?.description || "").includes(
+          "unarmedStrikeOptionMacro",
+        )
+      ) {
+        unarmedFields[`data.inventory.${unarmedIdx}.data.description`] =
+          unarmedStrikeDescription();
+      }
+      // Show its Use button so the Grapple / Shove buttons can go to chat.
+      if (!unarmed?.data?.hasUseBtn) {
+        unarmedFields[`data.inventory.${unarmedIdx}.data.hasUseBtn`] = true;
+        unarmedFields[`data.inventory.${unarmedIdx}.fields.useBtn.hidden`] =
+          false;
+      }
+      if (Object.keys(unarmedFields).length > 0) {
+        api.setValues(unarmedFields);
+      }
     }
     // Backfill / resync data.levelByClass (per-class levels used by effect
     // expressions such as aura ranges) for characters created before it existed.
@@ -3139,9 +3149,13 @@
           weaponType: { hidden: false },
           spell: { hidden: true },
           spellLevel: { hidden: true },
+          // Use posts the description (with its Grapple / Shove buttons) to
+          // chat; with no uses tracked it spends nothing.
+          useBtn: { hidden: false },
         },
         data: {
           description: unarmedStrikeDescription(),
+          hasUseBtn: true,
           type: "melee weapon",
           subtype: "Simple Melee Weapons",
           weaponType: "Unarmed",
