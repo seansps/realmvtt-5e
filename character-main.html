@@ -1970,17 +1970,33 @@
       }
     };
 
-    // Prompt for Ability Scores to raise. Each ability is listed once; the
-    // prompt's allowRepeats lets one be picked twice (+2 / +1 split).
-    let options = [];
-    const abilityChoices = backgroundObj?.data?.abilityScores || [];
-    abilityChoices.forEach((ability) => {
-      options.push({
-        label: capitalize(ability),
-        // In code we use camelCase, so we need to convert from normal to camelCase
-        value: normalToCamelCase(ability),
+    // Prompt for Ability Scores to raise. Each option is one legal split:
+    // +2 to one score and +1 to another, or +1 to three scores. The value
+    // lists one camelCase score per +1 (e.g. "strength,strength,dexterity").
+    const abilityChoices = [
+      ...new Set(backgroundObj?.data?.abilityScores || []),
+    ];
+    const options = [];
+    abilityChoices.forEach((plusTwo) => {
+      abilityChoices.forEach((plusOne) => {
+        if (plusOne === plusTwo) return;
+        options.push({
+          label: `${capitalize(plusTwo)} +2, ${capitalize(plusOne)} +1`,
+          value: [plusTwo, plusTwo, plusOne].map(normalToCamelCase).join(","),
+        });
       });
     });
+    for (let i = 0; i < abilityChoices.length; i++) {
+      for (let j = i + 1; j < abilityChoices.length; j++) {
+        for (let k = j + 1; k < abilityChoices.length; k++) {
+          const trio = [abilityChoices[i], abilityChoices[j], abilityChoices[k]];
+          options.push({
+            label: trio.map((a) => `${capitalize(a)} +1`).join(", "),
+            value: trio.map(normalToCamelCase).join(","),
+          });
+        }
+      }
+    }
 
     const abilityScoreSelection = (values) => {
       const fieldsToSet = {};
@@ -2035,10 +2051,7 @@
       });
     };
 
-    // Three picks with repeats allowed, but no score may take more than two
-    // (+2 / +1 or +1 / +1 / +1). The prompt can't cap per-option repeats, so
-    // re-ask when a score was picked three times.
-    const promptBackgroundAbilityScores = () => {
+    if (options.length > 0) {
       api.showPrompt(
         `Choose Ability Scores to Raise`,
         "Select Ability Scores",
@@ -2046,29 +2059,17 @@
         options,
         null,
         (values) => {
-          const counts = {};
-          (values || []).forEach((v) => {
-            const key = String(v).split("-")[0];
-            counts[key] = (counts[key] || 0) + 1;
-          });
-          if (Object.values(counts).some((n) => n > 2)) {
-            api.showNotification(
-              "You can raise a single ability score by at most 2.",
-              "red",
-              "Ability Scores",
-            );
-            promptBackgroundAbilityScores();
-            return;
-          }
-          abilityScoreSelection(values);
+          const picked = String(values?.[0] || "");
+          abilityScoreSelection(picked ? picked.split(",") : []);
         },
         "OK",
         "Cancel",
-        3,
-        true,
+        1,
       );
-    };
-    promptBackgroundAbilityScores();
+    } else {
+      // No ability choices on the background: still apply skills, feat, tools
+      abilityScoreSelection([]);
+    }
 
     // Set the background name
     fieldsToSet["data.backgroundName"] = backgroundName;
