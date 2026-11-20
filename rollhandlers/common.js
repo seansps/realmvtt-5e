@@ -1666,6 +1666,15 @@ const REALM_EFFECT_RULE_TYPES = new Set([
   "light",
 ]);
 
+// Record list fields (data.features, effects) can arrive as a plain object
+// with numeric keys when the stored data is malformed (e.g. a Mongo
+// `$set "data.features.0..."` onto a missing field). `|| []` doesn't catch
+// that, so `.map`/`.forEach` threw "c.map is not a function" on attack and
+// damage rolls (REALMVTT-FRONTEND-2J4 / 2J5). Treat anything non-array as empty.
+function _asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 // Same as getEffectsAndModifiers but for a token that is passed
 function getEffectsAndModifiersForToken(
   target,
@@ -1716,7 +1725,7 @@ function getEffectsAndModifiersForToken(
   }
 
   // First collect modifiers from effects
-  const effects = target?.effects || [];
+  const effects = _asArray(target?.effects);
   effects.forEach((effect) => {
     const rules = effect.rules || [];
     rules.forEach((rule) => {
@@ -1860,7 +1869,7 @@ function getEffectsAndModifiersForToken(
   });
 
   // Now collect all modifiers from Features and Items
-  const features = target?.data?.features || [];
+  const features = _asArray(target?.data?.features);
   // Ensure items is an array before filtering
   const items = Array.isArray(target?.data?.inventory)
     ? target?.data?.inventory
@@ -1906,7 +1915,7 @@ function getEffectsAndModifiersForToken(
   });
   // Collect slugified names of effects on the record for effect:<slug> predicates
   const effectSlugs = new Set(
-    (target?.effects || []).map((e) => _slugifyName(e?.name)).filter(Boolean),
+    _asArray(target?.effects).map((e) => _slugifyName(e?.name)).filter(Boolean),
   );
   // Collect slugified names of features/feats on the record for feature:<slug> predicates
   const featureSlugs = new Set(
@@ -5005,10 +5014,10 @@ function evaluateStaticModifierPredicate(rec, mod) {
     if (slug) activeToggles.add(slug);
   });
   const effectSlugs = new Set(
-    (rec?.effects || []).map((e) => _slugifyName(e?.name)).filter(Boolean),
+    _asArray(rec?.effects).map((e) => _slugifyName(e?.name)).filter(Boolean),
   );
   const featureSlugs = new Set(
-    (rec?.data?.features || [])
+    _asArray(rec?.data?.features)
       .map((f) => _slugifyName(f?.name))
       .filter(Boolean),
   );
@@ -5055,7 +5064,7 @@ function calculateSpeed(rec) {
   };
 
   // Apply all feature speed modifiers: baseSpeed first (upgrades only), then bonus/penalty
-  const features = rec?.data?.features || [];
+  const features = _asArray(rec?.data?.features);
   features.forEach((feature) => {
     const modifiers = feature?.data?.modifiers || [];
     modifiers.forEach((mod) => {

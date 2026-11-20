@@ -413,4 +413,29 @@ section("getMinRollModifier — active gating");
 assert("active minroll3 → 3", getMinRollModifier([{ value: "minroll3", active: true }]), 3);
 assert("inactive minroll3 → null", getMinRollModifier([{ value: "minroll3", active: false }]), null);
 
+section("getEffectsAndModifiersForToken — non-array features/effects (REALMVTT-FRONTEND-2J4/2J5)");
+{
+  // Malformed stored data: a Mongo $set onto a missing array path leaves an
+  // object with numeric keys. `|| []` let it through and `.map` threw
+  // "c.map is not a function" on every NPC attack/damage roll at that target.
+  const target = {
+    data: {
+      features: { 0: { name: "Darkvision", data: { modifiers: [] } } },
+      inventory: [],
+    },
+    effects: { 0: { name: "Blessed", rules: [] } },
+    effectIds: [],
+    effectValues: {},
+  };
+  let threw = null;
+  let res;
+  try {
+    res = getEffectsAndModifiersForToken(target, ["armorClass"], "");
+  } catch (e) {
+    threw = e.message;
+  }
+  assert("object-shaped features/effects do not throw", threw, null);
+  assert("returns an empty modifier list", Array.isArray(res) && res.length, 0);
+}
+
 process.exit(summary());
